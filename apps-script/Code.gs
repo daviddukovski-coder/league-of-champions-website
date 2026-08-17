@@ -9,8 +9,8 @@
  *   SITE_BASE_URL      – e.g. https://<user>.github.io/league-of-champions-tour/
  *
  * Required sheet tabs (exact header row spelling matters):
- *   "Registrations": ID | Timestamp | TournamentId | Competition | Vorname | Nachname | Email | Telefon | Partner | Verein | Status | StripeSessionId
- *   "Ranking":       Competition | Name | Verein | Punkte
+ *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId
+ *   "Ranking":       Competition | Name | Club | Points
  */
 
 var REG_SHEET = 'Registrations';
@@ -55,7 +55,7 @@ function jsonOut_(obj) {
 
 function getSheet_(name) {
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
-  if (!sh) throw new Error('Sheet "' + name + '" wurde nicht gefunden.');
+  if (!sh) throw new Error('Sheet "' + name + '" was not found.');
   return sh;
 }
 
@@ -76,10 +76,10 @@ function listRegistrations_(tournamentId) {
   rows.forEach(function(r) {
     if (r[idx.TournamentId] !== tournamentId) return;
     out.push({
-      vorname: r[idx.Vorname],
-      nachname: r[idx.Nachname],
+      firstName: r[idx.FirstName],
+      lastName: r[idx.LastName],
       partner: r[idx.Partner],
-      verein: r[idx.Verein],
+      club: r[idx.Club],
       competition: r[idx.Competition],
       status: r[idx.Status]
     });
@@ -104,8 +104,8 @@ function registerTeam_(body) {
   var id = Utilities.getUuid();
   sh.appendRow([
     id, new Date(), body.tournamentId, body.competition,
-    body.vorname, body.nachname, body.email, body.telefon,
-    body.partner, body.verein, 'pending', ''
+    body.firstName, body.lastName, body.email, body.phone,
+    body.partner, body.club, 'pending', ''
   ]);
   return { ok: true, id: id };
 }
@@ -136,7 +136,7 @@ function getRanking_() {
   return rows
     .filter(function(r) { return r[idx.Name]; })
     .map(function(r) {
-      return { competition: r[idx.Competition], name: r[idx.Name], verein: r[idx.Verein], punkte: Number(r[idx.Punkte]) || 0 };
+      return { competition: r[idx.Competition], name: r[idx.Name], club: r[idx.Club], points: Number(r[idx.Points]) || 0 };
     });
 }
 
@@ -149,10 +149,10 @@ function createCheckout_(body) {
   var props = PropertiesService.getScriptProperties();
   var base = props.getProperty('SITE_BASE_URL');
   var key = props.getProperty('STRIPE_SECRET_KEY');
-  if (!base || !key) return { error: 'SITE_BASE_URL oder STRIPE_SECRET_KEY nicht konfiguriert (Script Properties).' };
+  if (!base || !key) return { error: 'SITE_BASE_URL or STRIPE_SECRET_KEY not configured (Script Properties).' };
 
   // successPath/cancelPath are relative hash-paths from the front-end
-  // (e.g. "event/faro-finals/register/Herren?paid=<id>"); we only ever
+  // (e.g. "event/faro-finals/register/Men?paid=<id>"); we only ever
   // append them onto our own configured base URL, never a client-supplied host.
   var successUrl = base + '#/' + (body.successPath || '') + (String(body.successPath || '').indexOf('?') > -1 ? '&' : '?') + 'session_id={CHECKOUT_SESSION_ID}';
   var cancelUrl = base + '#/' + (body.cancelPath || '');
@@ -162,7 +162,7 @@ function createCheckout_(body) {
     'success_url': successUrl,
     'cancel_url': cancelUrl,
     'line_items[0][price_data][currency]': 'eur',
-    'line_items[0][price_data][product_data][name]': 'Startgebühr – ' + cfg.name,
+    'line_items[0][price_data][product_data][name]': 'Entry fee – ' + cfg.name,
     'line_items[0][price_data][unit_amount]': cfg.feeCents,
     'line_items[0][quantity]': 1,
     'metadata[registrationId]': body.id
@@ -183,7 +183,7 @@ function createCheckout_(body) {
 
 function confirmPayment_(body) {
   var key = PropertiesService.getScriptProperties().getProperty('STRIPE_SECRET_KEY');
-  if (!key) return { error: 'STRIPE_SECRET_KEY nicht konfiguriert.' };
+  if (!key) return { error: 'STRIPE_SECRET_KEY not configured.' };
 
   var res = UrlFetchApp.fetch('https://api.stripe.com/v1/checkout/sessions/' + encodeURIComponent(body.sessionId), {
     headers: { Authorization: 'Bearer ' + key },
@@ -197,8 +197,8 @@ function confirmPayment_(body) {
   // needing a signed webhook.
   var matches = data.metadata && data.metadata.registrationId === body.id;
   if (matches && data.payment_status === 'paid') {
-    updateRegistration_(body.id, { Status: 'bezahlt' });
-    return { ok: true, status: 'bezahlt' };
+    updateRegistration_(body.id, { Status: 'paid' });
+    return { ok: true, status: 'paid' };
   }
   return { ok: true, status: 'pending' };
 }

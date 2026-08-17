@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>League of Champions Tour</title>
-<meta name="description" content="Turnierübersicht, Infos, Team-Anmeldung und Rangliste für die Footvolley League of Champions Tour.">
+<meta name="description" content="Tournament overview, info, team registration and ranking for the Footvolley League of Champions Tour.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ============ THEME TOKENS ============
-     Quelle: footvolleyleagueofchampions.com + playerloc.com
-     Navy #0B0D63, Cyan #00F2FF, Bebas Neue (Headlines) / Poppins (UI) ============ */
+     Source: footvolleyleagueofchampions.com + playerloc.com
+     Navy #0B0D63, Cyan #00F2FF, Bebas Neue (headlines) / Poppins (UI) ============ */
   :root {
     --bg: #ffffff;
     --surface: #ffffff;
@@ -160,7 +160,7 @@
   .player-row { background:var(--surface); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
   .player-club { display:block; font-size:12.5px; color:var(--text-muted); margin-top:2px; }
   .status { font-size:11px; font-weight:600; padding:4px 10px; border-radius:12px; white-space:nowrap; }
-  .status-bezahlt { background:var(--tint-paid); color:var(--paid); }
+  .status-paid { background:var(--tint-paid); color:var(--paid); }
   .status-pending { background:var(--tint-pending); color:var(--pending-text); }
   .empty-note { color:var(--text-muted); font-size:14px; padding:4px 0 40px; }
 
@@ -224,7 +224,7 @@
   table.ranking td.rank { color:var(--text-muted); width:32px; }
   table.ranking td.pts { text-align:right; font-weight:600; color:var(--heading); }
 
-  /* ============ IMPRESSUM ============ */
+  /* ============ IMPRINT ============ */
   .prose { max-width:640px; padding:44px 0 90px; }
   .prose h1 { font-size:clamp(26px,4vw,34px); margin-bottom:24px; }
   .prose h2 { font-size:16px; margin:28px 0 8px; }
@@ -258,9 +258,9 @@
     <button class="wordmark" id="homeLink"><span class="mark">LEAGUE OF CHAMPIONS</span><span class="sub mono">FOOTVOLLEY</span></button>
     <div class="nav-right">
       <div class="nav-links">
-        <button class="nav-link" data-route="home">Turniere</button>
-        <button class="nav-link" data-route="ranking">Rangliste</button>
-        <button class="nav-link" data-route="impressum">Impressum</button>
+        <button class="nav-link" data-route="home">Tournaments</button>
+        <button class="nav-link" data-route="ranking">Ranking</button>
+        <button class="nav-link" data-route="impressum">Imprint</button>
       </div>
       <a class="ig-link" id="igLink" href="#" target="_blank" rel="noopener" aria-label="Instagram">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/></svg>
@@ -271,17 +271,17 @@
 </nav>
 
 <main>
-  <div id="demoBanner" class="demo-banner" hidden>DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)</div>
+  <div id="demoBanner" class="demo-banner" hidden>DEMO MODE – registrations are only stored locally in this browser (no real backend connected)</div>
 
   <section id="view-home" class="view">
     <div class="container">
       <div class="home-hero">
-        <h1>Europas größte Footvolley-Tour</h1>
+        <h1>Europe's biggest footvolley tour</h1>
         <p id="heroSub"></p>
       </div>
       <div class="tabs">
-        <button class="tab active" data-filter="upcoming">Kommende Turniere</button>
-        <button class="tab" data-filter="past">Vergangene Turniere</button>
+        <button class="tab active" data-filter="upcoming">Upcoming Tournaments</button>
+        <button class="tab" data-filter="past">Past Tournaments</button>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
     </div>
@@ -289,21 +289,21 @@
 
   <section id="view-detail" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="home">← Alle Turniere</button>
+      <button class="back-btn" data-back="home">← All Tournaments</button>
       <div id="detailContent"></div>
     </div>
   </section>
 
   <section id="view-compselect" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Zurück zum Turnier</button>
+      <button class="back-btn" data-back="detail">← Back to Tournament</button>
       <div id="compSelectContent"></div>
     </div>
   </section>
 
   <section id="view-register" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Zurück zum Turnier</button>
+      <button class="back-btn" data-back="detail">← Back to Tournament</button>
       <div class="register-inner" id="registerContent"></div>
     </div>
   </section>
@@ -323,9 +323,9 @@
 
 <footer>
   <span class="mark">LEAGUE OF CHAMPIONS</span> <span class="sub mono">FOOTVOLLEY</span>
-  <p>Fragen? <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
+  <p>Questions? <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
   <div class="foot-links">
-    <button data-route="impressum">Impressum</button>
+    <button data-route="impressum">Imprint</button>
     <a href="#" id="igTourLink" target="_blank" rel="noopener">Instagram · Tour</a>
     <a href="#" id="igBolaoLink" target="_blank" rel="noopener">Instagram · Bolao Sports</a>
   </div>
@@ -334,12 +334,12 @@
 <script>
 (function() {
   /* ==================================================================
-     CONFIG – vor dem Go-Live hier eintragen
+     CONFIG – fill in before going live
      ================================================================== */
   var CONFIG = {
-    // Web-App-URL aus dem Google-Apps-Script-Deployment (siehe Setup-Guide).
-    // Solange hier "PASTE_" drinsteht, läuft die Seite im Demo-Modus
-    // (Anmeldungen werden nur lokal im Browser gespeichert).
+    // Web app URL from the Google Apps Script deployment (see setup guide).
+    // As long as this still says "PASTE_", the site runs in demo mode
+    // (registrations are only stored locally in the browser).
     API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE',
     INSTAGRAM_TOUR_URL: 'https://instagram.com/footvolleyleagueofchampions',
     INSTAGRAM_BOLAO_URL: 'https://instagram.com/bolaosports'
@@ -347,28 +347,32 @@
   var DEMO_MODE = !CONFIG.API_URL || CONFIG.API_URL.indexOf('PASTE_') !== -1;
 
   /* ==================================================================
-     DATEN – Turniere & Vereine. Bilder/Logos können einfach durch
-     Bild-URLs ersetzt werden (image / logo Felder, aktuell null).
+     DATA – tournaments & clubs. Images/logos can simply be swapped by
+     setting the image / logo fields (currently null).
      ================================================================== */
   var TOURNAMENTS = [
-    { id:'stockholm-100', name:'Stockholm 100', tier:100, dateLabel:'30.–31. Jan', dateSort:'2026-01-30', city:'Stockholm', country:'Schweden', flag:'🇸🇪', competitions:['Herren'], status:'past', image:null },
-    { id:'amsterdam-500', name:'Amsterdam 500', tier:500, dateLabel:'7.–8. März', dateSort:'2026-03-07', city:'Amsterdam', country:'Niederlande', flag:'🇳🇱', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'barcelona-500', name:'Barcelona 500', tier:500, dateLabel:'3.–5. April', dateSort:'2026-04-03', city:'Vilanova', country:'Spanien', flag:'🇪🇸', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'kalogria-100', name:'Kalogria 100', tier:100, dateLabel:'3. Mai', dateSort:'2026-05-03', city:'Kalogria', country:'Griechenland', flag:'🇬🇷', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'graz-1000', name:'Graz 1000', tier:1000, dateLabel:'5.–7. Juni', dateSort:'2026-06-05', city:'Graz', country:'Österreich', flag:'🇦🇹', competitions:['Herren'], status:'past', image:null },
-    { id:'elitecup-1000', name:'Elite Cup 1000', tier:1000, dateLabel:'20.–21. Juni', dateSort:'2026-06-20', city:'Cervia', country:'Italien', flag:'🇮🇹', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'stlaurent-1000', name:'Saint Laurent du Var 1000', tier:1000, dateLabel:'4.–5. Juli', dateSort:'2026-07-04', city:'Saint Laurent du Var', country:'Frankreich', flag:'🇫🇷', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'nordic-100', name:'Nordic Footvolley 100', tier:100, dateLabel:'4.–5. Juli', dateSort:'2026-07-04', city:'Helsinki', country:'Finnland', flag:'🇫🇮', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'london-100', name:'London 100', tier:100, dateLabel:'11.–12. Juli', dateSort:'2026-07-11', city:'London', country:'England', flag:'🏴', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'santaluzia-500', name:'Santa Luzia 500', tier:500, dateLabel:'17.–19. Juli', dateSort:'2026-07-17', city:'Santa Luzia', country:'Portugal', flag:'🇵🇹', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'mandal-100', name:'Mandal 100', tier:100, dateLabel:'25. Juli', dateSort:'2026-07-25', city:'Mandal', country:'Norwegen', flag:'🇳🇴', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'copenhagen-1000', name:'Copenhagen 1000', tier:1000, dateLabel:'31. Jul – 2. Aug', dateSort:'2026-07-31', city:'Kopenhagen', country:'Dänemark', flag:'🇩🇰', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'pula-500', name:'Pula 500', tier:500, dateLabel:'7.–9. Aug', dateSort:'2026-08-07', city:'Pula', country:'Kroatien', flag:'🇭🇷', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'wiesloch-500', name:'Wiesloch 500', tier:500, dateLabel:'14.–16. Aug', dateSort:'2026-08-14', city:'Wiesloch', country:'Deutschland', flag:'🇩🇪', competitions:['Herren','Damen'], status:'past', image:null },
-    { id:'matosinhos-1000', name:'Matosinhos 1000', tier:1000, dateLabel:'21.–23. Aug', dateSort:'2026-08-21', city:'Matosinhos', country:'Portugal', flag:'🇵🇹', competitions:['Herren','Damen'], status:'upcoming', fee:60, deadline:'20. August 2026', image:null },
-    { id:'valencia-500', name:'Valencia 500 / Cullera 100', tier:500, dateLabel:'11.–13. Sep', dateSort:'2026-09-11', city:'Valencia', country:'Spanien', flag:'🇪🇸', competitions:['Herren','Damen'], status:'upcoming', fee:60, deadline:'8. September 2026', image:null },
-    { id:'faro-finals', name:'Faro Finals', tier:1000, dateLabel:'25.–27. Sep', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Herren','Damen'], status:'upcoming', fee:80, deadline:'22. September 2026', image:null }
+    { id:'stockholm-100', name:'Stockholm 100', tier:100, dateLabel:'Jan 30–31', dateSort:'2026-01-30', city:'Stockholm', country:'Sweden', flag:'🇸🇪', competitions:['Men'], status:'past', image:null },
+    { id:'amsterdam-500', name:'Amsterdam 500', tier:500, dateLabel:'Mar 7–8', dateSort:'2026-03-07', city:'Amsterdam', country:'Netherlands', flag:'🇳🇱', competitions:['Men','Women'], status:'past', image:null },
+    { id:'barcelona-500', name:'Barcelona 500', tier:500, dateLabel:'Apr 3–5', dateSort:'2026-04-03', city:'Vilanova', country:'Spain', flag:'🇪🇸', competitions:['Men','Women'], status:'past', image:null },
+    { id:'kalogria-100', name:'Kalogria 100', tier:100, dateLabel:'May 3', dateSort:'2026-05-03', city:'Kalogria', country:'Greece', flag:'🇬🇷', competitions:['Men','Women'], status:'past', image:null },
+    { id:'graz-1000', name:'Graz 1000', tier:1000, dateLabel:'Jun 5–7', dateSort:'2026-06-05', city:'Graz', country:'Austria', flag:'🇦🇹', competitions:['Men'], status:'past', image:null },
+    { id:'elitecup-1000', name:'Elite Cup 1000', tier:1000, dateLabel:'Jun 20–21', dateSort:'2026-06-20', city:'Cervia', country:'Italy', flag:'🇮🇹', competitions:['Men','Women'], status:'past', image:null },
+    { id:'stlaurent-1000', name:'Saint Laurent du Var 1000', tier:1000, dateLabel:'Jul 4–5', dateSort:'2026-07-04', city:'Saint Laurent du Var', country:'France', flag:'🇫🇷', competitions:['Men','Women'], status:'past', image:null },
+    { id:'nordic-100', name:'Nordic Footvolley 100', tier:100, dateLabel:'Jul 4–5', dateSort:'2026-07-04', city:'Helsinki', country:'Finland', flag:'🇫🇮', competitions:['Men','Women'], status:'past', image:null },
+    { id:'london-100', name:'London 100', tier:100, dateLabel:'Jul 11–12', dateSort:'2026-07-11', city:'London', country:'England', flag:'🏴', competitions:['Men','Women'], status:'past', image:null },
+    { id:'santaluzia-500', name:'Santa Luzia 500', tier:500, dateLabel:'Jul 17–19', dateSort:'2026-07-17', city:'Santa Luzia', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'past', image:null },
+    { id:'mandal-100', name:'Mandal 100', tier:100, dateLabel:'Jul 25', dateSort:'2026-07-25', city:'Mandal', country:'Norway', flag:'🇳🇴', competitions:['Men','Women'], status:'past', image:null },
+    { id:'copenhagen-1000', name:'Copenhagen 1000', tier:1000, dateLabel:'Jul 31 – Aug 2', dateSort:'2026-07-31', city:'Copenhagen', country:'Denmark', flag:'🇩🇰', competitions:['Men','Women'], status:'past', image:null },
+    { id:'pula-500', name:'Pula 500', tier:500, dateLabel:'Aug 7–9', dateSort:'2026-08-07', city:'Pula', country:'Croatia', flag:'🇭🇷', competitions:['Men','Women'], status:'past', image:null },
+    { id:'wiesloch-500', name:'Wiesloch 500', tier:500, dateLabel:'Aug 14–16', dateSort:'2026-08-14', city:'Wiesloch', country:'Germany', flag:'🇩🇪', competitions:['Men','Women'], status:'past', image:null },
+    { id:'matosinhos-1000', name:'Matosinhos 1000', tier:1000, dateLabel:'Aug 21–23', dateSort:'2026-08-21', city:'Matosinhos', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'August 20, 2026', image:null },
+    { id:'valencia-500', name:'Valencia 500 / Cullera 100', tier:500, dateLabel:'Sep 11–13', dateSort:'2026-09-11', city:'Valencia', country:'Spain', flag:'🇪🇸', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'September 8, 2026', image:null },
+    { id:'faro-finals', name:'Faro Finals', tier:1000, dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
   ];
+
+  var DIVISION_LABEL = { Men:"Men's", Women:"Women's" };
+  function divisionLabel(comp) { return (DIVISION_LABEL[comp] || comp) + ' Division'; }
+  function divisionsText(t) { return t.competitions.map(function(c){ return DIVISION_LABEL[c] || c; }).join(' & '); }
 
   var CLUBS = [
     'FC Beach Wien','Footvolley Graz','Malmö Beach Club','Amsterdam Sand Kings','Barcelona Beach Vôlei',
@@ -397,7 +401,7 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
   /* ==================================================================
-     BACKEND-LAYER (echtes Apps-Script-API oder lokaler Demo-Fallback)
+     BACKEND LAYER (real Apps Script API or local demo fallback)
      ================================================================== */
   function apiGet(action, params) {
     var qs = Object.keys(params || {}).map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
@@ -433,13 +437,13 @@
     return apiPost('createCheckout', { id:id, tournamentId:tournamentId, successPath:successPath, cancelPath:cancelPath });
   }
   function backendConfirmPayment(id, sessionId) {
-    if (DEMO_MODE) return Promise.resolve({ ok:true, status:'bezahlt' });
+    if (DEMO_MODE) return Promise.resolve({ ok:true, status:'paid' });
     return apiPost('confirmPayment', { id:id, sessionId:sessionId });
   }
   function backendMarkDemoPaid(id) {
     var list = demoAll();
     var e = list.find(function(r){ return r.id === id; });
-    if (e) { e.status = 'bezahlt'; demoSave(list); }
+    if (e) { e.status = 'paid'; demoSave(list); }
   }
   function backendStatus(id) {
     if (DEMO_MODE) {
@@ -451,12 +455,12 @@
   function backendRanking() {
     if (DEMO_MODE) {
       return Promise.resolve({ demo:true, rows: [
-        { competition:'Herren', name:'T. Novak', verein:'Split Beach Club', punkte:2140 },
-        { competition:'Herren', name:'M. Ferreira', verein:'Porto Futevôlei', punkte:1980 },
-        { competition:'Herren', name:'L. Weber', verein:'Hamburg Footvolley', punkte:1755 },
-        { competition:'Damen', name:'S. Almeida', verein:'Lisboa Futevôlei', punkte:2050 },
-        { competition:'Damen', name:'J. Andersson', verein:'Malmö Beach Club', punkte:1890 },
-        { competition:'Damen', name:'C. Moreau', verein:'Nice Beach Sports', punkte:1620 }
+        { competition:'Men', name:'T. Novak', club:'Split Beach Club', points:2140 },
+        { competition:'Men', name:'M. Ferreira', club:'Porto Futevôlei', points:1980 },
+        { competition:'Men', name:'L. Weber', club:'Hamburg Footvolley', points:1755 },
+        { competition:'Women', name:'S. Almeida', club:'Lisboa Futevôlei', points:2050 },
+        { competition:'Women', name:'J. Andersson', club:'Malmö Beach Club', points:1890 },
+        { competition:'Women', name:'C. Moreau', club:'Nice Beach Sports', points:1620 }
       ]});
     }
     return apiGet('ranking', {}).then(function(rows){ return { demo:false, rows: rows.error ? [] : rows }; }).catch(function(){ return { demo:false, rows:[] }; });
@@ -526,15 +530,15 @@
 
   function renderCard(t) {
     var statusBadge = t.status === 'upcoming'
-      ? '<span class="badge badge-upcoming">Anmeldung offen</span>'
-      : '<span class="badge badge-past">Beendet</span>';
+      ? '<span class="badge badge-upcoming">Registration open</span>'
+      : '<span class="badge badge-past">Completed</span>';
     var countSpan = t.status === 'upcoming' ? '<span class="tcard-count mono" data-count-for="' + t.id + '"></span>' : '';
     return (
       '<button class="tcard" data-id="' + t.id + '">' +
         '<div class="tcard-top"><span class="tier mono">LoC ' + t.tier + '</span>' + statusBadge + '</div>' +
         '<h3>' + esc(t.name) + '</h3>' +
         '<div class="tcard-meta mono"><span>' + t.dateLabel + '</span><span>' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
-        '<div class="tcard-cat">' + esc(t.competitions.join(' & ')) + '</div>' +
+        '<div class="tcard-cat">' + esc(divisionsText(t)) + '</div>' +
         countSpan +
       '</button>'
     );
@@ -552,7 +556,7 @@
     upcoming.forEach(function(t) {
       backendListRegistrations(t.id).then(function(list) {
         var el = document.querySelector('[data-count-for="' + t.id + '"]');
-        if (el && list.length > 0) el.textContent = list.length + (list.length === 1 ? ' Team angemeldet' : ' Teams angemeldet');
+        if (el && list.length > 0) el.textContent = list.length + (list.length === 1 ? ' team registered' : ' teams registered');
       });
     });
   }
@@ -563,14 +567,14 @@
   var detailContent = document.getElementById('detailContent');
 
   function renderPlayerList(players) {
-    if (!players.length) return '<p class="empty-note">Noch keine Anmeldungen – sei das erste Team!</p>';
+    if (!players.length) return '<p class="empty-note">No registrations yet – be the first team!</p>';
     return '<div class="player-list">' + players.map(function(p) {
-      var statusClass = p.status === 'bezahlt' ? 'status-bezahlt' : 'status-pending';
-      var statusLabel = p.status === 'bezahlt' ? 'Bezahlt' : 'Ausstehend';
+      var statusClass = p.status === 'paid' ? 'status-paid' : 'status-pending';
+      var statusLabel = p.status === 'paid' ? 'Paid' : 'Pending';
       return (
         '<div class="player-row">' +
-          '<div><strong>' + esc(p.vorname) + ' ' + esc(p.nachname) + '</strong> &amp; ' + esc(p.partner) +
-          '<span class="player-club">' + esc(p.verein) + '</span></div>' +
+          '<div><strong>' + esc(p.firstName) + ' ' + esc(p.lastName) + '</strong> &amp; ' + esc(p.partner) +
+          '<span class="player-club">' + esc(p.club) + '</span></div>' +
           '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
         '</div>'
       );
@@ -585,10 +589,10 @@
   function showDetail(t) {
     var infoRows =
       '<div class="detail-info-grid">' +
-        '<div class="info-block"><span class="label">Format</span><span class="value">2 gegen 2</span></div>' +
-        '<div class="info-block"><span class="label">Startgebühr</span><span class="value">' + (t.fee ? '€' + t.fee + ' / Team' : '–') + '</span></div>' +
-        '<div class="info-block"><span class="label">Anmeldeschluss</span><span class="value">' + (t.deadline || '–') + '</span></div>' +
-        '<div class="info-block"><span class="label">Bewerbe</span><span class="value">' + esc(t.competitions.join(' & ')) + '</span></div>' +
+        '<div class="info-block"><span class="label">Format</span><span class="value">2v2</span></div>' +
+        '<div class="info-block"><span class="label">Entry fee</span><span class="value">' + (t.fee ? '€' + t.fee + ' / team' : '–') + '</span></div>' +
+        '<div class="info-block"><span class="label">Registration deadline</span><span class="value">' + (t.deadline || '–') + '</span></div>' +
+        '<div class="info-block"><span class="label">Divisions</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
       '</div>';
 
     detailContent.innerHTML =
@@ -602,14 +606,14 @@
     var body = document.getElementById('detailBody');
 
     if (t.status !== 'upcoming') {
-      body.innerHTML = '<div class="closed-note">Die Anmeldung für dieses Turnier ist geschlossen.</div>';
+      body.innerHTML = '<div class="closed-note">Registration for this tournament is closed.</div>';
       setView('detail');
       return;
     }
 
     var actionsHtml = t.competitions.length > 1
-      ? '<button class="btn btn-cyan" id="goRegisterBtn">Jetzt anmelden</button>'
-      : '<button class="btn btn-cyan" id="goRegisterBtn">Jetzt anmelden – ' + esc(t.competitions[0]) + 'bewerb</button>';
+      ? '<button class="btn btn-cyan" id="goRegisterBtn">Register now</button>'
+      : '<button class="btn btn-cyan" id="goRegisterBtn">Register now – ' + esc(divisionLabel(t.competitions[0])) + '</button>';
 
     body.innerHTML = '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '</div><div id="playerLists"></div>';
 
@@ -626,10 +630,10 @@
       if (t.competitions.length > 1) {
         listsEl.innerHTML = t.competitions.map(function(comp) {
           var players = all.filter(function(p){ return p.competition === comp; });
-          return '<h2 class="section-title">' + esc(comp) + 'bewerb – Angemeldete Teams</h2>' + renderPlayerList(players);
+          return '<h2 class="section-title">' + esc(divisionLabel(comp)) + ' – Registered Teams</h2>' + renderPlayerList(players);
         }).join('');
       } else {
-        listsEl.innerHTML = '<h2 class="section-title">Angemeldete Teams</h2>' + renderPlayerList(all);
+        listsEl.innerHTML = '<h2 class="section-title">Registered Teams</h2>' + renderPlayerList(all);
       }
     });
 
@@ -644,15 +648,15 @@
       if (res && res.status === 'pending') {
         slot.innerHTML =
           '<div class="resume-banner">' +
-            '<p>Du hast eine ausstehende Anmeldung – jetzt Startgebühr bezahlen, um deinen Platz zu sichern.</p>' +
-            '<button class="btn btn-cyan" id="resumePayBtn">Jetzt bezahlen</button>' +
+            '<p>You have a pending registration – pay the entry fee now to secure your spot.</p>' +
+            '<button class="btn btn-cyan" id="resumePayBtn">Pay now</button>' +
           '</div>';
         document.getElementById('resumePayBtn').addEventListener('click', function() {
           var comp = demoAll().find(function(r){ return r.id === pendingId; });
           var compName = comp ? comp.competition : t.competitions[0];
           navigate('event/' + t.id + '/register/' + encodeURIComponent(compName) + '?resume=' + pendingId);
         });
-      } else if (res && res.status === 'bezahlt') {
+      } else if (res && res.status === 'paid') {
         localStorage.removeItem('loc_pending_' + t.id);
       }
     });
@@ -664,10 +668,10 @@
   function showCompSelect(t) {
     var compSelectContent = document.getElementById('compSelectContent');
     compSelectContent.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Für welchen Bewerb möchtest du dich anmelden?</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Which division would you like to register for?</div></div>' +
       '<div class="comp-select-grid">' +
         t.competitions.map(function(comp) {
-          return '<button class="comp-card" data-comp="' + esc(comp) + '"><h3>' + esc(comp) + 'bewerb</h3><span>Team-Anmeldung (2 gegen 2)</span></button>';
+          return '<button class="comp-card" data-comp="' + esc(comp) + '"><h3>' + esc(divisionLabel(comp)) + '</h3><span>Team registration (2v2)</span></button>';
         }).join('') +
       '</div>';
     compSelectContent.querySelectorAll('.comp-card').forEach(function(card) {
@@ -687,9 +691,9 @@
   }
 
   function setupClubCombo() {
-    var search = document.getElementById('rVereinSearch');
-    var hiddenInput = document.getElementById('rVerein');
-    var dropdown = document.getElementById('vereinDropdown');
+    var search = document.getElementById('rClubSearch');
+    var hiddenInput = document.getElementById('rClub');
+    var dropdown = document.getElementById('clubDropdown');
     search.addEventListener('input', function() {
       var q = search.value.trim().toLowerCase();
       hiddenInput.value = '';
@@ -720,38 +724,38 @@
 
   function showRegister(t, competition, query) {
     registerContent.innerHTML =
-      '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + ' · ' + esc(competition) + 'bewerb</span><h1>Team-Anmeldung</h1></div>' +
+      '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + ' · ' + esc(divisionLabel(competition)) + '</span><h1>Team Registration</h1></div>' +
       '<form id="regForm">' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Vorname *</label><input id="rVorname" required></div>' +
-          '<div class="form-group"><label>Nachname *</label><input id="rNachname" required></div>' +
+          '<div class="form-group"><label>First Name *</label><input id="rFirstName" required></div>' +
+          '<div class="form-group"><label>Last Name *</label><input id="rLastName" required></div>' +
         '</div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>E-Mail *</label><input type="email" id="rEmail" required></div>' +
-          '<div class="form-group"><label>Telefon *</label><input type="tel" id="rTelefon" required></div>' +
+          '<div class="form-group"><label>Email *</label><input type="email" id="rEmail" required></div>' +
+          '<div class="form-group"><label>Phone *</label><input type="tel" id="rPhone" required></div>' +
         '</div>' +
-        '<div class="form-group"><label>Partner/in (2. Spieler:in) *</label><input id="rPartner" required placeholder="Vor- und Nachname"></div>' +
+        '<div class="form-group"><label>Partner (2nd Player) *</label><input id="rPartner" required placeholder="First and last name"></div>' +
         '<div class="form-group combo-group">' +
-          '<label>Verein *</label>' +
-          '<input id="rVereinSearch" autocomplete="off" placeholder="Verein suchen …" required>' +
-          '<div id="vereinDropdown" class="combo-dropdown" hidden></div>' +
-          '<input type="hidden" id="rVerein">' +
+          '<label>Club *</label>' +
+          '<input id="rClubSearch" autocomplete="off" placeholder="Search club …" required>' +
+          '<div id="clubDropdown" class="combo-dropdown" hidden></div>' +
+          '<input type="hidden" id="rClub">' +
         '</div>' +
-        '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>Ich bin mit der Verarbeitung meiner Daten zur Turnieranmeldung einverstanden. *</span></label>' +
-        '<button type="submit" class="btn btn-cyan btn-block">Anmelden</button>' +
+        '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>I agree to the processing of my data for tournament registration. *</span></label>' +
+        '<button type="submit" class="btn btn-cyan btn-block">Register</button>' +
         '<p id="regError" class="form-error"></p>' +
       '</form>' +
       '<div id="pendingConfirm" class="confirmation" hidden></div>' +
       '<div id="paymentStep" hidden>' +
         '<div class="pay-summary">' +
-          '<div><span>Turnier</span><strong>' + esc(t.name) + '</strong></div>' +
-          '<div><span>Bewerb</span><strong>' + esc(competition) + '</strong></div>' +
+          '<div><span>Tournament</span><strong>' + esc(t.name) + '</strong></div>' +
+          '<div><span>Division</span><strong>' + esc(divisionLabel(competition)) + '</strong></div>' +
           '<div><span>Team</span><strong id="paySummaryTeam"></strong></div>' +
-          '<div><span>Startgebühr</span><strong>€' + (t.fee || 0) + '</strong></div>' +
+          '<div><span>Entry fee</span><strong>€' + (t.fee || 0) + '</strong></div>' +
         '</div>' +
-        '<button class="btn btn-cyan btn-block" id="payNowBtn">Startgebühr jetzt bezahlen</button>' +
-        '<button class="btn-ghost" id="payLaterBtn">Ich bezahle später</button>' +
-        '<p class="pay-note">Sichere Zahlung über Stripe. Erst nach Zahlungseingang ist die Anmeldung offiziell bestätigt.</p>' +
+        '<button class="btn btn-cyan btn-block" id="payNowBtn">Pay entry fee now</button>' +
+        '<button class="btn-ghost" id="payLaterBtn">I\'ll pay later</button>' +
+        '<p class="pay-note">Secure payment via Stripe. Registration is only officially confirmed once payment is received.</p>' +
       '</div>' +
       '<div id="regConfirm" class="confirmation" hidden></div>';
 
@@ -766,19 +770,19 @@
       pc.hidden = false;
       pc.innerHTML =
         '<div class="confirm-icon confirm-pending">✓</div>' +
-        '<h2>Vorläufige Anmeldung erhalten</h2>' +
-        '<p>Euer Team ist vorgemerkt. Um den Startplatz verbindlich zu sichern, bezahlt jetzt die Startgebühr.</p>';
-      document.getElementById('paySummaryTeam').textContent = entry.vorname + ' ' + entry.nachname + ' & ' + entry.partner;
+        '<h2>Provisional Registration Received</h2>' +
+        '<p>Your team is on the list. To secure your spot, pay the entry fee now.</p>';
+      document.getElementById('paySummaryTeam').textContent = entry.firstName + ' ' + entry.lastName + ' & ' + entry.partner;
       document.getElementById('paymentStep').hidden = false;
     }
 
-    // Zahlung nach einer bereits vorher eingereichten, noch offenen Anmeldung fortsetzen
+    // Resume payment for a previously submitted, still-open registration
     if (query && query.resume) {
       backendStatus(query.resume).then(function(res) {
         if (res && res.status === 'pending') {
           var all = demoAll();
           var found = all.find(function(r){ return r.id === query.resume; });
-          showPendingStep(found || { id:query.resume, vorname:'', nachname:'', partner:'' });
+          showPendingStep(found || { id:query.resume, firstName:'', lastName:'', partner:'' });
         }
       });
     }
@@ -787,48 +791,48 @@
       e.preventDefault();
       var err = document.getElementById('regError');
       err.textContent = '';
-      var vorname = document.getElementById('rVorname').value.trim();
-      var nachname = document.getElementById('rNachname').value.trim();
+      var firstName = document.getElementById('rFirstName').value.trim();
+      var lastName = document.getElementById('rLastName').value.trim();
       var email = document.getElementById('rEmail').value.trim();
-      var telefon = document.getElementById('rTelefon').value.trim();
+      var phone = document.getElementById('rPhone').value.trim();
       var partner = document.getElementById('rPartner').value.trim();
-      var vereinHidden = document.getElementById('rVerein').value.trim();
-      var vereinTyped = document.getElementById('rVereinSearch').value.trim();
-      var verein = vereinHidden || vereinTyped;
+      var clubHidden = document.getElementById('rClub').value.trim();
+      var clubTyped = document.getElementById('rClubSearch').value.trim();
+      var club = clubHidden || clubTyped;
       var consent = document.getElementById('rConsent').checked;
 
-      if (!vorname || !nachname || !email || !telefon || !partner || !verein || !consent) {
-        err.textContent = 'Bitte fülle alle Pflichtfelder aus.';
+      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent) {
+        err.textContent = 'Please fill in all required fields.';
         return;
       }
 
       var submitBtn = e.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Einen Moment …';
+      submitBtn.textContent = 'One moment …';
 
-      var payload = { tournamentId:t.id, competition:competition, vorname:vorname, nachname:nachname, email:email, telefon:telefon, partner:partner, verein:verein };
+      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club };
 
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');
         localStorage.setItem('loc_pending_' + t.id, res.id);
         showPendingStep(Object.assign({ id:res.id }, payload));
       }).catch(function() {
-        err.textContent = 'Da ist etwas schiefgelaufen. Bitte versuche es erneut.';
+        err.textContent = 'Something went wrong. Please try again.';
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Anmelden';
+        submitBtn.textContent = 'Register';
       });
     });
 
     document.getElementById('payNowBtn').addEventListener('click', function() {
       var btn = this;
       btn.disabled = true;
-      btn.textContent = 'Wird verarbeitet …';
+      btn.textContent = 'Processing …';
 
       if (DEMO_MODE) {
         sleep(900).then(function() {
           backendMarkDemoPaid(pendingEntry.id);
           localStorage.removeItem('loc_pending_' + t.id);
-          finishConfirmation('bezahlt');
+          finishConfirmation('paid');
         });
         return;
       }
@@ -837,7 +841,7 @@
       var cancelPath = 'event/' + t.id + '/register/' + encodeURIComponent(competition) + '?resume=' + pendingEntry.id;
       backendCreateCheckout(pendingEntry.id, t.id, successPath, cancelPath).then(function(res) {
         if (res && res.url) { window.location.href = res.url; }
-        else { document.getElementById('regError').textContent = 'Zahlung konnte nicht gestartet werden.'; btn.disabled = false; btn.textContent = 'Startgebühr jetzt bezahlen'; }
+        else { document.getElementById('regError').textContent = 'Payment could not be started.'; btn.disabled = false; btn.textContent = 'Pay entry fee now'; }
       });
     });
 
@@ -847,11 +851,11 @@
       navigate('event/' + t.id);
     });
 
-    // Rückkehr von Stripe Checkout (?paid=<id>&session_id=...)
+    // Returning from Stripe Checkout (?paid=<id>&session_id=...)
     if (query && query.paid && query.session_id) {
       backendConfirmPayment(query.paid, query.session_id).then(function(res) {
         localStorage.removeItem('loc_pending_' + t.id);
-        finishConfirmation(res && res.status === 'bezahlt' ? 'bezahlt' : 'pending');
+        finishConfirmation(res && res.status === 'paid' ? 'paid' : 'pending');
       });
     }
 
@@ -861,10 +865,10 @@
       document.getElementById('paymentStep').hidden = true;
       var conf = document.getElementById('regConfirm');
       conf.hidden = false;
-      if (status === 'bezahlt') {
-        conf.innerHTML = '<div class="confirm-icon confirm-paid">✓</div><h2>Anmeldung bestätigt!</h2><p>Euer Team ist startberechtigt. Bis bald auf dem Court!</p><button class="btn btn-outline" id="confBack">Zurück zum Turnier</button>';
+      if (status === 'paid') {
+        conf.innerHTML = '<div class="confirm-icon confirm-paid">✓</div><h2>Registration Confirmed!</h2><p>Your team is confirmed to play. See you on the court!</p><button class="btn btn-outline" id="confBack">Back to Tournament</button>';
       } else {
-        conf.innerHTML = '<div class="confirm-icon confirm-pending">⏳</div><h2>Zahlung noch ausstehend</h2><p>Wir konnten die Zahlung noch nicht bestätigen. Ihr könnt es auf der Turnierseite erneut versuchen.</p><button class="btn btn-outline" id="confBack">Zurück zum Turnier</button>';
+        conf.innerHTML = '<div class="confirm-icon confirm-pending">⏳</div><h2>Payment Still Pending</h2><p>We couldn\'t confirm the payment yet. You can try again from the tournament page.</p><button class="btn btn-outline" id="confBack">Back to Tournament</button>';
       }
       document.getElementById('confBack').addEventListener('click', function(){ navigate('event/' + t.id); });
     }
@@ -877,26 +881,26 @@
      ================================================================== */
   function showRanking() {
     var el = document.getElementById('rankingContent');
-    el.innerHTML = '<div class="ranking-head"><h1>Rangliste</h1><p>Punktestand der Saison 2026, laufend aktualisiert.</p></div><div class="ranking-groups" id="rankingGroups"></div>';
+    el.innerHTML = '<div class="ranking-head"><h1>Ranking</h1><p>2026 season standings, updated continuously.</p></div><div class="ranking-groups" id="rankingGroups"></div>';
     backendRanking().then(function(res) {
       var groupsEl = document.getElementById('rankingGroups');
       if (!groupsEl) return;
       if (res.demo) {
-        el.querySelector('.ranking-head').insertAdjacentHTML('beforeend', '<span class="demo-tag mono">Beispieldaten – Demo-Modus</span>');
+        el.querySelector('.ranking-head').insertAdjacentHTML('beforeend', '<span class="demo-tag mono">Sample data – demo mode</span>');
       }
-      var comps = ['Herren','Damen'];
+      var comps = ['Men','Women'];
       var byComp = {};
       comps.forEach(function(c){ byComp[c] = []; });
       (res.rows || []).forEach(function(r) { if (byComp[r.competition]) byComp[r.competition].push(r); });
 
       var html = comps.map(function(comp) {
-        var rows = byComp[comp].sort(function(a,b){ return b.punkte - a.punkte; });
+        var rows = byComp[comp].sort(function(a,b){ return b.points - a.points; });
         if (!rows.length) {
-          return '<div class="ranking-table-wrap"><h3>' + comp + 'bewerb</h3><p class="empty-note" style="padding:18px;">Rangliste wird nach dem ersten Turnier veröffentlicht.</p></div>';
+          return '<div class="ranking-table-wrap"><h3>' + divisionLabel(comp) + '</h3><p class="empty-note" style="padding:18px;">Standings will be published after the first tournament.</p></div>';
         }
-        return '<div class="ranking-table-wrap"><h3>' + comp + 'bewerb</h3><table class="ranking"><thead><tr><th></th><th>Name</th><th>Verein</th><th style="text-align:right">Punkte</th></tr></thead><tbody>' +
+        return '<div class="ranking-table-wrap"><h3>' + divisionLabel(comp) + '</h3><table class="ranking"><thead><tr><th></th><th>Name</th><th>Club</th><th style="text-align:right">Points</th></tr></thead><tbody>' +
           rows.map(function(r, i) {
-            return '<tr><td class="rank mono">' + (i+1) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.verein) + '</td><td class="pts mono">' + r.punkte + '</td></tr>';
+            return '<tr><td class="rank mono">' + (i+1) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.club) + '</td><td class="pts mono">' + r.points + '</td></tr>';
           }).join('') + '</tbody></table></div>';
       }).join('');
       groupsEl.innerHTML = html;
@@ -905,35 +909,33 @@
   }
 
   /* ==================================================================
-     IMPRESSUM
+     IMPRINT
      ================================================================== */
   function showImpressum() {
     document.getElementById('impressumContent').innerHTML =
-      '<h1>Impressum</h1>' +
-      '<h2>Diese Website wird betrieben von Bolao GmbH</h2>' +
-      '<p>Inhaber: Benedikt Hofmann-Wellenhof<br>Glacisstraße 65<br>8010 Graz, Österreich</p>' +
-      '<h2>Kontakt</h2>' +
-      '<p>E-Mail: <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a><br>Telefon: <a href="tel:+436606577498">+43 660 6577498</a></p>' +
-      '<h2>Geschäftsführung</h2>' +
+      '<h1>Imprint</h1>' +
+      '<h2>This website is managed by Bolao GmbH</h2>' +
+      '<p>Owner: Benedikt Hofmann-Wellenhof<br>Glacisstrasse 65<br>8010 Graz, Austria</p>' +
+      '<h2>Contact</h2>' +
+      '<p>Email: <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a><br>Phone: <a href="tel:+436606577498">+43 660 6577498</a></p>' +
+      '<h2>Managing Director</h2>' +
       '<p>Benedikt Hofmann-Wellenhof</p>' +
-      '<h2>Firmenbuch</h2>' +
-      '<p>Firmenbuchgericht Graz, FN 467717 w</p>' +
-      '<h2>UID-Nummer</h2>' +
+      '<h2>Court of Registration &amp; Registration Number</h2>' +
+      '<p>Graz, Reg. no. FN 467717 w</p>' +
+      '<h2>VAT Identification Number</h2>' +
       '<p>ATU72092512</p>' +
-      '<h2>Verantwortlich für den Inhalt</h2>' +
-      '<p>Benedikt Hofmann-Wellenhof, Anschrift wie oben.</p>' +
-      '<h2>EU-Streitschlichtung</h2>' +
-      '<p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>. Wir sind weder bereit noch verpflichtet, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>' +
-      '<h2>Haftungsausschluss</h2>' +
-      '<p>Die Inhalte dieser Website wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen.</p>';
+      '<h2>Responsible for Content</h2>' +
+      '<p>Benedikt Hofmann-Wellenhof, address as above.</p>' +
+      '<h2>EU Online Dispute Resolution</h2>' +
+      '<p>The European Commission provides a platform for Online Dispute Resolution (ODR): <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>. We are neither willing nor obliged to participate in dispute resolution proceedings in front of a consumer arbitration board.</p>';
     setView('impressum');
   }
 
   /* ==================================================================
      NAV / GLOBAL LISTENERS
      ================================================================== */
-  document.getElementById('seasonTag').textContent = 'SAISON 2026 · ' + TOURNAMENTS.length + ' TURNIERE';
-  document.getElementById('heroSub').textContent = TOURNAMENTS.length + ' Turniere quer durch Europa, drei Formate – LoC 1000, 500 und 100 – gespielt 2 gegen 2 für euren Verein.';
+  document.getElementById('seasonTag').textContent = 'SEASON 2026 · ' + TOURNAMENTS.length + ' TOURNAMENTS';
+  document.getElementById('heroSub').textContent = TOURNAMENTS.length + ' tournaments across Europe, three formats – LoC 1000, 500 and 100 – played 2v2 for your club.';
   document.getElementById('igLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igTourLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igBolaoLink').href = CONFIG.INSTAGRAM_BOLAO_URL;
