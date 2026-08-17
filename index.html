@@ -87,8 +87,10 @@
   /* ============ NAV ============ */
   .nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); border-bottom:1px solid rgba(255,255,255,0.12); }
   .nav-inner { max-width:1080px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-  .wordmark { display:flex; align-items:baseline; gap:8px; background:none; border:none; padding:0; }
-  .wordmark .mark { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.5px; color:var(--nav-text); }
+  .wordmark { display:flex; align-items:center; gap:10px; background:none; border:none; padding:0; }
+  .wordmark .badge { width:34px; height:34px; display:block; }
+  .wordmark .text { display:flex; flex-direction:column; align-items:flex-start; gap:0; }
+  .wordmark .mark { font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; letter-spacing:0.5px; color:var(--nav-text); }
   .wordmark .sub { font-size:11px; color:var(--cyan); font-weight:600; letter-spacing:0.5px; }
   .nav-right { display:flex; align-items:center; gap:22px; }
   .nav-links { display:flex; align-items:center; gap:20px; }
@@ -234,6 +236,7 @@
   .placeholder-field { color:var(--cyan-ink); }
 
   footer { background:var(--ink-deep); padding:44px 28px; text-align:center; margin-top:40px; }
+  footer .badge { width:88px; height:88px; display:block; margin:0 auto 14px; }
   footer .mark { color:var(--on-ink); font-family:'Bebas Neue',sans-serif; font-weight:700; }
   footer .sub { color:var(--cyan); font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:11px; }
   footer p { color:rgba(245,243,236,0.55); font-size:13px; margin-top:12px; }
@@ -255,7 +258,10 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <button class="wordmark" id="homeLink"><span class="mark">LEAGUE OF CHAMPIONS</span><span class="sub mono">FOOTVOLLEY</span></button>
+    <button class="wordmark" id="homeLink">
+      <img class="badge" src="assets/flc-logo-white.png" alt="">
+      <span class="text"><span class="mark">LEAGUE OF CHAMPIONS</span><span class="sub mono">FOOTVOLLEY</span></span>
+    </button>
     <div class="nav-right">
       <div class="nav-links">
         <button class="nav-link" data-route="home">Tournaments</button>
@@ -322,6 +328,7 @@
 </main>
 
 <footer>
+  <img class="badge" src="assets/flc-logo-white.png" alt="Footvolley League of Champions">
   <span class="mark">LEAGUE OF CHAMPIONS</span> <span class="sub mono">FOOTVOLLEY</span>
   <p>Questions? <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
   <div class="foot-links">
