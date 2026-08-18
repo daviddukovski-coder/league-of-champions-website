@@ -826,12 +826,13 @@ var CLUBS = [
     'detail.deadlineLabel': 'Registration deadline',
     'detail.divisionsLabel': 'Divisions',
     'detail.registerNow': 'Register now',
+    'detail.alreadyRegisteredNote': "You're already registered for this tournament.",
     'detail.registeredTeams': 'Registered Teams',
     'detail.noRegistrations': 'No registrations yet – be the first team!',
     'detail.closedNote': 'Registration for this tournament is closed.',
     'detail.resumeText': 'You have a pending registration – pay the entry fee now to secure your spot.',
     'detail.resumeBtn': 'Pay now',
-    'detail.paidLabel': 'Paid',
+    'detail.paidLabel': 'Confirmed',
     'detail.pendingLabel': 'Pending',
     'compselect.backLink': '← Back to Tournament',
     'compselect.question': 'Which division would you like to register for?',
@@ -1339,9 +1340,12 @@ var CLUBS = [
       return;
     }
 
-    var actionsHtml = t.competitions.length > 1
-      ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
-      : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>';
+    var alreadyRegistered = !!localStorage.getItem('loc_registered_' + t.id);
+    var actionsHtml = alreadyRegistered
+      ? '<div class="closed-note">' + uiEdit('detail.alreadyRegisteredNote') + '</div>'
+      : (t.competitions.length > 1
+        ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
+        : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>');
 
     var blocks = {
       image: eventImageHtml(t),
@@ -1353,10 +1357,13 @@ var CLUBS = [
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
     initSortable('detailBlocks', t.id);
 
-    document.getElementById('goRegisterBtn').addEventListener('click', function() {
-      if (t.competitions.length > 1) navigate('event/' + t.id + '/compselect');
-      else navigate('event/' + t.id + '/register/' + encodeURIComponent(t.competitions[0]));
-    });
+    var goRegisterBtn = document.getElementById('goRegisterBtn');
+    if (goRegisterBtn) {
+      goRegisterBtn.addEventListener('click', function() {
+        if (t.competitions.length > 1) navigate('event/' + t.id + '/compselect');
+        else navigate('event/' + t.id + '/register/' + encodeURIComponent(t.competitions[0]));
+      });
+    }
 
     checkResumablePayment(t);
 
@@ -1402,6 +1409,7 @@ var CLUBS = [
      COMPETITION SELECT
      ================================================================== */
   function showCompSelect(t) {
+    if (localStorage.getItem('loc_registered_' + t.id)) { navigate('event/' + t.id); return; }
     var compSelectContent = document.getElementById('compSelectContent');
     compSelectContent.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + uiEdit('compselect.question') + '</div></div>' +
@@ -1459,6 +1467,8 @@ var CLUBS = [
   var registerContent = document.getElementById('registerContent');
 
   function showRegister(t, competition, query) {
+    var isResuming = query && (query.resume || (query.paid && query.session_id));
+    if (localStorage.getItem('loc_registered_' + t.id) && !isResuming) { navigate('event/' + t.id); return; }
     registerContent.innerHTML =
       '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + ' · ' + esc(divisionLabel(competition)) + '</span><h1>' + uiEdit('register.heading') + '</h1></div>' +
       '<form id="regForm">' +
@@ -1558,6 +1568,7 @@ var CLUBS = [
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');
         localStorage.setItem('loc_pending_' + t.id, res.id);
+        localStorage.setItem('loc_registered_' + t.id, res.id);
         showPendingStep(Object.assign({ id:res.id }, payload));
       }).catch(function() {
         err.textContent = 'Something went wrong. Please try again.';
