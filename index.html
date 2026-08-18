@@ -291,21 +291,21 @@
   <div class="nav-inner">
     <button class="wordmark" id="homeLink">
       <img class="badge" alt="">
-      <span class="text"><span class="mark">LEAGUE OF CHAMPIONS</span><span class="sub mono">FOOTVOLLEY</span></span>
+      <span class="text"><span class="mark" data-ui-key="nav.mark">LEAGUE OF CHAMPIONS</span><span class="sub mono" data-ui-key="nav.sub">FOOTVOLLEY</span></span>
     </button>
     <div class="nav-right">
       <div class="nav-links">
-        <button class="nav-link" data-route="tournaments">Tournaments</button>
-        <button class="nav-link" data-route="impressum">Imprint</button>
+        <button class="nav-link" data-route="tournaments" data-ui-key="nav.tournaments">Tournaments</button>
+        <button class="nav-link" data-route="impressum" data-ui-key="nav.imprint">Imprint</button>
       </div>
       <div class="auth-nav" id="authNavLoggedOut">
-        <button class="nav-link" data-route="login">Log In</button>
-        <button class="btn btn-cyan btn-sm" data-route="register-account">Register</button>
+        <button class="nav-link" data-route="login" data-ui-key="nav.login">Log In</button>
+        <button class="btn btn-cyan btn-sm" data-route="register-account" data-ui-key="nav.register">Register</button>
       </div>
       <div class="auth-nav" id="authNavLoggedIn" hidden>
         <span class="nav-user" id="navUserName"></span>
         <button class="nav-link" id="editModeBtn" hidden>Edit Mode: Off</button>
-        <button class="nav-link" id="logoutBtn">Log Out</button>
+        <button class="nav-link" id="logoutBtn" data-ui-key="nav.logout">Log Out</button>
       </div>
       <a class="ig-link" id="igLink" href="#" target="_blank" rel="noopener" aria-label="Instagram">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/></svg>
@@ -316,31 +316,31 @@
 </nav>
 
 <main>
-  <div id="demoBanner" class="demo-banner" hidden>DEMO MODE – registrations are only stored locally in this browser (no real backend connected)</div>
+  <div id="demoBanner" class="demo-banner" hidden><span data-ui-key="demoBanner.text">DEMO MODE – registrations are only stored locally in this browser (no real backend connected)</span></div>
 
   <section id="view-landing" class="view">
     <div class="hero-media edit-target" id="heroMedia"></div>
     <div class="hero-content">
-      <span class="hero-eyebrow mono">Season 2026</span>
-      <h1>Europe's Footvolley Elite. One Tour.</h1>
-      <p>17 stops, three formats, hundreds of teams chasing the League of Champions title. Create your account and claim your spot on the sand.</p>
+      <span class="hero-eyebrow mono" data-ui-key="landing.eyebrow">Season 2026</span>
+      <h1 data-ui-key="landing.headline">Europe's Footvolley Elite. One Tour.</h1>
+      <p data-ui-key="landing.subtitle">17 stops, three formats, hundreds of teams chasing the League of Champions title. Create your account and claim your spot on the sand.</p>
       <div class="hero-actions">
-        <button class="btn btn-cyan" data-route="register-account">Register</button>
-        <button class="btn btn-outline-light" data-route="login">Log In</button>
+        <button class="btn btn-cyan" data-route="register-account" data-ui-key="landing.registerBtn">Register</button>
+        <button class="btn btn-outline-light" data-route="login" data-ui-key="landing.loginBtn">Log In</button>
       </div>
-      <button class="hero-browse" data-route="tournaments">Browse tournaments →</button>
+      <button class="hero-browse" data-route="tournaments" data-ui-key="landing.browseLink">Browse tournaments →</button>
     </div>
   </section>
 
   <section id="view-home" class="view" hidden>
     <div class="container">
       <div class="home-hero">
-        <h1>Europe's biggest footvolley tour</h1>
+        <h1 data-ui-key="home.headline">Europe's biggest footvolley tour</h1>
         <p id="heroSub"></p>
       </div>
       <div class="tabs">
-        <button class="tab active" data-filter="upcoming">Upcoming Tournaments</button>
-        <button class="tab" data-filter="past">Past Tournaments</button>
+        <button class="tab active" data-filter="upcoming" data-ui-key="home.tabUpcoming">Upcoming Tournaments</button>
+        <button class="tab" data-filter="past" data-ui-key="home.tabPast">Past Tournaments</button>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
     </div>
@@ -376,15 +376,15 @@
   <section id="view-login" class="view" hidden>
     <div class="container">
       <div class="auth-inner">
-        <h1>Log In</h1>
-        <div id="loginDemoNote" class="auth-demo-note" hidden>Demo mode — accounts are only stored in this browser, not a real account service.</div>
+        <h1 data-ui-key="login.heading">Log In</h1>
+        <div id="loginDemoNote" class="auth-demo-note" hidden><span data-ui-key="login.demoNote">Demo mode — accounts are only stored in this browser, not a real account service.</span></div>
         <form id="loginForm">
-          <div class="form-group"><label>Email *</label><input type="email" id="liEmail" required></div>
-          <div class="form-group"><label>Password *</label><input type="password" id="liPassword" required></div>
-          <button type="submit" class="btn btn-cyan btn-block">Log In</button>
+          <div class="form-group"><label data-ui-key="login.emailLabel">Email *</label><input type="email" id="liEmail" required></div>
+          <div class="form-group"><label data-ui-key="login.passwordLabel">Password *</label><input type="password" id="liPassword" required></div>
+          <button type="submit" class="btn btn-cyan btn-block" data-ui-key="login.submitBtn">Log In</button>
           <p id="loginError" class="form-error"></p>
         </form>
-        <p class="auth-switch">Don't have an account yet? <button class="btn-ghost" data-route="register-account">Register</button></p>
+        <p class="auth-switch"><span data-ui-key="login.switchText">Don't have an account yet?</span> <button class="btn-ghost" data-route="register-account" data-ui-key="login.switchBtn">Register</button></p>
       </div>
     </div>
   </section>
@@ -392,23 +392,23 @@
   <section id="view-registeraccount" class="view" hidden>
     <div class="container">
       <div class="auth-inner">
-        <h1>Create Account</h1>
-        <div id="registerDemoNote" class="auth-demo-note" hidden>Demo mode — accounts are only stored in this browser, not a real account service.</div>
+        <h1 data-ui-key="registerAccount.heading">Create Account</h1>
+        <div id="registerDemoNote" class="auth-demo-note" hidden><span data-ui-key="registerAccount.demoNote">Demo mode — accounts are only stored in this browser, not a real account service.</span></div>
         <form id="registerAccountForm">
           <div class="form-row">
-            <div class="form-group"><label>First Name *</label><input id="raFirstName" required></div>
-            <div class="form-group"><label>Last Name *</label><input id="raLastName" required></div>
+            <div class="form-group"><label data-ui-key="registerAccount.firstNameLabel">First Name *</label><input id="raFirstName" required></div>
+            <div class="form-group"><label data-ui-key="registerAccount.lastNameLabel">Last Name *</label><input id="raLastName" required></div>
           </div>
-          <div class="form-group"><label>Email *</label><input type="email" id="raEmail" required></div>
+          <div class="form-group"><label data-ui-key="registerAccount.emailLabel">Email *</label><input type="email" id="raEmail" required></div>
           <div class="form-row">
-            <div class="form-group"><label>Password *</label><input type="password" id="raPassword" minlength="6" required></div>
-            <div class="form-group"><label>Confirm Password *</label><input type="password" id="raPasswordConfirm" minlength="6" required></div>
+            <div class="form-group"><label data-ui-key="registerAccount.passwordLabel">Password *</label><input type="password" id="raPassword" minlength="6" required></div>
+            <div class="form-group"><label data-ui-key="registerAccount.confirmPasswordLabel">Confirm Password *</label><input type="password" id="raPasswordConfirm" minlength="6" required></div>
           </div>
-          <label class="checkbox-row"><input type="checkbox" id="raConsent" required><span>I agree to the processing of my data for account creation. *</span></label>
-          <button type="submit" class="btn btn-cyan btn-block">Create Account</button>
+          <label class="checkbox-row"><input type="checkbox" id="raConsent" required><span data-ui-key="registerAccount.consentLabel">I agree to the processing of my data for account creation. *</span></label>
+          <button type="submit" class="btn btn-cyan btn-block" data-ui-key="registerAccount.submitBtn">Create Account</button>
           <p id="registerAccountError" class="form-error"></p>
         </form>
-        <p class="auth-switch">Already have an account? <button class="btn-ghost" data-route="login">Log In</button></p>
+        <p class="auth-switch"><span data-ui-key="registerAccount.switchText">Already have an account?</span> <button class="btn-ghost" data-route="login" data-ui-key="registerAccount.switchBtn">Log In</button></p>
       </div>
     </div>
   </section>
@@ -416,10 +416,10 @@
 
 <footer>
   <img class="badge" alt="Footvolley League of Champions">
-  <span class="mark">LEAGUE OF CHAMPIONS</span> <span class="sub mono">FOOTVOLLEY</span>
-  <p>Questions? <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
+  <span class="mark" data-ui-key="nav.mark">LEAGUE OF CHAMPIONS</span> <span class="sub mono" data-ui-key="nav.sub">FOOTVOLLEY</span>
+  <p><span data-ui-key="footer.questions">Questions?</span> <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
   <div class="foot-links">
-    <button data-route="impressum">Imprint</button>
+    <button data-route="impressum" data-ui-key="footer.imprint">Imprint</button>
     <a href="#" id="igTourLink" target="_blank" rel="noopener">Instagram · Tour</a>
     <a href="#" id="igBolaoLink" target="_blank" rel="noopener">Instagram · Bolao Sports</a>
   </div>
@@ -788,6 +788,121 @@ var CLUBS = [
     return { video: o.video || CONFIG.HERO_VIDEO_URL, image: o.image || CONFIG.HERO_IMAGE_URL };
   }
 
+  /* ==================================================================
+     UI TEXT — every static label/heading/button/message on the site,
+     editable the same way as tournament fields (key 'ui', field = below).
+     ================================================================== */
+  var UI_DEFAULTS = {
+    'nav.mark': 'LEAGUE OF CHAMPIONS',
+    'nav.sub': 'FOOTVOLLEY',
+    'nav.tournaments': 'Tournaments',
+    'nav.imprint': 'Imprint',
+    'nav.login': 'Log In',
+    'nav.register': 'Register',
+    'nav.logout': 'Log Out',
+    'demoBanner.text': 'DEMO MODE – registrations are only stored locally in this browser (no real backend connected)',
+    'landing.eyebrow': 'Season 2026',
+    'landing.headline': "Europe's Footvolley Elite. One Tour.",
+    'landing.subtitle': '17 stops, three formats, hundreds of teams chasing the League of Champions title. Create your account and claim your spot on the sand.',
+    'landing.registerBtn': 'Register',
+    'landing.loginBtn': 'Log In',
+    'landing.browseLink': 'Browse tournaments →',
+    'home.headline': "Europe's biggest footvolley tour",
+    'home.tabUpcoming': 'Upcoming Tournaments',
+    'home.tabPast': 'Past Tournaments',
+    'detail.backLink': '← All Tournaments',
+    'detail.formatLabel': 'Format',
+    'detail.formatValue': '2v2',
+    'detail.feeLabel': 'Entry fee',
+    'detail.deadlineLabel': 'Registration deadline',
+    'detail.divisionsLabel': 'Divisions',
+    'detail.registerNow': 'Register now',
+    'detail.registeredTeams': 'Registered Teams',
+    'detail.noRegistrations': 'No registrations yet – be the first team!',
+    'detail.closedNote': 'Registration for this tournament is closed.',
+    'detail.resumeText': 'You have a pending registration – pay the entry fee now to secure your spot.',
+    'detail.resumeBtn': 'Pay now',
+    'detail.paidLabel': 'Paid',
+    'detail.pendingLabel': 'Pending',
+    'compselect.backLink': '← Back to Tournament',
+    'compselect.question': 'Which division would you like to register for?',
+    'compselect.teamReg': 'Team registration (2v2)',
+    'register.backLink': '← Back to Tournament',
+    'register.heading': 'Team Registration',
+    'register.firstNameLabel': 'First Name *',
+    'register.lastNameLabel': 'Last Name *',
+    'register.emailLabel': 'Email *',
+    'register.phoneLabel': 'Phone *',
+    'register.partnerLabel': 'Partner (2nd Player) *',
+    'register.partnerPlaceholder': 'First and last name',
+    'register.clubLabel': 'Club *',
+    'register.clubPlaceholder': 'Search club …',
+    'register.consentLabel': 'I agree to the processing of my data for tournament registration. *',
+    'register.submitBtn': 'Register',
+    'register.tournamentLabel': 'Tournament',
+    'register.divisionLabel': 'Division',
+    'register.teamLabel': 'Team',
+    'register.feeLabel': 'Entry fee',
+    'register.payBtn': 'Pay entry fee now',
+    'register.payLaterBtn': "I'll pay later",
+    'register.payNote': 'Secure payment via Stripe. Registration is only officially confirmed once payment is received.',
+    'register.pendingHeading': 'Provisional Registration Received',
+    'register.pendingText': 'Your team is on the list. To secure your spot, pay the entry fee now.',
+    'register.confirmedHeading': 'Registration Confirmed!',
+    'register.confirmedText': 'Your team is confirmed to play. See you on the court!',
+    'register.backToTournament': 'Back to Tournament',
+    'register.paymentPendingHeading': 'Payment Still Pending',
+    'register.paymentPendingText': "We couldn't confirm the payment yet. You can try again from the tournament page.",
+    'login.heading': 'Log In',
+    'login.demoNote': 'Demo mode — accounts are only stored in this browser, not a real account service.',
+    'login.emailLabel': 'Email *',
+    'login.passwordLabel': 'Password *',
+    'login.submitBtn': 'Log In',
+    'login.switchText': "Don't have an account yet?",
+    'login.switchBtn': 'Register',
+    'registerAccount.heading': 'Create Account',
+    'registerAccount.demoNote': 'Demo mode — accounts are only stored in this browser, not a real account service.',
+    'registerAccount.firstNameLabel': 'First Name *',
+    'registerAccount.lastNameLabel': 'Last Name *',
+    'registerAccount.emailLabel': 'Email *',
+    'registerAccount.passwordLabel': 'Password *',
+    'registerAccount.confirmPasswordLabel': 'Confirm Password *',
+    'registerAccount.consentLabel': 'I agree to the processing of my data for account creation. *',
+    'registerAccount.submitBtn': 'Create Account',
+    'registerAccount.switchText': 'Already have an account?',
+    'registerAccount.switchBtn': 'Log In',
+    'footer.questions': 'Questions?',
+    'footer.imprint': 'Imprint'
+  };
+
+  function uiText(key) {
+    var o = contentOverrides.ui;
+    if (o && o[key] != null && o[key] !== '') return o[key];
+    return UI_DEFAULTS[key] != null ? UI_DEFAULTS[key] : '';
+  }
+
+  // For text built dynamically inside JS-generated HTML (detail/register/etc.)
+  function uiEdit(key) {
+    var val = uiText(key);
+    return editTextHtml('ui', key, val, val, key);
+  }
+
+  // For text living in static HTML (nav, footer, landing, login/register forms):
+  // wrap the element's content in the same edit-text-wrap pattern on first render,
+  // then just refresh the displayed value on every later pass.
+  function instrumentUIText(root) {
+    (root || document).querySelectorAll('[data-ui-key]').forEach(function(el) {
+      var key = el.dataset.uiKey;
+      var val = uiText(key);
+      el.classList.add('edit-text-wrap');
+      el.dataset.editKey = 'ui';
+      el.dataset.editField = key;
+      el.dataset.editLabel = key;
+      el.dataset.editRaw = val;
+      el.innerHTML = '<span class="edit-text-value">' + esc(val) + '</span><button type="button" class="edit-pencil" title="Edit text">✎</button>';
+    });
+  }
+
   // Inline text editor — a real on-page input, not window.prompt() (blocked
   // inside the sandboxed Artifact preview, so it silently did nothing there).
   function editTextHtml(key, field, rawValue, displayText, label) {
@@ -809,12 +924,17 @@ var CLUBS = [
     input.select();
   }
 
+  function finishTextEdit(wrap) {
+    if (wrap.dataset.uiKey) instrumentUIText(document);
+    else route();
+  }
+
   function commitTextEdit(wrap) {
     var key = wrap.dataset.editKey, field = wrap.dataset.editField;
     var input = wrap.querySelector('.edit-text-input');
     var next = input.value.trim();
-    if (!next) { route(); return; }
-    saveContentField(key, field, next).then(function() { route(); });
+    if (!next) { finishTextEdit(wrap); return; }
+    saveContentField(key, field, next).then(function() { finishTextEdit(wrap); });
   }
 
   function editImageOverlayHtml(key) {
@@ -827,7 +947,7 @@ var CLUBS = [
     var save = e.target.closest('.edit-text-save');
     if (save) { commitTextEdit(save.closest('.edit-text-wrap')); return; }
     var cancel = e.target.closest('.edit-text-cancel');
-    if (cancel) { route(); return; }
+    if (cancel) { finishTextEdit(cancel.closest('.edit-text-wrap')); return; }
   });
 
   document.addEventListener('keydown', function(e) {
@@ -835,7 +955,7 @@ var CLUBS = [
     var wrap = e.target.closest('.edit-text-wrap');
     if (!wrap) return;
     if (e.key === 'Enter') { e.preventDefault(); commitTextEdit(wrap); }
-    else if (e.key === 'Escape') { e.preventDefault(); route(); }
+    else if (e.key === 'Escape') { e.preventDefault(); finishTextEdit(wrap); }
   });
 
   document.addEventListener('change', function(e) {
@@ -868,6 +988,7 @@ var CLUBS = [
     document.querySelectorAll('.nav-link').forEach(function(l) {
       l.classList.toggle('active', l.dataset.route === VIEW_TO_ROUTE[view]);
     });
+    instrumentUIText(document);
     window.scrollTo({ top:0, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
@@ -1069,10 +1190,10 @@ var CLUBS = [
   var detailContent = document.getElementById('detailContent');
 
   function renderPlayerList(players) {
-    if (!players.length) return '<p class="empty-note">No registrations yet – be the first team!</p>';
+    if (!players.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
     return '<div class="player-list">' + players.map(function(p) {
       var statusClass = p.status === 'paid' ? 'status-paid' : 'status-pending';
-      var statusLabel = p.status === 'paid' ? 'Paid' : 'Pending';
+      var statusLabel = p.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
       return (
         '<div class="player-row">' +
           '<div><strong>' + esc(p.firstName) + ' ' + esc(p.lastName) + '</strong> &amp; ' + esc(p.partner) +
@@ -1093,10 +1214,10 @@ var CLUBS = [
   function showDetail(t) {
     var infoRows =
       '<div class="detail-info-grid">' +
-        '<div class="info-block"><span class="label">Format</span><span class="value">2v2</span></div>' +
-        '<div class="info-block"><span class="label">Entry fee</span><span class="value">' + editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee + ' / team' : '–', 'entry fee') + '</span></div>' +
-        '<div class="info-block"><span class="label">Registration deadline</span><span class="value">' + editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline') + '</span></div>' +
-        '<div class="info-block"><span class="label">Divisions</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
+        '<div class="info-block"><span class="label">' + uiEdit('detail.formatLabel') + '</span><span class="value">' + uiEdit('detail.formatValue') + '</span></div>' +
+        '<div class="info-block"><span class="label">' + uiEdit('detail.feeLabel') + '</span><span class="value">' + editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee + ' / team' : '–', 'entry fee') + '</span></div>' +
+        '<div class="info-block"><span class="label">' + uiEdit('detail.deadlineLabel') + '</span><span class="value">' + editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline') + '</span></div>' +
+        '<div class="info-block"><span class="label">' + uiEdit('detail.divisionsLabel') + '</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
       '</div>';
 
     detailContent.innerHTML =
@@ -1110,14 +1231,14 @@ var CLUBS = [
     var body = document.getElementById('detailBody');
 
     if (t.status !== 'upcoming') {
-      body.innerHTML = '<div class="closed-note">Registration for this tournament is closed.</div>';
+      body.innerHTML = '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div>';
       setView('detail');
       return;
     }
 
     var actionsHtml = t.competitions.length > 1
-      ? '<button class="btn btn-cyan" id="goRegisterBtn">Register now</button>'
-      : '<button class="btn btn-cyan" id="goRegisterBtn">Register now – ' + esc(divisionLabel(t.competitions[0])) + '</button>';
+      ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
+      : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>';
 
     body.innerHTML = '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '</div><div id="playerLists"></div>';
 
@@ -1134,10 +1255,10 @@ var CLUBS = [
       if (t.competitions.length > 1) {
         listsEl.innerHTML = t.competitions.map(function(comp) {
           var players = all.filter(function(p){ return p.competition === comp; });
-          return '<h2 class="section-title">' + esc(divisionLabel(comp)) + ' – Registered Teams</h2>' + renderPlayerList(players);
+          return '<h2 class="section-title">' + esc(divisionLabel(comp)) + ' – ' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(players);
         }).join('');
       } else {
-        listsEl.innerHTML = '<h2 class="section-title">Registered Teams</h2>' + renderPlayerList(all);
+        listsEl.innerHTML = '<h2 class="section-title">' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(all);
       }
     });
 
@@ -1152,8 +1273,8 @@ var CLUBS = [
       if (res && res.status === 'pending') {
         slot.innerHTML =
           '<div class="resume-banner">' +
-            '<p>You have a pending registration – pay the entry fee now to secure your spot.</p>' +
-            '<button class="btn btn-cyan" id="resumePayBtn">Pay now</button>' +
+            '<p>' + uiEdit('detail.resumeText') + '</p>' +
+            '<button class="btn btn-cyan" id="resumePayBtn">' + uiText('detail.resumeBtn') + '</button>' +
           '</div>';
         document.getElementById('resumePayBtn').addEventListener('click', function() {
           var comp = demoAll().find(function(r){ return r.id === pendingId; });
@@ -1172,10 +1293,10 @@ var CLUBS = [
   function showCompSelect(t) {
     var compSelectContent = document.getElementById('compSelectContent');
     compSelectContent.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Which division would you like to register for?</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + uiEdit('compselect.question') + '</div></div>' +
       '<div class="comp-select-grid">' +
         t.competitions.map(function(comp) {
-          return '<button class="comp-card" data-comp="' + esc(comp) + '"><h3>' + esc(divisionLabel(comp)) + '</h3><span>Team registration (2v2)</span></button>';
+          return '<button class="comp-card" data-comp="' + esc(comp) + '"><h3>' + esc(divisionLabel(comp)) + '</h3><span>' + uiText('compselect.teamReg') + '</span></button>';
         }).join('') +
       '</div>';
     compSelectContent.querySelectorAll('.comp-card').forEach(function(card) {
@@ -1228,38 +1349,38 @@ var CLUBS = [
 
   function showRegister(t, competition, query) {
     registerContent.innerHTML =
-      '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + ' · ' + esc(divisionLabel(competition)) + '</span><h1>Team Registration</h1></div>' +
+      '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + ' · ' + esc(divisionLabel(competition)) + '</span><h1>' + uiEdit('register.heading') + '</h1></div>' +
       '<form id="regForm">' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>First Name *</label><input id="rFirstName" required></div>' +
-          '<div class="form-group"><label>Last Name *</label><input id="rLastName" required></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.firstNameLabel') + '</label><input id="rFirstName" required></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.lastNameLabel') + '</label><input id="rLastName" required></div>' +
         '</div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Email *</label><input type="email" id="rEmail" required></div>' +
-          '<div class="form-group"><label>Phone *</label><input type="tel" id="rPhone" required></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.emailLabel') + '</label><input type="email" id="rEmail" required></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.phoneLabel') + '</label><input type="tel" id="rPhone" required></div>' +
         '</div>' +
-        '<div class="form-group"><label>Partner (2nd Player) *</label><input id="rPartner" required placeholder="First and last name"></div>' +
+        '<div class="form-group"><label>' + uiEdit('register.partnerLabel') + '</label><input id="rPartner" required placeholder="' + esc(uiText('register.partnerPlaceholder')) + '"></div>' +
         '<div class="form-group combo-group">' +
-          '<label>Club *</label>' +
-          '<input id="rClubSearch" autocomplete="off" placeholder="Search club …" required>' +
+          '<label>' + uiEdit('register.clubLabel') + '</label>' +
+          '<input id="rClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '" required>' +
           '<div id="clubDropdown" class="combo-dropdown" hidden></div>' +
           '<input type="hidden" id="rClub">' +
         '</div>' +
-        '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>I agree to the processing of my data for tournament registration. *</span></label>' +
-        '<button type="submit" class="btn btn-cyan btn-block">Register</button>' +
+        '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>' + uiEdit('register.consentLabel') + '</span></label>' +
+        '<button type="submit" class="btn btn-cyan btn-block">' + uiText('register.submitBtn') + '</button>' +
         '<p id="regError" class="form-error"></p>' +
       '</form>' +
       '<div id="pendingConfirm" class="confirmation" hidden></div>' +
       '<div id="paymentStep" hidden>' +
         '<div class="pay-summary">' +
-          '<div><span>Tournament</span><strong>' + esc(t.name) + '</strong></div>' +
-          '<div><span>Division</span><strong>' + esc(divisionLabel(competition)) + '</strong></div>' +
-          '<div><span>Team</span><strong id="paySummaryTeam"></strong></div>' +
-          '<div><span>Entry fee</span><strong>€' + (t.fee || 0) + '</strong></div>' +
+          '<div><span>' + uiEdit('register.tournamentLabel') + '</span><strong>' + esc(t.name) + '</strong></div>' +
+          '<div><span>' + uiEdit('register.divisionLabel') + '</span><strong>' + esc(divisionLabel(competition)) + '</strong></div>' +
+          '<div><span>' + uiEdit('register.teamLabel') + '</span><strong id="paySummaryTeam"></strong></div>' +
+          '<div><span>' + uiEdit('register.feeLabel') + '</span><strong>€' + (t.fee || 0) + '</strong></div>' +
         '</div>' +
-        '<button class="btn btn-cyan btn-block" id="payNowBtn">Pay entry fee now</button>' +
-        '<button class="btn-ghost" id="payLaterBtn">I\'ll pay later</button>' +
-        '<p class="pay-note">Secure payment via Stripe. Registration is only officially confirmed once payment is received.</p>' +
+        '<button class="btn btn-cyan btn-block" id="payNowBtn">' + uiText('register.payBtn') + '</button>' +
+        '<button class="btn-ghost" id="payLaterBtn">' + uiText('register.payLaterBtn') + '</button>' +
+        '<p class="pay-note">' + uiEdit('register.payNote') + '</p>' +
       '</div>' +
       '<div id="regConfirm" class="confirmation" hidden></div>';
 
@@ -1281,8 +1402,8 @@ var CLUBS = [
       pc.hidden = false;
       pc.innerHTML =
         '<div class="confirm-icon confirm-pending">✓</div>' +
-        '<h2>Provisional Registration Received</h2>' +
-        '<p>Your team is on the list. To secure your spot, pay the entry fee now.</p>';
+        '<h2>' + uiEdit('register.pendingHeading') + '</h2>' +
+        '<p>' + uiEdit('register.pendingText') + '</p>';
       document.getElementById('paySummaryTeam').textContent = entry.firstName + ' ' + entry.lastName + ' & ' + entry.partner;
       document.getElementById('paymentStep').hidden = false;
     }
@@ -1377,9 +1498,9 @@ var CLUBS = [
       var conf = document.getElementById('regConfirm');
       conf.hidden = false;
       if (status === 'paid') {
-        conf.innerHTML = '<div class="confirm-icon confirm-paid">✓</div><h2>Registration Confirmed!</h2><p>Your team is confirmed to play. See you on the court!</p><button class="btn btn-outline" id="confBack">Back to Tournament</button>';
+        conf.innerHTML = '<div class="confirm-icon confirm-paid">✓</div><h2>' + uiEdit('register.confirmedHeading') + '</h2><p>' + uiEdit('register.confirmedText') + '</p><button class="btn btn-outline" id="confBack">' + uiText('register.backToTournament') + '</button>';
       } else {
-        conf.innerHTML = '<div class="confirm-icon confirm-pending">⏳</div><h2>Payment Still Pending</h2><p>We couldn\'t confirm the payment yet. You can try again from the tournament page.</p><button class="btn btn-outline" id="confBack">Back to Tournament</button>';
+        conf.innerHTML = '<div class="confirm-icon confirm-pending">⏳</div><h2>' + uiEdit('register.paymentPendingHeading') + '</h2><p>' + uiEdit('register.paymentPendingText') + '</p><button class="btn btn-outline" id="confBack">' + uiText('register.backToTournament') + '</button>';
       }
       document.getElementById('confBack').addEventListener('click', function(){ navigate('event/' + t.id); });
     }
