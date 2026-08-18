@@ -163,6 +163,11 @@
   .edit-text-save, .edit-text-cancel { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; }
   .edit-text-save { background:var(--paid); color:#fff; }
   .edit-text-cancel { background:#b3401f; color:#fff; }
+  .sortable-block { position:relative; }
+  .sortable-block.dragging { opacity:0.5; }
+  .sortable-handle { display:none; position:absolute; top:8px; right:8px; z-index:6; width:30px; height:30px; border-radius:50%; border:none; background:var(--cyan); color:var(--pill-text); font-size:15px; align-items:center; justify-content:center; cursor:grab; touch-action:none; }
+  body.admin-edit-mode .sortable-handle { display:flex; }
+  .sortable-placeholder { border:2px dashed var(--cyan); border-radius:var(--radius); background:var(--tint-ink); margin-bottom:24px; }
 
   /* ============ HOME ============ */
   .home-hero { padding:56px 0 36px; }
@@ -941,6 +946,55 @@ var CLUBS = [
     return '<label class="edit-overlay"><span class="edit-btn">✎ Change photo</span><input type="file" accept="image/*" class="edit-file-input" data-edit-image-key="' + esc(key) + '"></label>';
   }
 
+  // Drag-to-reorder for sortable-block groups. Uses Pointer Events so it
+  // works the same with mouse and touch (admins may reorder from a phone).
+  function initSortable(containerId, storageKey) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll(':scope > .sortable-block > .sortable-handle').forEach(function(handle) {
+      handle.addEventListener('pointerdown', function(e) {
+        if (!document.body.classList.contains('admin-edit-mode')) return;
+        e.preventDefault();
+        var dragEl = handle.closest('.sortable-block');
+        var placeholder = document.createElement('div');
+        placeholder.className = 'sortable-placeholder';
+        placeholder.style.height = dragEl.offsetHeight + 'px';
+        dragEl.parentNode.insertBefore(placeholder, dragEl.nextSibling);
+        dragEl.classList.add('dragging');
+        dragEl.style.position = 'relative';
+        dragEl.style.zIndex = '10';
+        try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+
+        function onMove(e2) {
+          var y = e2.clientY;
+          var siblings = Array.prototype.slice.call(container.children).filter(function(el) {
+            return el !== dragEl && el !== placeholder && el.classList.contains('sortable-block');
+          });
+          var target = siblings.filter(function(el) {
+            var r = el.getBoundingClientRect();
+            return y < r.top + r.height / 2;
+          })[0];
+          if (target) container.insertBefore(placeholder, target);
+          else container.appendChild(placeholder);
+        }
+        function onUp(e2) {
+          container.insertBefore(dragEl, placeholder);
+          placeholder.remove();
+          dragEl.classList.remove('dragging');
+          dragEl.style.position = '';
+          dragEl.style.zIndex = '';
+          try { handle.releasePointerCapture(e2.pointerId); } catch (err) {}
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          var order = Array.prototype.slice.call(container.querySelectorAll(':scope > .sortable-block')).map(function(el) { return el.dataset.blockKey; });
+          saveContentField(storageKey, 'blockOrder', JSON.stringify(order));
+        }
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
+    });
+  }
+
   document.addEventListener('click', function(e) {
     var pencil = e.target.closest('.edit-pencil');
     if (pencil) { startTextEdit(pencil.closest('.edit-text-wrap')); return; }
@@ -1211,6 +1265,24 @@ var CLUBS = [
     return '<div class="event-image edit-target">' + inner + editImageOverlayHtml(t.id) + '</div>';
   }
 
+  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'registerActions', 'teams'];
+
+  function blockOrderFor(t) {
+    var order;
+    try { order = t.blockOrder ? JSON.parse(t.blockOrder) : null; } catch (e) { order = null; }
+    if (!Array.isArray(order)) return DEFAULT_BLOCK_ORDER.slice();
+    var valid = order.filter(function(k){ return DEFAULT_BLOCK_ORDER.indexOf(k) !== -1; });
+    DEFAULT_BLOCK_ORDER.forEach(function(k){ if (valid.indexOf(k) === -1) valid.push(k); });
+    return valid;
+  }
+
+  function sortableBlockHtml(key, innerHtml) {
+    return '<div class="sortable-block" data-block-key="' + esc(key) + '">' +
+      '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
+      innerHtml +
+    '</div>';
+  }
+
   function showDetail(t) {
     var infoRows =
       '<div class="detail-info-grid">' +
@@ -1220,18 +1292,17 @@ var CLUBS = [
         '<div class="info-block"><span class="label">' + uiEdit('detail.divisionsLabel') + '</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
       '</div>';
 
-    detailContent.innerHTML =
-      eventImageHtml(t) +
+    var headerHtml =
       '<div class="detail-head">' +
         '<span class="tier mono">LoC ' + t.tier + '</span>' +
         '<h1>' + editTextHtml(t.id, 'name', t.name, t.name, 'tournament name') + '</h1>' +
         '<div class="detail-meta mono">' + editTextHtml(t.id, 'dateLabel', t.dateLabel, t.dateLabel, 'dates') + ' 2026 · ' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
-      '</div>' + infoRows + '<div id="detailBody"></div>';
-
-    var body = document.getElementById('detailBody');
+      '</div>';
 
     if (t.status !== 'upcoming') {
-      body.innerHTML = '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div>';
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div>', teams: '' };
+      detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
+      initSortable('detailBlocks', t.id);
       setView('detail');
       return;
     }
@@ -1240,7 +1311,15 @@ var CLUBS = [
       ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
       : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>';
 
-    body.innerHTML = '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '</div><div id="playerLists"></div>';
+    var blocks = {
+      image: eventImageHtml(t),
+      header: headerHtml,
+      infoGrid: infoRows,
+      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '</div>',
+      teams: '<div id="playerLists"></div>'
+    };
+    detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
+    initSortable('detailBlocks', t.id);
 
     document.getElementById('goRegisterBtn').addEventListener('click', function() {
       if (t.competitions.length > 1) navigate('event/' + t.id + '/compselect');
