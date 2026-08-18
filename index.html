@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
 <style>
   /* ============ THEME TOKENS ============
      Source: footvolleyleagueofchampions.com + playerloc.com
@@ -146,6 +148,16 @@
   .auth-inner h1 { font-size:30px; margin-bottom:24px; text-align:center; }
   .auth-switch { text-align:center; font-size:13.5px; color:var(--text-muted); margin-top:18px; }
   .auth-demo-note { text-align:center; font-size:12px; color:var(--pending-text); background:var(--tint-pending); padding:8px 14px; border-radius:8px; margin-bottom:20px; }
+
+  /* ============ ADMIN EDIT (only visible to admins with Edit Mode on) ============ */
+  #editModeBtn.active { color:var(--cyan); }
+  .edit-target { position:relative; }
+  .edit-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; cursor:pointer; border-radius:inherit; background:rgba(11,13,99,0.72); }
+  body.admin-edit-mode .edit-target .edit-overlay { display:flex; }
+  .edit-btn { background:var(--cyan); color:var(--pill-text); font-size:13px; font-weight:600; padding:9px 18px; border-radius:20px; pointer-events:none; }
+  .edit-file-input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+  .edit-pencil { display:none; background:var(--cyan); color:var(--pill-text); border:none; width:22px; height:22px; border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-left:8px; vertical-align:middle; }
+  body.admin-edit-mode .edit-pencil { display:inline-flex; align-items:center; justify-content:center; }
 
   /* ============ HOME ============ */
   .home-hero { padding:56px 0 36px; }
@@ -287,6 +299,7 @@
       </div>
       <div class="auth-nav" id="authNavLoggedIn" hidden>
         <span class="nav-user" id="navUserName"></span>
+        <button class="nav-link" id="editModeBtn" hidden>Edit Mode: Off</button>
         <button class="nav-link" id="logoutBtn">Log Out</button>
       </div>
       <a class="ig-link" id="igLink" href="#" target="_blank" rel="noopener" aria-label="Instagram">
@@ -301,7 +314,7 @@
   <div id="demoBanner" class="demo-banner" hidden>DEMO MODE – registrations are only stored locally in this browser (no real backend connected)</div>
 
   <section id="view-landing" class="view">
-    <div class="hero-media" id="heroMedia"></div>
+    <div class="hero-media edit-target" id="heroMedia"></div>
     <div class="hero-content">
       <span class="hero-eyebrow mono">Season 2026</span>
       <h1>Europe's Footvolley Elite. One Tour.</h1>
@@ -431,7 +444,10 @@
     // Hero media for the landing page — set one of these to a real video/image
     // URL once you have it; leave both null to show the placeholder pattern.
     HERO_VIDEO_URL: null,
-    HERO_IMAGE_URL: null
+    HERO_IMAGE_URL: null,
+    // Logged-in users whose email is in this list get the on-page editor
+    // (click photos/text to swap them) — everyone else just sees the site.
+    ADMIN_EMAILS: ['PASTE_YOUR_ADMIN_EMAIL@example.com']
   };
   var DEMO_MODE = !CONFIG.API_URL || CONFIG.API_URL.indexOf('PASTE_') !== -1;
   var AUTH_DEMO_MODE = !CONFIG.FIREBASE.apiKey || CONFIG.FIREBASE.apiKey.indexOf('PASTE_') !== -1;
@@ -619,6 +635,8 @@ var CLUBS = [
      ================================================================== */
   var currentUser = null; // { uid, name, email }
   var pendingPath = null; // route to resume after a successful login
+  var isAdmin = false;
+  var editMode = false;
 
   function demoUsers() {
     try { return JSON.parse(localStorage.getItem('loc_demo_users') || '[]'); } catch (e) { return []; }
@@ -695,8 +713,114 @@ var CLUBS = [
   function updateNavAuthUI() {
     document.getElementById('authNavLoggedOut').hidden = !!currentUser;
     document.getElementById('authNavLoggedIn').hidden = !currentUser;
+    isAdmin = !!currentUser && CONFIG.ADMIN_EMAILS.indexOf(currentUser.email) !== -1;
     if (currentUser) document.getElementById('navUserName').textContent = 'Hi, ' + (currentUser.name || currentUser.email);
+    document.getElementById('editModeBtn').hidden = !isAdmin;
+    if (!isAdmin) setEditMode(false);
+    document.body.classList.toggle('is-admin', isAdmin);
   }
+
+  function setEditMode(on) {
+    editMode = on;
+    document.getElementById('editModeBtn').textContent = 'Edit Mode: ' + (on ? 'On' : 'Off');
+    document.getElementById('editModeBtn').classList.toggle('active', on);
+    document.body.classList.toggle('admin-edit-mode', on);
+  }
+
+  /* ==================================================================
+     ADMIN CONTENT (page images/text — real Firestore+Storage or demo)
+     ================================================================== */
+  var contentOverrides = {};
+
+  function loadContentOverrides() {
+    if (AUTH_DEMO_MODE) {
+      try { contentOverrides = JSON.parse(localStorage.getItem('loc_admin_content') || '{}'); } catch (e) { contentOverrides = {}; }
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('content').doc('site').get().then(function(doc) {
+      contentOverrides = doc.exists ? (doc.data() || {}) : {};
+    }).catch(function() { contentOverrides = {}; });
+  }
+
+  function saveContentField(key, field, value) {
+    if (!contentOverrides[key]) contentOverrides[key] = {};
+    contentOverrides[key][field] = value;
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    var update = {};
+    update[key] = contentOverrides[key];
+    return firebase.firestore().collection('content').doc('site').set(update, { merge: true });
+  }
+
+  function fileToDataUrl(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function() { resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function saveContentImage(key, file) {
+    if (AUTH_DEMO_MODE) {
+      return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, 'image', dataUrl); });
+    }
+    var ref = firebase.storage().ref('content/' + key + '/' + Date.now() + '-' + file.name);
+    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+      return saveContentField(key, 'image', url);
+    });
+  }
+
+  function effectiveTournament(t) {
+    var o = contentOverrides[t.id];
+    return o ? Object.assign({}, t, o) : t;
+  }
+
+  function effectiveHero() {
+    var o = contentOverrides.hero || {};
+    return { video: o.video || CONFIG.HERO_VIDEO_URL, image: o.image || CONFIG.HERO_IMAGE_URL };
+  }
+
+  // Small inline editor used for text fields — quick + reliable rather than fancy.
+  function promptEditText(key, field, currentValue, label) {
+    var next = window.prompt('Edit ' + label + ':', currentValue == null ? '' : String(currentValue));
+    if (next === null) return; // cancelled
+    next = next.trim();
+    if (!next) return;
+    saveContentField(key, field, next).then(function() { route(); });
+  }
+
+  function editPencilHtml(key, field, value, label) {
+    return '<button type="button" class="edit-pencil" data-edit-text-key="' + esc(key) + '" data-edit-text-field="' + esc(field) + '" data-edit-text-label="' + esc(label) + '" data-edit-text-value="' + esc(value) + '" title="Edit ' + esc(label) + '">✎</button>';
+  }
+
+  function editImageOverlayHtml(key) {
+    return '<label class="edit-overlay"><span class="edit-btn">✎ Change photo</span><input type="file" accept="image/*" class="edit-file-input" data-edit-image-key="' + esc(key) + '"></label>';
+  }
+
+  document.addEventListener('click', function(e) {
+    var pencil = e.target.closest('.edit-pencil');
+    if (pencil) {
+      promptEditText(pencil.dataset.editTextKey, pencil.dataset.editTextField, pencil.dataset.editTextValue, pencil.dataset.editTextLabel);
+    }
+  });
+
+  document.addEventListener('change', function(e) {
+    var input = e.target.closest('.edit-file-input');
+    if (!input || !input.files || !input.files[0]) return;
+    var key = input.dataset.editImageKey;
+    var label = input.closest('.edit-overlay').querySelector('.edit-btn');
+    var prevText = label.textContent;
+    label.textContent = 'Uploading …';
+    saveContentImage(key, input.files[0]).then(function() {
+      route();
+    }).catch(function() {
+      label.textContent = prevText;
+      window.alert('Upload failed. Please try again.');
+    });
+  });
 
   /* ==================================================================
      ROUTER
@@ -739,6 +863,7 @@ var CLUBS = [
     if (p[0] === 'event' && p[1]) {
       var t = tourById(p[1]);
       if (!t) { navigate(''); return; }
+      t = effectiveTournament(t);
       if (p[2] === 'register') {
         if (!currentUser) { pendingPath = h.parts.join('/') + (Object.keys(h.query).length ? '?' + Object.keys(h.query).map(function(k){ return k + '=' + encodeURIComponent(h.query[k]); }).join('&') : ''); navigate('login'); return; }
         var comp = decodeURIComponent(p[3] || t.competitions[0]);
@@ -766,20 +891,24 @@ var CLUBS = [
      LANDING
      ================================================================== */
   function showLanding() {
+    renderHeroMedia();
     setView('landing');
   }
 
-  (function initHeroMedia() {
+  function renderHeroMedia() {
     var el = document.getElementById('heroMedia');
     if (!el) return;
-    if (CONFIG.HERO_VIDEO_URL) {
-      el.innerHTML = '<video autoplay muted loop playsinline src="' + esc(CONFIG.HERO_VIDEO_URL) + '"></video><div class="hero-overlay"></div>';
-    } else if (CONFIG.HERO_IMAGE_URL) {
-      el.innerHTML = '<img src="' + esc(CONFIG.HERO_IMAGE_URL) + '" alt=""><div class="hero-overlay"></div>';
+    var hero = effectiveHero();
+    var mediaHtml;
+    if (hero.video) {
+      mediaHtml = '<video autoplay muted loop playsinline src="' + esc(hero.video) + '"></video>';
+    } else if (hero.image) {
+      mediaHtml = '<img src="' + esc(hero.image) + '" alt="">';
     } else {
-      el.innerHTML = '<div class="hero-media-placeholder"><span class="hero-ph-text mono">Drop in your hero video or image — set CONFIG.HERO_VIDEO_URL / HERO_IMAGE_URL in index.html</span></div><div class="hero-overlay"></div>';
+      mediaHtml = '<div class="hero-media-placeholder"><span class="hero-ph-text mono">Drop in your hero video or image — set CONFIG.HERO_VIDEO_URL / HERO_IMAGE_URL in index.html</span></div>';
     }
-  })();
+    el.innerHTML = mediaHtml + '<div class="hero-overlay"></div>' + editImageOverlayHtml('hero');
+  }
 
   /* ==================================================================
      LOGIN / REGISTER ACCOUNT
@@ -859,6 +988,11 @@ var CLUBS = [
     authLogout().then(function() { navigate(''); });
   });
 
+  document.getElementById('editModeBtn').addEventListener('click', function() {
+    setEditMode(!editMode);
+    route();
+  });
+
   /* ==================================================================
      HOME
      ================================================================== */
@@ -882,7 +1016,8 @@ var CLUBS = [
 
   function renderGrid(filter) {
     var list = TOURNAMENTS.filter(function(t){ return t.status === filter; })
-      .sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); });
+      .sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); })
+      .map(effectiveTournament);
     grid.innerHTML = list.map(renderCard).join('');
     if (filter === 'upcoming') loadCounts();
   }
@@ -918,16 +1053,18 @@ var CLUBS = [
   }
 
   function eventImageHtml(t) {
-    if (t.image) return '<div class="event-image"><img src="' + esc(t.image) + '" alt="' + esc(t.name) + '"></div>';
-    return '<div class="event-image"><span class="ph-tier mono">LoC ' + t.tier + '</span><span class="ph-tag mono">' + esc(t.city) + ' · ' + t.dateLabel + '</span></div>';
+    var inner = t.image
+      ? '<img src="' + esc(t.image) + '" alt="' + esc(t.name) + '">'
+      : '<span class="ph-tier mono">LoC ' + t.tier + '</span><span class="ph-tag mono">' + esc(t.city) + ' · ' + t.dateLabel + '</span>';
+    return '<div class="event-image edit-target">' + inner + editImageOverlayHtml(t.id) + '</div>';
   }
 
   function showDetail(t) {
     var infoRows =
       '<div class="detail-info-grid">' +
         '<div class="info-block"><span class="label">Format</span><span class="value">2v2</span></div>' +
-        '<div class="info-block"><span class="label">Entry fee</span><span class="value">' + (t.fee ? '€' + t.fee + ' / team' : '–') + '</span></div>' +
-        '<div class="info-block"><span class="label">Registration deadline</span><span class="value">' + (t.deadline || '–') + '</span></div>' +
+        '<div class="info-block"><span class="label">Entry fee</span><span class="value">' + (t.fee ? '€' + t.fee + ' / team' : '–') + editPencilHtml(t.id, 'fee', t.fee || '', 'entry fee') + '</span></div>' +
+        '<div class="info-block"><span class="label">Registration deadline</span><span class="value">' + (t.deadline || '–') + editPencilHtml(t.id, 'deadline', t.deadline || '', 'registration deadline') + '</span></div>' +
         '<div class="info-block"><span class="label">Divisions</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
       '</div>';
 
@@ -935,8 +1072,8 @@ var CLUBS = [
       eventImageHtml(t) +
       '<div class="detail-head">' +
         '<span class="tier mono">LoC ' + t.tier + '</span>' +
-        '<h1>' + esc(t.name) + '</h1>' +
-        '<div class="detail-meta mono">' + t.dateLabel + ' 2026 · ' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
+        '<h1>' + esc(t.name) + editPencilHtml(t.id, 'name', t.name, 'tournament name') + '</h1>' +
+        '<div class="detail-meta mono">' + t.dateLabel + editPencilHtml(t.id, 'dateLabel', t.dateLabel, 'dates') + ' 2026 · ' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
       '</div>' + infoRows + '<div id="detailBody"></div>';
 
     var body = document.getElementById('detailBody');
@@ -1278,8 +1415,10 @@ var CLUBS = [
   if (AUTH_DEMO_MODE) {
     restoreDemoSession();
     updateNavAuthUI();
-    window.addEventListener('hashchange', route);
-    route();
+    loadContentOverrides().then(function() {
+      window.addEventListener('hashchange', route);
+      route();
+    });
   } else {
     var firstAuthCheck = true;
     firebase.auth().onAuthStateChanged(function(user) {
@@ -1287,8 +1426,10 @@ var CLUBS = [
       updateNavAuthUI();
       if (firstAuthCheck) {
         firstAuthCheck = false;
-        window.addEventListener('hashchange', route);
-        route();
+        loadContentOverrides().then(function() {
+          window.addEventListener('hashchange', route);
+          route();
+        });
       }
     });
   }
