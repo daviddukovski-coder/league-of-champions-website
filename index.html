@@ -452,7 +452,7 @@
     HERO_IMAGE_URL: null,
     // Logged-in users whose email is in this list get the on-page editor
     // (click photos/text to swap them) — everyone else just sees the site.
-    ADMIN_EMAILS: ['PASTE_YOUR_ADMIN_EMAIL@example.com']
+    ADMIN_EMAILS: ['daviddukovski@gmail.com']
   };
   var DEMO_MODE = !CONFIG.API_URL || CONFIG.API_URL.indexOf('PASTE_') !== -1;
   var AUTH_DEMO_MODE = !CONFIG.FIREBASE.apiKey || CONFIG.FIREBASE.apiKey.indexOf('PASTE_') !== -1;
@@ -718,7 +718,7 @@ var CLUBS = [
   function updateNavAuthUI() {
     document.getElementById('authNavLoggedOut').hidden = !!currentUser;
     document.getElementById('authNavLoggedIn').hidden = !currentUser;
-    isAdmin = !!currentUser && CONFIG.ADMIN_EMAILS.indexOf(currentUser.email) !== -1;
+    isAdmin = !!currentUser && CONFIG.ADMIN_EMAILS.map(function(e){ return e.toLowerCase(); }).indexOf((currentUser.email || '').toLowerCase()) !== -1;
     if (currentUser) document.getElementById('navUserName').textContent = 'Hi, ' + (currentUser.name || currentUser.email);
     document.getElementById('editModeBtn').hidden = !isAdmin;
     if (!isAdmin) setEditMode(false);
