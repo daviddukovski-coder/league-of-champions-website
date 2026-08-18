@@ -1529,13 +1529,19 @@ var CLUBS = [
       document.getElementById('paymentStep').hidden = false;
     }
 
-    // Resume payment for a previously submitted, still-open registration
+    // Resume payment for a previously submitted, still-open registration.
+    // Hide the blank form immediately (not just once the status check resolves) so
+    // there's no window where a visitor can fill it in again and create a duplicate.
     if (query && query.resume) {
+      document.getElementById('regForm').hidden = true;
       backendStatus(query.resume).then(function(res) {
         if (res && res.status === 'pending') {
           var all = demoAll();
           var found = all.find(function(r){ return r.id === query.resume; });
           showPendingStep(found || { id:query.resume, firstName:'', lastName:'', partner:'' });
+        } else {
+          if (res && res.status === 'paid') localStorage.removeItem('loc_pending_' + t.id);
+          navigate('event/' + t.id);
         }
       });
     }
@@ -1607,6 +1613,7 @@ var CLUBS = [
 
     // Returning from Stripe Checkout (?paid=<id>&session_id=...)
     if (query && query.paid && query.session_id) {
+      document.getElementById('regForm').hidden = true;
       backendConfirmPayment(query.paid, query.session_id).then(function(res) {
         localStorage.removeItem('loc_pending_' + t.id);
         finishConfirmation(res && res.status === 'paid' ? 'paid' : 'pending');
