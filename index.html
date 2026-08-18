@@ -216,6 +216,8 @@
   .player-list { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
   .player-row { background:var(--surface); padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
   .player-club { display:block; font-size:12.5px; color:var(--text-muted); margin-top:2px; }
+  .player-info { display:flex; align-items:center; gap:10px; min-width:0; }
+  .player-info .club-avatar { width:32px; height:32px; }
   .status { font-size:11px; font-weight:600; padding:4px 10px; border-radius:12px; white-space:nowrap; }
   .status-paid { background:var(--tint-paid); color:var(--paid); }
   .status-pending { background:var(--tint-pending); color:var(--pending-text); }
@@ -572,6 +574,10 @@ var CLUBS = [
   }
   function initials(name) {
     return name.split(/\s+/).filter(Boolean).slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+  }
+  function findClub(name) {
+    var n = (name || '').trim().toLowerCase();
+    return CLUBS.find(function(c){ return c.name.toLowerCase() === n; }) || { name: name || '' };
   }
 
   /* ==================================================================
@@ -1268,8 +1274,11 @@ var CLUBS = [
       var statusLabel = p.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
       return (
         '<div class="player-row">' +
-          '<div><strong>' + esc(p.firstName) + ' ' + esc(p.lastName) + '</strong> &amp; ' + esc(p.partner) +
-          '<span class="player-club">' + esc(p.club) + '</span></div>' +
+          '<div class="player-info">' +
+            clubAvatarHtml(findClub(p.club)) +
+            '<div><strong>' + esc(p.firstName) + ' ' + esc(p.lastName) + '</strong> &amp; ' + esc(p.partner) +
+            '<span class="player-club">' + esc(p.club) + '</span></div>' +
+          '</div>' +
           '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
         '</div>'
       );
