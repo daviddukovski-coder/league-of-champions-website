@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>League of Champions Tour</title>
-<meta name="description" content="Tournament overview, info, team registration and ranking for the Footvolley League of Champions Tour.">
+<meta name="description" content="Tournament overview, info and team registration for the Footvolley League of Champions Tour.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -240,21 +240,6 @@
   .confirmation p { color:var(--text-muted); font-size:15px; max-width:380px; margin:0 auto; }
   .confirmation .btn { margin-top:22px; }
 
-  /* ============ RANKING ============ */
-  .ranking-head { padding:44px 0 24px; }
-  .ranking-head h1 { font-size:clamp(26px,4vw,36px); margin-bottom:8px; }
-  .ranking-head p { color:var(--text-muted); font-size:15px; }
-  .demo-tag { display:inline-block; margin-top:10px; font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:11px; color:var(--pending-text); background:var(--tint-pending); padding:4px 10px; border-radius:12px; }
-  .ranking-groups { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; padding-bottom:80px; }
-  .ranking-table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
-  .ranking-table-wrap h3 { padding:16px 18px; border-bottom:1px solid var(--border); font-size:16px; }
-  table.ranking { width:100%; border-collapse:collapse; font-size:13.5px; }
-  table.ranking th { text-align:left; font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:10.5px; letter-spacing:0.6px; text-transform:uppercase; color:var(--text-muted); padding:10px 14px; border-bottom:1px solid var(--border); }
-  table.ranking td { padding:11px 14px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
-  table.ranking tr:last-child td { border-bottom:none; }
-  table.ranking td.rank { color:var(--text-muted); width:32px; }
-  table.ranking td.pts { text-align:right; font-weight:600; color:var(--heading); }
-
   /* ============ IMPRINT ============ */
   .prose { max-width:640px; padding:44px 0 90px; }
   .prose h1 { font-size:clamp(26px,4vw,34px); margin-bottom:24px; }
@@ -294,7 +279,6 @@
     <div class="nav-right">
       <div class="nav-links">
         <button class="nav-link" data-route="tournaments">Tournaments</button>
-        <button class="nav-link" data-route="ranking">Ranking</button>
         <button class="nav-link" data-route="impressum">Imprint</button>
       </div>
       <div class="auth-nav" id="authNavLoggedOut">
@@ -362,12 +346,6 @@
     <div class="container">
       <button class="back-btn" data-back="detail">← Back to Tournament</button>
       <div class="register-inner" id="registerContent"></div>
-    </div>
-  </section>
-
-  <section id="view-ranking" class="view" hidden>
-    <div class="container">
-      <div id="rankingContent"></div>
     </div>
   </section>
 
@@ -635,19 +613,6 @@ var CLUBS = [
     }
     return apiGet('status', { id:id });
   }
-  function backendRanking() {
-    if (DEMO_MODE) {
-      return Promise.resolve({ demo:true, rows: [
-        { competition:'Men', name:'T. Novak', club:'Split Beach Club', points:2140 },
-        { competition:'Men', name:'M. Ferreira', club:'Porto Futevôlei', points:1980 },
-        { competition:'Men', name:'L. Weber', club:'Hamburg Footvolley', points:1755 },
-        { competition:'Women', name:'S. Almeida', club:'Lisboa Futevôlei', points:2050 },
-        { competition:'Women', name:'J. Andersson', club:'Malmö Beach Club', points:1890 },
-        { competition:'Women', name:'C. Moreau', club:'Nice Beach Sports', points:1620 }
-      ]});
-    }
-    return apiGet('ranking', {}).then(function(rows){ return { demo:false, rows: rows.error ? [] : rows }; }).catch(function(){ return { demo:false, rows:[] }; });
-  }
 
   /* ==================================================================
      AUTH (real Firebase Authentication or local demo fallback)
@@ -739,10 +704,10 @@ var CLUBS = [
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var currentFilter = 'upcoming';
 
-  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', impressum:'impressum', login:'login', registeraccount:'register-account' };
+  var VIEW_TO_ROUTE = { home:'tournaments', impressum:'impressum', login:'login', registeraccount:'register-account' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','ranking','impressum','login','registeraccount'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','impressum','login','registeraccount'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -786,8 +751,6 @@ var CLUBS = [
     } else if (p[0] === 'tournaments') {
       renderGrid(currentFilter);
       setView('home');
-    } else if (p[0] === 'ranking') {
-      showRanking();
     } else if (p[0] === 'impressum') {
       showImpressum();
     } else if (p[0] === 'login') {
@@ -1254,38 +1217,6 @@ var CLUBS = [
     }
 
     setView('register');
-  }
-
-  /* ==================================================================
-     RANKING
-     ================================================================== */
-  function showRanking() {
-    var el = document.getElementById('rankingContent');
-    el.innerHTML = '<div class="ranking-head"><h1>Ranking</h1><p>2026 season standings, updated continuously.</p></div><div class="ranking-groups" id="rankingGroups"></div>';
-    backendRanking().then(function(res) {
-      var groupsEl = document.getElementById('rankingGroups');
-      if (!groupsEl) return;
-      if (res.demo) {
-        el.querySelector('.ranking-head').insertAdjacentHTML('beforeend', '<span class="demo-tag mono">Sample data – demo mode</span>');
-      }
-      var comps = ['Men','Women'];
-      var byComp = {};
-      comps.forEach(function(c){ byComp[c] = []; });
-      (res.rows || []).forEach(function(r) { if (byComp[r.competition]) byComp[r.competition].push(r); });
-
-      var html = comps.map(function(comp) {
-        var rows = byComp[comp].sort(function(a,b){ return b.points - a.points; });
-        if (!rows.length) {
-          return '<div class="ranking-table-wrap"><h3>' + divisionLabel(comp) + '</h3><p class="empty-note" style="padding:18px;">Standings will be published after the first tournament.</p></div>';
-        }
-        return '<div class="ranking-table-wrap"><h3>' + divisionLabel(comp) + '</h3><table class="ranking"><thead><tr><th></th><th>Name</th><th>Club</th><th style="text-align:right">Points</th></tr></thead><tbody>' +
-          rows.map(function(r, i) {
-            return '<tr><td class="rank mono">' + (i+1) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.club) + '</td><td class="pts mono">' + r.points + '</td></tr>';
-          }).join('') + '</tbody></table></div>';
-      }).join('');
-      groupsEl.innerHTML = html;
-    });
-    setView('ranking');
   }
 
   /* ==================================================================

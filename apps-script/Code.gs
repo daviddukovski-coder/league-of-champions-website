@@ -10,11 +10,9 @@
  *
  * Required sheet tabs (exact header row spelling matters):
  *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId
- *   "Ranking":       Competition | Name | Club | Points
  */
 
 var REG_SHEET = 'Registrations';
-var RANK_SHEET = 'Ranking';
 
 // Keep in sync with the TOURNAMENTS fee values in index.html.
 // The fee charged is always looked up here server-side — never trust
@@ -29,7 +27,6 @@ function doGet(e) {
   try {
     var action = e.parameter.action;
     if (action === 'list') return jsonOut_(listRegistrations_(e.parameter.tournamentId));
-    if (action === 'ranking') return jsonOut_(getRanking_());
     if (action === 'status') return jsonOut_(getStatus_(e.parameter.id));
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
@@ -124,20 +121,6 @@ function updateRegistration_(id, fields) {
     }
   }
   return false;
-}
-
-/* -------------------- Ranking -------------------- */
-
-function getRanking_() {
-  var sh = getSheet_(RANK_SHEET);
-  var rows = sh.getDataRange().getValues();
-  var header = rows.shift();
-  var idx = indexMap_(header);
-  return rows
-    .filter(function(r) { return r[idx.Name]; })
-    .map(function(r) {
-      return { competition: r[idx.Competition], name: r[idx.Name], club: r[idx.Club], points: Number(r[idx.Points]) || 0 };
-    });
 }
 
 /* -------------------- Stripe -------------------- */
