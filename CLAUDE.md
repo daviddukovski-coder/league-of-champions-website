@@ -24,6 +24,7 @@ Aktuell läuft die Site **im Demo-Modus**, weil zwei Werte noch Platzhalter sind
 
 ## Feature-Stand (aus Git-Historie, neueste zuerst)
 
+- **Auto-Spielplan pro Turnier** (`event/:id/schedule`, lebt im selben Bracket-Doc wie der Live-Bracket, eigenes `schedule`-Feld: Plätze-Anzahl + Liste von Tagen mit Startzeit): Admin trägt Plätze + Tage ein, klickt pro Stage "Add to schedule" – ein Greedy-Scheduler verteilt alle noch nicht eingeplanten Spiele dieser Stage auf die Plätze (niemand doppelt gebucht, Bracket-Spiele warten automatisch, bis ihre Zubringer-Spiele eingeplant sind). Dauer pro Spiel = Summe der Satzpunkte in Minuten (≈1 Min./Punkt), nie gespeichert sondern live berechnet. Es wird nie eine Uhrzeit gespeichert, nur die Reihenfolge pro Platz – jede Zeit ergibt sich aus der Summe der Dauern davor, weshalb Drag&Drop (auch zwischen Plätzen) und manuelle Blöcke ("Fan's Challenge" etc.) automatisch alles danach neu berechnen. Re-Klick auf "Add to schedule" ist sicher (nur neue Spiele werden ergänzt).
 - **Live-Bracket/Ticker pro Turnier** (`event/:id/live`, eigene Firestore-Collection `brackets/{tournamentId}` bzw. `localStorage['loc_bracket_...']` im Demo-Modus, Echtzeit via `onSnapshot`): Team-Roster (aus bezahlten Anmeldungen oder manuell), konfigurierbares Match-Format (Best-of/Satzpunkte, pro Spiel überschreibbar), **Gruppen**-Stage mit automatisch berechneter Tabelle, **Bracket**-Stage (vereint Crossover + K.-o. – jeder Slot in jeder Runde hat eine Quelle: Gruppen-/Swiss-Platzierung per Dropdown, manuelle Zuweisung, Freilos, oder automatisch Sieger der Vorrunde; Auflösung erfolgt dynamisch bei jedem Render, nicht gecacht), **Swiss**-Stage (Paarung nach Rekord-Buckets, entweder `seeded` per festem Seeding – Wiederholungsgegner möglich – oder `random` per explizitem "Auslosen"-Klick; Vorschau vor dem Speichern editierbar). Alles hinter `isAdmin`/`admin-edit-mode` abgesichert (Handler-Ebene, nicht nur CSS).
 - Doppel-Anmeldung für dasselbe Turnier verhindert (`localStorage['loc_registered_' + tournamentId]`), "Paid"-Status heißt jetzt "Confirmed", Vereinslogo bei jedem registrierten Team sichtbar.
 - Security-Fix: Admin-Edit-Aktionen (Text/Bild ändern) prüfen jetzt `isAdmin` direkt im Handler und in den Speicherfunktionen selbst, nicht mehr nur per CSS-Sichtbarkeit der Stift-Icons.
@@ -36,12 +37,14 @@ Aktuell läuft die Site **im Demo-Modus**, weil zwei Werte noch Platzhalter sind
 
 ## Zuletzt in Bearbeitung (laufende Session)
 
-Live-Bracket-Feature (siehe oben) fertig gebaut und in 5 Schritten committet + im Browser verifiziert (Demo-Modus). Kein offener/unstaged Zustand – alles committet.
+Auto-Spielplan-Feature (siehe oben) fertig gebaut und in 4 Schritten committet + im Browser verifiziert (Demo-Modus). Kein offener/unstaged Zustand – alles committet.
+
+**Wiederkehrender Bug-Typ, den es zu vermeiden gilt:** Mehrfach in dieser und der vorherigen Session ist derselbe CSS-Fehler aufgetreten – eine Komponentenklasse deklariert selbst `display:...`, was (bei gleicher Spezifität, aber späterer Position im Stylesheet) die `admin-only`/`admin-only-flex`/`admin-only-inline`-Sichtbarkeitsklasse überstimmt und Admin-Bedienelemente für alle Besucher sichtbar/nutzbar macht. Regel: neue Komponentenklassen, die mit einer `admin-only*`-Markerklasse kombiniert werden, dürfen niemals selbst `display` setzen – das muss immer die Markerklasse übernehmen. Vor jedem Feature-Abschluss den `getComputedStyle(...).display` für alle neuen Admin-Elemente als nicht-eingeloggter Besucher explizit prüfen, nicht nur visuell.
 
 ## Nächste sinnvolle Schritte
 
-1. Echte Apps-Script-Deployment-URL + Firebase-Keys eintragen, um aus dem Demo-Modus rauszukommen (Registrierungen, Accounts, Content-Editor UND Live-Bracket betroffen).
-2. Firestore-Security-Rules für `content/{doc}` UND `brackets/{tournamentId}` setzen (Setup-Guide Punkt 5).
+1. Echte Apps-Script-Deployment-URL + Firebase-Keys eintragen, um aus dem Demo-Modus rauszukommen (Registrierungen, Accounts, Content-Editor, Live-Bracket UND Spielplan betroffen).
+2. Firestore-Security-Rules für `content/{doc}` UND `brackets/{tournamentId}` setzen (Setup-Guide Punkt 5) – deckt auch den Spielplan ab, da er im selben Doc lebt.
 3. Stripe-Testkäufe end-to-end durchspielen (Checkout → `confirmPayment_` → Sheet-Status).
-4. Mobile-Test auf echtem Gerät (Touch-Events für Drag-Reorder, Live-Bracket-Ergebniseingabe courtside).
-5. Live-Bracket mit einem echten Turnier durchspielen (Gruppen → Bracket/Swiss → Finale) und Feedback zur Bedienung courtside einholen.
+4. Mobile-Test auf echtem Gerät (Touch-Events für Drag-Reorder, Live-Bracket-Ergebniseingabe UND Spielplan-Verschieben courtside).
+5. Live-Bracket + Spielplan mit einem echten Turnier durchspielen (Setzliste → Gruppen → Bracket/Swiss → Finale, Spielplan generieren) und Feedback zur Bedienung courtside einholen.
