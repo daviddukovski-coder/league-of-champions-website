@@ -2533,6 +2533,148 @@ var CLUBS = [
     return matchDurationMinutes(found.match, currentBracket.defaultFormat);
   }
 
+  // Finds where a match currently sits in the schedule (any day/court), with its
+  // computed start/end expressed as minutes since THAT day's start.
+  function findScheduledItem(bracket, matchId) {
+    var days = bracket.schedule.days;
+    for (var d = 0; d < days.length; d++) {
+      var day = days[d];
+      for (var c = 0; c < day.courts.length; c++) {
+        var items = day.courts[c];
+        var cum = 0;
+        for (var i = 0; i < items.length; i++) {
+          var dur = scheduleItemDuration(items[i]);
+          if (items[i].type === 'match' && items[i].matchId === matchId) {
+            return { day: day, dayIndex: d, court: c, startMin: cum, endMin: cum + dur };
+          }
+          cum += dur;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Earliest a slot's team could be known/available, in minutes since targetDay's
+  // start. null = not ready yet (its source isn't scheduled anywhere yet). A source
+  // scheduled on a different day is treated as already satisfied (days are sequential).
+  function slotReadyTime(bracket, slot, targetDay) {
+    var src = slot.source;
+    if (!src || src.type === 'manual' || src.type === 'bye') return 0;
+    if (src.type === 'matchWinner') {
+      var found = findScheduledItem(bracket, src.matchId);
+      if (!found) return null;
+      return found.day === targetDay ? found.endMin : 0;
+    }
+    if (src.type === 'rank') {
+      var srcStage = findStage(bracket, src.stageId);
+      if (!srcStage) return 0;
+      var matches = stageAllMatches(srcStage);
+      if (!matches.length) return 0;
+      var maxEnd = 0;
+      for (var i = 0; i < matches.length; i++) {
+        var f = findScheduledItem(bracket, matches[i].id);
+        if (!f) return null;
+        if (f.day === targetDay && f.endMin > maxEnd) maxEnd = f.endMin;
+      }
+      return maxEnd;
+    }
+    return 0;
+  }
+
+  // Collects this stage's matches that aren't on the schedule anywhere yet, each with
+  // its resolved team ids (null if still TBD) and earliest-possible start on targetDay.
+  // Matches whose dependency isn't itself scheduled yet are left out — the admin just
+  // re-clicks "Add to schedule" for this stage once that earlier round is scheduled.
+  function gatherSchedulableMatches(bracket, stage, targetDay) {
+    var out = [];
+    if (stage.type === 'group' || stage.type === 'swiss') {
+      stageAllMatches(stage).forEach(function(m) {
+        if (findScheduledItem(bracket, m.id)) return;
+        out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format });
+      });
+    } else if (stage.type === 'bracket') {
+      stage.rounds.forEach(function(round, ri) {
+        round.matches.forEach(function(m) {
+          if (findScheduledItem(bracket, m.id)) return;
+          var slotA = round.slots[m.slotAIndex], slotB = round.slots[m.slotBIndex];
+          if ((slotA.source && slotA.source.type === 'bye') || (slotB.source && slotB.source.type === 'bye')) return;
+          var readyA = slotReadyTime(bracket, slotA, targetDay);
+          var readyB = slotReadyTime(bracket, slotB, targetDay);
+          if (readyA === null || readyB === null) return;
+          var teamA = resolveSlotTeam(bracket, stage, ri, m.slotAIndex);
+          var teamB = resolveSlotTeam(bracket, stage, ri, m.slotBIndex);
+          out.push({ matchId: m.id, teamAId: teamA, teamBId: teamB, readyTime: Math.max(readyA, readyB), format: m.format });
+        });
+      });
+    }
+    return out;
+  }
+
+  // Greedy list-scheduler: repeatedly place whichever (match, court) pair can start
+  // soonest, respecting court availability, both teams' availability, and each match's
+  // readyTime. Not globally optimal, but deterministic and respects every real
+  // constraint. Returns how many matches it placed.
+  function autoScheduleStageToDay(bracket, stage, day) {
+    var pending = gatherSchedulableMatches(bracket, stage, day);
+    if (!pending.length) return 0;
+
+    var courtNextFree = day.courts.map(function(items) {
+      var cum = 0;
+      items.forEach(function(it) { cum += scheduleItemDuration(it); });
+      return cum;
+    });
+
+    var teamNextFree = {};
+    day.courts.forEach(function(items) {
+      var cum = 0;
+      items.forEach(function(it) {
+        var dur = scheduleItemDuration(it);
+        if (it.type === 'match') {
+          var found = findMatchAnywhere(bracket, it.matchId);
+          if (found) {
+            var teamA, teamB;
+            if (found.round) {
+              var ri = found.stage.rounds.indexOf(found.round);
+              teamA = resolveSlotTeam(bracket, found.stage, ri, found.match.slotAIndex);
+              teamB = resolveSlotTeam(bracket, found.stage, ri, found.match.slotBIndex);
+            } else {
+              teamA = found.match.teamAId; teamB = found.match.teamBId;
+            }
+            var end = cum + dur;
+            if (teamA) teamNextFree[teamA] = Math.max(teamNextFree[teamA] || 0, end);
+            if (teamB) teamNextFree[teamB] = Math.max(teamNextFree[teamB] || 0, end);
+          }
+        }
+        cum += dur;
+      });
+    });
+
+    var placed = 0;
+    while (pending.length) {
+      var best = null;
+      pending.forEach(function(pm) {
+        var duration = matchDurationMinutes({ format: pm.format }, bracket.defaultFormat);
+        for (var c = 0; c < courtNextFree.length; c++) {
+          var start = Math.max(
+            courtNextFree[c],
+            pm.teamAId ? (teamNextFree[pm.teamAId] || 0) : 0,
+            pm.teamBId ? (teamNextFree[pm.teamBId] || 0) : 0,
+            pm.readyTime
+          );
+          if (!best || start < best.start) best = { pm: pm, court: c, start: start, duration: duration };
+        }
+      });
+      if (!best) break;
+      day.courts[best.court].push({ id: genId('sked'), type: 'match', matchId: best.pm.matchId });
+      courtNextFree[best.court] = best.start + best.duration;
+      if (best.pm.teamAId) teamNextFree[best.pm.teamAId] = best.start + best.duration;
+      if (best.pm.teamBId) teamNextFree[best.pm.teamBId] = best.start + best.duration;
+      pending = pending.filter(function(p) { return p !== best.pm; });
+      placed++;
+    }
+    return placed;
+  }
+
   function renderScheduleItem(item, startLabel, duration) {
     if (item.type === 'custom') {
       return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
@@ -2611,6 +2753,21 @@ var CLUBS = [
     '</div>';
   }
 
+  function renderStageScheduleControls(bracket) {
+    if (!bracket.schedule.days.length || !bracket.stages.length) return '';
+    var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
+    var rows = bracket.stages.map(function(stage) {
+      return '<div class="roster-row">' +
+        '<div class="roster-row-teams"><div><strong>' + esc(stage.label) + '</strong><span class="player-club">' + esc(stage.type) + '</span></div></div>' +
+        '<div class="roster-row-actions">' +
+          '<select class="schedule-day-select" data-stage-select="' + esc(stage.id) + '">' + dayOptions + '</select>' +
+          '<button type="button" class="reg-action-btn" data-add-to-schedule="' + esc(stage.id) + '">Add to schedule</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="live-panel admin-only"><h2>Add matches to schedule</h2>' + rows + '</div>';
+  }
+
   function renderSchedule() {
     var t = currentBracketTournament;
     var bracket = currentBracket;
@@ -2618,6 +2775,7 @@ var CLUBS = [
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule</div></div>' +
       renderScheduleSetupPanel(bracket) +
+      renderStageScheduleControls(bracket) +
       bracket.schedule.days.map(renderScheduleDayBlock).join('') +
       (bracket.schedule.days.length ? '' : '<p class="empty-note">No days set up yet.</p>');
     wireScheduleEvents();
@@ -2642,6 +2800,19 @@ var CLUBS = [
       for (var i = 0; i < currentBracket.schedule.courtCount; i++) courts.push([]);
       currentBracket.schedule.days.push({ id: genId('day'), label: label, startTime: start, courts: courts });
       persistBracketSchedule();
+    });
+
+    document.querySelectorAll('[data-add-to-schedule]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.addToSchedule);
+        if (!stage) return;
+        var select = document.querySelector('.schedule-day-select[data-stage-select="' + stage.id + '"]');
+        var day = currentBracket.schedule.days[parseInt(select.value, 10)];
+        if (!day) return;
+        autoScheduleStageToDay(currentBracket, stage, day);
+        persistBracketSchedule();
+      });
     });
   }
 
