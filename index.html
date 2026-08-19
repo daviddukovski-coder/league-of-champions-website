@@ -1355,6 +1355,7 @@ var CLUBS = [
   function navigate(path) { location.hash = '#/' + path; }
 
   function route() {
+    unsubscribeBracketLive();
     var h = parseHash();
     var p = h.parts;
     if (p[0] === 'event' && p[1]) {
@@ -1697,6 +1698,11 @@ var CLUBS = [
   var currentBracket = null;
   var currentBracketTournament = null;
   var pendingSwissPreview = null;
+  var bracketUnsub = null;
+
+  function unsubscribeBracketLive() {
+    if (bracketUnsub) { bracketUnsub(); bracketUnsub = null; }
+  }
 
   function showLive(t) {
     var el = document.getElementById('liveContent');
@@ -1707,6 +1713,14 @@ var CLUBS = [
       currentBracket = bracket;
       currentBracketTournament = t;
       renderLive();
+      if (!AUTH_DEMO_MODE) {
+        // Real-time push so spectators watching this page see results update
+        // without refreshing, as soon as an admin saves a score elsewhere.
+        bracketUnsub = firebase.firestore().collection('brackets').doc(t.id).onSnapshot(function(doc) {
+          currentBracket = Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+          renderLive();
+        });
+      }
     });
   }
 
