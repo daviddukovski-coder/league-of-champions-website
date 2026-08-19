@@ -246,6 +246,25 @@
   .admin-only-inline { display:none; }
   body.admin-edit-mode .admin-only-inline { display:inline-flex; }
   .live-link-row { margin-bottom:28px; }
+  .btn-sm { padding:9px 18px; font-size:12.5px; }
+  .standings-table { width:100%; border-collapse:collapse; margin:10px 0 20px; font-size:13px; }
+  .standings-table th, .standings-table td { padding:9px 8px; text-align:center; border-bottom:1px solid var(--border); }
+  .standings-table th { font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; }
+  .standings-table td:first-child, .standings-table th:first-child { text-align:left; }
+  .standings-team { display:flex; align-items:center; gap:8px; font-weight:600; color:var(--heading); }
+  .standings-team .club-avatar { width:22px; height:22px; }
+  .match-list { display:flex; flex-direction:column; gap:10px; margin:14px 0; }
+  .match-row { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
+  .match-teams-line { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .match-team { display:flex; align-items:center; gap:8px; font-weight:600; font-size:13.5px; }
+  .match-team .club-avatar { width:24px; height:24px; }
+  .match-score-summary { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; white-space:nowrap; }
+  .match-sets { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
+  .match-format-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); }
+  .match-format-row select, .match-format-row input { width:auto; padding:8px; font-size:12.5px; }
+  .set-inputs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .set-input-pair { display:flex; align-items:center; gap:4px; }
+  .set-input-pair input { width:48px; padding:8px 4px; text-align:center; }
 
   /* ============ COMPETITION SELECT ============ */
   .comp-select-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:640px; padding-bottom:60px; }
@@ -880,6 +899,35 @@ var CLUBS = [
 
   function findStage(bracket, stageId) {
     return bracket.stages.find(function(s){ return s.id === stageId; }) || null;
+  }
+
+  // Generic standings computation — used by group tables now, and by Swiss record
+  // buckets / bracket rank-sources later. Sort: match wins desc, set diff desc, point diff desc.
+  function computeStandings(bracket, teamIds, matches) {
+    var stats = {};
+    teamIds.forEach(function(id) { stats[id] = { teamId: id, mp: 0, w: 0, l: 0, setsWon: 0, setsLost: 0, pointsWon: 0, pointsLost: 0 }; });
+    matches.forEach(function(m) {
+      if (!stats[m.teamAId] || !stats[m.teamBId]) return;
+      var winner = matchWinner(m, bracket.defaultFormat);
+      if (!winner) return;
+      stats[m.teamAId].mp++; stats[m.teamBId].mp++;
+      (m.sets || []).forEach(function(s) {
+        stats[m.teamAId].pointsWon += s[0]; stats[m.teamAId].pointsLost += s[1];
+        stats[m.teamBId].pointsWon += s[1]; stats[m.teamBId].pointsLost += s[0];
+        if (s[0] > s[1]) { stats[m.teamAId].setsWon++; stats[m.teamBId].setsLost++; }
+        else if (s[1] > s[0]) { stats[m.teamBId].setsWon++; stats[m.teamAId].setsLost++; }
+      });
+      if (winner === m.teamAId) { stats[m.teamAId].w++; stats[m.teamBId].l++; }
+      else { stats[m.teamBId].w++; stats[m.teamAId].l++; }
+    });
+    var list = teamIds.map(function(id) { return stats[id]; });
+    list.sort(function(a, b) {
+      if (b.w !== a.w) return b.w - a.w;
+      var adiff = a.setsWon - a.setsLost, bdiff = b.setsWon - b.setsLost;
+      if (bdiff !== adiff) return bdiff - adiff;
+      return (b.pointsWon - b.pointsLost) - (a.pointsWon - a.pointsLost);
+    });
+    return list;
   }
 
   /* ==================================================================
@@ -1589,14 +1637,95 @@ var CLUBS = [
     var swissInfo = stage.type === 'swiss'
       ? '<p class="empty-note">' + stage.config.winsToQualify + ' wins to qualify · ' + stage.config.lossesToEliminate + ' losses to eliminate · ' + (stage.config.pairingMode === 'random' ? 'live draw' : 'seeded') + '</p>'
       : '';
+    var body = stage.type === 'group'
+      ? renderGroupStageBody(stage)
+      : '<p class="empty-note">Match list coming in a later build step.</p>';
     return '<div class="stage-card" data-stage-id="' + esc(stage.id) + '">' +
       '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
         '<button type="button" class="icon-btn admin-only-flex" data-remove-stage="' + esc(stage.id) + '" title="Remove stage">✕</button>' +
       '</div>' +
       swissInfo +
       teamChecklist +
-      '<p class="empty-note">Match list coming in the next build step.</p>' +
+      body +
     '</div>';
+  }
+
+  function teamNameHtml(teamId) {
+    var team = findBracketTeam(currentBracket, teamId);
+    if (!team) return '<span class="match-team">TBD</span>';
+    return '<span class="match-team">' + clubAvatarHtml(findClub(team.club)) + esc(team.name) + '</span>';
+  }
+
+  function renderStandingsTable(stage) {
+    var standings = computeStandings(currentBracket, stage.teamIds, stage.matches);
+    if (!standings.length) return '';
+    return '<table class="standings-table"><thead><tr>' +
+      '<th>Team</th><th>MP</th><th>W</th><th>L</th><th>Sets</th><th>Points</th>' +
+      '</tr></thead><tbody>' +
+      standings.map(function(s) {
+        var team = findBracketTeam(currentBracket, s.teamId);
+        return '<tr><td><span class="standings-team">' + (team ? clubAvatarHtml(findClub(team.club)) : '') + esc(team ? team.name : '?') + '</span></td>' +
+          '<td>' + s.mp + '</td><td>' + s.w + '</td><td>' + s.l + '</td>' +
+          '<td>' + s.setsWon + '–' + s.setsLost + '</td>' +
+          '<td>' + s.pointsWon + '–' + s.pointsLost + '</td></tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  function formatSetsSummary(match) {
+    if (!match.sets || !match.sets.length) return 'vs';
+    return match.sets.map(function(s){ return s[0] + '–' + s[1]; }).join(', ');
+  }
+
+  function renderMatchRow(match) {
+    var fmt = match.format || currentBracket.defaultFormat;
+    var winner = matchWinner(match, currentBracket.defaultFormat);
+    var status = winner ? 'Final' : 'Scheduled';
+    var statusClass = winner ? 'status-paid' : 'status-pending';
+    var sets = match.sets || [];
+    var setSlots = [0, 1, 2, 3, 4].map(function(i) {
+      var s = sets[i] || ['', ''];
+      var hiddenAttr = i >= fmt.bestOf ? ' hidden' : '';
+      return '<div class="set-input-pair" data-set-slot="' + i + '"' + hiddenAttr + '>' +
+        '<input type="number" class="set-a" value="' + esc(s[0]) + '">' +
+        '<span>:</span>' +
+        '<input type="number" class="set-b" value="' + esc(s[1]) + '">' +
+      '</div>';
+    }).join('');
+    return '<div class="match-row" data-match-id="' + esc(match.id) + '">' +
+      '<div class="match-teams-line">' +
+        teamNameHtml(match.teamAId) +
+        '<span class="match-score-summary">' + esc(formatSetsSummary(match)) + '</span>' +
+        teamNameHtml(match.teamBId) +
+        '<span class="status ' + statusClass + '">' + status + '</span>' +
+        '<button type="button" class="icon-btn admin-only-flex" data-remove-match="' + esc(match.id) + '" title="Remove match">✕</button>' +
+      '</div>' +
+      '<div class="match-sets admin-only-flex">' +
+        '<div class="match-format-row">Best of ' +
+          '<select class="match-bestof">' + [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
+          ' — points <input class="match-setpoints" value="' + esc(fmt.setPoints.join(',')) + '" size="8">' +
+        '</div>' +
+        '<div class="set-inputs">' + setSlots + '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-save-match="' + esc(match.id) + '">Save</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderGroupStageBody(stage) {
+    var teamOptions = stage.teamIds.map(function(id) {
+      var team = findBracketTeam(currentBracket, id);
+      return team ? '<option value="' + esc(id) + '">' + esc(team.name) + '</option>' : '';
+    }).join('');
+    return renderStandingsTable(stage) +
+      '<div class="match-list">' + stage.matches.map(renderMatchRow).join('') + '</div>' +
+      (stage.matches.length ? '' : '<p class="empty-note">No matches yet.</p>') +
+      '<div class="admin-only">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Team A</label><select class="new-match-a">' + teamOptions + '</select></div>' +
+          '<div class="form-group"><label>Team B</label><select class="new-match-b">' + teamOptions + '</select></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-add-match="' + esc(stage.id) + '">+ Add match</button>' +
+      '</div>';
   }
 
   function renderAddStagePanel() {
@@ -1741,6 +1870,69 @@ var CLUBS = [
       }
       currentBracket.stages.push(stage);
       persistBracket();
+    });
+
+    document.querySelectorAll('[data-add-match]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.addMatch);
+        if (!stage) return;
+        var card = btn.closest('.stage-card');
+        var teamA = card.querySelector('.new-match-a').value;
+        var teamB = card.querySelector('.new-match-b').value;
+        if (!teamA || !teamB || teamA === teamB) return;
+        stage.matches.push({
+          id: genId('match'),
+          teamAId: teamA,
+          teamBId: teamB,
+          format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
+          sets: []
+        });
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-save-match]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var matchId = btn.dataset.saveMatch;
+        var row = btn.closest('.match-row');
+        var stage = currentBracket.stages.find(function(s) { return s.matches && s.matches.some(function(m) { return m.id === matchId; }); });
+        if (!stage) return;
+        var match = stage.matches.find(function(m) { return m.id === matchId; });
+        if (!match) return;
+        var bestOf = parseInt(row.querySelector('.match-bestof').value, 10) || 3;
+        var setPoints = row.querySelector('.match-setpoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
+        var sets = [];
+        row.querySelectorAll('.set-input-pair').forEach(function(pair) {
+          var a = pair.querySelector('.set-a').value.trim();
+          var b = pair.querySelector('.set-b').value.trim();
+          if (a !== '' && b !== '') sets.push([parseInt(a, 10), parseInt(b, 10)]);
+        });
+        match.format = { bestOf: bestOf, setPoints: setPoints.length ? setPoints : [21] };
+        match.sets = sets;
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-remove-match]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var matchId = btn.dataset.removeMatch;
+        currentBracket.stages.forEach(function(s) {
+          if (s.matches) s.matches = s.matches.filter(function(m) { return m.id !== matchId; });
+        });
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('.match-bestof').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var n = parseInt(sel.value, 10);
+        sel.closest('.match-row').querySelectorAll('.set-input-pair').forEach(function(pair) {
+          pair.hidden = parseInt(pair.dataset.setSlot, 10) >= n;
+        });
+      });
     });
   }
 
