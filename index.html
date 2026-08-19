@@ -283,6 +283,17 @@
   .slot-editor select, .slot-editor input { width:auto; padding:7px 8px; font-size:12px; }
   .slot-auto-note { font-size:11.5px; color:var(--text-muted); width:100%; }
 
+  /* Schedule */
+  .schedule-scroll { display:flex; gap:20px; overflow-x:auto; padding-bottom:12px; margin:14px 0; }
+  .schedule-court-col { flex:0 0 220px; display:flex; flex-direction:column; }
+  .schedule-court-title { flex-shrink:0; font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; margin-bottom:14px; }
+  .schedule-court-items { display:flex; flex-direction:column; gap:8px; }
+  .schedule-item { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; display:flex; gap:10px; align-items:flex-start; }
+  .schedule-item-custom { background:rgba(0,242,255,0.06); border-color:var(--cyan-ink); }
+  .schedule-item-time { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; flex-shrink:0; width:44px; }
+  .schedule-item-body { display:flex; flex-direction:column; gap:2px; font-size:13px; flex:1; min-width:0; }
+  .schedule-item-duration { font-size:11px; color:var(--text-muted); }
+
   /* ============ COMPETITION SELECT ============ */
   .comp-select-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:640px; padding-bottom:60px; }
   .comp-card { text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; display:flex; flex-direction:column; gap:8px; transition:transform .15s, box-shadow .15s, border-color .15s; }
@@ -433,6 +444,13 @@
     <div class="container">
       <button class="back-btn" data-back="detail">← Back to Tournament</button>
       <div id="liveContent"></div>
+    </div>
+  </section>
+
+  <section id="view-schedule" class="view" hidden>
+    <div class="container">
+      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <div id="scheduleContent"></div>
     </div>
   </section>
 
@@ -890,7 +908,7 @@ var CLUBS = [
   function genId(prefix) { return prefix + '-' + Date.now().toString(36) + rand(); }
 
   function emptyBracket() {
-    return { teams: [], defaultFormat: { bestOf: 3, setPoints: [21, 21, 15] }, stages: [] };
+    return { teams: [], defaultFormat: { bestOf: 3, setPoints: [21, 21, 15] }, stages: [], schedule: { courtCount: 4, days: [] } };
   }
 
   function loadBracket(tournamentId) {
@@ -1359,7 +1377,7 @@ var CLUBS = [
   var VIEW_TO_ROUTE = { home:'tournaments', impressum:'impressum', login:'login', registeraccount:'register-account' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','impressum','login','registeraccount'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','impressum','login','registeraccount'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -1402,6 +1420,8 @@ var CLUBS = [
         showCompSelect(t);
       } else if (p[2] === 'live') {
         showLive(t);
+      } else if (p[2] === 'schedule') {
+        showSchedule(t);
       } else {
         showDetail(t);
       }
@@ -2466,6 +2486,162 @@ var CLUBS = [
         pendingSwissPreview = null;
         persistBracket();
       });
+    });
+  }
+
+  /* ==================================================================
+     SCHEDULE
+     ================================================================== */
+  function showSchedule(t) {
+    var el = document.getElementById('scheduleContent');
+    el.innerHTML = '<p class="empty-note">Loading …</p>';
+    setView('schedule');
+    loadBracket(t.id).then(function(bracket) {
+      currentBracket = bracket;
+      currentBracketTournament = t;
+      renderSchedule();
+      if (!AUTH_DEMO_MODE) {
+        bracketUnsub = firebase.firestore().collection('brackets').doc(t.id).onSnapshot(function(doc) {
+          currentBracket = Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+          renderSchedule();
+        });
+      }
+    });
+  }
+
+  function persistBracketSchedule() {
+    return saveBracket(currentBracketTournament.id, currentBracket).then(renderSchedule);
+  }
+
+  function matchDurationMinutes(match, defaultFormat) {
+    var fmt = match.format || defaultFormat;
+    return fmt.setPoints.reduce(function(sum, p) { return sum + p; }, 0);
+  }
+
+  function addMinutesToTime(hhmm, minutesToAdd) {
+    var parts = hhmm.split(':');
+    var total = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10) + minutesToAdd;
+    total = ((total % 1440) + 1440) % 1440;
+    var h = Math.floor(total / 60), m = total % 60;
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+
+  function scheduleItemDuration(item) {
+    if (item.type === 'custom') return item.durationMin || 0;
+    var found = findMatchAnywhere(currentBracket, item.matchId);
+    if (!found) return 0;
+    return matchDurationMinutes(found.match, currentBracket.defaultFormat);
+  }
+
+  function renderScheduleItem(item, startLabel, duration) {
+    if (item.type === 'custom') {
+      return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
+        '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
+        '<div class="schedule-item-body"><strong>' + esc(item.label) + '</strong><span class="schedule-item-duration">' + duration + ' min</span></div>' +
+      '</div>';
+    }
+    var found = findMatchAnywhere(currentBracket, item.matchId);
+    if (!found) {
+      return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
+        '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
+        '<div class="schedule-item-body"><em>Match removed</em></div>' +
+      '</div>';
+    }
+    var teamAHtml, teamBHtml;
+    if (found.round) {
+      var ri = found.stage.rounds.indexOf(found.round);
+      var teamA = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotAIndex);
+      var teamB = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotBIndex);
+      teamAHtml = teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotAIndex)) + '</span>';
+      teamBHtml = teamB ? teamNameHtml(teamB) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotBIndex)) + '</span>';
+    } else {
+      teamAHtml = teamNameHtml(found.match.teamAId);
+      teamBHtml = teamNameHtml(found.match.teamBId);
+    }
+    return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
+      '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
+      '<div class="schedule-item-body">' +
+        '<div class="match-teams-line">' + teamAHtml + '<span class="match-score-summary">vs</span>' + teamBHtml + '</div>' +
+        '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderScheduleDayBlock(day) {
+    var cols = [];
+    for (var i = 0; i < currentBracket.schedule.courtCount; i++) {
+      var items = day.courts[i] || [];
+      var cumMinutes = 0;
+      var itemsHtml = items.map(function(item) {
+        var startLabel = addMinutesToTime(day.startTime, cumMinutes);
+        var duration = scheduleItemDuration(item);
+        var html = renderScheduleItem(item, startLabel, duration);
+        cumMinutes += duration;
+        return html;
+      }).join('');
+      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">Court ' + (i + 1) + '</div><div class="schedule-court-items">' + (itemsHtml || '<p class="empty-note">No matches yet.</p>') + '</div></div>');
+    }
+    return '<div class="live-panel"><h2>' + esc(day.label) + ' · starts ' + esc(day.startTime) + '</h2>' +
+      '<div class="schedule-scroll">' + cols.join('') + '</div>' +
+    '</div>';
+  }
+
+  function renderScheduleSetupPanel(bracket) {
+    var dayList = bracket.schedule.days.map(function(d) {
+      return '<p class="empty-note" style="padding:2px 0;">' + esc(d.label) + ' — starts ' + esc(d.startTime) + '</p>';
+    }).join('');
+    return '<div class="live-panel">' +
+      '<h2>Schedule Setup</h2>' +
+      '<p>' + bracket.schedule.courtCount + ' courts</p>' +
+      '<div class="admin-only">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Number of courts</label><input type="number" id="courtCountInput" min="1" value="' + bracket.schedule.courtCount + '"></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="saveCourtCountBtn">Save court count</button>' +
+      '</div>' +
+      '<h3>Days</h3>' +
+      dayList +
+      '<div class="admin-only">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Day label</label><input id="newDayLabel" placeholder="e.g. Saturday, Aug 22"></div>' +
+          '<div class="form-group"><label>Start time</label><input type="time" id="newDayStart" value="09:00"></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-cyan btn-sm" id="addDayBtn">+ Add day</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderSchedule() {
+    var t = currentBracketTournament;
+    var bracket = currentBracket;
+    var el = document.getElementById('scheduleContent');
+    el.innerHTML =
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule</div></div>' +
+      renderScheduleSetupPanel(bracket) +
+      bracket.schedule.days.map(renderScheduleDayBlock).join('') +
+      (bracket.schedule.days.length ? '' : '<p class="empty-note">No days set up yet.</p>');
+    wireScheduleEvents();
+  }
+
+  function wireScheduleEvents() {
+    var saveCourtCountBtn = document.getElementById('saveCourtCountBtn');
+    if (saveCourtCountBtn) saveCourtCountBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var n = parseInt(document.getElementById('courtCountInput').value, 10) || 1;
+      currentBracket.schedule.courtCount = Math.max(1, n);
+      persistBracketSchedule();
+    });
+
+    var addDayBtn = document.getElementById('addDayBtn');
+    if (addDayBtn) addDayBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var label = document.getElementById('newDayLabel').value.trim();
+      var start = document.getElementById('newDayStart').value || '09:00';
+      if (!label) return;
+      var courts = [];
+      for (var i = 0; i < currentBracket.schedule.courtCount; i++) courts.push([]);
+      currentBracket.schedule.days.push({ id: genId('day'), label: label, startTime: start, courts: courts });
+      persistBracketSchedule();
     });
   }
 
