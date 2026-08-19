@@ -259,7 +259,8 @@
   .match-team { display:flex; align-items:center; gap:8px; font-weight:600; font-size:13.5px; }
   .match-team .club-avatar { width:24px; height:24px; }
   .match-score-summary { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; white-space:nowrap; }
-  .match-sets { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
+  .match-sets { flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
+  .match-format-label { font-size:11px; color:var(--text-muted); white-space:nowrap; }
   .match-format-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); }
   .match-format-row select, .match-format-row input { width:auto; padding:8px; font-size:12.5px; }
   .set-inputs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
@@ -1866,6 +1867,7 @@ var CLUBS = [
         '<span class="match-score-summary">' + esc(formatSetsSummary(match)) + '</span>' +
         teamNameHtml(match.teamBId) +
         '<span class="status ' + statusClass + '">' + status + '</span>' +
+        '<span class="match-format-label">Best of ' + fmt.bestOf + ' · ' + esc(fmt.setPoints.join('/')) + '</span>' +
         (opts.allowRemove === false ? '' : '<button type="button" class="icon-btn admin-only-flex" data-remove-match="' + esc(match.id) + '" title="Remove match">✕</button>') +
       '</div>' +
       '<div class="match-sets admin-only-flex">' +
