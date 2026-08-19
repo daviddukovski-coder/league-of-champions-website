@@ -1680,7 +1680,7 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row"><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a></div>', teams: '' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row"><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a> <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a></div>', teams: '' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       setView('detail');
@@ -1698,7 +1698,7 @@ var CLUBS = [
       image: eventImageHtml(t),
       header: headerHtml,
       infoGrid: infoRows,
-      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '<a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a></div>',
+      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '<a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a></div>',
       teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
@@ -1825,7 +1825,7 @@ var CLUBS = [
     var bracket = currentBracket;
     var el = document.getElementById('liveContent');
     el.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Live Bracket</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Live Bracket · <a href="#/event/' + esc(t.id) + '/schedule">View Schedule →</a></div></div>' +
       renderRosterPanel(bracket) +
       renderFormatPanel(bracket.defaultFormat) +
       '<h2 class="section-title">Stages</h2>' +
@@ -2679,8 +2679,9 @@ var CLUBS = [
     return placed;
   }
 
-  function scheduleHandleHtml() {
-    return '<button type="button" class="schedule-item-handle admin-only-flex" title="Drag to move">⠿</button>';
+  function scheduleHandleHtml(itemId) {
+    return '<button type="button" class="icon-btn admin-only-flex" data-remove-schedule-item="' + esc(itemId) + '" title="Remove from schedule">✕</button>' +
+      '<button type="button" class="schedule-item-handle admin-only-flex" title="Drag to move">⠿</button>';
   }
 
   function renderScheduleItem(item, startLabel, duration) {
@@ -2688,7 +2689,7 @@ var CLUBS = [
       return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><strong>' + esc(item.label) + '</strong><span class="schedule-item-duration">' + duration + ' min</span></div>' +
-        scheduleHandleHtml() +
+        scheduleHandleHtml(item.id) +
       '</div>';
     }
     var found = findMatchAnywhere(currentBracket, item.matchId);
@@ -2696,7 +2697,7 @@ var CLUBS = [
       return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><em>Match removed</em></div>' +
-        scheduleHandleHtml() +
+        scheduleHandleHtml(item.id) +
       '</div>';
     }
     var teamAHtml, teamBHtml;
@@ -2716,7 +2717,7 @@ var CLUBS = [
         '<div class="match-teams-line">' + teamAHtml + '<span class="match-score-summary">vs</span>' + teamBHtml + '</div>' +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
       '</div>' +
-      scheduleHandleHtml() +
+      scheduleHandleHtml(item.id) +
     '</div>';
   }
 
@@ -2742,7 +2743,18 @@ var CLUBS = [
         '</div>' +
       '</div>');
     }
-    return '<div class="live-panel" data-day-id="' + esc(day.id) + '"><h2>' + esc(day.label) + ' · starts ' + esc(day.startTime) + '</h2>' +
+    return '<div class="live-panel" data-day-id="' + esc(day.id) + '">' +
+      '<div class="stage-card-head">' +
+        '<h2>' + esc(day.label) + ' · starts ' + esc(day.startTime) + '</h2>' +
+        '<button type="button" class="icon-btn admin-only-flex" data-remove-day="' + esc(day.id) + '" title="Remove day">✕</button>' +
+      '</div>' +
+      '<div class="admin-only">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Label</label><input class="edit-day-label" value="' + esc(day.label) + '"></div>' +
+          '<div class="form-group"><label>Start time</label><input type="time" class="edit-day-start" value="' + esc(day.startTime) + '"></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-save-day="' + esc(day.id) + '">Save day</button>' +
+      '</div>' +
       '<div class="schedule-scroll">' + cols.join('') + '</div>' +
     '</div>';
   }
@@ -2869,7 +2881,7 @@ var CLUBS = [
     var bracket = currentBracket;
     var el = document.getElementById('scheduleContent');
     el.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule · <a href="#/event/' + esc(t.id) + '/live">View Live Bracket →</a></div></div>' +
       renderScheduleSetupPanel(bracket) +
       renderStageScheduleControls(bracket) +
       bracket.schedule.days.map(renderScheduleDayBlock).join('') +
@@ -2925,6 +2937,53 @@ var CLUBS = [
         if (!label) return;
         day.courts[courtIndex].push({ id: genId('sked'), type: 'custom', label: label, durationMin: duration });
         persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-remove-schedule-item]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var itemId = btn.dataset.removeScheduleItem;
+        currentBracket.schedule.days.forEach(function(day) {
+          day.courts = day.courts.map(function(court) {
+            return court.filter(function(it) { return it.id !== itemId; });
+          });
+        });
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-save-day]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var day = currentBracket.schedule.days.filter(function(d) { return d.id === btn.dataset.saveDay; })[0];
+        if (!day) return;
+        var panel = btn.closest('.admin-only');
+        var label = panel.querySelector('.edit-day-label').value.trim();
+        var start = panel.querySelector('.edit-day-start').value;
+        if (label) day.label = label;
+        if (start) day.startTime = start;
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-remove-day]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var dayId = btn.dataset.removeDay;
+        var head = btn.closest('.stage-card-head');
+        head.innerHTML =
+          '<span class="confirm-delete-text">Remove this day and everything scheduled on it?</span>' +
+          '<button type="button" class="reg-action-btn reg-action-danger confirm-delete-yes">Yes, remove</button>' +
+          '<button type="button" class="reg-action-btn confirm-delete-cancel">Cancel</button>';
+        head.querySelector('.confirm-delete-yes').addEventListener('click', function() {
+          if (!isAdmin) return;
+          currentBracket.schedule.days = currentBracket.schedule.days.filter(function(d) { return d.id !== dayId; });
+          persistBracketSchedule();
+        });
+        head.querySelector('.confirm-delete-cancel').addEventListener('click', function() {
+          renderSchedule();
+        });
       });
     });
   }
