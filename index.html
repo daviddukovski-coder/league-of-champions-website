@@ -266,9 +266,10 @@
   .set-inputs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
   .set-input-pair { display:flex; align-items:center; gap:4px; }
   .set-input-pair input { width:48px; padding:8px 4px; text-align:center; }
-  .bracket-scroll { display:flex; gap:20px; overflow-x:auto; padding-bottom:12px; margin:14px 0; }
-  .bracket-round-col { flex:0 0 250px; display:flex; flex-direction:column; gap:14px; }
-  .bracket-round-title { font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; }
+  .bracket-scroll { display:flex; align-items:stretch; gap:20px; overflow-x:auto; padding-bottom:12px; margin:14px 0; }
+  .bracket-round-col { flex:0 0 250px; display:flex; flex-direction:column; }
+  .bracket-round-title { flex-shrink:0; font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; margin-bottom:14px; }
+  .bracket-round-matches { flex:1; display:flex; flex-direction:column; justify-content:space-around; gap:14px; }
   .bracket-slot-block { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; }
   .bracket-slot-block .match-row { background:none; border:none; padding:0; }
   .match-team.tbd { color:var(--text-muted); font-weight:500; font-style:italic; font-size:13.5px; }
@@ -1967,7 +1968,7 @@ var CLUBS = [
   function renderBracketStageBody(stage) {
     var cols = stage.rounds.map(function(round, ri) {
       var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
-      return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div>' + matchesHtml + '</div>';
+      return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div><div class="bracket-round-matches">' + matchesHtml + '</div></div>';
     }).join('');
     return (stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '<p class="empty-note">No rounds yet.</p>') +
       renderAddRoundPanel(stage);
