@@ -293,6 +293,10 @@
   .schedule-item-time { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; flex-shrink:0; width:44px; }
   .schedule-item-body { display:flex; flex-direction:column; gap:2px; font-size:13px; flex:1; min-width:0; }
   .schedule-item-duration { font-size:11px; color:var(--text-muted); }
+  .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
+  .schedule-add-block { gap:6px; align-items:center; margin-top:8px; }
+  .schedule-add-block input { width:auto; padding:7px 8px; font-size:12px; }
+  .schedule-add-block .new-block-label { flex:1; min-width:0; }
 
   /* ============ COMPETITION SELECT ============ */
   .comp-select-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:640px; padding-bottom:60px; }
@@ -2675,11 +2679,16 @@ var CLUBS = [
     return placed;
   }
 
+  function scheduleHandleHtml() {
+    return '<button type="button" class="schedule-item-handle admin-only-flex" title="Drag to move">⠿</button>';
+  }
+
   function renderScheduleItem(item, startLabel, duration) {
     if (item.type === 'custom') {
       return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><strong>' + esc(item.label) + '</strong><span class="schedule-item-duration">' + duration + ' min</span></div>' +
+        scheduleHandleHtml() +
       '</div>';
     }
     var found = findMatchAnywhere(currentBracket, item.matchId);
@@ -2687,6 +2696,7 @@ var CLUBS = [
       return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><em>Match removed</em></div>' +
+        scheduleHandleHtml() +
       '</div>';
     }
     var teamAHtml, teamBHtml;
@@ -2706,6 +2716,7 @@ var CLUBS = [
         '<div class="match-teams-line">' + teamAHtml + '<span class="match-score-summary">vs</span>' + teamBHtml + '</div>' +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
       '</div>' +
+      scheduleHandleHtml() +
     '</div>';
   }
 
@@ -2721,9 +2732,17 @@ var CLUBS = [
         cumMinutes += duration;
         return html;
       }).join('');
-      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">Court ' + (i + 1) + '</div><div class="schedule-court-items">' + (itemsHtml || '<p class="empty-note">No matches yet.</p>') + '</div></div>');
+      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">Court ' + (i + 1) + '</div>' +
+        '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
+        (itemsHtml ? '' : '<p class="empty-note">No matches yet.</p>') +
+        '<div class="admin-only-flex schedule-add-block">' +
+          '<input class="new-block-label" placeholder="e.g. Fan\'s Challenge">' +
+          '<input type="number" class="new-block-duration" placeholder="min" min="1" value="10">' +
+          '<button type="button" class="reg-action-btn" data-add-block="' + esc(day.id) + ':' + i + '">+ Add</button>' +
+        '</div>' +
+      '</div>');
     }
-    return '<div class="live-panel"><h2>' + esc(day.label) + ' · starts ' + esc(day.startTime) + '</h2>' +
+    return '<div class="live-panel" data-day-id="' + esc(day.id) + '"><h2>' + esc(day.label) + ' · starts ' + esc(day.startTime) + '</h2>' +
       '<div class="schedule-scroll">' + cols.join('') + '</div>' +
     '</div>';
   }
@@ -2768,6 +2787,83 @@ var CLUBS = [
     return '<div class="live-panel admin-only"><h2>Add matches to schedule</h2>' + rows + '</div>';
   }
 
+  // Rebuilds one day's court item-lists from whatever order the DOM currently shows
+  // (after a drag completes) — items may have moved between courts, not just within
+  // one. Looked up by id across the day's existing courts since we only store order.
+  function rebuildScheduleFromDOM(dayBlock, day) {
+    var containers = dayBlock.querySelectorAll('.schedule-court-items');
+    var newCourts = Array.prototype.map.call(containers, function(container) {
+      return Array.prototype.slice.call(container.querySelectorAll(':scope > .schedule-item')).map(function(el) {
+        var itemId = el.dataset.itemId;
+        for (var c = 0; c < day.courts.length; c++) {
+          var found = day.courts[c].filter(function(it) { return it.id === itemId; })[0];
+          if (found) return found;
+        }
+        return null;
+      }).filter(Boolean);
+    });
+    day.courts = newCourts;
+    persistBracketSchedule();
+  }
+
+  // Drag-to-reorder that also supports moving an item between court columns (not just
+  // within one, unlike initSortable) — same pointer-event mechanics, but onMove tracks
+  // which court column the pointer is over by x-position, confined to the same day.
+  function initScheduleSortable() {
+    document.querySelectorAll('.schedule-court-items > .schedule-item > .schedule-item-handle').forEach(function(handle) {
+      handle.addEventListener('pointerdown', function(e) {
+        if (!document.body.classList.contains('admin-edit-mode')) return;
+        e.preventDefault();
+        var dragEl = handle.closest('.schedule-item');
+        var dayBlock = dragEl.closest('[data-day-id]');
+        if (!dayBlock) return;
+        var sourceContainer = dragEl.parentNode;
+        var placeholder = document.createElement('div');
+        placeholder.className = 'sortable-placeholder';
+        placeholder.style.height = dragEl.offsetHeight + 'px';
+        sourceContainer.insertBefore(placeholder, dragEl.nextSibling);
+        dragEl.classList.add('dragging');
+        dragEl.style.position = 'relative';
+        dragEl.style.zIndex = '10';
+        try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+
+        function onMove(e2) {
+          var x = e2.clientX, y = e2.clientY;
+          var targetContainer = null;
+          dayBlock.querySelectorAll('.schedule-court-items').forEach(function(c) {
+            var r = c.getBoundingClientRect();
+            if (x >= r.left && x <= r.right) targetContainer = c;
+          });
+          if (!targetContainer) return;
+          var siblings = Array.prototype.slice.call(targetContainer.children).filter(function(el) {
+            return el !== dragEl && el !== placeholder && el.classList.contains('schedule-item');
+          });
+          var target = siblings.filter(function(el) {
+            var r = el.getBoundingClientRect();
+            return y < r.top + r.height / 2;
+          })[0];
+          if (target) targetContainer.insertBefore(placeholder, target);
+          else targetContainer.appendChild(placeholder);
+        }
+        function onUp(e2) {
+          placeholder.parentNode.insertBefore(dragEl, placeholder);
+          placeholder.remove();
+          dragEl.classList.remove('dragging');
+          dragEl.style.position = '';
+          dragEl.style.zIndex = '';
+          try { handle.releasePointerCapture(e2.pointerId); } catch (err) {}
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          if (!isAdmin) { renderSchedule(); return; }
+          var day = currentBracket.schedule.days.filter(function(d) { return d.id === dayBlock.dataset.dayId; })[0];
+          if (day) rebuildScheduleFromDOM(dayBlock, day);
+        }
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
+    });
+  }
+
   function renderSchedule() {
     var t = currentBracketTournament;
     var bracket = currentBracket;
@@ -2779,6 +2875,7 @@ var CLUBS = [
       bracket.schedule.days.map(renderScheduleDayBlock).join('') +
       (bracket.schedule.days.length ? '' : '<p class="empty-note">No days set up yet.</p>');
     wireScheduleEvents();
+    initScheduleSortable();
   }
 
   function wireScheduleEvents() {
@@ -2811,6 +2908,22 @@ var CLUBS = [
         var day = currentBracket.schedule.days[parseInt(select.value, 10)];
         if (!day) return;
         autoScheduleStageToDay(currentBracket, stage, day);
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-add-block]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var parts = btn.dataset.addBlock.split(':');
+        var day = currentBracket.schedule.days.filter(function(d) { return d.id === parts[0]; })[0];
+        if (!day) return;
+        var courtIndex = parseInt(parts[1], 10);
+        var wrap = btn.closest('.schedule-add-block');
+        var label = wrap.querySelector('.new-block-label').value.trim();
+        var duration = parseInt(wrap.querySelector('.new-block-duration').value, 10) || 10;
+        if (!label) return;
+        day.courts[courtIndex].push({ id: genId('sked'), type: 'custom', label: label, durationMin: duration });
         persistBracketSchedule();
       });
     });
