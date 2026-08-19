@@ -912,7 +912,7 @@ var CLUBS = [
   function genId(prefix) { return prefix + '-' + Date.now().toString(36) + rand(); }
 
   function emptyBracket() {
-    return { teams: [], defaultFormat: { bestOf: 3, setPoints: [21, 21, 15] }, stages: [], schedule: { courtCount: 4, days: [] } };
+    return { teams: [], defaultFormat: { bestOf: 3, setPoints: [18, 18, 15] }, stages: [], schedule: { courtCount: 4, days: [] } };
   }
 
   function loadBracket(tournamentId) {
@@ -1878,7 +1878,7 @@ var CLUBS = [
           '<div class="form-group"><label>Best of (sets)</label><select id="fmtBestOf">' +
             [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
           '</select></div>' +
-          '<div class="form-group"><label>Set points (comma-separated)</label><input id="fmtSetPoints" value="' + esc(fmt.setPoints.join(',')) + '" placeholder="21,21,15"></div>' +
+          '<div class="form-group"><label>Set points (comma-separated)</label><input id="fmtSetPoints" value="' + esc(fmt.setPoints.join(',')) + '" placeholder="18,18,15"></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="saveFormatBtn">Save format</button>' +
       '</div>' +
