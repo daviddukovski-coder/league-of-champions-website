@@ -1735,11 +1735,7 @@ var CLUBS = [
     }
 
     var alreadyRegistered = !!localStorage.getItem('loc_registered_' + t.id);
-    var actionsHtml = alreadyRegistered
-      ? '<div class="closed-note">' + uiEdit('detail.alreadyRegisteredNote') + '</div>'
-      : (t.competitions.length > 1
-        ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
-        : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>');
+    var actionsHtml = '<span id="registerActionSlot">' + registerActionHtml(t, alreadyRegistered) + '</span>';
 
     var blocks = {
       image: eventImageHtml(t),
@@ -1750,7 +1746,24 @@ var CLUBS = [
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
     initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
+    wireGoRegisterBtn(t);
 
+    checkResumablePayment(t);
+    verifyAlreadyRegistered(t);
+    loadAndRenderPlayerLists(t);
+
+    setView('detail');
+  }
+
+  function registerActionHtml(t, alreadyRegistered) {
+    return alreadyRegistered
+      ? '<div class="closed-note">' + uiEdit('detail.alreadyRegisteredNote') + '</div>'
+      : (t.competitions.length > 1
+        ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
+        : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>');
+  }
+
+  function wireGoRegisterBtn(t) {
     var goRegisterBtn = document.getElementById('goRegisterBtn');
     if (goRegisterBtn) {
       goRegisterBtn.addEventListener('click', function() {
@@ -1758,11 +1771,25 @@ var CLUBS = [
         else navigate('event/' + t.id + '/register/' + encodeURIComponent(t.competitions[0]));
       });
     }
+  }
 
-    checkResumablePayment(t);
-    loadAndRenderPlayerLists(t);
-
-    setView('detail');
+  // The "already registered" flag persists locally once set (by design, so a visitor
+  // can't accidentally double-register) — but an admin can delete a registration
+  // afterwards, which would otherwise leave this device stuck showing "already
+  // registered" for a registration that no longer exists. Re-verifies against the
+  // backend and clears the stale flag if it's gone.
+  function verifyAlreadyRegistered(t) {
+    var registeredId = localStorage.getItem('loc_registered_' + t.id);
+    if (!registeredId) return;
+    backendStatus(registeredId).then(function(res) {
+      if (!res || res.error) {
+        localStorage.removeItem('loc_registered_' + t.id);
+        localStorage.removeItem('loc_pending_' + t.id);
+        var slot = document.getElementById('registerActionSlot');
+        if (slot) slot.innerHTML = registerActionHtml(t, false);
+        wireGoRegisterBtn(t);
+      }
+    });
   }
 
   function loadAndRenderPlayerLists(t) {
