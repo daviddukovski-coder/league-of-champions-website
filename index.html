@@ -1266,7 +1266,10 @@ var CLUBS = [
 
   // Drag-to-reorder for sortable-block groups. Uses Pointer Events so it
   // works the same with mouse and touch (admins may reorder from a phone).
-  function initSortable(containerId, storageKey) {
+  // onReorder(newOrderOfBlockKeys) is called once a drag completes — callers decide
+  // how/where to persist the new order (content-override blockOrder, or reordering
+  // a data array directly, as the live-bracket stage list does).
+  function initSortable(containerId, onReorder) {
     var container = document.getElementById(containerId);
     if (!container) return;
     container.querySelectorAll(':scope > .sortable-block > .sortable-handle').forEach(function(handle) {
@@ -1305,7 +1308,7 @@ var CLUBS = [
           document.removeEventListener('pointermove', onMove);
           document.removeEventListener('pointerup', onUp);
           var order = Array.prototype.slice.call(container.querySelectorAll(':scope > .sortable-block')).map(function(el) { return el.dataset.blockKey; });
-          saveContentField(storageKey, 'blockOrder', JSON.stringify(order));
+          onReorder(order);
         }
         document.addEventListener('pointermove', onMove);
         document.addEventListener('pointerup', onUp);
@@ -1437,7 +1440,7 @@ var CLUBS = [
 
     var order = getBlockOrder('landingHero', DEFAULT_LANDING_ORDER, contentOverrides.landingHero && contentOverrides.landingHero.blockOrder);
     document.getElementById('heroContentBlocks').innerHTML = order.filter(function(k) { return blocks[k]; }).map(function(k) { return sortableBlockHtml(k, blocks[k]); }).join('');
-    initSortable('heroContentBlocks', 'landingHero');
+    initSortable('heroContentBlocks', function(order) { saveContentField('landingHero', 'blockOrder', JSON.stringify(order)); });
 
     setView('landing');
   }
@@ -1655,7 +1658,7 @@ var CLUBS = [
     if (t.status !== 'upcoming') {
       var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row"><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a></div>', teams: '' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
-      initSortable('detailBlocks', t.id);
+      initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       setView('detail');
       return;
     }
@@ -1675,7 +1678,7 @@ var CLUBS = [
       teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
-    initSortable('detailBlocks', t.id);
+    initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
 
     var goRegisterBtn = document.getElementById('goRegisterBtn');
     if (goRegisterBtn) {
@@ -1802,10 +1805,14 @@ var CLUBS = [
       renderRosterPanel(bracket) +
       renderFormatPanel(bracket.defaultFormat) +
       '<h2 class="section-title">Stages</h2>' +
-      '<div class="stage-list">' + bracket.stages.slice().reverse().map(renderStageCard).join('') + '</div>' +
+      '<div class="stage-list" id="stageList">' + bracket.stages.map(renderStageCard).join('') + '</div>' +
       (bracket.stages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel();
     wireLiveEvents();
+    initSortable('stageList', function(order) {
+      currentBracket.stages.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+      persistBracket();
+    });
   }
 
   function renderRosterPanel(bracket) {
@@ -1872,7 +1879,8 @@ var CLUBS = [
       : stage.type === 'bracket' ? renderBracketStageBody(stage)
       : stage.type === 'swiss' ? renderSwissStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
-    return '<div class="stage-card" data-stage-id="' + esc(stage.id) + '">' +
+    return '<div class="stage-card sortable-block" data-stage-id="' + esc(stage.id) + '" data-block-key="' + esc(stage.id) + '">' +
+      '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
       '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
         '<button type="button" class="icon-btn admin-only-flex" data-remove-stage="' + esc(stage.id) + '" title="Remove stage">✕</button>' +
       '</div>' +
@@ -1945,15 +1953,51 @@ var CLUBS = [
     '</div>';
   }
 
+  function missingRoundRobinPairs(stage) {
+    var existing = {};
+    stage.matches.forEach(function(m) {
+      existing[m.teamAId + '|' + m.teamBId] = true;
+      existing[m.teamBId + '|' + m.teamAId] = true;
+    });
+    var missing = 0;
+    for (var i = 0; i < stage.teamIds.length; i++) {
+      for (var j = i + 1; j < stage.teamIds.length; j++) {
+        if (!existing[stage.teamIds[i] + '|' + stage.teamIds[j]]) missing++;
+      }
+    }
+    return missing;
+  }
+
+  function generateRoundRobin(stage) {
+    var existing = {};
+    stage.matches.forEach(function(m) {
+      existing[m.teamAId + '|' + m.teamBId] = true;
+      existing[m.teamBId + '|' + m.teamAId] = true;
+    });
+    for (var i = 0; i < stage.teamIds.length; i++) {
+      for (var j = i + 1; j < stage.teamIds.length; j++) {
+        var a = stage.teamIds[i], b = stage.teamIds[j];
+        if (existing[a + '|' + b]) continue;
+        stage.matches.push({
+          id: genId('match'), teamAId: a, teamBId: b,
+          format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
+          sets: []
+        });
+      }
+    }
+  }
+
   function renderGroupStageBody(stage) {
     var teamOptions = stage.teamIds.map(function(id) {
       var team = findBracketTeam(currentBracket, id);
       return team ? '<option value="' + esc(id) + '">' + esc(team.name) + '</option>' : '';
     }).join('');
+    var missing = missingRoundRobinPairs(stage);
     return renderStandingsTable(stage) +
       '<div class="match-list">' + stage.matches.map(function(m) { return renderMatchRow(m); }).join('') + '</div>' +
       (stage.matches.length ? '' : '<p class="empty-note">No matches yet.</p>') +
       '<div class="admin-only">' +
+        (missing > 0 ? '<button type="button" class="btn btn-cyan btn-sm" data-generate-roundrobin="' + esc(stage.id) + '" style="margin-bottom:14px;">Generate all matches (round robin) — ' + missing + ' missing</button>' : '') +
         '<div class="form-row">' +
           '<div class="form-group"><label>Team A</label><select class="new-match-a">' + teamOptions + '</select></div>' +
           '<div class="form-group"><label>Team B</label><select class="new-match-b">' + teamOptions + '</select></div>' +
@@ -2250,7 +2294,7 @@ var CLUBS = [
       } else if (type === 'bracket') {
         stage.rounds = [];
       }
-      currentBracket.stages.push(stage);
+      currentBracket.stages.unshift(stage);
       persistBracket();
     });
 
@@ -2270,6 +2314,16 @@ var CLUBS = [
           format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
           sets: []
         });
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-generate-roundrobin]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.generateRoundrobin);
+        if (!stage) return;
+        generateRoundRobin(stage);
         persistBracket();
       });
     });
