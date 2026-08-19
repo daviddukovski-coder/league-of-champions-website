@@ -73,6 +73,7 @@ function listRegistrations_(tournamentId) {
   rows.forEach(function(r) {
     if (r[idx.TournamentId] !== tournamentId) return;
     out.push({
+      id: r[idx.ID],
       firstName: r[idx.FirstName],
       lastName: r[idx.LastName],
       partner: r[idx.Partner],

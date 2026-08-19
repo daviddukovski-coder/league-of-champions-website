@@ -223,6 +223,30 @@
   .status-pending { background:var(--tint-pending); color:var(--pending-text); }
   .empty-note { color:var(--text-muted); font-size:14px; padding:4px 0 40px; }
 
+  /* Live bracket */
+  .live-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px; }
+  .live-panel h2 { font-size:16px; margin-bottom:14px; }
+  .live-panel h3 { font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin:18px 0 10px; }
+  .live-panel h3:first-child { margin-top:0; }
+  .roster-row { background:var(--surface-2); padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:6px; }
+  .roster-row-teams { display:flex; align-items:center; gap:10px; min-width:0; }
+  .roster-row-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .seed-input { width:56px; text-align:center; padding:8px; flex-shrink:0; }
+  .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; background:var(--border); color:var(--text-muted); }
+  .icon-btn:hover { color:#fff; background:#b3401f; }
+  .stage-list { display:flex; flex-direction:column; gap:14px; margin-bottom:14px; }
+  .stage-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+  .stage-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+  .stage-card-head h3 { margin:0; font-size:15px; text-transform:none; letter-spacing:0; color:var(--heading); font-weight:700; }
+  .stage-type-pill { font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600; color:var(--cyan-ink); background:rgba(0,242,255,0.12); padding:3px 9px; border-radius:10px; }
+  .admin-only { display:none; }
+  body.admin-edit-mode .admin-only { display:block; }
+  .admin-only-flex { display:none; }
+  body.admin-edit-mode .admin-only-flex { display:flex; }
+  .admin-only-inline { display:none; }
+  body.admin-edit-mode .admin-only-inline { display:inline-flex; }
+  .live-link-row { margin-bottom:28px; }
+
   /* ============ COMPETITION SELECT ============ */
   .comp-select-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:640px; padding-bottom:60px; }
   .comp-card { text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; display:flex; flex-direction:column; gap:8px; transition:transform .15s, box-shadow .15s, border-color .15s; }
@@ -366,6 +390,13 @@
     <div class="container">
       <button class="back-btn" data-back="detail">← Back to Tournament</button>
       <div class="register-inner" id="registerContent"></div>
+    </div>
+  </section>
+
+  <section id="view-live" class="view" hidden>
+    <div class="container">
+      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <div id="liveContent"></div>
     </div>
   </section>
 
@@ -797,6 +828,61 @@ var CLUBS = [
   }
 
   /* ==================================================================
+     LIVE BRACKET DATA (real Firestore or demo localStorage, one doc per tournament)
+     ================================================================== */
+  function genId(prefix) { return prefix + '-' + Date.now().toString(36) + rand(); }
+
+  function emptyBracket() {
+    return { teams: [], defaultFormat: { bestOf: 3, setPoints: [21, 21, 15] }, stages: [] };
+  }
+
+  function loadBracket(tournamentId) {
+    if (AUTH_DEMO_MODE) {
+      var data;
+      try { data = JSON.parse(localStorage.getItem('loc_bracket_' + tournamentId) || 'null'); } catch (e) { data = null; }
+      return Promise.resolve(Object.assign(emptyBracket(), data || {}));
+    }
+    return firebase.firestore().collection('brackets').doc(tournamentId).get().then(function(doc) {
+      return Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+    });
+  }
+
+  function saveBracket(tournamentId, data) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_bracket_' + tournamentId, JSON.stringify(data));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('brackets').doc(tournamentId).set(data);
+  }
+
+  // Winner of a match = team with the majority of sets won for that match's bestOf.
+  function matchWinner(match, format) {
+    if (!match || !match.sets || !match.sets.length) return null;
+    var bestOf = (match.format && match.format.bestOf) || (format && format.bestOf) || 3;
+    var needed = Math.ceil(bestOf / 2);
+    var winsA = 0, winsB = 0;
+    match.sets.forEach(function(s) {
+      if (s[0] > s[1]) winsA++; else if (s[1] > s[0]) winsB++;
+    });
+    if (winsA >= needed) return match.teamAId;
+    if (winsB >= needed) return match.teamBId;
+    return null;
+  }
+
+  function matchStatus(match, format) {
+    return matchWinner(match, format) ? 'final' : 'scheduled';
+  }
+
+  function findBracketTeam(bracket, teamId) {
+    return bracket.teams.find(function(t){ return t.id === teamId; }) || null;
+  }
+
+  function findStage(bracket, stageId) {
+    return bracket.stages.find(function(s){ return s.id === stageId; }) || null;
+  }
+
+  /* ==================================================================
      UI TEXT — every static label/heading/button/message on the site,
      editable the same way as tournament fields (key 'ui', field = below).
      ================================================================== */
@@ -1043,7 +1129,7 @@ var CLUBS = [
   var VIEW_TO_ROUTE = { home:'tournaments', impressum:'impressum', login:'login', registeraccount:'register-account' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','impressum','login','registeraccount'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','impressum','login','registeraccount'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -1083,6 +1169,8 @@ var CLUBS = [
         showRegister(t, comp, h.query);
       } else if (p[2] === 'compselect') {
         showCompSelect(t);
+      } else if (p[2] === 'live') {
+        showLive(t);
       } else {
         showDetail(t);
       }
@@ -1333,7 +1421,7 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div>', teams: '' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row"><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a></div>', teams: '' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', t.id);
       setView('detail');
@@ -1351,7 +1439,7 @@ var CLUBS = [
       image: eventImageHtml(t),
       header: headerHtml,
       infoGrid: infoRows,
-      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '</div>',
+      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '<a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a></div>',
       teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
@@ -1402,6 +1490,257 @@ var CLUBS = [
       } else if (res && res.status === 'paid') {
         localStorage.removeItem('loc_pending_' + t.id);
       }
+    });
+  }
+
+  /* ==================================================================
+     LIVE BRACKET
+     ================================================================== */
+  var currentBracket = null;
+  var currentBracketTournament = null;
+
+  function showLive(t) {
+    var el = document.getElementById('liveContent');
+    el.innerHTML = '<p class="empty-note">Loading …</p>';
+    setView('live');
+    loadBracket(t.id).then(function(bracket) {
+      currentBracket = bracket;
+      currentBracketTournament = t;
+      renderLive();
+    });
+  }
+
+  function persistBracket() {
+    return saveBracket(currentBracketTournament.id, currentBracket).then(renderLive);
+  }
+
+  function renderLive() {
+    var t = currentBracketTournament;
+    var bracket = currentBracket;
+    var el = document.getElementById('liveContent');
+    el.innerHTML =
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Live Bracket</div></div>' +
+      renderRosterPanel(bracket) +
+      renderFormatPanel(bracket.defaultFormat) +
+      '<h2 class="section-title">Stages</h2>' +
+      '<div class="stage-list">' + bracket.stages.map(renderStageCard).join('') + '</div>' +
+      (bracket.stages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
+      renderAddStagePanel();
+    wireLiveEvents();
+  }
+
+  function renderRosterPanel(bracket) {
+    var rows = bracket.teams.map(function(team) {
+      return '<div class="roster-row">' +
+        '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
+          '<div><strong>' + esc(team.name) + '</strong>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
+        '</div>' +
+        '<div class="roster-row-actions">' +
+          '<input type="number" class="seed-input admin-only-flex" value="' + (team.seed || '') + '" data-seed-team="' + esc(team.id) + '" title="Seed">' +
+          '<button type="button" class="icon-btn admin-only-flex" data-remove-team="' + esc(team.id) + '" title="Remove team">✕</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="live-panel">' +
+      '<h2>Teams (' + bracket.teams.length + ')</h2>' +
+      (rows || '<p class="empty-note">No teams added yet.</p>') +
+      '<div class="admin-only" id="addTeamPanel">' +
+        '<h3>Add from registrations</h3>' +
+        '<div id="regTeamPicker"><p class="empty-note">Loading registrations …</p></div>' +
+        '<h3>Add manually</h3>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Team / players</label><input id="manualTeamName" placeholder="First Last & First Last"></div>' +
+          '<div class="form-group"><label>Club</label><select id="manualTeamClub"><option value="">— none —</option>' +
+            CLUBS.map(function(c){ return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>'; }).join('') +
+          '</select></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFormatPanel(fmt) {
+    return '<div class="live-panel">' +
+      '<h2>Default Match Format</h2>' +
+      '<p>Best of ' + fmt.bestOf + ' — ' + fmt.setPoints.join(' / ') + ' points</p>' +
+      '<div class="admin-only">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Best of (sets)</label><select id="fmtBestOf">' +
+            [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select></div>' +
+          '<div class="form-group"><label>Set points (comma-separated)</label><input id="fmtSetPoints" value="' + esc(fmt.setPoints.join(',')) + '" placeholder="21,21,15"></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline" id="saveFormatBtn">Save format</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderStageCard(stage) {
+    var teamChecklist = '';
+    if (stage.type === 'group' || stage.type === 'swiss') {
+      teamChecklist = '<div class="admin-only">' +
+        '<h3>Teams in this stage</h3>' +
+        currentBracket.teams.map(function(team) {
+          var checked = stage.teamIds.indexOf(team.id) !== -1;
+          return '<label class="checkbox-row"><input type="checkbox" data-stage-team="' + esc(stage.id) + '" data-team-id="' + esc(team.id) + '"' + (checked ? ' checked' : '') + '><span>' + esc(team.name) + '</span></label>';
+        }).join('') +
+      '</div>';
+    }
+    var swissInfo = stage.type === 'swiss'
+      ? '<p class="empty-note">' + stage.config.winsToQualify + ' wins to qualify · ' + stage.config.lossesToEliminate + ' losses to eliminate · ' + (stage.config.pairingMode === 'random' ? 'live draw' : 'seeded') + '</p>'
+      : '';
+    return '<div class="stage-card" data-stage-id="' + esc(stage.id) + '">' +
+      '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
+        '<button type="button" class="icon-btn admin-only-flex" data-remove-stage="' + esc(stage.id) + '" title="Remove stage">✕</button>' +
+      '</div>' +
+      swissInfo +
+      teamChecklist +
+      '<p class="empty-note">Match list coming in the next build step.</p>' +
+    '</div>';
+  }
+
+  function renderAddStagePanel() {
+    return '<div class="live-panel admin-only" id="addStagePanel">' +
+      '<h2>Add Stage</h2>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Label</label><input id="newStageLabel" placeholder="e.g. Group A"></div>' +
+        '<div class="form-group"><label>Type</label><select id="newStageType">' +
+          '<option value="group">Group</option>' +
+          '<option value="swiss">Swiss</option>' +
+          '<option value="bracket">Bracket (crossover / knockout)</option>' +
+        '</select></div>' +
+      '</div>' +
+      '<div class="form-row" id="swissConfigRow" hidden>' +
+        '<div class="form-group"><label>Wins to qualify</label><input type="number" id="newSwissWins" value="3" min="1"></div>' +
+        '<div class="form-group"><label>Losses to eliminate</label><input type="number" id="newSwissLosses" value="3" min="1"></div>' +
+        '<div class="form-group"><label>Pairing</label><select id="newSwissPairing"><option value="seeded">Seeded (fixed by seed)</option><option value="random">Live draw</option></select></div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-cyan" id="addStageBtn">+ Add stage</button>' +
+    '</div>';
+  }
+
+  function loadAvailableRegistrations() {
+    var picker = document.getElementById('regTeamPicker');
+    if (!picker || !currentBracketTournament) return;
+    backendListRegistrations(currentBracketTournament.id).then(function(all) {
+      var existingIds = currentBracket.teams.map(function(tm){ return tm.id; });
+      var available = all.filter(function(r) { return existingIds.indexOf('reg-' + r.id) === -1; });
+      if (!available.length) { picker.innerHTML = '<p class="empty-note">No more registered teams to add.</p>'; return; }
+      picker.innerHTML = available.map(function(r) {
+        var name = r.firstName + ' ' + r.lastName + ' & ' + r.partner;
+        var statusLabel = r.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
+        return '<div class="roster-row"><div class="roster-row-teams">' + clubAvatarHtml(findClub(r.club)) +
+          '<div><strong>' + esc(name) + '</strong><span class="player-club">' + esc(r.club) + ' · ' + esc(divisionLabel(r.competition)) + ' · ' + esc(statusLabel) + '</span></div></div>' +
+          '<button type="button" class="btn btn-outline" data-add-reg-id="' + esc(r.id) + '" data-add-reg-name="' + esc(name) + '" data-add-reg-club="' + esc(r.club) + '">+ Add</button>' +
+        '</div>';
+      }).join('');
+      picker.querySelectorAll('[data-add-reg-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          if (!isAdmin) return;
+          currentBracket.teams.push({
+            id: 'reg-' + btn.dataset.addRegId,
+            name: btn.dataset.addRegName,
+            club: btn.dataset.addRegClub,
+            logo: null,
+            players: btn.dataset.addRegName,
+            seed: null
+          });
+          persistBracket();
+        });
+      });
+    });
+  }
+
+  function wireLiveEvents() {
+    loadAvailableRegistrations();
+
+    document.querySelectorAll('[data-seed-team]').forEach(function(input) {
+      input.addEventListener('change', function() {
+        if (!isAdmin) return;
+        var team = findBracketTeam(currentBracket, input.dataset.seedTeam);
+        if (!team) return;
+        team.seed = parseInt(input.value, 10) || null;
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-remove-team]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var id = btn.dataset.removeTeam;
+        currentBracket.teams = currentBracket.teams.filter(function(tm){ return tm.id !== id; });
+        currentBracket.stages.forEach(function(s) { if (s.teamIds) s.teamIds = s.teamIds.filter(function(tid){ return tid !== id; }); });
+        persistBracket();
+      });
+    });
+
+    var addManualBtn = document.getElementById('addManualTeamBtn');
+    if (addManualBtn) addManualBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var name = document.getElementById('manualTeamName').value.trim();
+      if (!name) return;
+      var club = document.getElementById('manualTeamClub').value;
+      currentBracket.teams.push({ id: genId('team'), name: name, club: club, logo: null, players: name, seed: null });
+      persistBracket();
+    });
+
+    var saveFormatBtn = document.getElementById('saveFormatBtn');
+    if (saveFormatBtn) saveFormatBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var bestOf = parseInt(document.getElementById('fmtBestOf').value, 10) || 3;
+      var setPoints = document.getElementById('fmtSetPoints').value.split(',').map(function(n){ return parseInt(n.trim(), 10); }).filter(function(n){ return !isNaN(n); });
+      currentBracket.defaultFormat = { bestOf: bestOf, setPoints: setPoints.length ? setPoints : [21] };
+      persistBracket();
+    });
+
+    document.querySelectorAll('[data-stage-team]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, cb.dataset.stageTeam);
+        if (!stage) return;
+        var teamId = cb.dataset.teamId;
+        if (cb.checked) { if (stage.teamIds.indexOf(teamId) === -1) stage.teamIds.push(teamId); }
+        else { stage.teamIds = stage.teamIds.filter(function(id){ return id !== teamId; }); }
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-remove-stage]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var id = btn.dataset.removeStage;
+        currentBracket.stages = currentBracket.stages.filter(function(s){ return s.id !== id; });
+        persistBracket();
+      });
+    });
+
+    var newStageType = document.getElementById('newStageType');
+    if (newStageType) newStageType.addEventListener('change', function() {
+      document.getElementById('swissConfigRow').hidden = newStageType.value !== 'swiss';
+    });
+
+    var addStageBtn = document.getElementById('addStageBtn');
+    if (addStageBtn) addStageBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var label = document.getElementById('newStageLabel').value.trim();
+      var type = document.getElementById('newStageType').value;
+      if (!label) return;
+      var stage = { id: genId('stage'), type: type, label: label };
+      if (type === 'group') {
+        stage.teamIds = []; stage.matches = [];
+      } else if (type === 'swiss') {
+        stage.teamIds = [];
+        stage.config = {
+          winsToQualify: parseInt(document.getElementById('newSwissWins').value, 10) || 3,
+          lossesToEliminate: parseInt(document.getElementById('newSwissLosses').value, 10) || 3,
+          pairingMode: document.getElementById('newSwissPairing').value
+        };
+        stage.rounds = [];
+      } else if (type === 'bracket') {
+        stage.rounds = [];
+      }
+      currentBracket.stages.push(stage);
+      persistBracket();
     });
   }
 
