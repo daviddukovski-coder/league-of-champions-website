@@ -1012,6 +1012,74 @@ var CLUBS = [
     return 'TBD';
   }
 
+  function teamSeed(teamId) {
+    var t = findBracketTeam(currentBracket, teamId);
+    return (t && t.seed) || 999;
+  }
+
+  // Win/loss record per team across all Swiss rounds played so far. A bye counts
+  // as an automatic win for that round without needing a played match.
+  function computeSwissRecords(bracket, stage) {
+    var records = {};
+    stage.teamIds.forEach(function(id) { records[id] = { teamId: id, w: 0, l: 0 }; });
+    stage.rounds.forEach(function(round) {
+      (round.matches || []).forEach(function(m) {
+        var winner = matchWinner(m, bracket.defaultFormat);
+        if (!winner) return;
+        var loser = winner === m.teamAId ? m.teamBId : m.teamAId;
+        if (records[winner]) records[winner].w++;
+        if (records[loser]) records[loser].l++;
+      });
+      if (round.byeTeamId && records[round.byeTeamId]) records[round.byeTeamId].w++;
+    });
+    return records;
+  }
+
+  function swissRoundComplete(bracket, round) {
+    return (round.matches || []).every(function(m) { return !!matchWinner(m, bracket.defaultFormat); });
+  }
+
+  // Groups still-active teams (not yet qualified/eliminated) into record buckets,
+  // then pairs within each bucket — fold-pairing by seed ("seeded": who plays whom
+  // at every record is fixed in advance, rematches allowed) or a shuffle behind an
+  // explicit draw action ("random"). A leftover team in an odd bucket carries into
+  // the next bucket; a true leftover at the end gets a bye for the round.
+  function generateSwissRound(bracket, stage, pairingMode) {
+    var records = computeSwissRecords(bracket, stage);
+    var active = stage.teamIds.filter(function(id) {
+      var r = records[id];
+      return r && r.w < stage.config.winsToQualify && r.l < stage.config.lossesToEliminate;
+    });
+    var buckets = {};
+    active.forEach(function(id) {
+      var key = records[id].w + '-' + records[id].l;
+      (buckets[key] = buckets[key] || []).push(id);
+    });
+    var bucketKeys = Object.keys(buckets).sort();
+    var leftover = null;
+    var pairs = [];
+    bucketKeys.forEach(function(key) {
+      var group = buckets[key].slice();
+      if (leftover) { group.unshift(leftover); leftover = null; }
+      if (pairingMode === 'seeded') {
+        group.sort(function(a, b) { return teamSeed(a) - teamSeed(b); });
+      } else {
+        for (var i = group.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = group[i]; group[i] = group[j]; group[j] = tmp;
+        }
+      }
+      if (group.length % 2 === 1) leftover = group.pop();
+      if (pairingMode === 'seeded') {
+        var n = group.length;
+        for (var k = 0; k < n / 2; k++) pairs.push([group[k], group[n - 1 - k]]);
+      } else {
+        for (var m2 = 0; m2 < group.length; m2 += 2) pairs.push([group[m2], group[m2 + 1]]);
+      }
+    });
+    return { pairs: pairs, byeTeamId: leftover };
+  }
+
   /* ==================================================================
      UI TEXT — every static label/heading/button/message on the site,
      editable the same way as tournament fields (key 'ui', field = below).
@@ -1628,11 +1696,13 @@ var CLUBS = [
      ================================================================== */
   var currentBracket = null;
   var currentBracketTournament = null;
+  var pendingSwissPreview = null;
 
   function showLive(t) {
     var el = document.getElementById('liveContent');
     el.innerHTML = '<p class="empty-note">Loading …</p>';
     setView('live');
+    pendingSwissPreview = null;
     loadBracket(t.id).then(function(bracket) {
       currentBracket = bracket;
       currentBracketTournament = t;
@@ -1721,6 +1791,7 @@ var CLUBS = [
       : '';
     var body = stage.type === 'group' ? renderGroupStageBody(stage)
       : stage.type === 'bracket' ? renderBracketStageBody(stage)
+      : stage.type === 'swiss' ? renderSwissStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
     return '<div class="stage-card" data-stage-id="' + esc(stage.id) + '">' +
       '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
@@ -1884,6 +1955,79 @@ var CLUBS = [
     }).join('');
     return (stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '<p class="empty-note">No rounds yet.</p>') +
       renderAddRoundPanel(stage);
+  }
+
+  function renderSwissRecordsTable(stage, records) {
+    var rows = stage.teamIds.map(function(id) {
+      var team = findBracketTeam(currentBracket, id);
+      var r = records[id] || { w: 0, l: 0 };
+      var status = r.w >= stage.config.winsToQualify ? 'Qualified' : r.l >= stage.config.lossesToEliminate ? 'Eliminated' : 'Active';
+      var statusClass = status === 'Qualified' ? 'status-paid' : status === 'Eliminated' ? 'status-pending' : '';
+      return { team: team, r: r, status: status, statusClass: statusClass };
+    }).sort(function(a, b) { return (b.r.w - b.r.l) - (a.r.w - a.r.l); });
+    return '<table class="standings-table"><thead><tr><th>Team</th><th>W</th><th>L</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function(x) {
+        return '<tr><td><span class="standings-team">' + (x.team ? clubAvatarHtml(findClub(x.team.club)) : '') + esc(x.team ? x.team.name : '?') + '</span></td>' +
+          '<td>' + x.r.w + '</td><td>' + x.r.l + '</td>' +
+          '<td>' + (x.statusClass ? '<span class="status ' + x.statusClass + '">' + x.status + '</span>' : x.status) + '</td></tr>';
+      }).join('') +
+    '</tbody></table>';
+  }
+
+  function renderSwissPreview(stage, preview) {
+    function teamOptions(selectedId) {
+      return stage.teamIds.map(function(id) {
+        var t = findBracketTeam(currentBracket, id);
+        return '<option value="' + esc(id) + '"' + (id === selectedId ? ' selected' : '') + '>' + esc(t ? t.name : id) + '</option>';
+      }).join('');
+    }
+    var pairsHtml = preview.pairs.map(function(pair, i) {
+      return '<div class="match-teams-line" data-preview-pair="' + i + '">' +
+        '<select class="preview-team-a">' + teamOptions(pair[0]) + '</select>' +
+        '<span class="match-score-summary">vs</span>' +
+        '<select class="preview-team-b">' + teamOptions(pair[1]) + '</select>' +
+      '</div>';
+    }).join('');
+    var byeTeam = preview.byeTeamId ? findBracketTeam(currentBracket, preview.byeTeamId) : null;
+    var byeHtml = byeTeam ? '<p class="empty-note">' + esc(byeTeam.name) + ' gets a bye this round</p>' : '';
+    return '<div class="live-panel swiss-preview">' +
+      '<h3>Preview — Round ' + (stage.rounds.length + 1) + '</h3>' +
+      pairsHtml + byeHtml +
+      '<div class="roster-row-actions" style="margin-top:12px;">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-regenerate-swiss="' + esc(stage.id) + '">Regenerate</button>' +
+        '<button type="button" class="btn btn-cyan btn-sm" data-confirm-swiss="' + esc(stage.id) + '">Confirm round</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderSwissStageBody(stage) {
+    var bracket = currentBracket;
+    var records = computeSwissRecords(bracket, stage);
+    var recordsTable = renderSwissRecordsTable(stage, records);
+    var roundsHtml = stage.rounds.map(function(round, ri) {
+      var matchesHtml = (round.matches || []).map(function(m) { return renderMatchRow(m, { allowRemove: false }); }).join('');
+      var byeTeam = round.byeTeamId ? findBracketTeam(bracket, round.byeTeamId) : null;
+      var byeHtml = byeTeam ? '<p class="empty-note">' + esc(byeTeam.name) + ' — bye this round</p>' : '';
+      return '<h3>Round ' + (ri + 1) + '</h3><div class="match-list">' + matchesHtml + '</div>' + byeHtml;
+    }).join('');
+    var lastRound = stage.rounds[stage.rounds.length - 1];
+    var canGenerate = !lastRound || swissRoundComplete(bracket, lastRound);
+    var activeCount = stage.teamIds.filter(function(id) {
+      var r = records[id];
+      return r && r.w < stage.config.winsToQualify && r.l < stage.config.lossesToEliminate;
+    }).length;
+    var genPanel = '';
+    if (pendingSwissPreview && pendingSwissPreview.stageId === stage.id) {
+      genPanel = renderSwissPreview(stage, pendingSwissPreview);
+    } else if (!canGenerate) {
+      genPanel = '<p class="empty-note admin-only">Finish all matches in the current round to generate the next one.</p>';
+    } else if (activeCount > 1) {
+      var label = stage.config.pairingMode === 'random' ? 'Auslosen (draw round ' + (stage.rounds.length + 1) + ')' : 'Generate round ' + (stage.rounds.length + 1);
+      genPanel = '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" data-generate-swiss="' + esc(stage.id) + '">' + esc(label) + '</button></div>';
+    } else if (stage.rounds.length) {
+      genPanel = '<p class="empty-note">Swiss stage complete.</p>';
+    }
+    return recordsTable + roundsHtml + genPanel;
   }
 
   function renderAddStagePanel() {
@@ -2149,6 +2293,43 @@ var CLUBS = [
           source = { type: 'bye' };
         }
         stage.rounds[roundIndex].slots[slotIndex].source = source;
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-generate-swiss], [data-regenerate-swiss]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stageId = btn.dataset.generateSwiss || btn.dataset.regenerateSwiss;
+        var stage = findStage(currentBracket, stageId);
+        if (!stage) return;
+        var result = generateSwissRound(currentBracket, stage, stage.config.pairingMode);
+        pendingSwissPreview = { stageId: stage.id, pairs: result.pairs, byeTeamId: result.byeTeamId };
+        renderLive();
+      });
+    });
+
+    document.querySelectorAll('[data-confirm-swiss]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.confirmSwiss);
+        if (!stage || !pendingSwissPreview || pendingSwissPreview.stageId !== stage.id) return;
+        var card = btn.closest('.swiss-preview');
+        var pairs = [];
+        card.querySelectorAll('[data-preview-pair]').forEach(function(row) {
+          var a = row.querySelector('.preview-team-a').value;
+          var b = row.querySelector('.preview-team-b').value;
+          pairs.push([a, b]);
+        });
+        var matches = pairs.map(function(p) {
+          return {
+            id: genId('match'), teamAId: p[0], teamBId: p[1],
+            format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
+            sets: []
+          };
+        });
+        stage.rounds.push({ matches: matches, byeTeamId: pendingSwissPreview.byeTeamId });
+        pendingSwissPreview = null;
         persistBracket();
       });
     });
