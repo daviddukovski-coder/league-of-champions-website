@@ -265,6 +265,15 @@
   .set-inputs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
   .set-input-pair { display:flex; align-items:center; gap:4px; }
   .set-input-pair input { width:48px; padding:8px 4px; text-align:center; }
+  .bracket-scroll { display:flex; gap:20px; overflow-x:auto; padding-bottom:12px; margin:14px 0; }
+  .bracket-round-col { flex:0 0 250px; display:flex; flex-direction:column; gap:14px; }
+  .bracket-round-title { font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; }
+  .bracket-slot-block { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; }
+  .bracket-slot-block .match-row { background:none; border:none; padding:0; }
+  .match-team.tbd { color:var(--text-muted); font-weight:500; font-style:italic; font-size:13.5px; }
+  .slot-editor { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
+  .slot-editor select, .slot-editor input { width:auto; padding:7px 8px; font-size:12px; }
+  .slot-auto-note { font-size:11.5px; color:var(--text-muted); width:100%; }
 
   /* ============ COMPETITION SELECT ============ */
   .comp-select-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:640px; padding-bottom:60px; }
@@ -928,6 +937,79 @@ var CLUBS = [
       return (b.pointsWon - b.pointsLost) - (a.pointsWon - a.pointsLost);
     });
     return list;
+  }
+
+  function stageAllMatches(stage) {
+    if (stage.matches) return stage.matches;
+    if (stage.rounds) {
+      var all = [];
+      stage.rounds.forEach(function(r) { all = all.concat(r.matches || []); });
+      return all;
+    }
+    return [];
+  }
+
+  function findMatchAnywhere(bracket, matchId) {
+    for (var si = 0; si < bracket.stages.length; si++) {
+      var stage = bracket.stages[si];
+      if (stage.matches) {
+        var m = stage.matches.find(function(mm) { return mm.id === matchId; });
+        if (m) return { stage: stage, round: null, match: m };
+      }
+      if (stage.rounds) {
+        for (var ri = 0; ri < stage.rounds.length; ri++) {
+          var m2 = (stage.rounds[ri].matches || []).find(function(mm) { return mm.id === matchId; });
+          if (m2) return { stage: stage, round: stage.rounds[ri], match: m2 };
+        }
+      }
+    }
+    return null;
+  }
+
+  // Dynamically resolves which team occupies a bracket slot — recomputed on every
+  // render (not cached) so it self-heals if an earlier group/match result is corrected.
+  function resolveSlotTeam(bracket, stage, roundIndex, slotIndex, depth) {
+    depth = depth || 0;
+    if (depth > 20) return null;
+    var round = stage.rounds[roundIndex];
+    var slot = round && round.slots[slotIndex];
+    if (!slot || !slot.source) return null;
+    var src = slot.source;
+    if (src.type === 'bye') return null;
+    if (src.type === 'manual') return src.teamId || null;
+    if (src.type === 'rank') {
+      var srcStage = findStage(bracket, src.stageId);
+      if (!srcStage) return null;
+      var standings = computeStandings(bracket, srcStage.teamIds || [], stageAllMatches(srcStage));
+      var entry = standings[src.rank - 1];
+      return entry ? entry.teamId : null;
+    }
+    if (src.type === 'matchWinner') {
+      var found = findMatchAnywhere(bracket, src.matchId);
+      if (!found || !found.round) return null;
+      var m = found.match;
+      var rIdx = found.stage.rounds.indexOf(found.round);
+      var slotA = found.round.slots[m.slotAIndex], slotB = found.round.slots[m.slotBIndex];
+      var byeA = slotA.source && slotA.source.type === 'bye';
+      var byeB = slotB.source && slotB.source.type === 'bye';
+      var teamA = resolveSlotTeam(bracket, found.stage, rIdx, m.slotAIndex, depth + 1);
+      var teamB = resolveSlotTeam(bracket, found.stage, rIdx, m.slotBIndex, depth + 1);
+      if (byeA || byeB) return byeA ? teamB : teamA; // a bye auto-advances the other team, no match needed
+      return matchWinner({ id: m.id, teamAId: teamA, teamBId: teamB, sets: m.sets, format: m.format }, bracket.defaultFormat);
+    }
+    return null;
+  }
+
+  function slotSourceLabel(bracket, stage, roundIndex, slotIndex) {
+    var slot = stage.rounds[roundIndex].slots[slotIndex];
+    var src = slot.source || { type: 'manual' };
+    if (src.type === 'bye') return 'Bye';
+    if (src.type === 'rank') {
+      var srcStage = findStage(bracket, src.stageId);
+      return 'TBD – #' + src.rank + ' ' + (srcStage ? srcStage.label : '?');
+    }
+    if (src.type === 'matchWinner') return 'TBD – winner of previous match';
+    return 'TBD';
   }
 
   /* ==================================================================
@@ -1637,8 +1719,8 @@ var CLUBS = [
     var swissInfo = stage.type === 'swiss'
       ? '<p class="empty-note">' + stage.config.winsToQualify + ' wins to qualify · ' + stage.config.lossesToEliminate + ' losses to eliminate · ' + (stage.config.pairingMode === 'random' ? 'live draw' : 'seeded') + '</p>'
       : '';
-    var body = stage.type === 'group'
-      ? renderGroupStageBody(stage)
+    var body = stage.type === 'group' ? renderGroupStageBody(stage)
+      : stage.type === 'bracket' ? renderBracketStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
     return '<div class="stage-card" data-stage-id="' + esc(stage.id) + '">' +
       '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
@@ -1677,7 +1759,8 @@ var CLUBS = [
     return match.sets.map(function(s){ return s[0] + '–' + s[1]; }).join(', ');
   }
 
-  function renderMatchRow(match) {
+  function renderMatchRow(match, opts) {
+    opts = opts || {};
     var fmt = match.format || currentBracket.defaultFormat;
     var winner = matchWinner(match, currentBracket.defaultFormat);
     var status = winner ? 'Final' : 'Scheduled';
@@ -1698,7 +1781,7 @@ var CLUBS = [
         '<span class="match-score-summary">' + esc(formatSetsSummary(match)) + '</span>' +
         teamNameHtml(match.teamBId) +
         '<span class="status ' + statusClass + '">' + status + '</span>' +
-        '<button type="button" class="icon-btn admin-only-flex" data-remove-match="' + esc(match.id) + '" title="Remove match">✕</button>' +
+        (opts.allowRemove === false ? '' : '<button type="button" class="icon-btn admin-only-flex" data-remove-match="' + esc(match.id) + '" title="Remove match">✕</button>') +
       '</div>' +
       '<div class="match-sets admin-only-flex">' +
         '<div class="match-format-row">Best of ' +
@@ -1717,7 +1800,7 @@ var CLUBS = [
       return team ? '<option value="' + esc(id) + '">' + esc(team.name) + '</option>' : '';
     }).join('');
     return renderStandingsTable(stage) +
-      '<div class="match-list">' + stage.matches.map(renderMatchRow).join('') + '</div>' +
+      '<div class="match-list">' + stage.matches.map(function(m) { return renderMatchRow(m); }).join('') + '</div>' +
       (stage.matches.length ? '' : '<p class="empty-note">No matches yet.</p>') +
       '<div class="admin-only">' +
         '<div class="form-row">' +
@@ -1726,6 +1809,81 @@ var CLUBS = [
         '</div>' +
         '<button type="button" class="btn btn-outline btn-sm" data-add-match="' + esc(stage.id) + '">+ Add match</button>' +
       '</div>';
+  }
+
+  function renderSlotEditor(stage, roundIndex, slotIndex) {
+    var slot = stage.rounds[roundIndex].slots[slotIndex];
+    var src = slot.source || { type: 'manual' };
+    var displayType = src.type === 'matchWinner' ? 'manual' : src.type;
+    var stageOptions = currentBracket.stages.filter(function(s) { return s.type !== 'bracket'; }).map(function(s) {
+      return '<option value="' + esc(s.id) + '"' + (src.type === 'rank' && src.stageId === s.id ? ' selected' : '') + '>' + esc(s.label) + '</option>';
+    }).join('');
+    var teamOptions = '<option value="">—</option>' + currentBracket.teams.map(function(t) {
+      return '<option value="' + esc(t.id) + '"' + (src.type === 'manual' && src.teamId === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>';
+    }).join('');
+    var key = stage.id + ':' + roundIndex + ':' + slotIndex;
+    return '<div class="slot-editor">' +
+      (src.type === 'matchWinner' ? '<span class="slot-auto-note">Auto: winner of previous match — </span>' : '') +
+      '<select class="slot-type">' +
+        '<option value="manual"' + (displayType === 'manual' ? ' selected' : '') + '>Manual pick</option>' +
+        '<option value="rank"' + (displayType === 'rank' ? ' selected' : '') + '>Group/Swiss rank</option>' +
+        '<option value="bye"' + (displayType === 'bye' ? ' selected' : '') + '>Bye</option>' +
+      '</select>' +
+      '<select class="slot-team"' + (displayType !== 'manual' ? ' hidden' : '') + '>' + teamOptions + '</select>' +
+      '<select class="slot-stage"' + (displayType !== 'rank' ? ' hidden' : '') + '>' + stageOptions + '</select>' +
+      '<input type="number" class="slot-rank" min="1" value="' + (src.rank || 1) + '"' + (displayType !== 'rank' ? ' hidden' : '') + ' placeholder="rank">' +
+      '<button type="button" class="btn btn-outline btn-sm" data-save-slot="' + esc(key) + '">Set</button>' +
+    '</div>';
+  }
+
+  function renderBracketMatchCard(stage, roundIndex, matchIndex) {
+    var bracket = currentBracket;
+    var round = stage.rounds[roundIndex];
+    var m = round.matches[matchIndex];
+    var teamA = resolveSlotTeam(bracket, stage, roundIndex, m.slotAIndex);
+    var teamB = resolveSlotTeam(bracket, stage, roundIndex, m.slotBIndex);
+    var slotA = round.slots[m.slotAIndex], slotB = round.slots[m.slotBIndex];
+    var byeA = slotA.source && slotA.source.type === 'bye';
+    var byeB = slotB.source && slotB.source.type === 'bye';
+    var body;
+    if (byeA || byeB) {
+      var advancing = byeA ? teamB : teamA;
+      body = '<div class="match-teams-line">' + (advancing ? teamNameHtml(advancing) : '<span class="match-team tbd">TBD</span>') + '<span class="match-score-summary">bye — advances</span></div>';
+    } else if (teamA && teamB) {
+      var resolvedMatch = { id: m.id, teamAId: teamA, teamBId: teamB, sets: m.sets, format: m.format };
+      body = renderMatchRow(resolvedMatch, { allowRemove: false });
+    } else {
+      body = '<div class="match-teams-line">' +
+        (teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(bracket, stage, roundIndex, m.slotAIndex)) + '</span>') +
+        '<span class="match-score-summary">vs</span>' +
+        (teamB ? teamNameHtml(teamB) : '<span class="match-team tbd">' + esc(slotSourceLabel(bracket, stage, roundIndex, m.slotBIndex)) + '</span>') +
+      '</div>';
+    }
+    return '<div class="bracket-slot-block">' + body +
+      '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>' +
+    '</div>';
+  }
+
+  function renderAddRoundPanel(stage) {
+    var suggested = stage.rounds.length ? stage.rounds[stage.rounds.length - 1].matches.length : 8;
+    return '<div class="admin-only" style="margin-top:14px;">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Round name</label><input class="new-round-name" placeholder="e.g. Crossover, Quarterfinal, Final"></div>' +
+        '<div class="form-group"><label>Slots</label><select class="new-round-slots">' +
+          [2, 4, 8, 16, 32].map(function(n) { return '<option value="' + n + '"' + (n === suggested ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+        '</select></div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-cyan btn-sm" data-add-round="' + esc(stage.id) + '">+ Add round</button>' +
+    '</div>';
+  }
+
+  function renderBracketStageBody(stage) {
+    var cols = stage.rounds.map(function(round, ri) {
+      var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
+      return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div>' + matchesHtml + '</div>';
+    }).join('');
+    return (stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '<p class="empty-note">No rounds yet.</p>') +
+      renderAddRoundPanel(stage);
   }
 
   function renderAddStagePanel() {
@@ -1897,10 +2055,9 @@ var CLUBS = [
         if (!isAdmin) return;
         var matchId = btn.dataset.saveMatch;
         var row = btn.closest('.match-row');
-        var stage = currentBracket.stages.find(function(s) { return s.matches && s.matches.some(function(m) { return m.id === matchId; }); });
-        if (!stage) return;
-        var match = stage.matches.find(function(m) { return m.id === matchId; });
-        if (!match) return;
+        var found = findMatchAnywhere(currentBracket, matchId);
+        if (!found) return;
+        var match = found.match;
         var bestOf = parseInt(row.querySelector('.match-bestof').value, 10) || 3;
         var setPoints = row.querySelector('.match-setpoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
         var sets = [];
@@ -1932,6 +2089,67 @@ var CLUBS = [
         sel.closest('.match-row').querySelectorAll('.set-input-pair').forEach(function(pair) {
           pair.hidden = parseInt(pair.dataset.setSlot, 10) >= n;
         });
+      });
+    });
+
+    document.querySelectorAll('[data-add-round]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.addRound);
+        if (!stage) return;
+        var card = btn.closest('.stage-card');
+        var name = card.querySelector('.new-round-name').value.trim() || ('Round ' + (stage.rounds.length + 1));
+        var numSlots = parseInt(card.querySelector('.new-round-slots').value, 10);
+        var prevRound = stage.rounds[stage.rounds.length - 1];
+        var slots = [];
+        for (var i = 0; i < numSlots; i++) {
+          if (prevRound && prevRound.matches[i]) {
+            slots.push({ source: { type: 'matchWinner', matchId: prevRound.matches[i].id } });
+          } else {
+            slots.push({ source: { type: 'manual', teamId: null } });
+          }
+        }
+        var matches = [];
+        for (var j = 0; j < numSlots; j += 2) {
+          matches.push({
+            id: genId('match'), slotAIndex: j, slotBIndex: j + 1,
+            format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
+            sets: []
+          });
+        }
+        stage.rounds.push({ name: name, slots: slots, matches: matches });
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('.slot-editor .slot-type').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var editor = sel.closest('.slot-editor');
+        editor.querySelector('.slot-team').hidden = sel.value !== 'manual';
+        editor.querySelector('.slot-stage').hidden = sel.value !== 'rank';
+        editor.querySelector('.slot-rank').hidden = sel.value !== 'rank';
+      });
+    });
+
+    document.querySelectorAll('[data-save-slot]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var parts = btn.dataset.saveSlot.split(':');
+        var stage = findStage(currentBracket, parts[0]);
+        var roundIndex = parseInt(parts[1], 10), slotIndex = parseInt(parts[2], 10);
+        if (!stage) return;
+        var editor = btn.closest('.slot-editor');
+        var type = editor.querySelector('.slot-type').value;
+        var source;
+        if (type === 'manual') {
+          source = { type: 'manual', teamId: editor.querySelector('.slot-team').value || null };
+        } else if (type === 'rank') {
+          source = { type: 'rank', stageId: editor.querySelector('.slot-stage').value, rank: parseInt(editor.querySelector('.slot-rank').value, 10) || 1 };
+        } else {
+          source = { type: 'bye' };
+        }
+        stage.rounds[roundIndex].slots[slotIndex].source = source;
+        persistBracket();
       });
     });
   }
