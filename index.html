@@ -154,7 +154,7 @@
   .edit-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; cursor:pointer; border-radius:inherit; background:rgba(11,13,99,0.72); }
   body.admin-edit-mode .edit-target .edit-overlay { display:flex; }
   .edit-btn { background:var(--cyan); color:var(--pill-text); font-size:13px; font-weight:600; padding:9px 18px; border-radius:20px; pointer-events:none; }
-  .edit-file-input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+  .edit-file-input, .edit-hero-file-input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
   .edit-pencil { display:none; background:var(--cyan); color:var(--pill-text); border:none; width:22px; height:22px; border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-left:8px; vertical-align:middle; flex-shrink:0; }
   body.admin-edit-mode .edit-pencil { display:inline-flex; align-items:center; justify-content:center; }
   /* No display/layout properties here on purpose — this class gets added to
@@ -896,6 +896,30 @@ var CLUBS = [
     });
   }
 
+  // Hero media accepts video OR image (unlike every other edit-target, which is
+  // photo-only) — picks the override field from the file's actual MIME type.
+  // In demo mode this goes through localStorage as a base64 data URL, same as
+  // every other demo-mode upload, but browsers cap that around 5-10MB per origin —
+  // fine for a small looping clip, not for a full-length video — so a quota error
+  // here surfaces a clear message instead of failing silently.
+  function saveHeroMedia(file) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var field = file.type.indexOf('video') === 0 ? 'video' : 'image';
+    if (AUTH_DEMO_MODE) {
+      return fileToDataUrl(file).then(function(dataUrl) {
+        try {
+          return saveContentField('hero', field, dataUrl);
+        } catch (err) {
+          return Promise.reject(new Error('storage-quota'));
+        }
+      });
+    }
+    var ref = firebase.storage().ref('content/hero/' + Date.now() + '-' + file.name);
+    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+      return saveContentField('hero', field, url);
+    });
+  }
+
   function effectiveTournament(t) {
     var o = contentOverrides[t.id];
     return o ? Object.assign({}, t, o) : t;
@@ -1286,6 +1310,10 @@ var CLUBS = [
     return '<label class="edit-overlay"><span class="edit-btn">✎ Change photo</span><input type="file" accept="image/*" class="edit-file-input" data-edit-image-key="' + esc(key) + '"></label>';
   }
 
+  function editHeroMediaOverlayHtml() {
+    return '<label class="edit-overlay"><span class="edit-btn">✎ Change video/photo</span><input type="file" accept="video/*,image/*" class="edit-hero-file-input"></label>';
+  }
+
   // Drag-to-reorder for sortable-block groups. Uses Pointer Events so it
   // works the same with mouse and touch (admins may reorder from a phone).
   // onReorder(newOrderOfBlockKeys) is called once a drag completes — callers decide
@@ -1369,6 +1397,25 @@ var CLUBS = [
     }).catch(function() {
       label.textContent = prevText;
       window.alert('Upload failed. Please try again.');
+    });
+  });
+
+  document.addEventListener('change', function(e) {
+    var input = e.target.closest('.edit-hero-file-input');
+    if (!input || !input.files || !input.files[0]) return;
+    if (!isAdmin) { input.value = ''; return; }
+    var label = input.closest('.edit-overlay').querySelector('.edit-btn');
+    var prevText = label.textContent;
+    label.textContent = 'Uploading …';
+    saveHeroMedia(input.files[0]).then(function() {
+      route();
+    }).catch(function(err) {
+      label.textContent = prevText;
+      if (err && err.message === 'storage-quota') {
+        window.alert("This video is too large for demo mode (browser storage is limited to a few MB). Either use a shorter/smaller clip, or set up real Firebase Storage (see setup guide) for unlimited size.");
+      } else {
+        window.alert('Upload failed. Please try again.');
+      }
     });
   });
 
@@ -1481,7 +1528,7 @@ var CLUBS = [
     } else {
       mediaHtml = '<div class="hero-media-placeholder"><span class="hero-ph-text mono">Drop in your hero video or image — set CONFIG.HERO_VIDEO_URL / HERO_IMAGE_URL in index.html</span></div>';
     }
-    el.innerHTML = mediaHtml + '<div class="hero-overlay"></div>' + editImageOverlayHtml('hero');
+    el.innerHTML = mediaHtml + '<div class="hero-overlay"></div>' + editHeroMediaOverlayHtml();
   }
 
   /* ==================================================================
