@@ -40,6 +40,8 @@ function doPost(e) {
     if (body.action === 'register') return jsonOut_(registerTeam_(body));
     if (body.action === 'createCheckout') return jsonOut_(createCheckout_(body));
     if (body.action === 'confirmPayment') return jsonOut_(confirmPayment_(body));
+    if (body.action === 'markPaid') return jsonOut_(markPaid_(body));
+    if (body.action === 'deleteRegistration') return jsonOut_(deleteRegistration_(body));
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
     return jsonOut_({ error: String(err) });
@@ -122,6 +124,31 @@ function updateRegistration_(id, fields) {
     }
   }
   return false;
+}
+
+// Admin-only actions (manually confirm a cash payment, remove a duplicate/cancelled
+// registration). Gated client-side by CONFIG.ADMIN_EMAILS, same trust model as the
+// rest of this endpoint — there's no server-side identity check here, so anyone who
+// finds this Web App URL could in principle call these directly. Fine for a small,
+// single-operator tournament; add a shared-secret or token check here first if that's
+// not an acceptable risk once real payments are flowing.
+function markPaid_(body) {
+  var ok = updateRegistration_(body.id, { Status: 'paid' });
+  return ok ? { ok: true } : { error: 'not found' };
+}
+
+function deleteRegistration_(body) {
+  var sh = getSheet_(REG_SHEET);
+  var rows = sh.getDataRange().getValues();
+  var header = rows[0];
+  var idx = indexMap_(header);
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][idx.ID] === body.id) {
+      sh.deleteRow(i + 1);
+      return { ok: true };
+    }
+  }
+  return { error: 'not found' };
 }
 
 /* -------------------- Stripe -------------------- */

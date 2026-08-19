@@ -221,6 +221,12 @@
   .status { font-size:11px; font-weight:600; padding:4px 10px; border-radius:12px; white-space:nowrap; }
   .status-paid { background:var(--tint-paid); color:var(--paid); }
   .status-pending { background:var(--tint-pending); color:var(--pending-text); }
+  .player-row-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .reg-action-btn { padding:6px 14px; font-size:11.5px; font-weight:600; border-radius:14px; border:1.5px solid var(--cyan-ink); background:transparent; color:var(--cyan-ink); cursor:pointer; white-space:nowrap; }
+  .reg-action-btn:hover { background:rgba(0,242,255,0.08); }
+  .reg-action-danger { border-color:#b3401f; color:#b3401f; }
+  .reg-action-danger:hover { background:rgba(179,64,31,0.08); }
+  .confirm-delete-text { font-size:12px; color:var(--text-muted); white-space:nowrap; }
   .empty-note { color:var(--text-muted); font-size:14px; padding:4px 0 40px; }
 
   /* Live bracket */
@@ -700,6 +706,27 @@ var CLUBS = [
       return Promise.resolve(e ? { status:e.status } : { error:'not found' });
     }
     return apiGet('status', { id:id });
+  }
+
+  // Admin-only actions from the tournament detail page (manually confirm a cash
+  // payment, remove a duplicate/cancelled registration).
+  function backendAdminMarkPaid(id) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (DEMO_MODE) {
+      var list = demoAll();
+      var e = list.find(function(r){ return r.id === id; });
+      if (e) { e.status = 'paid'; demoSave(list); }
+      return Promise.resolve({ ok:true });
+    }
+    return apiPost('markPaid', { id:id });
+  }
+  function backendAdminDeleteRegistration(id) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (DEMO_MODE) {
+      demoSave(demoAll().filter(function(r){ return r.id !== id; }));
+      return Promise.resolve({ ok:true });
+    }
+    return apiPost('deleteRegistration', { id:id });
   }
 
   /* ==================================================================
@@ -1563,13 +1590,17 @@ var CLUBS = [
       var statusClass = p.status === 'paid' ? 'status-paid' : 'status-pending';
       var statusLabel = p.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
       return (
-        '<div class="player-row">' +
+        '<div class="player-row" data-reg-id="' + esc(p.id) + '">' +
           '<div class="player-info">' +
             clubAvatarHtml(findClub(p.club)) +
             '<div><strong>' + esc(p.firstName) + ' ' + esc(p.lastName) + '</strong> &amp; ' + esc(p.partner) +
             '<span class="player-club">' + esc(p.club) + '</span></div>' +
           '</div>' +
-          '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
+          '<div class="player-row-actions">' +
+            '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
+            (p.status !== 'paid' ? '<button type="button" class="reg-action-btn admin-only-inline" data-confirm-reg="' + esc(p.id) + '">Confirm</button>' : '') +
+            '<button type="button" class="icon-btn admin-only-flex" data-delete-reg="' + esc(p.id) + '" title="Delete registration">✕</button>' +
+          '</div>' +
         '</div>'
       );
     }).join('') + '</div>';
@@ -1655,7 +1686,12 @@ var CLUBS = [
     }
 
     checkResumablePayment(t);
+    loadAndRenderPlayerLists(t);
 
+    setView('detail');
+  }
+
+  function loadAndRenderPlayerLists(t) {
     backendListRegistrations(t.id).then(function(all) {
       var listsEl = document.getElementById('playerLists');
       if (!listsEl) return;
@@ -1667,9 +1703,36 @@ var CLUBS = [
       } else {
         listsEl.innerHTML = '<h2 class="section-title">' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(all);
       }
+      wirePlayerListEvents(t);
     });
+  }
 
-    setView('detail');
+  function wirePlayerListEvents(t) {
+    document.querySelectorAll('[data-confirm-reg]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        btn.disabled = true;
+        backendAdminMarkPaid(btn.dataset.confirmReg).then(function() { loadAndRenderPlayerLists(t); });
+      });
+    });
+    document.querySelectorAll('[data-delete-reg]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var id = btn.dataset.deleteReg;
+        var actions = btn.closest('.player-row-actions');
+        actions.innerHTML =
+          '<span class="confirm-delete-text">Delete this team?</span>' +
+          '<button type="button" class="reg-action-btn reg-action-danger confirm-delete-yes">Yes, delete</button>' +
+          '<button type="button" class="reg-action-btn confirm-delete-cancel">Cancel</button>';
+        actions.querySelector('.confirm-delete-yes').addEventListener('click', function() {
+          if (!isAdmin) return;
+          backendAdminDeleteRegistration(id).then(function() { loadAndRenderPlayerLists(t); });
+        });
+        actions.querySelector('.confirm-delete-cancel').addEventListener('click', function() {
+          loadAndRenderPlayerLists(t);
+        });
+      });
+    });
   }
 
   function checkResumablePayment(t) {
