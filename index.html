@@ -3197,8 +3197,28 @@ var CLUBS = [
   // soonest, respecting court availability, both teams' availability, and each match's
   // readyTime. Not globally optimal, but deterministic and respects every real
   // constraint. Returns how many matches it placed.
-  function autoScheduleStageToDay(bracket, stage, day) {
-    var pending = gatherSchedulableMatches(bracket, stage, day);
+  // Accepts one or more stages so their matches compete for the same courts in
+  // a single greedy pass — the loop below always places whichever pending match
+  // (from ANY of the given stages) can start soonest, which is what makes
+  // simultaneous groups interleave across time instead of one finishing before
+  // the next is even considered (which is what happened when this ran once per
+  // stage, each call exhausting its own matches before the next stage's call
+  // even began).
+  //
+  // The per-stage match lists are woven together (one from each stage in turn)
+  // rather than simply concatenated. The greedy loop's tie-break always favors
+  // whichever candidate appears earlier in the pending array — with a plain
+  // concatenation, EVERY tie would resolve in favor of the first stage listed
+  // (its matches always come first), so that stage would still finish entirely
+  // before the next one's matches ever got picked, defeating the whole point.
+  // Weaving the lists means ties alternate fairly across stages instead.
+  function autoScheduleStagesToDay(bracket, stages, day) {
+    var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
+    var pending = [];
+    var maxLen = perStage.reduce(function(m, arr) { return Math.max(m, arr.length); }, 0);
+    for (var i = 0; i < maxLen; i++) {
+      perStage.forEach(function(arr) { if (arr[i]) pending.push(arr[i]); });
+    }
     if (!pending.length) return 0;
 
     var courtNextFree = day.courts.map(function(items) {
@@ -3373,15 +3393,17 @@ var CLUBS = [
     if (!bracket.schedule.days.length || !bracket.stages.length) return '';
     var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
     var rows = bracket.stages.map(function(stage) {
-      return '<div class="roster-row">' +
-        '<div class="roster-row-teams"><div><strong>' + esc(stage.label) + '</strong><span class="player-club">' + esc(stage.type) + '</span></div></div>' +
-        '<div class="roster-row-actions">' +
-          '<select class="schedule-day-select" data-stage-select="' + esc(stage.id) + '">' + dayOptions + '</select>' +
-          '<button type="button" class="reg-action-btn" data-add-to-schedule="' + esc(stage.id) + '">Add to schedule</button>' +
-        '</div>' +
-      '</div>';
+      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(stage.type) + '</span></span></label>';
     }).join('');
-    return '<div class="live-panel admin-only"><h2>Add matches to schedule</h2>' + rows + '</div>';
+    return '<div class="live-panel admin-only">' +
+      '<h2>Add matches to schedule</h2>' +
+      '<p class="empty-note">Select one or more stages to schedule together — their matches interleave across the same courts instead of one stage finishing before the next starts.</p>' +
+      rows +
+      '<div class="roster-row-actions" style="margin-top:12px;">' +
+        '<select id="multiScheduleDaySelect">' + dayOptions + '</select>' +
+        '<button type="button" class="btn btn-cyan btn-sm" id="addMultiToScheduleBtn">Add selected to schedule</button>' +
+      '</div>' +
+    '</div>';
   }
 
   // Rebuilds one day's court item-lists from whatever order the DOM currently shows
@@ -3496,17 +3518,16 @@ var CLUBS = [
       persistBracketSchedule();
     });
 
-    document.querySelectorAll('[data-add-to-schedule]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (!isAdmin) return;
-        var stage = findStage(currentBracket, btn.dataset.addToSchedule);
-        if (!stage) return;
-        var select = document.querySelector('.schedule-day-select[data-stage-select="' + stage.id + '"]');
-        var day = currentBracket.schedule.days[parseInt(select.value, 10)];
-        if (!day) return;
-        autoScheduleStageToDay(currentBracket, stage, day);
-        persistBracketSchedule();
-      });
+    var addMultiBtn = document.getElementById('addMultiToScheduleBtn');
+    if (addMultiBtn) addMultiBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var checkedIds = Array.prototype.slice.call(document.querySelectorAll('[data-schedule-stage-check]:checked')).map(function(cb) { return cb.dataset.scheduleStageCheck; });
+      if (!checkedIds.length) return;
+      var stages = checkedIds.map(function(id) { return findStage(currentBracket, id); }).filter(Boolean);
+      var day = currentBracket.schedule.days[parseInt(document.getElementById('multiScheduleDaySelect').value, 10)];
+      if (!day) return;
+      autoScheduleStagesToDay(currentBracket, stages, day);
+      persistBracketSchedule();
     });
 
     document.querySelectorAll('[data-add-block]').forEach(function(btn) {
