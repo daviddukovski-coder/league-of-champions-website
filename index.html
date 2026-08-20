@@ -2123,21 +2123,31 @@ var CLUBS = [
     });
   }
 
+  function teamRosterRowHtml(team) {
+    var promoteBtn = team.category === 'quali'
+      ? '<button type="button" class="btn btn-outline btn-sm admin-only-flex" data-promote-team="' + esc(team.id) + '" title="Promote to Main Draw">Promote to Main Draw</button>'
+      : '';
+    return '<div class="roster-row">' +
+      '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
+        '<div><strong>' + esc(team.name) + '</strong>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
+      '</div>' +
+      '<div class="roster-row-actions">' +
+        promoteBtn +
+        '<input type="number" class="seed-input admin-only-flex" value="' + (team.seed || '') + '" data-seed-team="' + esc(team.id) + '" title="Seed">' +
+        '<button type="button" class="icon-btn admin-only-flex" data-remove-team="' + esc(team.id) + '" title="Remove team">✕</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderRosterPanel(bracket) {
-    var rows = bracket.teams.map(function(team) {
-      return '<div class="roster-row">' +
-        '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
-          '<div><strong>' + esc(team.name) + '</strong>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
-        '</div>' +
-        '<div class="roster-row-actions">' +
-          '<input type="number" class="seed-input admin-only-flex" value="' + (team.seed || '') + '" data-seed-team="' + esc(team.id) + '" title="Seed">' +
-          '<button type="button" class="icon-btn admin-only-flex" data-remove-team="' + esc(team.id) + '" title="Remove team">✕</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    var quali = bracket.teams.filter(function(t) { return t.category === 'quali'; });
+    var main = bracket.teams.filter(function(t) { return t.category !== 'quali'; });
+    var groups = '';
+    if (quali.length) groups += '<h3>Qualifier (' + quali.length + ')</h3>' + quali.map(teamRosterRowHtml).join('');
+    groups += '<h3>Main Draw (' + main.length + ')</h3>' + (main.length ? main.map(teamRosterRowHtml).join('') : '<p class="empty-note">No teams added yet.</p>');
     return '<div class="live-panel">' +
       '<h2>Teams (' + bracket.teams.length + ')</h2>' +
-      (rows || '<p class="empty-note">No teams added yet.</p>') +
+      groups +
       '<div class="admin-only" id="addTeamPanel">' +
         '<h3>Add from registrations</h3>' +
         '<div id="regTeamPicker"><p class="empty-note">Loading registrations …</p></div>' +
@@ -2147,6 +2157,7 @@ var CLUBS = [
           '<div class="form-group"><label>Club</label><select id="manualTeamClub"><option value="">— none —</option>' +
             CLUBS.map(function(c){ return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>'; }).join('') +
           '</select></div>' +
+          '<div class="form-group"><label>Category</label><select id="manualTeamCategory"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
       '</div>' +
@@ -2541,19 +2552,24 @@ var CLUBS = [
         var statusLabel = r.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
         return '<div class="roster-row"><div class="roster-row-teams">' + clubAvatarHtml(findClub(r.club)) +
           '<div><strong>' + esc(name) + '</strong><span class="player-club">' + esc(r.club) + ' · ' + esc(divisionLabel(r.competition)) + ' · ' + esc(statusLabel) + '</span></div></div>' +
-          '<button type="button" class="btn btn-outline" data-add-reg-id="' + esc(r.id) + '" data-add-reg-name="' + esc(name) + '" data-add-reg-club="' + esc(r.club) + '">+ Add</button>' +
+          '<div class="roster-row-actions">' +
+            '<select class="reg-category-select"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select>' +
+            '<button type="button" class="btn btn-outline" data-add-reg-id="' + esc(r.id) + '" data-add-reg-name="' + esc(name) + '" data-add-reg-club="' + esc(r.club) + '">+ Add</button>' +
+          '</div>' +
         '</div>';
       }).join('');
       picker.querySelectorAll('[data-add-reg-id]').forEach(function(btn) {
         btn.addEventListener('click', function() {
           if (!isAdmin) return;
+          var category = btn.closest('.roster-row').querySelector('.reg-category-select').value;
           currentBracket.teams.push({
             id: 'reg-' + btn.dataset.addRegId,
             name: btn.dataset.addRegName,
             club: btn.dataset.addRegClub,
             logo: null,
             players: btn.dataset.addRegName,
-            seed: null
+            seed: null,
+            category: category
           });
           persistBracket();
         });
@@ -2584,13 +2600,24 @@ var CLUBS = [
       });
     });
 
+    document.querySelectorAll('[data-promote-team]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var team = findBracketTeam(currentBracket, btn.dataset.promoteTeam);
+        if (!team) return;
+        team.category = 'main';
+        persistBracket();
+      });
+    });
+
     var addManualBtn = document.getElementById('addManualTeamBtn');
     if (addManualBtn) addManualBtn.addEventListener('click', function() {
       if (!isAdmin) return;
       var name = document.getElementById('manualTeamName').value.trim();
       if (!name) return;
       var club = document.getElementById('manualTeamClub').value;
-      currentBracket.teams.push({ id: genId('team'), name: name, club: club, logo: null, players: name, seed: null });
+      var category = document.getElementById('manualTeamCategory').value;
+      currentBracket.teams.push({ id: genId('team'), name: name, club: club, logo: null, players: name, seed: null, category: category });
       persistBracket();
     });
 
