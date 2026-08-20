@@ -9,7 +9,7 @@
  *   SITE_BASE_URL      – e.g. https://<user>.github.io/league-of-champions-tour/
  *
  * Required sheet tabs (exact header row spelling matters):
- *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId
+ *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId | UserId | PartnerId
  */
 
 var REG_SHEET = 'Registrations';
@@ -81,7 +81,9 @@ function listRegistrations_(tournamentId) {
       partner: r[idx.Partner],
       club: r[idx.Club],
       competition: r[idx.Competition],
-      status: r[idx.Status]
+      status: r[idx.Status],
+      uid: r[idx.UserId],
+      partnerUid: r[idx.PartnerId]
     });
   });
   return out;
@@ -105,7 +107,8 @@ function registerTeam_(body) {
   sh.appendRow([
     id, new Date(), body.tournamentId, body.competition,
     body.firstName, body.lastName, body.email, body.phone,
-    body.partner, body.club, 'pending', ''
+    body.partner, body.club, 'pending', '',
+    body.uid || '', body.partnerUid || ''
   ]);
   return { ok: true, id: id };
 }
