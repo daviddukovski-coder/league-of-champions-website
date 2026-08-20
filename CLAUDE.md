@@ -1,6 +1,6 @@
 # League of Champions – Turnier-Anmeldeplattform
 
-Stand: 2026-08-19. Diese Datei ist der Einstiegspunkt für jede neue Chat-Session an diesem Projekt – sie fasst zusammen, was existiert, was fertig ist und was als Nächstes ansteht.
+Stand: 2026-08-20. Diese Datei ist der Einstiegspunkt für jede neue Chat-Session an diesem Projekt – sie fasst zusammen, was existiert, was fertig ist und was als Nächstes ansteht.
 
 ## Was das ist
 
@@ -37,14 +37,23 @@ Aktuell läuft die Site **im Demo-Modus**, weil zwei Werte noch Platzhalter sind
 
 ## Zuletzt in Bearbeitung (laufende Session)
 
-Auto-Spielplan-Feature (siehe oben) fertig gebaut und in 4 Schritten committet + im Browser verifiziert (Demo-Modus). Kein offener/unstaged Zustand – alles committet.
+Sechs kleinere, direkt umsetzbare Fixes aus dem großen Feedback-Batch fertig gebaut, im Browser verifiziert und committet (`1a7b60a`):
+- **Logo-Verzerrung behoben** (war KEIN `object-fit`-Problem – das Badge-PNG ist quadratisch. Eigentliche Ursache: `<img class="badge">` teilte sich den Klassennamen mit der Status-Pill-Klasse `.badge`/`.badge-upcoming`/`.badge-past`, wodurch deren `padding`+`border-radius` auf das Logo durchschlug und die Content-Box verzerrte. Fix: umbenannt zu `.league-badge`, plus `object-fit:contain` zur Absicherung.)
+- Spielplan-Items zeigen Team A / vs / Team B jetzt gestapelt (vertikal) statt in einer umbrechenden Zeile.
+- Ein im Live Bracket eingetragenes Ergebnis erscheint automatisch im Spielplan (echtes Ergebnis statt "vs", dezent in Grün via `var(--paid)`) – nutzt das bestehende `formatSetsSummary()`.
+- Neuer LIVE-Button pro Turnier (verlinkt zu bolao.tv), einzeln pro Turnier im Edit Mode ein-/ausschaltbar (`liveButtonHtml`/`wireLiveToggle`, Feld `liveEnabled` im normalen Content-Override-Mechanismus – keine neue Speicherlogik nötig).
+- Status-Label "Final" → "Finished" (Nutzerentscheidung), Footer-Text "Instagram · Tour" → "Instagram · League of Champions".
 
-**Wiederkehrender Bug-Typ, den es zu vermeiden gilt:** Mehrfach in dieser und der vorherigen Session ist derselbe CSS-Fehler aufgetreten – eine Komponentenklasse deklariert selbst `display:...`, was (bei gleicher Spezifität, aber späterer Position im Stylesheet) die `admin-only`/`admin-only-flex`/`admin-only-inline`-Sichtbarkeitsklasse überstimmt und Admin-Bedienelemente für alle Besucher sichtbar/nutzbar macht. Regel: neue Komponentenklassen, die mit einer `admin-only*`-Markerklasse kombiniert werden, dürfen niemals selbst `display` setzen – das muss immer die Markerklasse übernehmen. Vor jedem Feature-Abschluss den `getComputedStyle(...).display` für alle neuen Admin-Elemente als nicht-eingeloggter Besucher explizit prüfen, nicht nur visuell.
+**Wiederkehrender Bug-Typ, den es zu vermeiden gilt:** Mehrfach in dieser und der vorherigen Session ist derselbe CSS-Fehler aufgetreten – eine Komponentenklasse deklariert selbst `display:...`, was (bei gleicher Spezifität, aber späterer Position im Stylesheet) die `admin-only`/`admin-only-flex`/`admin-only-inline`-Sichtbarkeitsklasse überstimmt und Admin-Bedienelemente für alle Besucher sichtbar/nutzbar macht. Regel: neue Komponentenklassen, die mit einer `admin-only*`-Markerklasse kombiniert werden, dürfen niemals selbst `display` setzen – das muss immer die Markerklasse übernehmen. Vor jedem Feature-Abschluss den `getComputedStyle(...).display` für alle neuen Admin-Elemente als nicht-eingeloggter Besucher explizit prüfen, nicht nur visuell. **Verwandte, aber andere Falle (diese Session neu entdeckt):** generische, kurze Klassennamen (`.badge`) können mit einer fachlich unverwandten Klasse gleichen Namens kollidieren und ungewollt Eigenschaften vererben – bei neuen CSS-Klassen auf eindeutige, beschreibende Namen achten statt allgemeine Begriffe wie "badge", "item", "label" wiederzuverwenden.
 
 ## Nächste sinnvolle Schritte
 
-1. Echte Apps-Script-Deployment-URL + Firebase-Keys eintragen, um aus dem Demo-Modus rauszukommen (Registrierungen, Accounts, Content-Editor, Live-Bracket UND Spielplan betroffen).
-2. Firestore-Security-Rules für `content/{doc}` UND `brackets/{tournamentId}` setzen (Setup-Guide Punkt 5) – deckt auch den Spielplan ab, da er im selben Doc lebt.
-3. Stripe-Testkäufe end-to-end durchspielen (Checkout → `confirmPayment_` → Sheet-Status).
-4. Mobile-Test auf echtem Gerät (Touch-Events für Drag-Reorder, Live-Bracket-Ergebniseingabe UND Spielplan-Verschieben courtside).
-5. Live-Bracket + Spielplan mit einem echten Turnier durchspielen (Setzliste → Gruppen → Bracket/Swiss → Finale, Spielplan generieren) und Feedback zur Bedienung courtside einholen.
+1. **Nächstes großes Feature (vom Nutzer priorisiert):** Doppel-K.-o.-Modus als weitere Bracket-Stage-Option + Team-Einteilung in "Quali"/"Hauptbewerb" – noch nicht begonnen, braucht einen eigenen Plan-Mode-Durchlauf.
+2. Danach: Spielerprofile (Name/Alter optional/Ranking-Punkte/Turniere/Siege/Niederlagen/Klubs) + anklickbare Spielernamen + Spieler-Autocomplete beim Partner-Feld – noch nicht begonnen, Datenmodell-Fragen an den Nutzer noch offen.
+3. Danach: Round-Robin-Reihenfolge nach Standardschema pro Gruppe + Verschränkung mehrerer gleichzeitig laufender Gruppen im Spielplan – Nutzer-Beschreibung des genauen 4er-Gruppen-Schemas wurde mitten im Satz abgeschnitten, muss vor dem Plan-Mode-Durchlauf nachgefragt werden.
+4. Echte Apps-Script-Deployment-URL + Firebase-Keys eintragen, um aus dem Demo-Modus rauszukommen (Registrierungen, Accounts, Content-Editor, Live-Bracket UND Spielplan betroffen).
+5. Firestore-Security-Rules für `content/{doc}` UND `brackets/{tournamentId}` setzen (Setup-Guide Punkt 5) – deckt auch den Spielplan ab, da er im selben Doc lebt.
+6. Stripe-Testkäufe end-to-end durchspielen (Checkout → `confirmPayment_` → Sheet-Status).
+7. Mobile-Test auf echtem Gerät (Touch-Events für Drag-Reorder, Live-Bracket-Ergebniseingabe UND Spielplan-Verschieben courtside).
+8. Live-Bracket + Spielplan mit einem echten Turnier durchspielen (Setzliste → Gruppen → Bracket/Swiss → Finale, Spielplan generieren) und Feedback zur Bedienung courtside einholen.
+9. GitHub-Pages-Deployment abschließen, sobald der Nutzer GitHub-Username + leeres Repo bereitstellt (`gh` CLI ist auf dieser Maschine nicht installiert, kein Remote konfiguriert).
