@@ -2653,7 +2653,7 @@ var CLUBS = [
           '<div><strong>' + esc(name) + '</strong><span class="player-club">' + esc(r.club) + ' · ' + esc(divisionLabel(r.competition)) + ' · ' + esc(statusLabel) + '</span></div></div>' +
           '<div class="roster-row-actions">' +
             '<select class="reg-category-select"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select>' +
-            '<button type="button" class="btn btn-outline" data-add-reg-id="' + esc(r.id) + '" data-add-reg-name="' + esc(name) + '" data-add-reg-club="' + esc(r.club) + '">+ Add</button>' +
+            '<button type="button" class="btn btn-outline" data-add-reg-id="' + esc(r.id) + '" data-add-reg-name="' + esc(name) + '" data-add-reg-club="' + esc(r.club) + '" data-add-reg-uid="' + esc(r.uid || '') + '" data-add-reg-partner-uid="' + esc(r.partnerUid || '') + '">+ Add</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -2668,7 +2668,9 @@ var CLUBS = [
             logo: null,
             players: btn.dataset.addRegName,
             seed: null,
-            category: category
+            category: category,
+            uid: btn.dataset.addRegUid || undefined,
+            partnerUid: btn.dataset.addRegPartnerUid || undefined
           });
           persistBracket();
         });
@@ -3533,6 +3535,38 @@ var CLUBS = [
     });
   }
 
+  // Optional, best-effort partner lookup — mirrors setupClubCombo exactly, but
+  // free-text entry (no match picked) stays fully valid; a picked account just
+  // additionally records rPartnerUid so that player gets a linked profile later.
+  function setupPartnerCombo() {
+    var search = document.getElementById('rPartner');
+    var hiddenInput = document.getElementById('rPartnerUid');
+    var dropdown = document.getElementById('partnerDropdown');
+    search.addEventListener('input', function() {
+      var q = search.value.trim().toLowerCase();
+      hiddenInput.value = '';
+      if (!q) { dropdown.hidden = true; return; }
+      var matches = playersDirectory.filter(function(p) {
+        return p.uid !== (currentUser && currentUser.uid) && p.name.toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 8);
+      if (!matches.length) { dropdown.hidden = true; return; }
+      dropdown.innerHTML = matches.map(function(p) {
+        return '<div class="combo-item" data-uid="' + esc(p.uid) + '" data-name="' + esc(p.name) + '"><span>' + esc(p.name) + '</span><span class="player-club">' + esc(p.email) + '</span></div>';
+      }).join('');
+      dropdown.hidden = false;
+    });
+    dropdown.addEventListener('click', function(e) {
+      var item = e.target.closest('.combo-item');
+      if (!item) return;
+      search.value = item.dataset.name;
+      hiddenInput.value = item.dataset.uid;
+      dropdown.hidden = true;
+    });
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.combo-group')) dropdown.hidden = true;
+    });
+  }
+
   /* ==================================================================
      REGISTER
      ================================================================== */
@@ -3552,7 +3586,12 @@ var CLUBS = [
           '<div class="form-group"><label>' + uiEdit('register.emailLabel') + '</label><input type="email" id="rEmail" required></div>' +
           '<div class="form-group"><label>' + uiEdit('register.phoneLabel') + '</label><input type="tel" id="rPhone" required></div>' +
         '</div>' +
-        '<div class="form-group"><label>' + uiEdit('register.partnerLabel') + '</label><input id="rPartner" required placeholder="' + esc(uiText('register.partnerPlaceholder')) + '"></div>' +
+        '<div class="form-group combo-group">' +
+          '<label>' + uiEdit('register.partnerLabel') + '</label>' +
+          '<input id="rPartner" autocomplete="off" required placeholder="' + esc(uiText('register.partnerPlaceholder')) + '">' +
+          '<div id="partnerDropdown" class="combo-dropdown" hidden></div>' +
+          '<input type="hidden" id="rPartnerUid">' +
+        '</div>' +
         '<div class="form-group combo-group">' +
           '<label>' + uiEdit('register.clubLabel') + '</label>' +
           '<input id="rClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '" required>' +
@@ -3578,6 +3617,7 @@ var CLUBS = [
       '<div id="regConfirm" class="confirmation" hidden></div>';
 
     setupClubCombo();
+    setupPartnerCombo();
 
     if (currentUser) {
       var nameParts = (currentUser.name || '').trim().split(/\s+/);
@@ -3627,6 +3667,7 @@ var CLUBS = [
       var email = document.getElementById('rEmail').value.trim();
       var phone = document.getElementById('rPhone').value.trim();
       var partner = document.getElementById('rPartner').value.trim();
+      var partnerUid = document.getElementById('rPartnerUid').value.trim();
       var clubHidden = document.getElementById('rClub').value.trim();
       var clubTyped = document.getElementById('rClubSearch').value.trim();
       var club = clubHidden || clubTyped;
@@ -3641,7 +3682,7 @@ var CLUBS = [
       submitBtn.disabled = true;
       submitBtn.textContent = 'One moment …';
 
-      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club };
+      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, uid:currentUser.uid, partnerUid:partnerUid };
 
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');
