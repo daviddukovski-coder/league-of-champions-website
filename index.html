@@ -2948,7 +2948,7 @@ var CLUBS = [
   function slotReadyTime(bracket, slot, targetDay) {
     var src = slot.source;
     if (!src || src.type === 'manual' || src.type === 'bye') return 0;
-    if (src.type === 'matchWinner') {
+    if (src.type === 'matchWinner' || src.type === 'loser') {
       var found = findScheduledItem(bracket, src.matchId);
       if (!found) return null;
       return found.day === targetDay ? found.endMin : 0;
@@ -2980,7 +2980,7 @@ var CLUBS = [
         if (findScheduledItem(bracket, m.id)) return;
         out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format });
       });
-    } else if (stage.type === 'bracket') {
+    } else if (stage.type === 'bracket' || stage.type === 'doubleElim') {
       stage.rounds.forEach(function(round, ri) {
         round.matches.forEach(function(m) {
           if (findScheduledItem(bracket, m.id)) return;
