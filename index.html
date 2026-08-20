@@ -1206,11 +1206,16 @@ var CLUBS = [
     return order;
   }
 
-  // Builds a fully seeded double-elimination bracket in one shot: a pure function
-  // that returns {rounds} without touching stage — the caller decides when (or
+  function slotIsBye(round, slotIndex) {
+    var slot = round.slots[slotIndex];
+    return !!(slot && slot.source && slot.source.type === 'bye');
+  }
+
+  // Builds a fully seeded double-elimination bracket (winners bracket, losers
+  // bracket, and a single-match grand final) in one shot: a pure function that
+  // returns {rounds} without touching stage — the caller decides when (or
   // whether) to commit it, same compute/preview/confirm discipline the Swiss
-  // stage generation above already follows. Winners-bracket only for now; the
-  // losers bracket and grand final are added on top of this in a later step.
+  // stage generation above already follows.
   function generateDoubleElim(bracket, stage) {
     var ordered = stage.teamIds.slice().sort(function(a, b) { return teamSeed(a) - teamSeed(b); });
     var n = ordered.length;
@@ -1242,7 +1247,94 @@ var CLUBS = [
       rounds.push({ name: name, side: 'winners', slots: newSlots, matches: newMatches });
     }
 
-    return { rounds: rounds };
+    // ---- Losers bracket ----
+    // Built by simulation, not a hardcoded per-round formula, so it generalizes
+    // to any team count. For each winners round k, either lay out a fresh
+    // "drop-in" round (pairing losers-bracket survivors 1:1 against that
+    // round's newly-eliminated winners-bracket losers) or, if the survivor
+    // count doesn't match yet, one or more "consolidation" rounds first
+    // (survivors pair only among themselves) to bring the count down.
+    //
+    // A winners-round-1 match can have at most one bye side (never two — the
+    // seeding always pairs the smaller of any two seed numbers, which is
+    // always ≤ N, against the larger, which may exceed N), so it either has a
+    // real loser (normal `loser` reference) or no loser at all (`bye`,
+    // routing the other side straight through with no game). When a losers
+    // match ends up with BOTH its own slots literal byes, it can never
+    // produce a real winner either — anything downstream referencing it must
+    // also be written as a literal bye, exactly the way winners round 1
+    // already represents "nobody plays here" directly rather than as a
+    // dangling reference to a match that could never resolve.
+    var lbRounds = [];
+    var survivors = null; // null before Losers Round 1; after, [{matchId, dead}]
+    var lbRoundNum = 0;
+
+    function pushLbRound(pairs, side) {
+      var slots = [], matches = [];
+      pairs.forEach(function(pair) {
+        var aIdx = slots.length; slots.push({ source: pair[0] });
+        var bIdx = slots.length; slots.push({ source: pair[1] });
+        matches.push({ id: genId('match'), slotAIndex: aIdx, slotBIndex: bIdx, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] });
+      });
+      lbRoundNum++;
+      var round = { name: 'Losers Round ' + lbRoundNum, side: 'losers', slots: slots, matches: matches };
+      lbRounds.push(round);
+      return matches.map(function(m) {
+        return { matchId: m.id, dead: slotIsBye(round, m.slotAIndex) && slotIsBye(round, m.slotBIndex) };
+      });
+    }
+
+    for (var kk = 1; kk <= totalRounds; kk++) {
+      var wbRoundK = rounds[kk - 1];
+      var wbMatchesK = wbRoundK.matches;
+
+      if (survivors === null) {
+        var r1Pairs = [];
+        for (var pp = 0; pp < wbMatchesK.length; pp += 2) {
+          var wmA = wbMatchesK[pp], wmB = wbMatchesK[pp + 1];
+          var srcA = (slotIsBye(wbRoundK, wmA.slotAIndex) || slotIsBye(wbRoundK, wmA.slotBIndex)) ? { type: 'bye' } : { type: 'loser', matchId: wmA.id };
+          var srcB = (slotIsBye(wbRoundK, wmB.slotAIndex) || slotIsBye(wbRoundK, wmB.slotBIndex)) ? { type: 'bye' } : { type: 'loser', matchId: wmB.id };
+          r1Pairs.push([srcA, srcB]);
+        }
+        survivors = pushLbRound(r1Pairs);
+        continue;
+      }
+
+      while (survivors.length > wbMatchesK.length) {
+        var cPairs = [];
+        for (var qq = 0; qq < survivors.length; qq += 2) {
+          var svA = survivors[qq], svB = survivors[qq + 1];
+          cPairs.push([
+            svA.dead ? { type: 'bye' } : { type: 'matchWinner', matchId: svA.matchId },
+            svB.dead ? { type: 'bye' } : { type: 'matchWinner', matchId: svB.matchId }
+          ]);
+        }
+        survivors = pushLbRound(cPairs);
+      }
+
+      var dPairs = [];
+      for (var ii = 0; ii < survivors.length; ii++) {
+        var sv = survivors[ii];
+        var wm = wbMatchesK[ii];
+        var srcSurvivor = sv.dead ? { type: 'bye' } : { type: 'matchWinner', matchId: sv.matchId };
+        var srcIncoming = (slotIsBye(wbRoundK, wm.slotAIndex) || slotIsBye(wbRoundK, wm.slotBIndex)) ? { type: 'bye' } : { type: 'loser', matchId: wm.id };
+        dPairs.push([srcSurvivor, srcIncoming]);
+      }
+      survivors = pushLbRound(dPairs);
+      if (kk === totalRounds) lbRounds[lbRounds.length - 1].name = 'Losers Final';
+    }
+
+    // ---- Grand Final — a single decisive match, no bracket reset ----
+    var lastWbMatch = rounds[rounds.length - 1].matches[0];
+    var lastLbMatch = lbRounds[lbRounds.length - 1].matches[0];
+    var gfMatch = { id: genId('match'), slotAIndex: 0, slotBIndex: 1, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] };
+    var gfRound = {
+      name: 'Grand Final', side: 'final',
+      slots: [{ source: { type: 'matchWinner', matchId: lastWbMatch.id } }, { source: { type: 'matchWinner', matchId: lastLbMatch.id } }],
+      matches: [gfMatch]
+    };
+
+    return { rounds: rounds.concat(lbRounds).concat([gfRound]) };
   }
 
   /* ==================================================================
@@ -2226,7 +2318,7 @@ var CLUBS = [
   function renderSlotEditor(stage, roundIndex, slotIndex) {
     var slot = stage.rounds[roundIndex].slots[slotIndex];
     var src = slot.source || { type: 'manual' };
-    var displayType = src.type === 'matchWinner' ? 'manual' : src.type;
+    var displayType = (src.type === 'matchWinner' || src.type === 'loser') ? 'manual' : src.type;
     var stageOptions = currentBracket.stages.filter(function(s) { return s.type !== 'bracket' && s.type !== 'doubleElim'; }).map(function(s) {
       return '<option value="' + esc(s.id) + '"' + (src.type === 'rank' && src.stageId === s.id ? ' selected' : '') + '>' + esc(s.label) + '</option>';
     }).join('');
@@ -2236,6 +2328,7 @@ var CLUBS = [
     var key = stage.id + ':' + roundIndex + ':' + slotIndex;
     return '<div class="slot-editor">' +
       (src.type === 'matchWinner' ? '<span class="slot-auto-note">Auto: winner of previous match — </span>' : '') +
+      (src.type === 'loser' ? '<span class="slot-auto-note">Auto: loser of previous match — </span>' : '') +
       '<select class="slot-type">' +
         '<option value="manual"' + (displayType === 'manual' ? ' selected' : '') + '>Manual pick</option>' +
         '<option value="rank"' + (displayType === 'rank' ? ' selected' : '') + '>Group/Swiss rank</option>' +
