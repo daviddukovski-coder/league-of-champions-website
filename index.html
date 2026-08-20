@@ -105,7 +105,8 @@
   .ig-link:hover { border-color:var(--cyan); color:var(--cyan); }
   .season-tag { font-size:11px; color:rgba(255,255,255,0.55); letter-spacing:0.5px; }
   .auth-nav { display:flex; align-items:center; gap:14px; }
-  .nav-user { font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); }
+  .nav-user { font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); cursor:pointer; }
+  .nav-user:hover { text-decoration:underline; }
 
   /* ============ BUTTONS ============ */
   .btn { display:inline-block; padding:14px 30px; border-radius:30px; font-size:14px; font-weight:600; letter-spacing:0.3px; border:2px solid transparent; transition:transform .15s, background .15s, opacity .15s, border-color .15s; }
@@ -467,6 +468,13 @@
     </div>
   </section>
 
+  <section id="view-player" class="view" hidden>
+    <div class="container">
+      <button class="back-btn" data-back="home">← Back</button>
+      <div id="playerContent"></div>
+    </div>
+  </section>
+
   <section id="view-impressum" class="view" hidden>
     <div class="container">
       <div class="prose" id="impressumContent"></div>
@@ -802,7 +810,13 @@ var CLUBS = [
     return firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then(function(cred) {
       return cred.user.updateProfile({ displayName: data.name }).then(function() {
         currentUser = { uid:cred.user.uid, name:data.name, email:data.email };
-        return currentUser;
+        // Firebase Auth's own user list isn't client-queryable, so a lightweight
+        // directory doc is what makes accounts searchable/viewable (player search,
+        // profile pages) — demo mode doesn't need this, demoUsers() already serves
+        // that role directly.
+        return firebase.firestore().collection('players').doc(cred.user.uid).set({ uid:cred.user.uid, name:data.name, email:data.email }).then(function() {
+          return currentUser;
+        });
       });
     });
   }
@@ -819,7 +833,11 @@ var CLUBS = [
     }
     return firebase.auth().signInWithEmailAndPassword(data.email, data.password).then(function(cred) {
       currentUser = { uid:cred.user.uid, name:cred.user.displayName || '', email:cred.user.email };
-      return currentUser;
+      // Self-healing upsert for any account created before the players directory
+      // existed — cheap, and keeps the directory eventually-consistent with Auth.
+      return firebase.firestore().collection('players').doc(currentUser.uid).set(currentUser, { merge:true }).then(function() {
+        return currentUser;
+      });
     });
   }
 
@@ -844,7 +862,11 @@ var CLUBS = [
     document.getElementById('authNavLoggedOut').hidden = !!currentUser;
     document.getElementById('authNavLoggedIn').hidden = !currentUser;
     isAdmin = !!currentUser && CONFIG.ADMIN_EMAILS.map(function(e){ return e.toLowerCase(); }).indexOf((currentUser.email || '').toLowerCase()) !== -1;
-    if (currentUser) document.getElementById('navUserName').textContent = 'Hi, ' + (currentUser.name || currentUser.email);
+    if (currentUser) {
+      var navUserName = document.getElementById('navUserName');
+      navUserName.textContent = 'Hi, ' + (currentUser.name || currentUser.email);
+      navUserName.dataset.route = 'player/' + currentUser.uid;
+    }
     document.getElementById('editModeBtn').hidden = !isAdmin;
     if (!isAdmin) setEditMode(false);
     document.body.classList.toggle('is-admin', isAdmin);
@@ -870,6 +892,27 @@ var CLUBS = [
     return firebase.firestore().collection('content').doc('site').get().then(function(doc) {
       contentOverrides = doc.exists ? (doc.data() || {}) : {};
     }).catch(function() { contentOverrides = {}; });
+  }
+
+  /* ==================================================================
+     PLAYERS DIRECTORY (account directory — powers profile lookups and
+     partner search; real Firestore 'players' collection, or demoUsers()
+     directly in demo mode since that already has name+email)
+     ================================================================== */
+  var playersDirectory = [];
+
+  function loadPlayersDirectory() {
+    if (AUTH_DEMO_MODE) {
+      playersDirectory = demoUsers().map(function(u) { return { uid:u.uid, name:u.name, email:u.email }; });
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('players').get().then(function(snap) {
+      playersDirectory = snap.docs.map(function(d) { return d.data(); });
+    }).catch(function() { playersDirectory = []; });
+  }
+
+  function findPlayer(uid) {
+    return playersDirectory.find(function(p) { return p.uid === uid; }) || null;
   }
 
   function saveContentField(key, field, value) {
@@ -1611,7 +1654,7 @@ var CLUBS = [
   var VIEW_TO_ROUTE = { home:'tournaments', impressum:'impressum', login:'login', registeraccount:'register-account' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','impressum','login','registeraccount'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','player','impressum','login','registeraccount'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -1662,6 +1705,8 @@ var CLUBS = [
     } else if (p[0] === 'tournaments') {
       renderGrid(currentFilter);
       setView('home');
+    } else if (p[0] === 'player' && p[1]) {
+      showPlayer(p[1]);
     } else if (p[0] === 'impressum') {
       showImpressum();
     } else if (p[0] === 'login') {
@@ -2065,6 +2110,59 @@ var CLUBS = [
         localStorage.removeItem('loc_pending_' + t.id);
       }
     });
+  }
+
+  /* ==================================================================
+     PLAYER PROFILE
+     ================================================================== */
+  function savePlayerAge(uid, age) {
+    if (AUTH_DEMO_MODE) {
+      var users = demoUsers();
+      var user = users.find(function(u) { return u.uid === uid; });
+      if (user) { user.age = age; demoSaveUsers(users); }
+    } else {
+      firebase.firestore().collection('players').doc(uid).set({ age:age }, { merge:true });
+    }
+    var dirEntry = findPlayer(uid);
+    if (dirEntry) dirEntry.age = age;
+  }
+
+  function renderPlayerProfile(player) {
+    var el = document.getElementById('playerContent');
+    var isOwn = !!currentUser && currentUser.uid === player.uid;
+    var ageValue = player.age ? esc(player.age) : '–';
+    var ageHtml = isOwn
+      ? '<div class="info-block"><span class="label">Age</span><span class="value"><input type="number" id="playerAgeInput" min="1" max="120" value="' + (player.age || '') + '" placeholder="–" style="width:70px;"> <button type="button" class="btn btn-outline btn-sm" id="savePlayerAgeBtn">Save</button></span></div>'
+      : '<div class="info-block"><span class="label">Age</span><span class="value">' + ageValue + '</span></div>';
+    el.innerHTML =
+      '<div class="detail-head"><h1>' + esc(player.name) + '</h1><div class="detail-meta mono">' + esc(player.email) + '</div></div>' +
+      '<div class="detail-info-grid">' +
+        ageHtml +
+        '<div class="info-block"><span class="label">Ranking Points</span><span class="value">–</span></div>' +
+        '<div class="info-block"><span class="label">Tournaments Played</span><span class="value" id="playerStatTournaments">–</span></div>' +
+        '<div class="info-block"><span class="label">Won Games</span><span class="value" id="playerStatWins">–</span></div>' +
+        '<div class="info-block"><span class="label">Lost Games</span><span class="value" id="playerStatLosses">–</span></div>' +
+      '</div>' +
+      '<h2 class="section-title">Clubs Represented</h2>' +
+      '<p class="empty-note" id="playerClubsList">–</p>';
+    if (isOwn) {
+      document.getElementById('savePlayerAgeBtn').addEventListener('click', function() {
+        var val = parseInt(document.getElementById('playerAgeInput').value, 10);
+        savePlayerAge(player.uid, val || null);
+      });
+    }
+  }
+
+  function showPlayer(uid) {
+    var el = document.getElementById('playerContent');
+    var player = findPlayer(uid);
+    if (!player) {
+      el.innerHTML = '<p class="empty-note">Player not found.</p>';
+      setView('player');
+      return;
+    }
+    renderPlayerProfile(player);
+    setView('player');
   }
 
   /* ==================================================================
@@ -3671,7 +3769,7 @@ var CLUBS = [
   if (AUTH_DEMO_MODE) {
     restoreDemoSession();
     updateNavAuthUI();
-    loadContentOverrides().then(function() {
+    Promise.all([loadContentOverrides(), loadPlayersDirectory()]).then(function() {
       window.addEventListener('hashchange', route);
       route();
     });
@@ -3682,7 +3780,7 @@ var CLUBS = [
       updateNavAuthUI();
       if (firstAuthCheck) {
         firstAuthCheck = false;
-        loadContentOverrides().then(function() {
+        Promise.all([loadContentOverrides(), loadPlayersDirectory()]).then(function() {
           window.addEventListener('hashchange', route);
           route();
         });
