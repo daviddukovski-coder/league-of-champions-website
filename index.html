@@ -985,6 +985,14 @@ var CLUBS = [
     return matchWinner(match, format) ? 'final' : 'scheduled';
   }
 
+  // Losing side of a decided match — mirrors matchWinner exactly, used to route
+  // eliminated teams into a double-elimination losers bracket.
+  function matchLoser(match, format) {
+    var winner = matchWinner(match, format);
+    if (!winner) return null;
+    return winner === match.teamAId ? match.teamBId : match.teamAId;
+  }
+
   function findBracketTeam(bracket, teamId) {
     return bracket.teams.find(function(t){ return t.id === teamId; }) || null;
   }
@@ -1080,6 +1088,19 @@ var CLUBS = [
       if (byeA || byeB) return byeA ? teamB : teamA; // a bye auto-advances the other team, no match needed
       return matchWinner({ id: m.id, teamAId: teamA, teamBId: teamB, sets: m.sets, format: m.format }, bracket.defaultFormat);
     }
+    if (src.type === 'loser') {
+      var lFound = findMatchAnywhere(bracket, src.matchId);
+      if (!lFound || !lFound.round) return null;
+      var lm = lFound.match;
+      var lrIdx = lFound.stage.rounds.indexOf(lFound.round);
+      var lSlotA = lFound.round.slots[lm.slotAIndex], lSlotB = lFound.round.slots[lm.slotBIndex];
+      var lByeA = lSlotA.source && lSlotA.source.type === 'bye';
+      var lByeB = lSlotB.source && lSlotB.source.type === 'bye';
+      if (lByeA || lByeB) return null; // a bye produces no real loser to route into the losers bracket
+      var lTeamA = resolveSlotTeam(bracket, lFound.stage, lrIdx, lm.slotAIndex, depth + 1);
+      var lTeamB = resolveSlotTeam(bracket, lFound.stage, lrIdx, lm.slotBIndex, depth + 1);
+      return matchLoser({ id: lm.id, teamAId: lTeamA, teamBId: lTeamB, sets: lm.sets, format: lm.format }, bracket.defaultFormat);
+    }
     return null;
   }
 
@@ -1092,6 +1113,7 @@ var CLUBS = [
       return 'TBD – #' + src.rank + ' ' + (srcStage ? srcStage.label : '?');
     }
     if (src.type === 'matchWinner') return 'TBD – winner of previous match';
+    if (src.type === 'loser') return 'TBD – loser of previous match';
     return 'TBD';
   }
 
@@ -1161,6 +1183,66 @@ var CLUBS = [
       }
     });
     return { pairs: pairs, byeTeamId: leftover };
+  }
+
+  function nextPow2GTE(n) {
+    var s = 1;
+    while (s < n) s *= 2;
+    return s;
+  }
+
+  // Standard recursive bracket-seeding order: seed vs (n+1-seed) at every split,
+  // so top seeds are spread as far apart as possible (1 and 2 can only meet in
+  // the final; 1-4 only meet from the semifinal onward, etc). Verified against
+  // Challonge's own 16-team layout: seedOrder(16) === [1,16,8,9,4,13,5,12,2,15,7,10,3,14,6,11].
+  function seedOrder(size) {
+    var order = [1];
+    while (order.length < size) {
+      var n = order.length * 2;
+      var next = [];
+      order.forEach(function(s) { next.push(s); next.push(n + 1 - s); });
+      order = next;
+    }
+    return order;
+  }
+
+  // Builds a fully seeded double-elimination bracket in one shot: a pure function
+  // that returns {rounds} without touching stage — the caller decides when (or
+  // whether) to commit it, same compute/preview/confirm discipline the Swiss
+  // stage generation above already follows. Winners-bracket only for now; the
+  // losers bracket and grand final are added on top of this in a later step.
+  function generateDoubleElim(bracket, stage) {
+    var ordered = stage.teamIds.slice().sort(function(a, b) { return teamSeed(a) - teamSeed(b); });
+    var n = ordered.length;
+    if (n < 3) return { error: 'Need at least 3 teams to generate a double-elimination bracket.' };
+    var size = nextPow2GTE(n);
+    var order = seedOrder(size);
+    var fmt = bracket.defaultFormat;
+
+    var rounds = [];
+    var slots = order.map(function(seedNum) {
+      var teamId = seedNum <= n ? ordered[seedNum - 1] : null;
+      return { source: teamId ? { type: 'manual', teamId: teamId } : { type: 'bye' } };
+    });
+    var matches = [];
+    for (var j = 0; j < slots.length; j += 2) {
+      matches.push({ id: genId('match'), slotAIndex: j, slotBIndex: j + 1, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] });
+    }
+    rounds.push({ name: 'Winners Round 1', side: 'winners', slots: slots, matches: matches });
+
+    var totalRounds = Math.log2(size);
+    for (var r = 2; r <= totalRounds; r++) {
+      var prevRound = rounds[rounds.length - 1];
+      var newSlots = prevRound.matches.map(function(m) { return { source: { type: 'matchWinner', matchId: m.id } }; });
+      var newMatches = [];
+      for (var k = 0; k < newSlots.length; k += 2) {
+        newMatches.push({ id: genId('match'), slotAIndex: k, slotBIndex: k + 1, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] });
+      }
+      var name = r === totalRounds ? 'Winners Final' : (r === totalRounds - 1 ? 'Winners Semifinal' : 'Winners Round ' + r);
+      rounds.push({ name: name, side: 'winners', slots: newSlots, matches: newMatches });
+    }
+
+    return { rounds: rounds };
   }
 
   /* ==================================================================
@@ -1898,6 +1980,7 @@ var CLUBS = [
   var currentBracket = null;
   var currentBracketTournament = null;
   var pendingSwissPreview = null;
+  var pendingDoubleElimPreview = null;
   var bracketUnsub = null;
 
   function unsubscribeBracketLive() {
@@ -1909,6 +1992,7 @@ var CLUBS = [
     el.innerHTML = '<p class="empty-note">Loading …</p>';
     setView('live');
     pendingSwissPreview = null;
+    pendingDoubleElimPreview = null;
     loadBracket(t.id).then(function(bracket) {
       currentBracket = bracket;
       currentBracketTournament = t;
@@ -1995,7 +2079,7 @@ var CLUBS = [
 
   function renderStageCard(stage) {
     var teamChecklist = '';
-    if (stage.type === 'group' || stage.type === 'swiss') {
+    if (stage.type === 'group' || stage.type === 'swiss' || stage.type === 'doubleElim') {
       teamChecklist = '<div class="admin-only">' +
         '<h3>Teams in this stage</h3>' +
         currentBracket.teams.map(function(team) {
@@ -2010,6 +2094,7 @@ var CLUBS = [
     var body = stage.type === 'group' ? renderGroupStageBody(stage)
       : stage.type === 'bracket' ? renderBracketStageBody(stage)
       : stage.type === 'swiss' ? renderSwissStageBody(stage)
+      : stage.type === 'doubleElim' ? renderDoubleElimStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
     return '<div class="stage-card sortable-block" data-stage-id="' + esc(stage.id) + '" data-block-key="' + esc(stage.id) + '">' +
       '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
@@ -2142,7 +2227,7 @@ var CLUBS = [
     var slot = stage.rounds[roundIndex].slots[slotIndex];
     var src = slot.source || { type: 'manual' };
     var displayType = src.type === 'matchWinner' ? 'manual' : src.type;
-    var stageOptions = currentBracket.stages.filter(function(s) { return s.type !== 'bracket'; }).map(function(s) {
+    var stageOptions = currentBracket.stages.filter(function(s) { return s.type !== 'bracket' && s.type !== 'doubleElim'; }).map(function(s) {
       return '<option value="' + esc(s.id) + '"' + (src.type === 'rank' && src.stageId === s.id ? ' selected' : '') + '>' + esc(s.label) + '</option>';
     }).join('');
     var teamOptions = '<option value="">—</option>' + currentBracket.teams.map(function(t) {
@@ -2163,7 +2248,8 @@ var CLUBS = [
     '</div>';
   }
 
-  function renderBracketMatchCard(stage, roundIndex, matchIndex) {
+  function renderBracketMatchCard(stage, roundIndex, matchIndex, opts) {
+    opts = opts || {};
     var bracket = currentBracket;
     var round = stage.rounds[roundIndex];
     var m = round.matches[matchIndex];
@@ -2176,7 +2262,7 @@ var CLUBS = [
     if (byeA || byeB) {
       var advancing = byeA ? teamB : teamA;
       body = '<div class="match-teams-line">' + (advancing ? teamNameHtml(advancing) : '<span class="match-team tbd">TBD</span>') + '<span class="match-score-summary">bye — advances</span></div>';
-    } else if (teamA && teamB) {
+    } else if (teamA && teamB && !opts.readOnly) {
       var resolvedMatch = { id: m.id, teamAId: teamA, teamBId: teamB, sets: m.sets, format: m.format };
       body = renderMatchRow(resolvedMatch, { allowRemove: false });
     } else {
@@ -2186,9 +2272,8 @@ var CLUBS = [
         (teamB ? teamNameHtml(teamB) : '<span class="match-team tbd">' + esc(slotSourceLabel(bracket, stage, roundIndex, m.slotBIndex)) + '</span>') +
       '</div>';
     }
-    return '<div class="bracket-slot-block">' + body +
-      '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>' +
-    '</div>';
+    var editors = opts.readOnly ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
+    return '<div class="bracket-slot-block">' + body + editors + '</div>';
   }
 
   function renderAddRoundPanel(stage) {
@@ -2211,6 +2296,50 @@ var CLUBS = [
     }).join('');
     return (stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '<p class="empty-note">No rounds yet.</p>') +
       renderAddRoundPanel(stage);
+  }
+
+  // Renders a doubleElim stage's rounds grouped into their three visual
+  // sections (winners / losers / grand final) — each section is exactly the
+  // same round-columns layout renderBracketStageBody already uses for a flat
+  // list, just applied to a filtered slice. Works equally for the committed
+  // stage or a not-yet-saved preview object with the same {rounds} shape.
+  function renderDoubleElimRounds(stage, opts) {
+    var sections = [['winners', 'Winners Bracket'], ['losers', 'Losers Bracket'], ['final', 'Grand Final']];
+    return sections.map(function(pair) {
+      var side = pair[0], title = pair[1];
+      var indices = [];
+      stage.rounds.forEach(function(r, ri) { if (r.side === side) indices.push(ri); });
+      if (!indices.length) return '';
+      var cols = indices.map(function(ri) {
+        var round = stage.rounds[ri];
+        var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi, opts); }).join('');
+        return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div><div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+      }).join('');
+      return '<h3>' + title + '</h3><div class="bracket-scroll">' + cols + '</div>';
+    }).join('');
+  }
+
+  function renderDoubleElimPreview(stage, preview) {
+    var previewStage = { id: stage.id, type: stage.type, label: stage.label, teamIds: stage.teamIds, rounds: preview.rounds };
+    return '<div class="live-panel">' +
+      '<h3>Preview</h3>' +
+      renderDoubleElimRounds(previewStage, { readOnly: true }) +
+      '<div class="roster-row-actions" style="margin-top:12px;">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-regenerate-doubleelim="' + esc(stage.id) + '">Regenerate</button>' +
+        '<button type="button" class="btn btn-cyan btn-sm" data-confirm-doubleelim="' + esc(stage.id) + '">Confirm bracket</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderDoubleElimStageBody(stage) {
+    if (pendingDoubleElimPreview && pendingDoubleElimPreview.stageId === stage.id) {
+      return renderDoubleElimPreview(stage, pendingDoubleElimPreview);
+    }
+    if (stage.rounds.length) {
+      return renderDoubleElimRounds(stage);
+    }
+    return '<p class="empty-note">No bracket generated yet — pick teams above, then generate.</p>' +
+      '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" data-generate-doubleelim="' + esc(stage.id) + '">Generate bracket</button></div>';
   }
 
   function renderSwissRecordsTable(stage, records) {
@@ -2295,6 +2424,7 @@ var CLUBS = [
           '<option value="group">Group</option>' +
           '<option value="swiss">Swiss</option>' +
           '<option value="bracket">Bracket (crossover / knockout)</option>' +
+          '<option value="doubleElim">Double Elimination</option>' +
         '</select></div>' +
       '</div>' +
       '<div class="form-row" id="swissConfigRow" hidden>' +
@@ -2425,6 +2555,8 @@ var CLUBS = [
         stage.rounds = [];
       } else if (type === 'bracket') {
         stage.rounds = [];
+      } else if (type === 'doubleElim') {
+        stage.teamIds = []; stage.rounds = [];
       }
       currentBracket.stages.unshift(stage);
       persistBracket();
@@ -2596,6 +2728,30 @@ var CLUBS = [
         });
         stage.rounds.push({ matches: matches, byeTeamId: pendingSwissPreview.byeTeamId });
         pendingSwissPreview = null;
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-generate-doubleelim], [data-regenerate-doubleelim]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stageId = btn.dataset.generateDoubleelim || btn.dataset.regenerateDoubleelim;
+        var stage = findStage(currentBracket, stageId);
+        if (!stage) return;
+        var result = generateDoubleElim(currentBracket, stage);
+        if (result.error) { window.alert(result.error); return; }
+        pendingDoubleElimPreview = { stageId: stage.id, rounds: result.rounds };
+        renderLive();
+      });
+    });
+
+    document.querySelectorAll('[data-confirm-doubleelim]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.confirmDoubleelim);
+        if (!stage || !pendingDoubleElimPreview || pendingDoubleElimPreview.stageId !== stage.id) return;
+        stage.rounds = pendingDoubleElimPreview.rounds;
+        pendingDoubleElimPreview = null;
         persistBracket();
       });
     });
