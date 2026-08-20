@@ -92,7 +92,7 @@
   .nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); border-bottom:1px solid rgba(255,255,255,0.12); }
   .nav-inner { max-width:1080px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .wordmark { display:flex; align-items:center; gap:10px; background:none; border:none; padding:0; }
-  .wordmark .badge { width:34px; height:34px; display:block; }
+  .wordmark .league-badge { width:34px; height:34px; display:block; object-fit:contain; }
   .wordmark .text { display:flex; flex-direction:column; align-items:flex-start; gap:0; }
   .wordmark .mark { font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; letter-spacing:0.5px; color:var(--nav-text); }
   .wordmark .sub { font-size:11px; color:var(--cyan); font-weight:600; letter-spacing:0.5px; }
@@ -116,6 +116,11 @@
   .btn-outline:hover { background:rgba(0,242,255,0.08); }
   .btn-outline-light { background:transparent; color:#fff; border:2px solid rgba(255,255,255,0.7); }
   .btn-outline-light:hover { border-color:#fff; background:rgba(255,255,255,0.08); }
+  .btn-live { background:#e0233c; color:#fff; display:inline-flex; align-items:center; gap:7px; }
+  .btn-live:hover { background:#c91d33; transform:translateY(-1px); }
+  .btn-live-dot { width:8px; height:8px; border-radius:50%; background:#fff; flex-shrink:0; animation:liveDotPulse 1.4s ease-in-out infinite; }
+  @keyframes liveDotPulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .live-toggle-btn { font-size:12.5px; padding:8px 16px; }
   .btn-sm { padding:9px 20px; font-size:13px; }
   .btn-block { width:100%; text-align:center; }
   .btn-ghost { background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
@@ -293,6 +298,9 @@
   .schedule-item-time { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; flex-shrink:0; width:44px; }
   .schedule-item-body { display:flex; flex-direction:column; gap:2px; font-size:13px; flex:1; min-width:0; }
   .schedule-item-duration { font-size:11px; color:var(--text-muted); }
+  .schedule-match-teams { display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+  .schedule-match-vs { font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
+  .schedule-match-result { font-size:11.5px; color:var(--paid); font-weight:700; }
   .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
   .schedule-add-block { gap:6px; align-items:center; margin-top:8px; }
   .schedule-add-block input { width:auto; padding:7px 8px; font-size:12px; }
@@ -353,7 +361,7 @@
   .placeholder-field { color:var(--cyan-ink); }
 
   footer { background:var(--ink-deep); padding:44px 28px; text-align:center; margin-top:40px; }
-  footer .badge { width:88px; height:88px; display:block; margin:0 auto 14px; }
+  footer .league-badge { width:88px; height:88px; display:block; margin:0 auto 14px; object-fit:contain; }
   footer .mark { color:var(--on-ink); font-family:'Bebas Neue',sans-serif; font-weight:700; }
   footer .sub { color:var(--cyan); font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:11px; }
   footer p { color:rgba(245,243,236,0.55); font-size:13px; margin-top:12px; }
@@ -376,7 +384,7 @@
 <nav class="nav">
   <div class="nav-inner">
     <button class="wordmark" id="homeLink">
-      <img class="badge" alt="">
+      <img class="league-badge" alt="">
       <span class="text"><span class="mark" data-ui-key="nav.mark">LEAGUE OF CHAMPIONS</span><span class="sub mono" data-ui-key="nav.sub">FOOTVOLLEY</span></span>
     </button>
     <div class="nav-right">
@@ -506,12 +514,12 @@
 </main>
 
 <footer>
-  <img class="badge" alt="Footvolley League of Champions">
+  <img class="league-badge" alt="Footvolley League of Champions">
   <span class="mark" data-ui-key="nav.mark">LEAGUE OF CHAMPIONS</span> <span class="sub mono" data-ui-key="nav.sub">FOOTVOLLEY</span>
   <p><span data-ui-key="footer.questions">Questions?</span> <a href="mailto:office@bolao-sports.com">office@bolao-sports.com</a> · <a href="tel:+436606577498">+43 660 6577498</a></p>
   <div class="foot-links">
     <button data-route="impressum" data-ui-key="footer.imprint">Imprint</button>
-    <a href="#" id="igTourLink" target="_blank" rel="noopener">Instagram · Tour</a>
+    <a href="#" id="igTourLink" target="_blank" rel="noopener">Instagram · League of Champions</a>
     <a href="#" id="igBolaoLink" target="_blank" rel="noopener">Instagram · Bolao Sports</a>
   </div>
 </footer>
@@ -1727,9 +1735,10 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row"><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a> <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a></div>', teams: '' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a> <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a></div>', teams: '' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
+      wireLiveToggle(t);
       setView('detail');
       return;
     }
@@ -1741,18 +1750,43 @@ var CLUBS = [
       image: eventImageHtml(t),
       header: headerHtml,
       infoGrid: infoRows,
-      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '<a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a></div>',
+      registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + '<a class="btn btn-outline" href="#/event/' + esc(t.id) + '/live">Live Bracket →</a><a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a>' + liveButtonHtml(t) + '</div>',
       teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
     initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
     wireGoRegisterBtn(t);
+    wireLiveToggle(t);
 
     checkResumablePayment(t);
     verifyAlreadyRegistered(t);
     loadAndRenderPlayerLists(t);
 
     setView('detail');
+  }
+
+  // Public LIVE button (links to the external livestream) plus an admin-only
+  // toggle to switch it on/off per tournament. t.liveEnabled comes through the
+  // normal contentOverrides merge (effectiveTournament), same as every other
+  // admin-editable tournament field, so it needs no dedicated storage.
+  function liveButtonHtml(t) {
+    var live = t.liveEnabled
+      ? '<a class="btn btn-live" href="https://bolao.tv" target="_blank" rel="noopener"><span class="btn-live-dot"></span>LIVE</a>'
+      : '';
+    var toggle = '<button type="button" class="btn btn-outline live-toggle-btn admin-only-inline" data-toggle-live="' + esc(t.id) + '">' +
+      (t.liveEnabled ? 'Hide LIVE button' : 'Show LIVE button') + '</button>';
+    return live + toggle;
+  }
+
+  function wireLiveToggle(t) {
+    var btn = document.querySelector('[data-toggle-live="' + t.id + '"]');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      saveContentField(t.id, 'liveEnabled', !t.liveEnabled).then(function() {
+        showDetail(effectiveTournament(tourById(t.id)));
+      });
+    });
   }
 
   function registerActionHtml(t, alreadyRegistered) {
@@ -2019,7 +2053,7 @@ var CLUBS = [
     opts = opts || {};
     var fmt = match.format || currentBracket.defaultFormat;
     var winner = matchWinner(match, currentBracket.defaultFormat);
-    var status = winner ? 'Final' : 'Scheduled';
+    var status = winner ? 'Finished' : 'Scheduled';
     var statusClass = winner ? 'status-paid' : 'status-pending';
     var sets = match.sets || [];
     var setSlots = [0, 1, 2, 3, 4].map(function(i) {
@@ -2774,21 +2808,27 @@ var CLUBS = [
         scheduleHandleHtml(item.id) +
       '</div>';
     }
-    var teamAHtml, teamBHtml;
+    var teamAHtml, teamBHtml, matchForResult;
     if (found.round) {
       var ri = found.stage.rounds.indexOf(found.round);
       var teamA = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotAIndex);
       var teamB = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotBIndex);
       teamAHtml = teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotAIndex)) + '</span>';
       teamBHtml = teamB ? teamNameHtml(teamB) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotBIndex)) + '</span>';
+      matchForResult = { teamAId: teamA, teamBId: teamB, sets: found.match.sets, format: found.match.format };
     } else {
       teamAHtml = teamNameHtml(found.match.teamAId);
       teamBHtml = teamNameHtml(found.match.teamBId);
+      matchForResult = found.match;
     }
+    var winner = matchWinner(matchForResult, currentBracket.defaultFormat);
+    var vsHtml = winner
+      ? '<span class="schedule-match-result">' + esc(formatSetsSummary(matchForResult)) + '</span>'
+      : '<span class="schedule-match-vs">vs</span>';
     return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
-        '<div class="match-teams-line">' + teamAHtml + '<span class="match-score-summary">vs</span>' + teamBHtml + '</div>' +
+        '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
       '</div>' +
       scheduleHandleHtml(item.id) +
@@ -3325,7 +3365,7 @@ var CLUBS = [
   document.getElementById('igLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igTourLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igBolaoLink').href = CONFIG.INSTAGRAM_BOLAO_URL;
-  document.querySelectorAll('img.badge').forEach(function(img){ img.src = BADGE_URI; });
+  document.querySelectorAll('img.league-badge').forEach(function(img){ img.src = BADGE_URI; });
   if (DEMO_MODE) document.getElementById('demoBanner').hidden = false;
 
   document.getElementById('homeLink').addEventListener('click', function(){ navigate(''); });
