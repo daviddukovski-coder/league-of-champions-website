@@ -2460,21 +2460,42 @@ var CLUBS = [
     return missing;
   }
 
+  // The organizer's standard round-robin play order for common group sizes —
+  // not a derived/generic algorithm, these are the exact sequences used at
+  // their real tournaments. Pairs are 1-indexed positions into stage.teamIds
+  // (the order teams were checked into the group), not seed values — group
+  // stages have no seeding concept. Sizes outside this table fall back to the
+  // simple i-then-j order rather than guessing at an extrapolated pattern.
+  var ROUND_ROBIN_ORDER = {
+    3: [[1,3],[2,3],[1,2]],
+    4: [[1,3],[2,4],[1,4],[2,3],[3,4],[1,2]],
+    5: [[1,3],[4,5],[2,3],[1,5],[2,4],[3,5],[1,4],[2,5],[3,4],[1,2]],
+    6: [[1,5],[2,3],[1,4],[2,5],[1,6],[2,4],[3,6],[4,5],[2,6],[3,5],[4,6],[1,3],[5,6],[3,4],[1,2]]
+  };
+
   function generateRoundRobin(stage) {
     var existing = {};
     stage.matches.forEach(function(m) {
       existing[m.teamAId + '|' + m.teamBId] = true;
       existing[m.teamBId + '|' + m.teamAId] = true;
     });
-    for (var i = 0; i < stage.teamIds.length; i++) {
-      for (var j = i + 1; j < stage.teamIds.length; j++) {
-        var a = stage.teamIds[i], b = stage.teamIds[j];
-        if (existing[a + '|' + b]) continue;
-        stage.matches.push({
-          id: genId('match'), teamAId: a, teamBId: b,
-          format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
-          sets: []
-        });
+    function addPair(a, b) {
+      if (existing[a + '|' + b]) return;
+      stage.matches.push({
+        id: genId('match'), teamAId: a, teamBId: b,
+        format: { bestOf: currentBracket.defaultFormat.bestOf, setPoints: currentBracket.defaultFormat.setPoints.slice() },
+        sets: []
+      });
+      existing[a + '|' + b] = true; existing[b + '|' + a] = true;
+    }
+    var order = ROUND_ROBIN_ORDER[stage.teamIds.length];
+    if (order) {
+      order.forEach(function(pair) { addPair(stage.teamIds[pair[0] - 1], stage.teamIds[pair[1] - 1]); });
+    } else {
+      for (var i = 0; i < stage.teamIds.length; i++) {
+        for (var j = i + 1; j < stage.teamIds.length; j++) {
+          addPair(stage.teamIds[i], stage.teamIds[j]);
+        }
       }
     }
   }
