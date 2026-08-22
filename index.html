@@ -1518,17 +1518,10 @@ var CLUBS = [
             if (teamIds.indexOf(tm.id) !== -1 && tm.club) clubs[tm.club] = true;
           });
           playerRecordInBracket(bracket, teamIds).forEach(function(r) { wins += r.w; losses += r.l; });
-          // Uses computeTeamPlacements (not computeTournamentPlacement) because it
-          // resolves placement per stage — required when a tournament has several
-          // parallel bracket-type stages (e.g. modified-pool-play groups), where
-          // computeTournamentPlacement's single "last medal stage" pick would only
-          // ever credit medals from one of them.
-          var teamPlacements = computeTeamPlacements(bracket);
-          var placementLabel = null;
-          teamIds.forEach(function(tid) { if (teamPlacements[tid]) placementLabel = teamPlacements[tid]; });
-          if (placementLabel === '1st') { entry.placement = 1; medals.gold++; }
-          else if (placementLabel === '2nd') { entry.placement = 2; medals.silver++; }
-          else if (placementLabel === '3rd') { entry.placement = 3; medals.bronze++; }
+          var placement = computeTournamentPlacement(bracket);
+          if (placement.first && teamIds.indexOf(placement.first) !== -1) { entry.placement = 1; medals.gold++; }
+          else if (placement.second && teamIds.indexOf(placement.second) !== -1) { entry.placement = 2; medals.silver++; }
+          else if (placement.third && teamIds.indexOf(placement.third) !== -1) { entry.placement = 3; medals.bronze++; }
           // Points-per-placement table is still pending from the organizer —
           // entry.points stays null (rendered as "–") until that's wired in.
         }
