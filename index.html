@@ -3202,30 +3202,62 @@ var CLUBS = [
     '</div>';
   }
 
+  // Splits a team list into Qualifier/Main Draw sub-groups (existing behavior,
+  // reused whether teams are shown in one panel or split per division below).
+  function categoryGroupsHtml(teams) {
+    var quali = teams.filter(function(t) { return t.category === 'quali'; });
+    var main = teams.filter(function(t) { return t.category !== 'quali'; });
+    var html = '';
+    if (quali.length) html += '<h3>Qualifier (' + quali.length + ')</h3>' + quali.map(teamRosterRowHtml).join('');
+    html += '<h3>Main Draw (' + main.length + ')</h3>' + (main.length ? main.map(teamRosterRowHtml).join('') : '<p class="empty-note">No teams added yet.</p>');
+    return html;
+  }
+
   function renderRosterPanel(bracket) {
-    var quali = bracket.teams.filter(function(t) { return t.category === 'quali'; });
-    var main = bracket.teams.filter(function(t) { return t.category !== 'quali'; });
-    var groups = '';
-    if (quali.length) groups += '<h3>Qualifier (' + quali.length + ')</h3>' + quali.map(teamRosterRowHtml).join('');
-    groups += '<h3>Main Draw (' + main.length + ')</h3>' + (main.length ? main.map(teamRosterRowHtml).join('') : '<p class="empty-note">No teams added yet.</p>');
-    return '<div class="live-panel">' +
-      '<h2>Teams (' + bracket.teams.length + ')</h2>' +
-      groups +
-      '<div class="admin-only" id="addTeamPanel">' +
+    var competitions = [];
+    bracket.teams.forEach(function(t) {
+      if (t.competition && competitions.indexOf(t.competition) === -1) competitions.push(t.competition);
+    });
+    var teamPanels;
+    if (competitions.length >= 2) {
+      // Men before Women, then anything else alphabetically — a fixed, readable order.
+      var order = ['Men', 'Women'];
+      competitions.sort(function(a, b) {
+        var ia = order.indexOf(a); if (ia === -1) ia = 99;
+        var ib = order.indexOf(b); if (ib === -1) ib = 99;
+        return ia - ib || a.localeCompare(b);
+      });
+      teamPanels = competitions.map(function(comp) {
+        var teams = bracket.teams.filter(function(t) { return t.competition === comp; });
+        var label = (DIVISION_LABEL[comp] || comp) + ' Teams (' + teams.length + ')';
+        return '<div class="live-panel"><h2>' + esc(label) + '</h2>' + categoryGroupsHtml(teams) + '</div>';
+      }).join('');
+      var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
+      if (unassigned.length) {
+        teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
+      }
+    } else {
+      teamPanels = '<div class="live-panel"><h2>Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams) + '</div>';
+    }
+    return teamPanels +
+      '<div class="live-panel admin-only" id="addTeamPanel">' +
+        '<h2>Manage Teams</h2>' +
         '<h3>Add from registrations</h3>' +
         '<div id="regTeamPicker"><p class="empty-note">Loading registrations …</p></div>' +
         '<h3>Add manually</h3>' +
         '<div class="form-row">' +
           '<div class="form-group"><label>Team / players</label><input id="manualTeamName" placeholder="First Last & First Last"></div>' +
-          '<div class="form-group"><label>Club</label><select id="manualTeamClub"><option value="">— none —</option>' +
-            CLUBS.map(function(c){ return '<option value="' + esc(c.name) + '">' + esc(c.name) + '</option>'; }).join('') +
-          '</select></div>' +
+          '<div class="form-group combo-group">' +
+            '<label>Club</label>' +
+            '<input id="manualTeamClubSearch" autocomplete="off" placeholder="Search club…">' +
+            '<div id="manualTeamClubDropdown" class="combo-dropdown" hidden></div>' +
+            '<input type="hidden" id="manualTeamClub">' +
+          '</div>' +
           '<div class="form-group"><label>Category</label><select id="manualTeamCategory"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select></div>' +
           '<div class="form-group"><label>Division</label><select id="manualTeamCompetition"><option value="Men">Men</option><option value="Women">Women</option></select></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
-      '</div>' +
-    '</div>';
+      '</div>';
   }
 
   function refereeRowHtml(uid) {
@@ -3725,6 +3757,7 @@ var CLUBS = [
 
   function wireLiveEvents() {
     loadAvailableRegistrations();
+    setupManualTeamClubCombo();
 
     var syncRankingBtn = document.getElementById('syncRankingBtn');
     if (syncRankingBtn) syncRankingBtn.addEventListener('click', function() {
@@ -4701,6 +4734,36 @@ var CLUBS = [
     var search = document.getElementById('rClubSearch');
     var hiddenInput = document.getElementById('rClub');
     var dropdown = document.getElementById('clubDropdown');
+    search.addEventListener('input', function() {
+      var q = search.value.trim().toLowerCase();
+      hiddenInput.value = '';
+      if (!q) { dropdown.hidden = true; return; }
+      var matches = CLUBS.filter(function(c){ return c.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
+      if (!matches.length) { dropdown.hidden = true; return; }
+      dropdown.innerHTML = matches.map(function(c){
+        return '<div class="combo-item" data-club="' + esc(c.name) + '">' + clubAvatarHtml(c) + '<span>' + esc(c.name) + '</span></div>';
+      }).join('');
+      dropdown.hidden = false;
+    });
+    dropdown.addEventListener('click', function(e) {
+      var item = e.target.closest('.combo-item');
+      if (!item) return;
+      search.value = item.dataset.club;
+      hiddenInput.value = item.dataset.club;
+      dropdown.hidden = true;
+    });
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.combo-group')) dropdown.hidden = true;
+    });
+  }
+
+  // Mirrors setupClubCombo exactly, targeting the Live Bracket admin's
+  // manual-add-team form instead of the registration form.
+  function setupManualTeamClubCombo() {
+    var search = document.getElementById('manualTeamClubSearch');
+    var hiddenInput = document.getElementById('manualTeamClub');
+    var dropdown = document.getElementById('manualTeamClubDropdown');
+    if (!search) return;
     search.addEventListener('input', function() {
       var q = search.value.trim().toLowerCase();
       hiddenInput.value = '';
