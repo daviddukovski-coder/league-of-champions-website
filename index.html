@@ -125,6 +125,8 @@
   .btn-disabled:hover { background:transparent; }
   .phase-control { gap:8px; margin-top:12px; align-items:center; }
   .phase-btn.active { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
+  .division-filter-tabs { gap:8px; margin-bottom:18px; }
+  .division-filter-tab.active { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
   .btn-live { background:#e0233c; color:#fff; gap:7px; }
   .btn-live:hover { background:#c91d33; transform:translateY(-1px); }
   .btn-live-dot { width:8px; height:8px; border-radius:50%; background:#fff; flex-shrink:0; animation:liveDotPulse 1.4s ease-in-out infinite; }
@@ -3130,6 +3132,11 @@ var CLUBS = [
   var pendingSwissPreview = null;
   var pendingDoubleElimPreview = null;
   var bracketUnsub = null;
+  // Local view-only state (never persisted) — narrows the Live Bracket admin
+  // screen to one division's teams/stages so setting up e.g. 8 Men's groups
+  // doesn't require scrolling past 16 Women's teams each time. The Schedule
+  // page is unaffected: it always reads the full bracket.stages regardless.
+  var liveDivisionFilter = null;
 
   function unsubscribeBracketLive() {
     if (bracketUnsub) { bracketUnsub(); bracketUnsub = null; }
@@ -3164,19 +3171,34 @@ var CLUBS = [
     var t = currentBracketTournament;
     var bracket = currentBracket;
     var el = document.getElementById('liveContent');
+    // A single-division tournament (or one that lost its second division)
+    // has nothing to filter — don't leave a stale filter silently hiding stages.
+    if (bracketCompetitions(bracket).length < 2) liveDivisionFilter = null;
+    var visibleStages = liveDivisionFilter
+      ? bracket.stages.filter(function(s) { return s.competition === liveDivisionFilter; })
+      : bracket.stages;
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + liveBracketLabel(t) + (scheduleLinkVisible(t) ? ' · <a href="#/event/' + esc(t.id) + '/schedule">View Schedule →</a>' : '') + '</div></div>' +
+      renderDivisionFilterTabs(bracket) +
       renderRosterPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
       renderFormatPanel(bracket.defaultFormat) +
-      '<h2 class="section-title">Stages</h2>' +
-      '<div class="stage-list" id="stageList">' + bracket.stages.map(renderStageCard).join('') + '</div>' +
-      (bracket.stages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
+      '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(DIVISION_LABEL[liveDivisionFilter] || liveDivisionFilter) : '') + '</h2>' +
+      '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
+      (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
     wireLiveEvents();
     initSortable('stageList', function(order) {
-      currentBracket.stages.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+      // Only the visible (filtered) stages were draggable — reorder them among
+      // themselves while leaving any hidden-by-filter stages exactly where
+      // they were, instead of collapsing them all to the front (they'd all
+      // report index -1 in a plain full-array sort against `order`).
+      var reordered = order.map(function(id) { return findStage(currentBracket, id); }).filter(Boolean);
+      var i = 0;
+      currentBracket.stages = currentBracket.stages.map(function(s) {
+        return visibleStages.indexOf(s) !== -1 ? reordered[i++] : s;
+      });
       persistBracket();
     });
   }
@@ -3213,28 +3235,51 @@ var CLUBS = [
     return html;
   }
 
-  function renderRosterPanel(bracket) {
-    var competitions = [];
+  // Distinct competitions present among a bracket's teams, Men before Women
+  // then anything else alphabetically — one fixed, readable order reused
+  // everywhere a division needs listing (roster split, filter tabs, Add Stage).
+  function bracketCompetitions(bracket) {
+    var list = [];
     bracket.teams.forEach(function(t) {
-      if (t.competition && competitions.indexOf(t.competition) === -1) competitions.push(t.competition);
+      if (t.competition && list.indexOf(t.competition) === -1) list.push(t.competition);
     });
+    var order = ['Men', 'Women'];
+    list.sort(function(a, b) {
+      var ia = order.indexOf(a); if (ia === -1) ia = 99;
+      var ib = order.indexOf(b); if (ib === -1) ib = 99;
+      return ia - ib || a.localeCompare(b);
+    });
+    return list;
+  }
+
+  // Tabs to narrow the whole admin screen (teams + stages) to one division at
+  // a time — local view state only (liveDivisionFilter), never persisted, so
+  // the Schedule page (which always reads the full bracket) is unaffected.
+  function renderDivisionFilterTabs(bracket) {
+    var comps = bracketCompetitions(bracket);
+    if (comps.length < 2) return '';
+    var tabs = '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (!liveDivisionFilter ? ' active' : '') + '" data-division-filter="">All</button>' +
+      comps.map(function(c) {
+        return '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '" data-division-filter="' + esc(c) + '">' + esc(DIVISION_LABEL[c] || c) + '</button>';
+      }).join('');
+    return '<div class="division-filter-tabs admin-only-flex" id="divisionFilterTabs">' + tabs + '</div>';
+  }
+
+  function renderRosterPanel(bracket) {
+    var competitions = bracketCompetitions(bracket);
     var teamPanels;
     if (competitions.length >= 2) {
-      // Men before Women, then anything else alphabetically — a fixed, readable order.
-      var order = ['Men', 'Women'];
-      competitions.sort(function(a, b) {
-        var ia = order.indexOf(a); if (ia === -1) ia = 99;
-        var ib = order.indexOf(b); if (ib === -1) ib = 99;
-        return ia - ib || a.localeCompare(b);
-      });
-      teamPanels = competitions.map(function(comp) {
+      var shown = liveDivisionFilter ? competitions.filter(function(c) { return c === liveDivisionFilter; }) : competitions;
+      teamPanels = shown.map(function(comp) {
         var teams = bracket.teams.filter(function(t) { return t.competition === comp; });
         var label = (DIVISION_LABEL[comp] || comp) + ' Teams (' + teams.length + ')';
         return '<div class="live-panel"><h2>' + esc(label) + '</h2>' + categoryGroupsHtml(teams) + '</div>';
       }).join('');
-      var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
-      if (unassigned.length) {
-        teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
+      if (!liveDivisionFilter) {
+        var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
+        if (unassigned.length) {
+          teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
+        }
       }
     } else {
       teamPanels = '<div class="live-panel"><h2>Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams) + '</div>';
@@ -3254,7 +3299,7 @@ var CLUBS = [
             '<input type="hidden" id="manualTeamClub">' +
           '</div>' +
           '<div class="form-group"><label>Category</label><select id="manualTeamCategory"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select></div>' +
-          '<div class="form-group"><label>Division</label><select id="manualTeamCompetition"><option value="Men">Men</option><option value="Women">Women</option></select></div>' +
+          '<div class="form-group"><label>Division</label><select id="manualTeamCompetition"><option value="Men"' + (liveDivisionFilter === 'Men' ? ' selected' : '') + '>Men</option><option value="Women"' + (liveDivisionFilter === 'Women' ? ' selected' : '') + '>Women</option></select></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
       '</div>';
@@ -3313,9 +3358,14 @@ var CLUBS = [
   function renderStageCard(stage) {
     var teamChecklist = '';
     if (stage.type === 'group' || stage.type === 'swiss' || stage.type === 'doubleElim') {
+      // If the stage itself is tagged with a division, only offer that
+      // division's teams here — no need to scroll past the other one.
+      var checklistTeams = stage.competition
+        ? currentBracket.teams.filter(function(team) { return team.competition === stage.competition; })
+        : currentBracket.teams;
       teamChecklist = '<div class="admin-only">' +
         '<h3>Teams in this stage</h3>' +
-        currentBracket.teams.map(function(team) {
+        checklistTeams.map(function(team) {
           var checked = stage.teamIds.indexOf(team.id) !== -1;
           return '<label class="checkbox-row"><input type="checkbox" data-stage-team="' + esc(stage.id) + '" data-team-id="' + esc(team.id) + '"' + (checked ? ' checked' : '') + '><span>' + esc(team.name) + '</span></label>';
         }).join('') +
@@ -3329,9 +3379,10 @@ var CLUBS = [
       : stage.type === 'swiss' ? renderSwissStageBody(stage)
       : stage.type === 'doubleElim' ? renderDoubleElimStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
+    var divisionPill = stage.competition ? ' <span class="stage-type-pill">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
     return '<div class="stage-card sortable-block" data-stage-id="' + esc(stage.id) + '" data-block-key="' + esc(stage.id) + '">' +
       '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
-      '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span></h3>' +
+      '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span>' + divisionPill + '</h3>' +
         '<button type="button" class="icon-btn admin-only-flex" data-remove-stage="' + esc(stage.id) + '" title="Remove stage">✕</button>' +
       '</div>' +
       swissInfo +
@@ -3689,6 +3740,13 @@ var CLUBS = [
 
   function renderAddStagePanel(bracket) {
     var fmt = bracket.defaultFormat;
+    var comps = bracketCompetitions(bracket);
+    var divisionField = comps.length >= 2
+      ? '<div class="form-group"><label>Division</label><select id="newStageDivision">' +
+          '<option value="">— none —</option>' +
+          comps.map(function(c){ return '<option value="' + esc(c) + '"' + (liveDivisionFilter === c ? ' selected' : '') + '>' + esc(DIVISION_LABEL[c] || c) + '</option>'; }).join('') +
+        '</select></div>'
+      : '';
     return '<div class="live-panel admin-only" id="addStagePanel">' +
       '<h2>Add Stage</h2>' +
       '<div class="form-row">' +
@@ -3700,6 +3758,11 @@ var CLUBS = [
           '<option value="doubleElim">Double Elimination</option>' +
         '</select></div>' +
       '</div>' +
+      '<div class="form-row">' +
+        divisionField +
+        '<div class="form-group"><label>Number of groups</label><input type="number" id="newStageCount" value="1" min="1" max="26"></div>' +
+      '</div>' +
+      '<p class="empty-note">With more than 1, the label is used as a prefix — "Group" creates "Group A", "Group B", … as separate stages, all with the settings below.</p>' +
       '<div class="form-row">' +
         '<div class="form-group"><label>Best of (sets)</label><select id="newStageBestOf">' +
           [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
@@ -3758,6 +3821,13 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
+
+    document.querySelectorAll('[data-division-filter]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        liveDivisionFilter = btn.dataset.divisionFilter || null;
+        renderLive();
+      });
+    });
 
     var syncRankingBtn = document.getElementById('syncRankingBtn');
     if (syncRankingBtn) syncRankingBtn.addEventListener('click', function() {
@@ -3882,28 +3952,40 @@ var CLUBS = [
       var label = document.getElementById('newStageLabel').value.trim();
       var type = document.getElementById('newStageType').value;
       if (!label) return;
+      var divisionField = document.getElementById('newStageDivision');
+      var competition = divisionField ? (divisionField.value || null) : null;
+      var count = Math.max(1, parseInt(document.getElementById('newStageCount').value, 10) || 1);
       var stageBestOf = parseInt(document.getElementById('newStageBestOf').value, 10) || currentBracket.defaultFormat.bestOf;
       var stageSetPoints = document.getElementById('newStageSetPoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
-      var stage = {
-        id: genId('stage'), type: type, label: label,
-        defaultFormat: { bestOf: stageBestOf, setPoints: stageSetPoints.length ? stageSetPoints : currentBracket.defaultFormat.setPoints.slice() }
-      };
-      if (type === 'group') {
-        stage.teamIds = []; stage.matches = [];
-      } else if (type === 'swiss') {
-        stage.teamIds = [];
-        stage.config = {
-          winsToQualify: parseInt(document.getElementById('newSwissWins').value, 10) || 3,
-          lossesToEliminate: parseInt(document.getElementById('newSwissLosses').value, 10) || 3,
-          pairingMode: document.getElementById('newSwissPairing').value
+      var sharedFormat = { bestOf: stageBestOf, setPoints: stageSetPoints.length ? stageSetPoints : currentBracket.defaultFormat.setPoints.slice() };
+      var swissConfig = type === 'swiss' ? {
+        winsToQualify: parseInt(document.getElementById('newSwissWins').value, 10) || 3,
+        lossesToEliminate: parseInt(document.getElementById('newSwissLosses').value, 10) || 3,
+        pairingMode: document.getElementById('newSwissPairing').value
+      } : null;
+      var newStages = [];
+      for (var i = 0; i < count; i++) {
+        // "Group" x8 -> "Group A".."Group H"; a single stage keeps the typed label as-is.
+        var stageLabel = count > 1 ? label + ' ' + String.fromCharCode(65 + i) : label;
+        var stage = {
+          id: genId('stage'), type: type, label: stageLabel,
+          defaultFormat: { bestOf: sharedFormat.bestOf, setPoints: sharedFormat.setPoints.slice() }
         };
-        stage.rounds = [];
-      } else if (type === 'bracket') {
-        stage.rounds = [];
-      } else if (type === 'doubleElim') {
-        stage.teamIds = []; stage.rounds = [];
+        if (competition) stage.competition = competition;
+        if (type === 'group') {
+          stage.teamIds = []; stage.matches = [];
+        } else if (type === 'swiss') {
+          stage.teamIds = [];
+          stage.config = Object.assign({}, swissConfig);
+          stage.rounds = [];
+        } else if (type === 'bracket') {
+          stage.rounds = [];
+        } else if (type === 'doubleElim') {
+          stage.teamIds = []; stage.rounds = [];
+        }
+        newStages.push(stage);
       }
-      currentBracket.stages.unshift(stage);
+      currentBracket.stages = newStages.concat(currentBracket.stages);
       persistBracket();
     });
 
