@@ -675,6 +675,7 @@
   ];
 
   var DIVISION_LABEL = { Men:"Men's", Women:"Women's" };
+  var STAGE_TYPE_LABEL = { group: 'Group', swiss: 'Swiss', bracket: 'Bracket', doubleElim: 'Double Elim', modifiedPool: 'Modified Pool' };
   function divisionLabel(comp) { return (DIVISION_LABEL[comp] || comp) + ' Division'; }
   function divisionsText(t) { return t.competitions.map(function(c){ return DIVISION_LABEL[c] || c; }).join(' & '); }
 
@@ -1251,10 +1252,11 @@ var CLUBS = [
 
   // Flattens one stage into {id, teamAId, teamBId, sets, format} regardless of
   // stage type — group/swiss matches already carry direct team ids; bracket/
-  // doubleElim matches only carry slot indices and need per-round resolution.
+  // doubleElim/modifiedPool matches only carry slot indices and need per-round
+  // resolution.
   function resolvedStageMatches(bracket, stage) {
     if (stage.type === 'group' || stage.type === 'swiss') return stageAllMatches(stage);
-    if (stage.type === 'bracket' || stage.type === 'doubleElim') {
+    if (stage.type === 'bracket' || stage.type === 'doubleElim' || stage.type === 'modifiedPool') {
       var out = [];
       (stage.rounds || []).forEach(function(round, ri) {
         (round.matches || []).forEach(function(m) {
@@ -1405,7 +1407,7 @@ var CLUBS = [
     }
 
     bracket.stages.forEach(function(stage) {
-      if (stage.type === 'bracket') {
+      if (stage.type === 'bracket' || stage.type === 'modifiedPool') {
         var mainRounds = stage.rounds.filter(function(r) { return r.side !== 'thirdPlace'; });
         var thirdRound = stage.rounds.find(function(r) { return r.side === 'thirdPlace'; });
         mainRounds.forEach(function(round, ri) {
@@ -3471,7 +3473,7 @@ var CLUBS = [
 
   function renderStageCard(stage) {
     var teamChecklist = '';
-    if (stage.type === 'group' && stage.groupSize) {
+    if ((stage.type === 'group' || stage.type === 'modifiedPool') && stage.groupSize) {
       // Fixed-size groups get one search box per slot instead of a checkbox
       // list over every team — much faster to fill from a pool of dozens of
       // registered teams, and the slot order is preserved (stage.teamIds[i]),
@@ -3514,11 +3516,12 @@ var CLUBS = [
       : stage.type === 'bracket' ? renderBracketStageBody(stage)
       : stage.type === 'swiss' ? renderSwissStageBody(stage)
       : stage.type === 'doubleElim' ? renderDoubleElimStageBody(stage)
+      : stage.type === 'modifiedPool' ? renderModifiedPoolStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
     var divisionPill = stage.competition ? ' <span class="stage-type-pill">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
     return '<div class="stage-card sortable-block" data-stage-id="' + esc(stage.id) + '" data-block-key="' + esc(stage.id) + '">' +
       '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
-      '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(stage.type) + '</span>' + divisionPill + '</h3>' +
+      '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>' + divisionPill + '</h3>' +
         '<button type="button" class="icon-btn admin-only-flex" data-remove-stage="' + esc(stage.id) + '" title="Remove stage">✕</button>' +
       '</div>' +
       swissInfo +
@@ -3762,14 +3765,48 @@ var CLUBS = [
     '</div>';
   }
 
-  function renderBracketStageBody(stage) {
+  // Shared by any stage type whose rounds are the {slots,matches} bracket
+  // shape (bracket, doubleElim's per-section slices, modifiedPool) — resolves
+  // and renders each round as its own column.
+  function renderBracketRoundsHtml(stage) {
     var cols = stage.rounds.map(function(round, ri) {
       var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
       return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div><div class="bracket-round-matches">' + matchesHtml + '</div></div>';
     }).join('');
-    return (stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '<p class="empty-note">No rounds yet.</p>') +
+    return stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '';
+  }
+
+  function renderBracketStageBody(stage) {
+    return (renderBracketRoundsHtml(stage) || '<p class="empty-note">No rounds yet.</p>') +
       renderThirdPlacePanel(stage) +
       renderAddRoundPanel(stage);
+  }
+
+  // Modified Pool: always exactly 4 seeded teams (stage.teamIds, slot order =
+  // seed 1..4, filled via the same search-dropdown slots as a fixed-size
+  // group). One click builds the whole 4-match structure at once — no
+  // per-round "Add round"/"Add third place" clicking like a generic Bracket
+  // stage needs, since the shape never varies: seed1v4 + seed2v3, then the
+  // winners' match (1st/2nd) and the losers' match (3rd/4th). Reuses the exact
+  // same {rounds:[{slots,matches}]} shape internally as 'bracket' (so
+  // placements/schedule integration already understand it once stage.type is
+  // included in the relevant checks) — but deliberately does NOT render it as
+  // bracket columns with "Round 1/Final/Spiel um Platz 3" headers, since this
+  // is one pool's internal seeding, not a tournament-wide knockout. All 4
+  // matches render flat, one after another, the same as a Group stage's
+  // match list.
+  function renderModifiedPoolStageBody(stage) {
+    if (!stage.rounds.length) {
+      var filled = (stage.teamIds || []).filter(Boolean).length;
+      return '<div class="admin-only">' +
+        (filled === 4
+          ? '<button type="button" class="btn btn-cyan btn-sm" data-generate-modified-pool="' + esc(stage.id) + '">Generate pool matches (seed 1v4, seed 2v3)</button>'
+          : '<p class="empty-note">' + filled + '/4 teams assigned — fill all 4 seed slots above to generate.</p>') +
+      '</div>';
+    }
+    var matchRefs = [[0, 0], [0, 1], [1, 0], [2, 0]]; // seed1v4, seed2v3, winners' match, losers' match
+    var matchesHtml = matchRefs.map(function(ref) { return renderBracketMatchCard(stage, ref[0], ref[1]); }).join('');
+    return '<div class="match-list">' + matchesHtml + '</div>';
   }
 
   // Renders a doubleElim stage's rounds grouped into their three visual
@@ -3907,6 +3944,7 @@ var CLUBS = [
           '<option value="swiss">Swiss</option>' +
           '<option value="bracket">Bracket (crossover / knockout)</option>' +
           '<option value="doubleElim">Double Elimination</option>' +
+          '<option value="modifiedPool">Modified Pool (4 teams)</option>' +
         '</select></div>' +
       '</div>' +
       '<div class="form-row">' +
@@ -3914,7 +3952,7 @@ var CLUBS = [
         '<div class="form-group"><label>Number of groups</label><input type="number" id="newStageCount" value="1" min="1" max="26"></div>' +
         '<div class="form-group" id="newStageSizeRow"><label>Teams per group</label><input type="number" id="newStageSize" min="2" placeholder="e.g. 4"></div>' +
       '</div>' +
-      '<p class="empty-note">With more than 1, the label is used as a prefix — "Group" creates "Group A", "Group B", … as separate stages, all with the settings below. Set "Teams per group" to get a search box per slot to assign specific teams (in order — useful for seeding); leave it blank to check teams off a list instead, same as before.</p>' +
+      '<p class="empty-note">With more than 1, the label is used as a prefix — "Group" creates "Group A", "Group B", … as separate stages, all with the settings below. Set "Teams per group" to get a search box per slot to assign specific teams (in order — useful for seeding); leave it blank to check teams off a list instead, same as before. "Modified Pool" is always exactly 4 seeded teams — seed 1 plays seed 4, seed 2 plays seed 3, then the winners play for 1st/2nd and the losers play for 3rd/4th (2 matches per team, no full round robin).</p>' +
       '<div class="form-row">' +
         '<div class="form-group"><label>Best of (sets)</label><select id="newStageBestOf">' +
           [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
@@ -4177,7 +4215,7 @@ var CLUBS = [
       var divisionField = document.getElementById('newStageDivision');
       var competition = divisionField ? (divisionField.value || null) : null;
       var count = Math.max(1, parseInt(document.getElementById('newStageCount').value, 10) || 1);
-      var groupSize = type === 'group' ? (parseInt(document.getElementById('newStageSize').value, 10) || null) : null;
+      var groupSize = type === 'group' ? (parseInt(document.getElementById('newStageSize').value, 10) || null) : (type === 'modifiedPool' ? 4 : null);
       var stageBestOf = parseInt(document.getElementById('newStageBestOf').value, 10) || currentBracket.defaultFormat.bestOf;
       var stageSetPoints = document.getElementById('newStageSetPoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
       var sharedFormat = { bestOf: stageBestOf, setPoints: stageSetPoints.length ? stageSetPoints : currentBracket.defaultFormat.setPoints.slice() };
@@ -4206,6 +4244,8 @@ var CLUBS = [
           stage.rounds = [];
         } else if (type === 'doubleElim') {
           stage.teamIds = []; stage.rounds = [];
+        } else if (type === 'modifiedPool') {
+          stage.teamIds = []; stage.groupSize = 4; stage.rounds = [];
         }
         newStages.push(stage);
       }
@@ -4343,6 +4383,52 @@ var CLUBS = [
           sets: []
         }];
         stage.rounds.push({ name: 'Spiel um Platz 3', side: 'thirdPlace', slots: slots, matches: matches });
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-generate-modified-pool]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var stage = findStage(currentBracket, btn.dataset.generateModifiedPool);
+        if (!stage || stage.rounds.length) return;
+        var ids = stage.teamIds || [];
+        if (ids.filter(Boolean).length !== 4) return;
+        var fmt = stage.defaultFormat || currentBracket.defaultFormat;
+        function newMatch(a, b) {
+          return { id: genId('match'), slotAIndex: a, slotBIndex: b, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] };
+        }
+        var m1 = newMatch(0, 1); // seed 1 vs seed 4
+        var m2 = newMatch(2, 3); // seed 2 vs seed 3
+        var round1 = {
+          name: 'Round 1',
+          slots: [
+            { source: { type: 'manual', teamId: ids[0] } },
+            { source: { type: 'manual', teamId: ids[3] } },
+            { source: { type: 'manual', teamId: ids[1] } },
+            { source: { type: 'manual', teamId: ids[2] } }
+          ],
+          matches: [m1, m2]
+        };
+        var mFinal = newMatch(0, 1);
+        var finalRound = {
+          name: 'Final',
+          slots: [
+            { source: { type: 'matchWinner', matchId: m1.id } },
+            { source: { type: 'matchWinner', matchId: m2.id } }
+          ],
+          matches: [mFinal]
+        };
+        var m3rd = newMatch(0, 1);
+        var thirdRound = {
+          name: 'Spiel um Platz 3', side: 'thirdPlace',
+          slots: [
+            { source: { type: 'loser', matchId: m1.id } },
+            { source: { type: 'loser', matchId: m2.id } }
+          ],
+          matches: [m3rd]
+        };
+        stage.rounds = [round1, finalRound, thirdRound];
         persistBracket();
       });
     });
@@ -4577,7 +4663,7 @@ var CLUBS = [
         if (findScheduledItem(bracket, m.id)) return;
         out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format });
       });
-    } else if (stage.type === 'bracket' || stage.type === 'doubleElim') {
+    } else if (stage.type === 'bracket' || stage.type === 'doubleElim' || stage.type === 'modifiedPool') {
       stage.rounds.forEach(function(round, ri) {
         round.matches.forEach(function(m) {
           if (findScheduledItem(bracket, m.id)) return;
@@ -4795,7 +4881,7 @@ var CLUBS = [
     if (!bracket.schedule.days.length || !bracket.stages.length) return '';
     var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
     var rows = bracket.stages.map(function(stage) {
-      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(stage.type) + '</span></span></label>';
+      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span></span></label>';
     }).join('');
     return '<div class="live-panel admin-only">' +
       '<h2>Add matches to schedule</h2>' +
