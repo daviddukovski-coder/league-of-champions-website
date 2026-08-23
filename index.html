@@ -183,6 +183,15 @@
   .edit-text-save, .edit-text-cancel { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; }
   .edit-text-save { background:var(--paid); color:#fff; }
   .edit-text-cancel { background:#b3401f; color:#fff; }
+  /* Same look as .edit-pencil/.edit-text-input/-save/-cancel above, but a
+     separate class family — see the comment in wireLiveEvents for why this
+     control can't share those classes with the generic content-field editor. */
+  .team-rename-pencil { display:none; background:var(--cyan); color:var(--pill-text); border:none; width:22px; height:22px; border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-left:8px; vertical-align:middle; flex-shrink:0; }
+  body.admin-edit-mode .team-rename-pencil { display:inline-flex; align-items:center; justify-content:center; }
+  .team-rename-input { font:inherit; color:#111; background:#fff; border:2px solid var(--cyan); border-radius:4px; padding:2px 6px; width:auto; min-width:120px; }
+  .team-rename-save, .team-rename-cancel { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; margin-left:4px; }
+  .team-rename-save { background:var(--paid); color:#fff; }
+  .team-rename-cancel { background:#b3401f; color:#fff; }
   .sortable-block { position:relative; }
   .sortable-block.dragging { opacity:0.5; }
   .sortable-handle { display:none; position:absolute; top:8px; right:8px; z-index:6; width:30px; height:30px; border-radius:50%; border:none; background:var(--cyan); color:var(--pill-text); font-size:15px; align-items:center; justify-content:center; cursor:grab; touch-action:none; }
@@ -2175,7 +2184,7 @@ var CLUBS = [
       } else if (p[2] === 'compselect') {
         showCompSelect(t);
       } else if (p[2] === 'live') {
-        showLive(t, p[3]);
+        showLive(t, p[3] && decodeURIComponent(p[3]));
       } else if (p[2] === 'schedule') {
         showSchedule(t);
       } else {
@@ -2787,7 +2796,7 @@ var CLUBS = [
         var regRows = comp ? all.filter(function(p) { return p.competition === comp; }) : all;
         var teamRows = comp ? extraTeams.filter(function(tm) { return tm.competition === comp; }) : extraTeams;
         if (!regRows.length && !teamRows.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
-        var extraHtml = teamRows.length ? '<div class="player-list">' + teamRows.map(teamRosterRowHtml).join('') + '</div>' : '';
+        var extraHtml = teamRows.length ? '<div class="player-list">' + teamRows.map(teamPublicRowHtml).join('') + '</div>' : '';
         return (regRows.length ? renderPlayerList(regRows) : '') + extraHtml;
       }
       if (t.competitions.length > 1) {
@@ -3233,6 +3242,7 @@ var CLUBS = [
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(DIVISION_LABEL[liveDivisionFilter] || liveDivisionFilter) : '') + '</h2>' +
+      generateAllGroupMatchesHtml(bracket.stages) +
       '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
@@ -3262,13 +3272,28 @@ var CLUBS = [
     }).join('');
   }
 
+  // Read-only version for the public tournament page (loadAndRenderPlayerLists) —
+  // teamRosterRowHtml's admin controls (division/seed/remove/rename) only have
+  // click handlers wired up on the Live Bracket page (wireLiveEvents), so
+  // rendering that version here would show buttons that silently do nothing.
+  function teamPublicRowHtml(team) {
+    return '<div class="roster-row">' +
+      '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
+        '<div><strong>' + esc(team.name) + '</strong>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   function teamRosterRowHtml(team) {
     var promoteBtn = team.category === 'quali'
       ? '<button type="button" class="btn btn-outline btn-sm admin-only-flex" data-promote-team="' + esc(team.id) + '" title="Promote to Main Draw">Promote to Main Draw</button>'
       : '';
     return '<div class="roster-row">' +
       '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
-        '<div><strong>' + esc(team.name) + '</strong>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
+        '<div><span class="team-name-wrap" data-team-name-wrap="' + esc(team.id) + '" data-raw-name="' + esc(team.name) + '">' +
+            '<strong class="team-name-value">' + esc(team.name) + '</strong>' +
+            '<button type="button" class="team-rename-pencil" data-rename-team="' + esc(team.id) + '" title="Rename team">✎</button>' +
+          '</span>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
       '</div>' +
       '<div class="roster-row-actions">' +
         promoteBtn +
@@ -3320,7 +3345,7 @@ var CLUBS = [
     if (comps.length < 2) return '';
     var base = '#/event/' + esc(currentBracketTournament.id) + '/live';
     var tabs = comps.map(function(c) {
-        return '<a href="' + base + '/' + esc(c.toLowerCase()) + '" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '">' + esc(DIVISION_LABEL[c] || c) + '</a>';
+        return '<a href="' + base + '/' + esc(encodeURIComponent(c.toLowerCase())) + '" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '">' + esc(DIVISION_LABEL[c] || c) + '</a>';
       }).join('');
     return '<div class="division-filter-tabs" id="divisionFilterTabs">' + tabs + '</div>';
   }
@@ -3586,6 +3611,18 @@ var CLUBS = [
         }
       }
     }
+  }
+
+  // One click instead of one per group — fills in every missing round-robin
+  // pair across EVERY group-type stage in the whole bracket, Men's and
+  // Women's both, regardless of which division tab is currently open (an
+  // organizer with 8 groups across both divisions shouldn't have to switch
+  // tabs and click 8 times).
+  function generateAllGroupMatchesHtml(stages) {
+    var groupsWithMissing = stages.filter(function(s) { return s.type === 'group' && missingRoundRobinPairs(s) > 0; });
+    if (!groupsWithMissing.length) return '';
+    var total = groupsWithMissing.reduce(function(sum, s) { return sum + missingRoundRobinPairs(s); }, 0);
+    return '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" id="generateAllGroupsBtn" style="margin-bottom:14px;">Generate all matches for every group (Men\'s + Women\'s) — ' + total + ' missing across ' + groupsWithMissing.length + ' group' + (groupsWithMissing.length > 1 ? 's' : '') + '</button></div>';
   }
 
   function renderGroupStageBody(stage) {
@@ -3941,6 +3978,43 @@ var CLUBS = [
       });
     });
 
+    // Renames team.name in place — every view in this bracket (roster,
+    // stage team lists, standings, schedule) reads team.name live off the
+    // same bracket document, so one edit here updates all of them at once.
+    document.querySelectorAll('[data-rename-team]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var wrap = btn.closest('[data-team-name-wrap]');
+        // Deliberately NOT reusing the site-wide .edit-text-input/-save/-cancel/
+        // .edit-pencil classes here: those are matched by a document-level
+        // delegated click/keydown handler (commitTextEdit/startTextEdit) that
+        // expects an .edit-text-wrap ancestor with data-edit-key/-field for the
+        // saveContentField (tournament content-override) path. This control
+        // edits bracket team data instead (persistBracket), so it needs its
+        // own class names to avoid double-handling the same click/keydown.
+        wrap.innerHTML =
+          '<input type="text" class="team-rename-input" value="' + esc(wrap.dataset.rawName) + '">' +
+          '<button type="button" class="team-rename-save" title="Save">✓</button>' +
+          '<button type="button" class="team-rename-cancel" title="Cancel">✕</button>';
+        var input = wrap.querySelector('.team-rename-input');
+        input.focus();
+        input.select();
+        function commit() {
+          var next = input.value.trim();
+          if (!next) { renderLive(); return; }
+          var team = findBracketTeam(currentBracket, wrap.dataset.teamNameWrap);
+          if (team) team.name = next;
+          persistBracket();
+        }
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); renderLive(); }
+        });
+        wrap.querySelector('.team-rename-save').addEventListener('click', commit);
+        wrap.querySelector('.team-rename-cancel').addEventListener('click', function() { renderLive(); });
+      });
+    });
+
     document.querySelectorAll('[data-remove-team]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (!isAdmin) return;
@@ -4133,6 +4207,15 @@ var CLUBS = [
         persistBracket();
       });
     });
+
+    var generateAllGroupsBtn = document.getElementById('generateAllGroupsBtn');
+    if (generateAllGroupsBtn) {
+      generateAllGroupsBtn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        currentBracket.stages.filter(function(s) { return s.type === 'group'; }).forEach(generateRoundRobin);
+        persistBracket();
+      });
+    }
 
     document.querySelectorAll('[data-save-match]').forEach(function(btn) {
       btn.addEventListener('click', function() {
