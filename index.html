@@ -125,7 +125,7 @@
   .btn-disabled:hover { background:transparent; }
   .phase-control { gap:8px; margin-top:12px; align-items:center; }
   .phase-btn.active { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
-  .division-filter-tabs { gap:8px; margin-bottom:18px; }
+  .division-filter-tabs { display:flex; gap:8px; margin-bottom:18px; }
   .division-filter-tab.active { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
   .btn-live { background:#e0233c; color:#fff; gap:7px; }
   .btn-live:hover { background:#c91d33; transform:translateY(-1px); }
@@ -1169,6 +1169,9 @@ var CLUBS = [
   // Generic standings computation — used by group tables now, and by Swiss record
   // buckets / bracket rank-sources later. Sort: match wins desc, set diff desc, point diff desc.
   function computeStandings(bracket, teamIds, matches) {
+    // Slot-assigned groups can have not-yet-filled (null) slots — no phantom
+    // "?" row for those until an actual team lands there.
+    teamIds = teamIds.filter(Boolean);
     var stats = {};
     teamIds.forEach(function(id) { stats[id] = { teamId: id, mp: 0, w: 0, l: 0, setsWon: 0, setsLost: 0, pointsWon: 0, pointsLost: 0 }; });
     matches.forEach(function(m) {
@@ -2160,7 +2163,7 @@ var CLUBS = [
       } else if (p[2] === 'compselect') {
         showCompSelect(t);
       } else if (p[2] === 'live') {
-        showLive(t);
+        showLive(t, p[3]);
       } else if (p[2] === 'schedule') {
         showSchedule(t);
       } else {
@@ -2564,12 +2567,13 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="bracketTeamsPublic"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
       wireLiveBracketDisable(t);
       wireTournamentPhaseControl(t);
+      loadAndRenderBracketTeamsPublic(t);
       setView('detail');
       return;
     }
@@ -2582,7 +2586,7 @@ var CLUBS = [
       header: headerHtml,
       infoGrid: infoRows,
       registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + bracketLinksHtml(t) + liveButtonHtml(t) + '</div>' + tournamentPhaseControlHtml(t),
-      teams: '<div id="playerLists"></div>'
+      teams: '<div id="playerLists"></div><div id="bracketTeamsPublic"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
     initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
@@ -2594,6 +2598,7 @@ var CLUBS = [
     checkResumablePayment(t);
     verifyAlreadyRegistered(t);
     loadAndRenderPlayerLists(t);
+    loadAndRenderBracketTeamsPublic(t);
 
     setView('detail');
   }
@@ -2762,6 +2767,35 @@ var CLUBS = [
         listsEl.innerHTML = '<h2 class="section-title">' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(all);
       }
       wirePlayerListEvents(t);
+    });
+  }
+
+  // Public read-only view of the Live Bracket's own team roster + referees,
+  // separate from loadAndRenderPlayerLists above: teams added straight into
+  // the Live Bracket (bulk-imported, or manually) never go through the
+  // Registrations sheet, so they'd otherwise never appear on this public
+  // tournament page at all. Reuses categoryGroupsHtml/teamRosterRowHtml
+  // as-is — their admin controls are already hidden via CSS for visitors.
+  function renderBracketTeamsAndRefereesHtml(bracket) {
+    if (!bracket) return '';
+    var comps = bracketCompetitions(bracket);
+    var teamsHtml = !bracket.teams.length ? '' : (comps.length >= 2
+      ? comps.map(function(c) {
+          var teams = bracket.teams.filter(function(t) { return t.competition === c; });
+          return '<h2 class="section-title">' + esc(DIVISION_LABEL[c] || c) + ' Teams (' + teams.length + ')</h2>' + categoryGroupsHtml(teams);
+        }).join('')
+      : '<h2 class="section-title">Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams));
+    var refsHtml = (bracket.referees && bracket.referees.length)
+      ? '<h2 class="section-title">Referees</h2>' + bracket.referees.map(refereeRowHtml).join('')
+      : '';
+    return teamsHtml + refsHtml;
+  }
+
+  function loadAndRenderBracketTeamsPublic(t) {
+    var el = document.getElementById('bracketTeamsPublic');
+    if (!el) return;
+    loadBracket(t.id).then(function(bracket) {
+      el.innerHTML = renderBracketTeamsAndRefereesHtml(bracket);
     });
   }
 
@@ -3142,7 +3176,11 @@ var CLUBS = [
     if (bracketUnsub) { bracketUnsub(); bracketUnsub = null; }
   }
 
-  function showLive(t) {
+  // divisionParam comes straight from the URL (#/event/:id/live/men, /women) so
+  // the division view is a real, bookmarkable/shareable subpage rather than
+  // transient click-state — matched case-insensitively against whichever
+  // competition values this bracket's teams actually use.
+  function showLive(t, divisionParam) {
     var el = document.getElementById('liveContent');
     el.innerHTML = '<p class="empty-note">Loading …</p>';
     setView('live');
@@ -3151,6 +3189,12 @@ var CLUBS = [
     loadBracket(t.id).then(function(bracket) {
       currentBracket = bracket;
       currentBracketTournament = t;
+      // No "All" view when there's more than one division — land straight on
+      // the first one (Men's, per bracketCompetitions' fixed ordering) rather
+      // than a combined list, matching a single-division tournament's tabs.
+      var comps = bracketCompetitions(bracket);
+      var match = divisionParam && comps.find(function(c) { return c.toLowerCase() === divisionParam.toLowerCase(); });
+      liveDivisionFilter = match || comps[0] || null;
       renderLive();
       if (!AUTH_DEMO_MODE) {
         // Real-time push so spectators watching this page see results update
@@ -3183,7 +3227,6 @@ var CLUBS = [
       renderRosterPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
-      renderFormatPanel(bracket.defaultFormat) +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(DIVISION_LABEL[liveDivisionFilter] || liveDivisionFilter) : '') + '</h2>' +
       '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
@@ -3252,17 +3295,19 @@ var CLUBS = [
     return list;
   }
 
-  // Tabs to narrow the whole admin screen (teams + stages) to one division at
-  // a time — local view state only (liveDivisionFilter), never persisted, so
-  // the Schedule page (which always reads the full bracket) is unaffected.
+  // Real, bookmarkable subpages (#/event/:id/live/men, /women) that narrow the
+  // whole Live Bracket screen — teams, stages, each stage's team checklist —
+  // to one division. Public, not admin-gated: anyone can jump straight to
+  // just the Men's or Women's bracket. The Schedule page always reads the
+  // full bracket regardless, so it's unaffected by this.
   function renderDivisionFilterTabs(bracket) {
     var comps = bracketCompetitions(bracket);
     if (comps.length < 2) return '';
-    var tabs = '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (!liveDivisionFilter ? ' active' : '') + '" data-division-filter="">All</button>' +
-      comps.map(function(c) {
-        return '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '" data-division-filter="' + esc(c) + '">' + esc(DIVISION_LABEL[c] || c) + '</button>';
+    var base = '#/event/' + esc(currentBracketTournament.id) + '/live';
+    var tabs = comps.map(function(c) {
+        return '<a href="' + base + '/' + esc(c.toLowerCase()) + '" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '">' + esc(DIVISION_LABEL[c] || c) + '</a>';
       }).join('');
-    return '<div class="division-filter-tabs admin-only-flex" id="divisionFilterTabs">' + tabs + '</div>';
+    return '<div class="division-filter-tabs" id="divisionFilterTabs">' + tabs + '</div>';
   }
 
   function renderRosterPanel(bracket) {
@@ -3275,11 +3320,12 @@ var CLUBS = [
         var label = (DIVISION_LABEL[comp] || comp) + ' Teams (' + teams.length + ')';
         return '<div class="live-panel"><h2>' + esc(label) + '</h2>' + categoryGroupsHtml(teams) + '</div>';
       }).join('');
-      if (!liveDivisionFilter) {
-        var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
-        if (unassigned.length) {
-          teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
-        }
+      // Always shown (not gated by the active tab) - with no "All" view left,
+      // a stray team with no division set would otherwise never appear under
+      // either tab and become impossible to find and fix.
+      var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
+      if (unassigned.length) {
+        teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
       }
     } else {
       teamPanels = '<div class="live-panel"><h2>Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams) + '</div>';
@@ -3320,7 +3366,7 @@ var CLUBS = [
 
   function renderRefereesPanel(bracket) {
     var referees = bracket.referees || [];
-    return '<div class="live-panel">' +
+    return '<div class="live-panel admin-only">' +
       '<h2>Referees (' + referees.length + ')</h2>' +
       (referees.length ? referees.map(refereeRowHtml).join('') : '<p class="empty-note">No referees assigned yet.</p>') +
       '<div class="admin-only combo-group" id="addRefereePanel">' +
@@ -3339,25 +3385,32 @@ var CLUBS = [
     '</div>';
   }
 
-  function renderFormatPanel(fmt) {
-    return '<div class="live-panel">' +
-      '<h2>Default Match Format</h2>' +
-      '<p>Best of ' + fmt.bestOf + ' — ' + fmt.setPoints.join(' / ') + ' points</p>' +
-      '<div class="admin-only">' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Best of (sets)</label><select id="fmtBestOf">' +
-            [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
-          '</select></div>' +
-          '<div class="form-group"><label>Set points (comma-separated)</label><input id="fmtSetPoints" value="' + esc(fmt.setPoints.join(',')) + '" placeholder="18,18,15"></div>' +
-        '</div>' +
-        '<button type="button" class="btn btn-outline" id="saveFormatBtn">Save format</button>' +
-      '</div>' +
-    '</div>';
-  }
 
   function renderStageCard(stage) {
     var teamChecklist = '';
-    if (stage.type === 'group' || stage.type === 'swiss' || stage.type === 'doubleElim') {
+    if (stage.type === 'group' && stage.groupSize) {
+      // Fixed-size groups get one search box per slot instead of a checkbox
+      // list over every team — much faster to fill from a pool of dozens of
+      // registered teams, and the slot order is preserved (stage.teamIds[i]),
+      // which is what actually decides the 1v4/2v3-style pairing order.
+      var filled = stage.teamIds.filter(Boolean).length;
+      var slots = [];
+      for (var si = 0; si < stage.groupSize; si++) {
+        var assignedId = stage.teamIds[si] || '';
+        var assignedTeam = assignedId ? findBracketTeam(currentBracket, assignedId) : null;
+        slots.push(
+          '<div class="form-group combo-group stage-slot-group">' +
+            '<input class="stage-slot-search" autocomplete="off" placeholder="Team ' + (si + 1) + '…" value="' + (assignedTeam ? esc(assignedTeam.name) : '') + '" data-stage-slot="' + esc(stage.id) + '" data-slot-index="' + si + '">' +
+            '<div class="combo-dropdown stage-slot-dropdown" hidden></div>' +
+            '<input type="hidden" class="stage-slot-value" value="' + esc(assignedId) + '">' +
+          '</div>'
+        );
+      }
+      teamChecklist = '<div class="admin-only">' +
+        '<h3>Teams in this stage (' + filled + '/' + stage.groupSize + ')</h3>' +
+        slots.join('') +
+      '</div>';
+    } else if (stage.type === 'group' || stage.type === 'swiss' || stage.type === 'doubleElim') {
       // If the stage itself is tagged with a division, only offer that
       // division's teams here — no need to scroll past the other one.
       var checklistTeams = stage.competition
@@ -3463,6 +3516,9 @@ var CLUBS = [
     var missing = 0;
     for (var i = 0; i < stage.teamIds.length; i++) {
       for (var j = i + 1; j < stage.teamIds.length; j++) {
+        // Slot-assigned groups can have empty (null) slots still waiting for a
+        // team — not a real pair to schedule yet, so don't count it as missing.
+        if (!stage.teamIds[i] || !stage.teamIds[j]) continue;
         if (!existing[stage.teamIds[i] + '|' + stage.teamIds[j]]) missing++;
       }
     }
@@ -3489,7 +3545,7 @@ var CLUBS = [
       existing[m.teamBId + '|' + m.teamAId] = true;
     });
     function addPair(a, b) {
-      if (existing[a + '|' + b]) return;
+      if (!a || !b || existing[a + '|' + b]) return;
       var fmt = stage.defaultFormat || currentBracket.defaultFormat;
       stage.matches.push({
         id: genId('match'), teamAId: a, teamBId: b,
@@ -3761,8 +3817,9 @@ var CLUBS = [
       '<div class="form-row">' +
         divisionField +
         '<div class="form-group"><label>Number of groups</label><input type="number" id="newStageCount" value="1" min="1" max="26"></div>' +
+        '<div class="form-group" id="newStageSizeRow"><label>Teams per group</label><input type="number" id="newStageSize" min="2" placeholder="e.g. 4"></div>' +
       '</div>' +
-      '<p class="empty-note">With more than 1, the label is used as a prefix — "Group" creates "Group A", "Group B", … as separate stages, all with the settings below.</p>' +
+      '<p class="empty-note">With more than 1, the label is used as a prefix — "Group" creates "Group A", "Group B", … as separate stages, all with the settings below. Set "Teams per group" to get a search box per slot to assign specific teams (in order — useful for seeding); leave it blank to check teams off a list instead, same as before.</p>' +
       '<div class="form-row">' +
         '<div class="form-group"><label>Best of (sets)</label><select id="newStageBestOf">' +
           [1, 3, 5].map(function(n){ return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
@@ -3821,13 +3878,6 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
-
-    document.querySelectorAll('[data-division-filter]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        liveDivisionFilter = btn.dataset.divisionFilter || null;
-        renderLive();
-      });
-    });
 
     var syncRankingBtn = document.getElementById('syncRankingBtn');
     if (syncRankingBtn) syncRankingBtn.addEventListener('click', function() {
@@ -3911,15 +3961,6 @@ var CLUBS = [
       persistBracket();
     });
 
-    var saveFormatBtn = document.getElementById('saveFormatBtn');
-    if (saveFormatBtn) saveFormatBtn.addEventListener('click', function() {
-      if (!isAdmin) return;
-      var bestOf = parseInt(document.getElementById('fmtBestOf').value, 10) || 3;
-      var setPoints = document.getElementById('fmtSetPoints').value.split(',').map(function(n){ return parseInt(n.trim(), 10); }).filter(function(n){ return !isNaN(n); });
-      currentBracket.defaultFormat = { bestOf: bestOf, setPoints: setPoints.length ? setPoints : [21] };
-      persistBracket();
-    });
-
     document.querySelectorAll('[data-stage-team]').forEach(function(cb) {
       cb.addEventListener('change', function() {
         if (!isAdmin) return;
@@ -3929,6 +3970,54 @@ var CLUBS = [
         if (cb.checked) { if (stage.teamIds.indexOf(teamId) === -1) stage.teamIds.push(teamId); }
         else { stage.teamIds = stage.teamIds.filter(function(id){ return id !== teamId; }); }
         persistBracket();
+      });
+    });
+
+    document.querySelectorAll('.stage-slot-search').forEach(function(input) {
+      var stageId = input.dataset.stageSlot;
+      var slotIndex = parseInt(input.dataset.slotIndex, 10);
+      var group = input.closest('.stage-slot-group');
+      var dropdown = group.querySelector('.stage-slot-dropdown');
+      var hiddenInput = group.querySelector('.stage-slot-value');
+      input.addEventListener('input', function() {
+        if (!isAdmin) return;
+        var q = input.value.trim().toLowerCase();
+        hiddenInput.value = '';
+        if (!q) { dropdown.hidden = true; return; }
+        var stage = findStage(currentBracket, stageId);
+        if (!stage) return;
+        var pool = stage.competition
+          ? currentBracket.teams.filter(function(t) { return t.competition === stage.competition; })
+          : currentBracket.teams;
+        var takenElsewhere = stage.teamIds.filter(function(id, i) { return i !== slotIndex && id; });
+        var matches = pool.filter(function(t) {
+          return t.name.toLowerCase().indexOf(q) !== -1 && takenElsewhere.indexOf(t.id) === -1;
+        }).slice(0, 8);
+        if (!matches.length) { dropdown.hidden = true; return; }
+        dropdown.innerHTML = matches.map(function(t) {
+          return '<div class="combo-item" data-team-id="' + esc(t.id) + '">' + clubAvatarHtml(findClub(t.club)) + '<span>' + esc(t.name) + '</span></div>';
+        }).join('');
+        dropdown.hidden = false;
+      });
+      dropdown.addEventListener('click', function(e) {
+        if (!isAdmin) return;
+        var item = e.target.closest('.combo-item');
+        if (!item) return;
+        var stage = findStage(currentBracket, stageId);
+        if (!stage) return;
+        var team = findBracketTeam(currentBracket, item.dataset.teamId);
+        input.value = team ? team.name : '';
+        hiddenInput.value = item.dataset.teamId;
+        dropdown.hidden = true;
+        var arr = stage.teamIds.slice();
+        while (arr.length <= slotIndex) arr.push(null);
+        arr[slotIndex] = item.dataset.teamId;
+        while (arr.length && !arr[arr.length - 1]) arr.pop();
+        stage.teamIds = arr;
+        persistBracket();
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.combo-group')) dropdown.hidden = true;
       });
     });
 
@@ -3944,6 +4033,7 @@ var CLUBS = [
     var newStageType = document.getElementById('newStageType');
     if (newStageType) newStageType.addEventListener('change', function() {
       document.getElementById('swissConfigRow').hidden = newStageType.value !== 'swiss';
+      document.getElementById('newStageSizeRow').hidden = newStageType.value !== 'group';
     });
 
     var addStageBtn = document.getElementById('addStageBtn');
@@ -3955,6 +4045,7 @@ var CLUBS = [
       var divisionField = document.getElementById('newStageDivision');
       var competition = divisionField ? (divisionField.value || null) : null;
       var count = Math.max(1, parseInt(document.getElementById('newStageCount').value, 10) || 1);
+      var groupSize = type === 'group' ? (parseInt(document.getElementById('newStageSize').value, 10) || null) : null;
       var stageBestOf = parseInt(document.getElementById('newStageBestOf').value, 10) || currentBracket.defaultFormat.bestOf;
       var stageSetPoints = document.getElementById('newStageSetPoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
       var sharedFormat = { bestOf: stageBestOf, setPoints: stageSetPoints.length ? stageSetPoints : currentBracket.defaultFormat.setPoints.slice() };
@@ -3974,6 +4065,7 @@ var CLUBS = [
         if (competition) stage.competition = competition;
         if (type === 'group') {
           stage.teamIds = []; stage.matches = [];
+          if (groupSize) stage.groupSize = groupSize;
         } else if (type === 'swiss') {
           stage.teamIds = [];
           stage.config = Object.assign({}, swissConfig);
