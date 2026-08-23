@@ -252,6 +252,12 @@
   /* Live bracket */
   .live-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px; }
   .live-panel h2 { font-size:16px; margin-bottom:14px; }
+  .roster-details summary { cursor:pointer; list-style:none; }
+  .roster-details summary::-webkit-details-marker { display:none; }
+  .roster-details summary h2 { display:inline-block; margin-bottom:0; }
+  .roster-details summary::after { content:'▸'; font-size:12px; color:var(--text-muted); margin-left:8px; }
+  .roster-details[open] summary::after { content:'▾'; }
+  .roster-details[open] summary h2 { margin-bottom:14px; }
   .live-panel h3 { font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin:18px 0 10px; }
   .live-panel h3:first-child { margin-top:0; }
   .roster-row { background:var(--surface-2); padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:6px; }
@@ -2567,13 +2573,13 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="bracketTeamsPublic"></div>' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
       wireLiveBracketDisable(t);
       wireTournamentPhaseControl(t);
-      loadAndRenderBracketTeamsPublic(t);
+      loadAndRenderPlayerLists(t);
       setView('detail');
       return;
     }
@@ -2586,7 +2592,7 @@ var CLUBS = [
       header: headerHtml,
       infoGrid: infoRows,
       registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + bracketLinksHtml(t) + liveButtonHtml(t) + '</div>' + tournamentPhaseControlHtml(t),
-      teams: '<div id="playerLists"></div><div id="bracketTeamsPublic"></div>'
+      teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
     initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
@@ -2598,7 +2604,6 @@ var CLUBS = [
     checkResumablePayment(t);
     verifyAlreadyRegistered(t);
     loadAndRenderPlayerLists(t);
-    loadAndRenderBracketTeamsPublic(t);
 
     setView('detail');
   }
@@ -2754,48 +2759,38 @@ var CLUBS = [
     });
   }
 
+  // One list per division, not two: registrations (with payment status/admin
+  // actions) plus any Live Bracket team that has no registration behind it
+  // (bulk-imported or added manually — teams.id only starts with "reg-" when
+  // it was pulled in from a real registration). Previously these rendered as
+  // two separate, confusingly-duplicate sections per division.
   function loadAndRenderPlayerLists(t) {
-    backendListRegistrations(t.id).then(function(all) {
+    Promise.all([backendListRegistrations(t.id), loadBracket(t.id)]).then(function(results) {
+      var all = results[0];
+      var bracket = results[1];
       var listsEl = document.getElementById('playerLists');
       if (!listsEl) return;
+      var regIds = {};
+      all.forEach(function(r) { regIds['reg-' + r.id] = true; });
+      var extraTeams = (bracket.teams || []).filter(function(tm) { return !regIds[tm.id]; });
+      function sectionHtml(comp) {
+        var regRows = comp ? all.filter(function(p) { return p.competition === comp; }) : all;
+        var teamRows = comp ? extraTeams.filter(function(tm) { return tm.competition === comp; }) : extraTeams;
+        if (!regRows.length && !teamRows.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
+        var extraHtml = teamRows.length ? '<div class="player-list">' + teamRows.map(teamRosterRowHtml).join('') + '</div>' : '';
+        return (regRows.length ? renderPlayerList(regRows) : '') + extraHtml;
+      }
       if (t.competitions.length > 1) {
         listsEl.innerHTML = t.competitions.map(function(comp) {
-          var players = all.filter(function(p){ return p.competition === comp; });
-          return '<h2 class="section-title">' + esc(divisionLabel(comp)) + ' – ' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(players);
+          return '<h2 class="section-title">' + esc(divisionLabel(comp)) + ' – ' + uiEdit('detail.registeredTeams') + '</h2>' + sectionHtml(comp);
         }).join('');
       } else {
-        listsEl.innerHTML = '<h2 class="section-title">' + uiEdit('detail.registeredTeams') + '</h2>' + renderPlayerList(all);
+        listsEl.innerHTML = '<h2 class="section-title">' + uiEdit('detail.registeredTeams') + '</h2>' + sectionHtml(null);
+      }
+      if (bracket.referees && bracket.referees.length) {
+        listsEl.innerHTML += '<h2 class="section-title">Referees</h2>' + bracket.referees.map(refereeRowHtml).join('');
       }
       wirePlayerListEvents(t);
-    });
-  }
-
-  // Public read-only view of the Live Bracket's own team roster + referees,
-  // separate from loadAndRenderPlayerLists above: teams added straight into
-  // the Live Bracket (bulk-imported, or manually) never go through the
-  // Registrations sheet, so they'd otherwise never appear on this public
-  // tournament page at all. Reuses categoryGroupsHtml/teamRosterRowHtml
-  // as-is — their admin controls are already hidden via CSS for visitors.
-  function renderBracketTeamsAndRefereesHtml(bracket) {
-    if (!bracket) return '';
-    var comps = bracketCompetitions(bracket);
-    var teamsHtml = !bracket.teams.length ? '' : (comps.length >= 2
-      ? comps.map(function(c) {
-          var teams = bracket.teams.filter(function(t) { return t.competition === c; });
-          return '<h2 class="section-title">' + esc(DIVISION_LABEL[c] || c) + ' Teams (' + teams.length + ')</h2>' + categoryGroupsHtml(teams);
-        }).join('')
-      : '<h2 class="section-title">Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams));
-    var refsHtml = (bracket.referees && bracket.referees.length)
-      ? '<h2 class="section-title">Referees</h2>' + bracket.referees.map(refereeRowHtml).join('')
-      : '';
-    return teamsHtml + refsHtml;
-  }
-
-  function loadAndRenderBracketTeamsPublic(t) {
-    var el = document.getElementById('bracketTeamsPublic');
-    if (!el) return;
-    loadBracket(t.id).then(function(bracket) {
-      el.innerHTML = renderBracketTeamsAndRefereesHtml(bracket);
     });
   }
 
@@ -3310,6 +3305,14 @@ var CLUBS = [
     return '<div class="division-filter-tabs" id="divisionFilterTabs">' + tabs + '</div>';
   }
 
+  // Roster count is what matters at a glance now that group/KO assignment
+  // happens via each stage's own search-dropdown slots (renderStageCard) —
+  // the full per-team list is still here for edits (remove/seed/division)
+  // but collapsed behind a <details> toggle instead of always spelled out.
+  function rosterPanelHtml(labelBase, teams) {
+    return '<div class="live-panel"><details class="roster-details"><summary><h2>' + esc(labelBase) + ' (' + teams.length + ')</h2></summary>' + categoryGroupsHtml(teams) + '</details></div>';
+  }
+
   function renderRosterPanel(bracket) {
     var competitions = bracketCompetitions(bracket);
     var teamPanels;
@@ -3317,18 +3320,17 @@ var CLUBS = [
       var shown = liveDivisionFilter ? competitions.filter(function(c) { return c === liveDivisionFilter; }) : competitions;
       teamPanels = shown.map(function(comp) {
         var teams = bracket.teams.filter(function(t) { return t.competition === comp; });
-        var label = (DIVISION_LABEL[comp] || comp) + ' Teams (' + teams.length + ')';
-        return '<div class="live-panel"><h2>' + esc(label) + '</h2>' + categoryGroupsHtml(teams) + '</div>';
+        return rosterPanelHtml((DIVISION_LABEL[comp] || comp) + ' Teams', teams);
       }).join('');
       // Always shown (not gated by the active tab) - with no "All" view left,
       // a stray team with no division set would otherwise never appear under
       // either tab and become impossible to find and fix.
       var unassigned = bracket.teams.filter(function(t) { return !t.competition; });
       if (unassigned.length) {
-        teamPanels += '<div class="live-panel"><h2>Unassigned Teams (' + unassigned.length + ')</h2>' + categoryGroupsHtml(unassigned) + '</div>';
+        teamPanels += rosterPanelHtml('Unassigned Teams', unassigned);
       }
     } else {
-      teamPanels = '<div class="live-panel"><h2>Teams (' + bracket.teams.length + ')</h2>' + categoryGroupsHtml(bracket.teams) + '</div>';
+      teamPanels = rosterPanelHtml('Teams', bracket.teams);
     }
     return teamPanels +
       '<div class="live-panel admin-only" id="addTeamPanel">' +
