@@ -4726,6 +4726,17 @@ var CLUBS = [
   // A team's next-free time still accounts for its matches on EVERY court,
   // selected or not, so it's never double-booked against a match scheduled
   // outside the current selection.
+  //
+  // Runs as repeated passes rather than one: a Modified Pool/Bracket stage's
+  // Final and 3rd-place matches aren't "ready" (per gatherSchedulableMatches)
+  // until their Round 1 dependency is itself on the schedule — which only
+  // becomes true partway through THIS SAME call, once Round 1 gets placed.
+  // A single pass would stop there and leave Final/3rd-place for the admin to
+  // notice and re-click "Add to schedule" for. Instead, each pass re-gathers
+  // from the now-updated day.courts and places whatever just became ready
+  // (rendered as "TBD – winner/loser of previous match" until that dependency
+  // is actually played), and repeats until a pass places nothing new — so one
+  // click schedules the whole stage's shape, ready or not.
   function autoScheduleStagesToDay(bracket, stages, day, courtIndices) {
     // Days can predate a later increase to schedule.courtCount, leaving
     // day.courts shorter than the court list currently shown — pad it so
@@ -4734,70 +4745,80 @@ var CLUBS = [
 
     var targetIndices = (courtIndices && courtIndices.length) ? courtIndices : day.courts.map(function(_, i) { return i; });
 
-    var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
-    var pending = [];
-    var maxLen = perStage.reduce(function(m, arr) { return Math.max(m, arr.length); }, 0);
-    for (var i = 0; i < maxLen; i++) {
-      perStage.forEach(function(arr) { if (arr[i]) pending.push(arr[i]); });
-    }
-    if (!pending.length) return 0;
+    function placeOnePass() {
+      var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
+      var pending = [];
+      var maxLen = perStage.reduce(function(m, arr) { return Math.max(m, arr.length); }, 0);
+      for (var i = 0; i < maxLen; i++) {
+        perStage.forEach(function(arr) { if (arr[i]) pending.push(arr[i]); });
+      }
+      if (!pending.length) return 0;
 
-    var courtNextFree = targetIndices.map(function(ci) {
-      var cum = 0;
-      day.courts[ci].forEach(function(it) { cum += scheduleItemDuration(it); });
-      return cum;
-    });
+      var courtNextFree = targetIndices.map(function(ci) {
+        var cum = 0;
+        day.courts[ci].forEach(function(it) { cum += scheduleItemDuration(it); });
+        return cum;
+      });
 
-    var teamNextFree = {};
-    day.courts.forEach(function(items) {
-      var cum = 0;
-      items.forEach(function(it) {
-        var dur = scheduleItemDuration(it);
-        if (it.type === 'match') {
-          var found = findMatchAnywhere(bracket, it.matchId);
-          if (found) {
-            var teamA, teamB;
-            if (found.round) {
-              var ri = found.stage.rounds.indexOf(found.round);
-              teamA = resolveSlotTeam(bracket, found.stage, ri, found.match.slotAIndex);
-              teamB = resolveSlotTeam(bracket, found.stage, ri, found.match.slotBIndex);
-            } else {
-              teamA = found.match.teamAId; teamB = found.match.teamBId;
+      var teamNextFree = {};
+      day.courts.forEach(function(items) {
+        var cum = 0;
+        items.forEach(function(it) {
+          var dur = scheduleItemDuration(it);
+          if (it.type === 'match') {
+            var found = findMatchAnywhere(bracket, it.matchId);
+            if (found) {
+              var teamA, teamB;
+              if (found.round) {
+                var ri = found.stage.rounds.indexOf(found.round);
+                teamA = resolveSlotTeam(bracket, found.stage, ri, found.match.slotAIndex);
+                teamB = resolveSlotTeam(bracket, found.stage, ri, found.match.slotBIndex);
+              } else {
+                teamA = found.match.teamAId; teamB = found.match.teamBId;
+              }
+              var end = cum + dur;
+              if (teamA) teamNextFree[teamA] = Math.max(teamNextFree[teamA] || 0, end);
+              if (teamB) teamNextFree[teamB] = Math.max(teamNextFree[teamB] || 0, end);
             }
-            var end = cum + dur;
-            if (teamA) teamNextFree[teamA] = Math.max(teamNextFree[teamA] || 0, end);
-            if (teamB) teamNextFree[teamB] = Math.max(teamNextFree[teamB] || 0, end);
           }
-        }
-        cum += dur;
+          cum += dur;
+        });
       });
-    });
 
-    var placed = 0;
-    while (pending.length) {
-      var best = null;
-      pending.forEach(function(pm) {
-        var duration = matchDurationMinutes({ format: pm.format }, bracket.defaultFormat);
-        for (var c = 0; c < courtNextFree.length; c++) {
-          var start = Math.max(
-            courtNextFree[c],
-            pm.teamAId ? (teamNextFree[pm.teamAId] || 0) : 0,
-            pm.teamBId ? (teamNextFree[pm.teamBId] || 0) : 0,
-            pm.readyTime
-          );
-          if (!best || start < best.start) best = { pm: pm, court: c, start: start, duration: duration };
-        }
-      });
-      if (!best) break;
-      var realCourt = targetIndices[best.court];
-      day.courts[realCourt].push({ id: genId('sked'), type: 'match', matchId: best.pm.matchId });
-      courtNextFree[best.court] = best.start + best.duration;
-      if (best.pm.teamAId) teamNextFree[best.pm.teamAId] = best.start + best.duration;
-      if (best.pm.teamBId) teamNextFree[best.pm.teamBId] = best.start + best.duration;
-      pending = pending.filter(function(p) { return p !== best.pm; });
-      placed++;
+      var placed = 0;
+      while (pending.length) {
+        var best = null;
+        pending.forEach(function(pm) {
+          var duration = matchDurationMinutes({ format: pm.format }, bracket.defaultFormat);
+          for (var c = 0; c < courtNextFree.length; c++) {
+            var start = Math.max(
+              courtNextFree[c],
+              pm.teamAId ? (teamNextFree[pm.teamAId] || 0) : 0,
+              pm.teamBId ? (teamNextFree[pm.teamBId] || 0) : 0,
+              pm.readyTime
+            );
+            if (!best || start < best.start) best = { pm: pm, court: c, start: start, duration: duration };
+          }
+        });
+        if (!best) break;
+        var realCourt = targetIndices[best.court];
+        day.courts[realCourt].push({ id: genId('sked'), type: 'match', matchId: best.pm.matchId });
+        courtNextFree[best.court] = best.start + best.duration;
+        if (best.pm.teamAId) teamNextFree[best.pm.teamAId] = best.start + best.duration;
+        if (best.pm.teamBId) teamNextFree[best.pm.teamBId] = best.start + best.duration;
+        pending = pending.filter(function(p) { return p !== best.pm; });
+        placed++;
+      }
+      return placed;
     }
-    return placed;
+
+    var totalPlaced = 0;
+    var placedThisPass;
+    do {
+      placedThisPass = placeOnePass();
+      totalPlaced += placedThisPass;
+    } while (placedThisPass > 0);
+    return totalPlaced;
   }
 
   function scheduleHandleHtml(itemId) {
