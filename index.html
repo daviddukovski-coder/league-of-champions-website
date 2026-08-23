@@ -1127,24 +1127,60 @@ var CLUBS = [
     return { teams: [], defaultFormat: { bestOf: 3, setPoints: [18, 18, 15] }, stages: [], schedule: { courtCount: 4, days: [] } };
   }
 
+  // Firestore rejects a document containing a nested array (an array whose
+  // elements are themselves arrays). schedule.days[].courts is naturally
+  // Array<Array<ScheduleItem>> — one items-array per court — so each inner
+  // array gets wrapped in a single-key object for the trip through Firestore
+  // (denormalizeBracketForSave) and unwrapped again on the way back
+  // (normalizeBracket). Every place that turns a raw Firestore/localStorage
+  // document into a live bracket object must go through normalizeBracket so
+  // day.courts is always a plain array-of-arrays in memory — accepts either
+  // shape on the way in so already-saved demo-mode data (raw arrays, written
+  // before this existed) still loads correctly.
+  function normalizeBracket(raw) {
+    var bracket = Object.assign(emptyBracket(), raw || {});
+    if (bracket.schedule && bracket.schedule.days && bracket.schedule.days.length) {
+      bracket.schedule = Object.assign({}, bracket.schedule, {
+        days: bracket.schedule.days.map(function(d) {
+          return Object.assign({}, d, {
+            courts: (d.courts || []).map(function(c) { return Array.isArray(c) ? c : ((c && c.items) || []); })
+          });
+        })
+      });
+    }
+    return bracket;
+  }
+
+  function denormalizeBracketForSave(bracket) {
+    if (!bracket.schedule || !bracket.schedule.days || !bracket.schedule.days.length) return bracket;
+    return Object.assign({}, bracket, {
+      schedule: Object.assign({}, bracket.schedule, {
+        days: bracket.schedule.days.map(function(d) {
+          return Object.assign({}, d, { courts: (d.courts || []).map(function(items) { return { items: items }; }) });
+        })
+      })
+    });
+  }
+
   function loadBracket(tournamentId) {
     if (AUTH_DEMO_MODE) {
       var data;
       try { data = JSON.parse(localStorage.getItem('loc_bracket_' + tournamentId) || 'null'); } catch (e) { data = null; }
-      return Promise.resolve(Object.assign(emptyBracket(), data || {}));
+      return Promise.resolve(normalizeBracket(data));
     }
     return firebase.firestore().collection('brackets').doc(tournamentId).get().then(function(doc) {
-      return Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+      return normalizeBracket(doc.exists ? doc.data() : null);
     });
   }
 
   function saveBracket(tournamentId, data) {
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var payload = denormalizeBracketForSave(data);
     if (AUTH_DEMO_MODE) {
-      localStorage.setItem('loc_bracket_' + tournamentId, JSON.stringify(data));
+      localStorage.setItem('loc_bracket_' + tournamentId, JSON.stringify(payload));
       return Promise.resolve();
     }
-    return firebase.firestore().collection('brackets').doc(tournamentId).set(data);
+    return firebase.firestore().collection('brackets').doc(tournamentId).set(payload);
   }
 
   // Winner of a match = team with the majority of sets won for that match's bestOf.
@@ -3214,7 +3250,7 @@ var CLUBS = [
         // Real-time push so spectators watching this page see results update
         // without refreshing, as soon as an admin saves a score elsewhere.
         bracketUnsub = firebase.firestore().collection('brackets').doc(t.id).onSnapshot(function(doc) {
-          currentBracket = Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+          currentBracket = normalizeBracket(doc.exists ? doc.data() : null);
           renderLive();
         });
       }
@@ -4451,7 +4487,7 @@ var CLUBS = [
       renderSchedule();
       if (!AUTH_DEMO_MODE) {
         bracketUnsub = firebase.firestore().collection('brackets').doc(t.id).onSnapshot(function(doc) {
-          currentBracket = Object.assign(emptyBracket(), doc.exists ? (doc.data() || {}) : {});
+          currentBracket = normalizeBracket(doc.exists ? doc.data() : null);
           renderSchedule();
         });
       }
