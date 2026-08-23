@@ -2002,7 +2002,13 @@ var CLUBS = [
     var input = wrap.querySelector('.edit-text-input');
     var next = input.value.trim();
     if (!next) { finishTextEdit(wrap); return; }
-    saveContentField(key, field, next).then(function() { finishTextEdit(wrap); });
+    // "Divisions" is the one editable field that's a list, not a scalar —
+    // stored as an actual array (Firestore and the demo-mode JSON blob both
+    // round-trip arrays fine), parsed here from the comma-separated input.
+    var value = field === 'competitions'
+      ? next.split(',').map(function(s) { return s.trim(); }).filter(Boolean)
+      : next;
+    saveContentField(key, field, value).then(function() { finishTextEdit(wrap); });
   }
 
   function editImageOverlayHtml(key) {
@@ -2557,12 +2563,16 @@ var CLUBS = [
   }
 
   function showDetail(t) {
+    // Kept in sync here too (not just in showLive/showSchedule) so
+    // divisionOptionsHtml() has the right tournament's competitions list
+    // when a team's Division <select> renders on this public page.
+    currentBracketTournament = t;
     var infoRows =
       '<div class="detail-info-grid">' +
         '<div class="info-block"><span class="label">' + uiEdit('detail.formatLabel') + '</span><span class="value">' + uiEdit('detail.formatValue') + '</span></div>' +
         '<div class="info-block"><span class="label">' + uiEdit('detail.feeLabel') + '</span><span class="value">' + editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee + ' / team' : '–', 'entry fee') + '</span></div>' +
         '<div class="info-block"><span class="label">' + uiEdit('detail.deadlineLabel') + '</span><span class="value">' + editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline') + '</span></div>' +
-        '<div class="info-block"><span class="label">' + uiEdit('detail.divisionsLabel') + '</span><span class="value">' + esc(divisionsText(t)) + '</span></div>' +
+        '<div class="info-block"><span class="label">' + uiEdit('detail.divisionsLabel') + '</span><span class="value">' + editTextHtml(t.id, 'competitions', t.competitions.join(', '), divisionsText(t), 'divisions — comma-separated, e.g. Men, Women, Men 100') + '</span></div>' +
       '</div>';
 
     var headerHtml =
@@ -3241,6 +3251,17 @@ var CLUBS = [
     });
   }
 
+  // Options for a division <select>, sourced from the tournament's own
+  // (admin-configurable) competitions list — not from bracketCompetitions(),
+  // which only reflects divisions teams already happen to be tagged with and
+  // so would never offer a brand-new division (e.g. "Men 100") to assign.
+  function divisionOptionsHtml(selected) {
+    var comps = (currentBracketTournament && currentBracketTournament.competitions) || ['Men', 'Women'];
+    return comps.map(function(c) {
+      return '<option value="' + esc(c) + '"' + (c === selected ? ' selected' : '') + '>' + esc(DIVISION_LABEL[c] || c) + '</option>';
+    }).join('');
+  }
+
   function teamRosterRowHtml(team) {
     var promoteBtn = team.category === 'quali'
       ? '<button type="button" class="btn btn-outline btn-sm admin-only-flex" data-promote-team="' + esc(team.id) + '" title="Promote to Main Draw">Promote to Main Draw</button>'
@@ -3253,8 +3274,7 @@ var CLUBS = [
         promoteBtn +
         '<select class="competition-select admin-only-flex" data-competition-team="' + esc(team.id) + '" title="Division">' +
           '<option value=""' + (!team.competition ? ' selected' : '') + '>Division?</option>' +
-          '<option value="Men"' + (team.competition === 'Men' ? ' selected' : '') + '>Men</option>' +
-          '<option value="Women"' + (team.competition === 'Women' ? ' selected' : '') + '>Women</option>' +
+          divisionOptionsHtml(team.competition) +
         '</select>' +
         '<input type="number" class="seed-input admin-only-flex" value="' + (team.seed || '') + '" data-seed-team="' + esc(team.id) + '" title="Seed">' +
         '<button type="button" class="icon-btn admin-only-flex" data-remove-team="' + esc(team.id) + '" title="Remove team">✕</button>' +
@@ -3347,7 +3367,7 @@ var CLUBS = [
             '<input type="hidden" id="manualTeamClub">' +
           '</div>' +
           '<div class="form-group"><label>Category</label><select id="manualTeamCategory"><option value="main">Main Draw</option><option value="quali">Qualifier</option></select></div>' +
-          '<div class="form-group"><label>Division</label><select id="manualTeamCompetition"><option value="Men"' + (liveDivisionFilter === 'Men' ? ' selected' : '') + '>Men</option><option value="Women"' + (liveDivisionFilter === 'Women' ? ' selected' : '') + '>Women</option></select></div>' +
+          '<div class="form-group"><label>Division</label><select id="manualTeamCompetition">' + divisionOptionsHtml(liveDivisionFilter) + '</select></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
       '</div>';
@@ -3798,11 +3818,11 @@ var CLUBS = [
 
   function renderAddStagePanel(bracket) {
     var fmt = bracket.defaultFormat;
-    var comps = bracketCompetitions(bracket);
+    var comps = (currentBracketTournament && currentBracketTournament.competitions) || bracketCompetitions(bracket);
     var divisionField = comps.length >= 2
       ? '<div class="form-group"><label>Division</label><select id="newStageDivision">' +
           '<option value="">— none —</option>' +
-          comps.map(function(c){ return '<option value="' + esc(c) + '"' + (liveDivisionFilter === c ? ' selected' : '') + '>' + esc(DIVISION_LABEL[c] || c) + '</option>'; }).join('') +
+          divisionOptionsHtml(liveDivisionFilter) +
         '</select></div>'
       : '';
     return '<div class="live-panel admin-only" id="addStagePanel">' +
