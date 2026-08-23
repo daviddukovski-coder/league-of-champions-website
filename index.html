@@ -3652,16 +3652,69 @@ var CLUBS = [
     }
   }
 
-  // One click instead of one per group — fills in every missing round-robin
-  // pair across EVERY group-type stage in the whole bracket, Men's and
-  // Women's both, regardless of which division tab is currently open (an
-  // organizer with 8 groups across both divisions shouldn't have to switch
-  // tabs and click 8 times).
+  // Builds a Modified Pool stage's fixed 4-match structure — seed1v4, seed2v3,
+  // then the winners' match (1st/2nd) and the losers' match (3rd/4th). Shared
+  // by the per-stage "Generate pool matches" button and the bulk "generate
+  // everything" button so there's one place that knows this shape.
+  function generateModifiedPoolBracket(stage) {
+    var ids = stage.teamIds || [];
+    if (ids.filter(Boolean).length !== 4) return;
+    var fmt = stage.defaultFormat || currentBracket.defaultFormat;
+    function newMatch(a, b) {
+      return { id: genId('match'), slotAIndex: a, slotBIndex: b, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] };
+    }
+    var m1 = newMatch(0, 1); // seed 1 vs seed 4
+    var m2 = newMatch(2, 3); // seed 2 vs seed 3
+    var round1 = {
+      name: 'Round 1',
+      slots: [
+        { source: { type: 'manual', teamId: ids[0] } },
+        { source: { type: 'manual', teamId: ids[3] } },
+        { source: { type: 'manual', teamId: ids[1] } },
+        { source: { type: 'manual', teamId: ids[2] } }
+      ],
+      matches: [m1, m2]
+    };
+    var mFinal = newMatch(0, 1);
+    var finalRound = {
+      name: 'Final',
+      slots: [
+        { source: { type: 'matchWinner', matchId: m1.id } },
+        { source: { type: 'matchWinner', matchId: m2.id } }
+      ],
+      matches: [mFinal]
+    };
+    var m3rd = newMatch(0, 1);
+    var thirdRound = {
+      name: 'Spiel um Platz 3', side: 'thirdPlace',
+      slots: [
+        { source: { type: 'loser', matchId: m1.id } },
+        { source: { type: 'loser', matchId: m2.id } }
+      ],
+      matches: [m3rd]
+    };
+    stage.rounds = [round1, finalRound, thirdRound];
+  }
+
+  // One click instead of one per group/pool — fills in every missing
+  // round-robin pair across every group-type stage AND generates the bracket
+  // for every ready-to-go Modified Pool stage (4/4 teams, not yet generated),
+  // across the WHOLE bracket, Men's and Women's both, regardless of which
+  // division tab is currently open (an organizer with 8 groups across both
+  // divisions shouldn't have to switch tabs and click 8 times).
   function generateAllGroupMatchesHtml(stages) {
     var groupsWithMissing = stages.filter(function(s) { return s.type === 'group' && missingRoundRobinPairs(s) > 0; });
-    if (!groupsWithMissing.length) return '';
-    var total = groupsWithMissing.reduce(function(sum, s) { return sum + missingRoundRobinPairs(s); }, 0);
-    return '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" id="generateAllGroupsBtn" style="margin-bottom:14px;">Generate all matches for every group (Men\'s + Women\'s) — ' + total + ' missing across ' + groupsWithMissing.length + ' group' + (groupsWithMissing.length > 1 ? 's' : '') + '</button></div>';
+    var poolsReady = stages.filter(function(s) { return s.type === 'modifiedPool' && !s.rounds.length && (s.teamIds || []).filter(Boolean).length === 4; });
+    if (!groupsWithMissing.length && !poolsReady.length) return '';
+    var parts = [];
+    if (groupsWithMissing.length) {
+      var total = groupsWithMissing.reduce(function(sum, s) { return sum + missingRoundRobinPairs(s); }, 0);
+      parts.push(total + ' missing across ' + groupsWithMissing.length + ' group' + (groupsWithMissing.length > 1 ? 's' : ''));
+    }
+    if (poolsReady.length) {
+      parts.push(poolsReady.length + ' pool' + (poolsReady.length > 1 ? 's' : '') + ' not yet generated');
+    }
+    return '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" id="generateAllGroupsBtn" style="margin-bottom:14px;">Generate all matches (Men\'s + Women\'s) — ' + parts.join(' · ') + '</button></div>';
   }
 
   function renderGroupStageBody(stage) {
@@ -4289,6 +4342,9 @@ var CLUBS = [
       generateAllGroupsBtn.addEventListener('click', function() {
         if (!isAdmin) return;
         currentBracket.stages.filter(function(s) { return s.type === 'group'; }).forEach(generateRoundRobin);
+        currentBracket.stages
+          .filter(function(s) { return s.type === 'modifiedPool' && !s.rounds.length && (s.teamIds || []).filter(Boolean).length === 4; })
+          .forEach(generateModifiedPoolBracket);
         persistBracket();
       });
     }
@@ -4392,43 +4448,7 @@ var CLUBS = [
         if (!isAdmin) return;
         var stage = findStage(currentBracket, btn.dataset.generateModifiedPool);
         if (!stage || stage.rounds.length) return;
-        var ids = stage.teamIds || [];
-        if (ids.filter(Boolean).length !== 4) return;
-        var fmt = stage.defaultFormat || currentBracket.defaultFormat;
-        function newMatch(a, b) {
-          return { id: genId('match'), slotAIndex: a, slotBIndex: b, format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: [] };
-        }
-        var m1 = newMatch(0, 1); // seed 1 vs seed 4
-        var m2 = newMatch(2, 3); // seed 2 vs seed 3
-        var round1 = {
-          name: 'Round 1',
-          slots: [
-            { source: { type: 'manual', teamId: ids[0] } },
-            { source: { type: 'manual', teamId: ids[3] } },
-            { source: { type: 'manual', teamId: ids[1] } },
-            { source: { type: 'manual', teamId: ids[2] } }
-          ],
-          matches: [m1, m2]
-        };
-        var mFinal = newMatch(0, 1);
-        var finalRound = {
-          name: 'Final',
-          slots: [
-            { source: { type: 'matchWinner', matchId: m1.id } },
-            { source: { type: 'matchWinner', matchId: m2.id } }
-          ],
-          matches: [mFinal]
-        };
-        var m3rd = newMatch(0, 1);
-        var thirdRound = {
-          name: 'Spiel um Platz 3', side: 'thirdPlace',
-          slots: [
-            { source: { type: 'loser', matchId: m1.id } },
-            { source: { type: 'loser', matchId: m2.id } }
-          ],
-          matches: [m3rd]
-        };
-        stage.rounds = [round1, finalRound, thirdRound];
+        generateModifiedPoolBracket(stage);
         persistBracket();
       });
     });
