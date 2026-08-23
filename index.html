@@ -4720,7 +4720,20 @@ var CLUBS = [
   // (its matches always come first), so that stage would still finish entirely
   // before the next one's matches ever got picked, defeating the whole point.
   // Weaving the lists means ties alternate fairly across stages instead.
-  function autoScheduleStagesToDay(bracket, stages, day) {
+  // courtIndices restricts which courts new matches can land on (e.g. 2
+  // groups sharing just Court 3) — defaults to every court on the day when
+  // omitted/empty, matching the original spread-across-everything behavior.
+  // A team's next-free time still accounts for its matches on EVERY court,
+  // selected or not, so it's never double-booked against a match scheduled
+  // outside the current selection.
+  function autoScheduleStagesToDay(bracket, stages, day, courtIndices) {
+    // Days can predate a later increase to schedule.courtCount, leaving
+    // day.courts shorter than the court list currently shown — pad it so
+    // every court index up to courtCount is a real array before scheduling.
+    while (day.courts.length < bracket.schedule.courtCount) day.courts.push([]);
+
+    var targetIndices = (courtIndices && courtIndices.length) ? courtIndices : day.courts.map(function(_, i) { return i; });
+
     var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
     var pending = [];
     var maxLen = perStage.reduce(function(m, arr) { return Math.max(m, arr.length); }, 0);
@@ -4729,9 +4742,9 @@ var CLUBS = [
     }
     if (!pending.length) return 0;
 
-    var courtNextFree = day.courts.map(function(items) {
+    var courtNextFree = targetIndices.map(function(ci) {
       var cum = 0;
-      items.forEach(function(it) { cum += scheduleItemDuration(it); });
+      day.courts[ci].forEach(function(it) { cum += scheduleItemDuration(it); });
       return cum;
     });
 
@@ -4776,7 +4789,8 @@ var CLUBS = [
         }
       });
       if (!best) break;
-      day.courts[best.court].push({ id: genId('sked'), type: 'match', matchId: best.pm.matchId });
+      var realCourt = targetIndices[best.court];
+      day.courts[realCourt].push({ id: genId('sked'), type: 'match', matchId: best.pm.matchId });
       courtNextFree[best.court] = best.start + best.duration;
       if (best.pm.teamAId) teamNextFree[best.pm.teamAId] = best.start + best.duration;
       if (best.pm.teamBId) teamNextFree[best.pm.teamBId] = best.start + best.duration;
@@ -4868,6 +4882,7 @@ var CLUBS = [
         '</div>' +
         '<button type="button" class="btn btn-outline btn-sm" data-save-day="' + esc(day.id) + '">Save day</button>' +
       '</div>' +
+      (cols.length > 3 ? '<p class="empty-note">← Scroll to see all ' + cols.length + ' courts →</p>' : '') +
       '<div class="schedule-scroll">' + cols.join('') + '</div>' +
     '</div>';
   }
@@ -4901,12 +4916,22 @@ var CLUBS = [
     if (!bracket.schedule.days.length || !bracket.stages.length) return '';
     var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
     var rows = bracket.stages.map(function(stage) {
-      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span></span></label>';
+      var divisionTag = stage.competition ? ' <span class="player-club">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
+      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>' + divisionTag + '</span></label>';
     }).join('');
+    // Courts default to all-checked (matches the old "spread across every
+    // court" behavior) — uncheck down to just the court(s) these stages'
+    // matches should actually interleave on, e.g. 2 pools sharing 1 court.
+    var courtChecks = [];
+    for (var c = 0; c < bracket.schedule.courtCount; c++) {
+      courtChecks.push('<label class="checkbox-row"><input type="checkbox" class="multi-schedule-court" value="' + c + '" checked><span>Court ' + (c + 1) + '</span></label>');
+    }
     return '<div class="live-panel admin-only">' +
       '<h2>Add matches to schedule</h2>' +
       '<p class="empty-note">Select one or more stages to schedule together — their matches interleave across the same courts instead of one stage finishing before the next starts.</p>' +
       rows +
+      '<p class="empty-note" style="margin-top:12px;">Which court(s) should these matches go on? Uncheck the rest — e.g. 2 groups sharing 1 court.</p>' +
+      courtChecks.join('') +
       '<div class="roster-row-actions" style="margin-top:12px;">' +
         '<select id="multiScheduleDaySelect">' + dayOptions + '</select>' +
         '<button type="button" class="btn btn-cyan btn-sm" id="addMultiToScheduleBtn">Add selected to schedule</button>' +
@@ -5038,7 +5063,8 @@ var CLUBS = [
       var stages = checkedIds.map(function(id) { return findStage(currentBracket, id); }).filter(Boolean);
       var day = currentBracket.schedule.days[parseInt(document.getElementById('multiScheduleDaySelect').value, 10)];
       if (!day) return;
-      autoScheduleStagesToDay(currentBracket, stages, day);
+      var courtIndices = Array.prototype.slice.call(document.querySelectorAll('.multi-schedule-court:checked')).map(function(cb) { return parseInt(cb.value, 10); });
+      autoScheduleStagesToDay(currentBracket, stages, day, courtIndices);
       persistBracketSchedule();
     });
 
