@@ -4806,7 +4806,10 @@ var CLUBS = [
     });
   }
 
-  function matchDurationMinutes(match, defaultFormat) {
+  // Women's matches run to a flat 45 minutes regardless of format — everyone
+  // else keeps the "sum of set-point targets" estimate (~1 min/point).
+  function matchDurationMinutes(match, defaultFormat, competition) {
+    if (competition === 'Women') return 45;
     var fmt = match.format || defaultFormat;
     return fmt.setPoints.reduce(function(sum, p) { return sum + p; }, 0);
   }
@@ -4823,7 +4826,7 @@ var CLUBS = [
     if (item.type === 'custom' || item.type === 'break') return item.durationMin || 0;
     var found = findMatchAnywhere(currentBracket, item.matchId);
     if (!found) return 0;
-    return matchDurationMinutes(found.match, currentBracket.defaultFormat);
+    return matchDurationMinutes(found.match, currentBracket.defaultFormat, found.stage.competition);
   }
 
   // Finds where a match currently sits in the schedule (any day/court), with its
@@ -4887,7 +4890,7 @@ var CLUBS = [
     if (stage.type === 'group' || stage.type === 'swiss') {
       stageAllMatches(stage).forEach(function(m) {
         if (findScheduledItem(bracket, m.id)) return;
-        out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format });
+        out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format, competition: stage.competition });
       });
     } else if (stage.type === 'bracket' || stage.type === 'doubleElim' || stage.type === 'modifiedPool') {
       var roundEntries = (roundIndex == null)
@@ -4903,7 +4906,7 @@ var CLUBS = [
           var readyB = slotReadyTime(bracket, slotB, targetDay);
           var teamA = resolveSlotTeam(bracket, stage, ri, m.slotAIndex);
           var teamB = resolveSlotTeam(bracket, stage, ri, m.slotBIndex);
-          out.push({ matchId: m.id, teamAId: teamA, teamBId: teamB, readyTime: Math.max(readyA, readyB), format: m.format });
+          out.push({ matchId: m.id, teamAId: teamA, teamBId: teamB, readyTime: Math.max(readyA, readyB), format: m.format, competition: stage.competition });
         });
       });
     }
@@ -5019,7 +5022,7 @@ var CLUBS = [
       while (pending.length) {
         var best = null;
         pending.forEach(function(pm) {
-          var duration = matchDurationMinutes({ format: pm.format }, bracket.defaultFormat);
+          var duration = matchDurationMinutes({ format: pm.format }, bracket.defaultFormat, pm.competition);
           for (var c = 0; c < courtNextFree.length; c++) {
             var start = Math.max(
               courtNextFree[c],
