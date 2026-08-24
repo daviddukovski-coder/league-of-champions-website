@@ -312,6 +312,7 @@
   .bracket-round-title { flex-shrink:0; font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; margin-bottom:14px; }
   .bracket-round-matches { flex:1; display:flex; flex-direction:column; justify-content:space-around; gap:14px; }
   .bracket-slot-block { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; }
+  .match-code-badge { display:inline-block; font-family:'Poppins','Open Sans',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.4px; color:var(--cyan-ink); background:var(--tint-ink); border-radius:6px; padding:2px 6px; margin-bottom:6px; }
   .bracket-slot-block .match-row { background:none; border:none; padding:0; }
   .match-team.tbd { color:var(--text-muted); font-weight:500; font-style:italic; font-size:13.5px; }
   .slot-editor { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
@@ -1728,6 +1729,31 @@ var CLUBS = [
     return null;
   }
 
+  // Short reference code for a bracket-type match, e.g. "WQF1" = Women's
+  // Quarterfinal 1 (division letter + round abbreviation + position within
+  // the round). Computed fresh from the current stage/round every time
+  // rather than stored, so a round rename or reorder is reflected
+  // automatically with nothing extra to keep in sync.
+  var ROUND_NAME_ABBREV = {
+    'quarterfinal': 'QF', 'quarterfinals': 'QF',
+    'semifinal': 'SF', 'semifinals': 'SF',
+    'final': 'F', 'finals': 'F',
+    'round of 32': 'R32', 'round of 16': 'R16', 'round of 8': 'R8', 'round of 4': 'R4',
+    '3rd place': 'BR', 'bronze final': 'BR', 'spiel um platz 3': 'BR'
+  };
+  function abbreviateRoundName(name) {
+    var key = (name || '').trim().toLowerCase();
+    if (ROUND_NAME_ABBREV[key]) return ROUND_NAME_ABBREV[key];
+    var words = key.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+    return words.slice(0, 3).map(function(w) { return w[0].toUpperCase(); }).join('') || 'M';
+  }
+  function matchCode(stage, roundIndex, matchIndex) {
+    var round = stage.rounds[roundIndex];
+    if (!round) return '';
+    var divLetter = stage.competition === 'Women' ? 'W' : (stage.competition === 'Men' ? 'M' : '');
+    return divLetter + abbreviateRoundName(round.name) + (matchIndex + 1);
+  }
+
   function slotSourceLabel(bracket, stage, roundIndex, slotIndex) {
     var slot = stage.rounds[roundIndex].slots[slotIndex];
     var src = slot.source || { type: 'manual' };
@@ -1736,8 +1762,17 @@ var CLUBS = [
       var srcStage = findStage(bracket, src.stageId);
       return 'TBD – #' + src.rank + ' ' + (srcStage ? srcStage.label : '?');
     }
-    if (src.type === 'matchWinner') return 'TBD – winner of previous match';
-    if (src.type === 'loser') return 'TBD – loser of previous match';
+    if (src.type === 'matchWinner' || src.type === 'loser') {
+      var verb = src.type === 'matchWinner' ? 'winner' : 'loser';
+      var found = findMatchAnywhere(bracket, src.matchId);
+      if (found && found.round) {
+        var fRi = found.stage.rounds.indexOf(found.round);
+        var fMi = found.round.matches.indexOf(found.match);
+        var code = matchCode(found.stage, fRi, fMi);
+        if (code) return 'TBD – ' + verb + ' of ' + code;
+      }
+      return 'TBD – ' + verb + ' of previous match';
+    }
     return 'TBD';
   }
 
@@ -3876,7 +3911,8 @@ var CLUBS = [
       (opts.readOnly ? '' : renderMatchFormatEditor(m));
     }
     var editors = opts.readOnly ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
-    return '<div class="bracket-slot-block">' + body + editors + '</div>';
+    var codeBadge = '<span class="match-code-badge">' + esc(matchCode(stage, roundIndex, matchIndex)) + '</span>';
+    return '<div class="bracket-slot-block">' + codeBadge + body + editors + '</div>';
   }
 
   function renderAddRoundPanel(stage) {
@@ -5124,14 +5160,16 @@ var CLUBS = [
         scheduleHandleHtml(item.id) +
       '</div>';
     }
-    var teamAHtml, teamBHtml, matchForResult;
+    var teamAHtml, teamBHtml, matchForResult, codeBadgeHtml = '';
     // Bracket/Modified-Pool stages often run several rounds across the day
     // (Round of 16, Quarterfinals, ...) — "Finals" alone doesn't say which one
     // this block is, so fold the round name in wherever there is one.
     var stageLabel = found.stage.label;
     if (found.round) {
       var ri = found.stage.rounds.indexOf(found.round);
+      var mi = found.round.matches.indexOf(found.match);
       stageLabel += ' – ' + found.round.name;
+      codeBadgeHtml = '<span class="match-code-badge">' + esc(matchCode(found.stage, ri, mi)) + '</span>';
       var teamA = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotAIndex);
       var teamB = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotBIndex);
       teamAHtml = teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotAIndex)) + '</span>';
@@ -5167,6 +5205,7 @@ var CLUBS = [
     return '<div class="schedule-item" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
+        codeBadgeHtml +
         '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(stageLabel) + '</span>' +
         scoreEntryHtml +
