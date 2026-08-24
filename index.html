@@ -5096,8 +5096,13 @@ var CLUBS = [
       '</div>';
     }
     var teamAHtml, teamBHtml, matchForResult;
+    // Bracket/Modified-Pool stages often run several rounds across the day
+    // (Round of 16, Quarterfinals, ...) — "Finals" alone doesn't say which one
+    // this block is, so fold the round name in wherever there is one.
+    var stageLabel = found.stage.label;
     if (found.round) {
       var ri = found.stage.rounds.indexOf(found.round);
+      stageLabel += ' – ' + found.round.name;
       var teamA = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotAIndex);
       var teamB = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotBIndex);
       teamAHtml = teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(currentBracket, found.stage, ri, found.match.slotAIndex)) + '</span>';
@@ -5134,7 +5139,7 @@ var CLUBS = [
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
         '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
-        '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
+        '<span class="schedule-item-duration">' + duration + ' min · ' + esc(stageLabel) + '</span>' +
         scoreEntryHtml +
       '</div>' +
       scheduleHandleHtml(item.id) +
