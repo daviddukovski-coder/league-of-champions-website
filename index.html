@@ -4806,8 +4806,12 @@ var CLUBS = [
     });
   }
 
+  // Best-of-3 matches get a flat 45 minutes on the schedule (a fixed slot works
+  // better than "sum of the three set-point targets" here); best-of-1/5 keep
+  // the set-points estimate.
   function matchDurationMinutes(match, defaultFormat) {
     var fmt = match.format || defaultFormat;
+    if (fmt.bestOf === 3) return 45;
     return fmt.setPoints.reduce(function(sum, p) { return sum + p; }, 0);
   }
 
