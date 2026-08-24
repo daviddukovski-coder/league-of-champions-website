@@ -3748,10 +3748,8 @@ var CLUBS = [
     }).map(function(s) {
       return '<option value="' + esc(s.id) + '"' + (src.type === 'rank' && src.stageId === s.id ? ' selected' : '') + '>' + esc(s.label) + '</option>';
     }).join('');
-    var teamPool = stage.competition ? currentBracket.teams.filter(function(t) { return t.competition === stage.competition; }) : currentBracket.teams;
-    var teamOptions = '<option value="">—</option>' + teamPool.map(function(t) {
-      return '<option value="' + esc(t.id) + '"' + (src.type === 'manual' && src.teamId === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>';
-    }).join('');
+    var currentTeamId = (src.type === 'manual' && src.teamId) ? src.teamId : '';
+    var currentTeam = currentTeamId ? findBracketTeam(currentBracket, currentTeamId) : null;
     var key = stage.id + ':' + roundIndex + ':' + slotIndex;
     return '<div class="slot-editor">' +
       (src.type === 'matchWinner' ? '<span class="slot-auto-note">Auto: winner of previous match — </span>' : '') +
@@ -3761,7 +3759,11 @@ var CLUBS = [
         '<option value="rank"' + (displayType === 'rank' ? ' selected' : '') + '>Group/Swiss rank</option>' +
         '<option value="bye"' + (displayType === 'bye' ? ' selected' : '') + '>Bye</option>' +
       '</select>' +
-      '<select class="slot-team"' + (displayType !== 'manual' ? ' hidden' : '') + '>' + teamOptions + '</select>' +
+      '<div class="form-group combo-group slot-team-group"' + (displayType !== 'manual' ? ' hidden' : '') + '>' +
+        '<input class="slot-team-search" autocomplete="off" placeholder="Search team…" value="' + (currentTeam ? esc(currentTeam.name) : '') + '" data-stage-id="' + esc(stage.id) + '">' +
+        '<div class="combo-dropdown slot-team-dropdown" hidden></div>' +
+        '<input type="hidden" class="slot-team-value" value="' + esc(currentTeamId) + '">' +
+      '</div>' +
       '<select class="slot-stage"' + (displayType !== 'rank' ? ' hidden' : '') + '>' + stageOptions + '</select>' +
       '<input type="number" class="slot-rank" min="1" value="' + (src.rank || 1) + '"' + (displayType !== 'rank' ? ' hidden' : '') + ' placeholder="rank">' +
       '<button type="button" class="btn btn-outline btn-sm" data-save-slot="' + esc(key) + '">Set</button>' +
@@ -4520,9 +4522,46 @@ var CLUBS = [
     document.querySelectorAll('.slot-editor .slot-type').forEach(function(sel) {
       sel.addEventListener('change', function() {
         var editor = sel.closest('.slot-editor');
-        editor.querySelector('.slot-team').hidden = sel.value !== 'manual';
+        editor.querySelector('.slot-team-group').hidden = sel.value !== 'manual';
         editor.querySelector('.slot-stage').hidden = sel.value !== 'rank';
         editor.querySelector('.slot-rank').hidden = sel.value !== 'rank';
+      });
+    });
+
+    // Same search-as-you-type combo as the fixed-size-group slot search
+    // (stage-slot-search above) — a plain <select> listing every team in the
+    // division got unwieldy once a division had dozens of teams.
+    document.querySelectorAll('.slot-team-search').forEach(function(input) {
+      var group = input.closest('.slot-team-group');
+      var dropdown = group.querySelector('.slot-team-dropdown');
+      var hiddenInput = group.querySelector('.slot-team-value');
+      var stageId = input.dataset.stageId;
+      input.addEventListener('input', function() {
+        if (!isAdmin) return;
+        var q = input.value.trim().toLowerCase();
+        hiddenInput.value = '';
+        if (!q) { dropdown.hidden = true; return; }
+        var stage = findStage(currentBracket, stageId);
+        if (!stage) return;
+        var pool = stage.competition ? currentBracket.teams.filter(function(t) { return t.competition === stage.competition; }) : currentBracket.teams;
+        var matches = pool.filter(function(t) { return t.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
+        if (!matches.length) { dropdown.hidden = true; return; }
+        dropdown.innerHTML = matches.map(function(t) {
+          return '<div class="combo-item" data-team-id="' + esc(t.id) + '">' + clubAvatarHtml(findClub(t.club)) + '<span>' + esc(t.name) + '</span></div>';
+        }).join('');
+        dropdown.hidden = false;
+      });
+      dropdown.addEventListener('click', function(e) {
+        if (!isAdmin) return;
+        var item = e.target.closest('.combo-item');
+        if (!item) return;
+        var team = findBracketTeam(currentBracket, item.dataset.teamId);
+        input.value = team ? team.name : '';
+        hiddenInput.value = item.dataset.teamId;
+        dropdown.hidden = true;
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.combo-group')) dropdown.hidden = true;
       });
     });
 
@@ -4537,7 +4576,7 @@ var CLUBS = [
         var type = editor.querySelector('.slot-type').value;
         var source;
         if (type === 'manual') {
-          source = { type: 'manual', teamId: editor.querySelector('.slot-team').value || null };
+          source = { type: 'manual', teamId: editor.querySelector('.slot-team-value').value || null };
         } else if (type === 'rank') {
           source = { type: 'rank', stageId: editor.querySelector('.slot-stage').value, rank: parseInt(editor.querySelector('.slot-rank').value, 10) || 1 };
         } else {
