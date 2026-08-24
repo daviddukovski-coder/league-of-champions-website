@@ -325,11 +325,14 @@
   .schedule-court-items { display:flex; flex-direction:column; gap:8px; }
   .schedule-item { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; display:flex; gap:10px; align-items:flex-start; }
   .schedule-item-custom { background:rgba(0,242,255,0.06); border-color:var(--cyan-ink); }
+  .schedule-item-break { background:transparent; border-style:dashed; opacity:0.7; }
   .schedule-item-time { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; flex-shrink:0; width:44px; }
   .schedule-item-body { display:flex; flex-direction:column; gap:2px; font-size:13px; flex:1; min-width:0; }
   .schedule-item-duration { font-size:11px; color:var(--text-muted); }
   .schedule-match-teams { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; width:100%; }
   .schedule-match-teams .match-team { white-space:nowrap; }
+  .schedule-score-entry { flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border); }
+  .schedule-score-entry .set-a, .schedule-score-entry .set-b { width:36px; }
   .schedule-match-vs { font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
   .schedule-match-result { font-size:11.5px; color:var(--paid); font-weight:700; }
   .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
@@ -4786,7 +4789,7 @@ var CLUBS = [
   }
 
   function scheduleItemDuration(item) {
-    if (item.type === 'custom') return item.durationMin || 0;
+    if (item.type === 'custom' || item.type === 'break') return item.durationMin || 0;
     var found = findMatchAnywhere(currentBracket, item.matchId);
     if (!found) return 0;
     return matchDurationMinutes(found.match, currentBracket.defaultFormat);
@@ -4844,7 +4847,11 @@ var CLUBS = [
   // its resolved team ids (null if still TBD) and earliest-possible start on targetDay.
   // Matches whose dependency isn't itself scheduled yet are left out — the admin just
   // re-clicks "Add to schedule" for this stage once that earlier round is scheduled.
-  function gatherSchedulableMatches(bracket, stage, targetDay) {
+  // roundIndex restricts gathering to a single round of a Bracket/Modified-Pool
+  // stage (e.g. just "Semifinals", not the whole "Finals" stage) — needed so
+  // rounds that won't be played on the same day/court can be scheduled
+  // separately. Ignored for Group/Swiss, which have no such per-round split.
+  function gatherSchedulableMatches(bracket, stage, targetDay, roundIndex) {
     var out = [];
     if (stage.type === 'group' || stage.type === 'swiss') {
       stageAllMatches(stage).forEach(function(m) {
@@ -4852,7 +4859,11 @@ var CLUBS = [
         out.push({ matchId: m.id, teamAId: m.teamAId, teamBId: m.teamBId, readyTime: 0, format: m.format });
       });
     } else if (stage.type === 'bracket' || stage.type === 'doubleElim' || stage.type === 'modifiedPool') {
-      stage.rounds.forEach(function(round, ri) {
+      var roundEntries = (roundIndex == null)
+        ? stage.rounds.map(function(r, i) { return { round: r, ri: i }; })
+        : (stage.rounds[roundIndex] ? [{ round: stage.rounds[roundIndex], ri: roundIndex }] : []);
+      roundEntries.forEach(function(entry) {
+        var round = entry.round, ri = entry.ri;
         round.matches.forEach(function(m) {
           if (findScheduledItem(bracket, m.id)) return;
           var slotA = round.slots[m.slotAIndex], slotB = round.slots[m.slotBIndex];
@@ -4905,7 +4916,10 @@ var CLUBS = [
   // (rendered as "TBD – winner/loser of previous match" until that dependency
   // is actually played), and repeats until a pass places nothing new — so one
   // click schedules the whole stage's shape, ready or not.
-  function autoScheduleStagesToDay(bracket, stages, day, courtIndices) {
+  // `selections` is a list of { stage, roundIndex } — roundIndex is null/undefined
+  // for Group/Swiss (whole stage) or a Bracket/Modified-Pool round picked
+  // individually (see gatherSchedulableMatches).
+  function autoScheduleStagesToDay(bracket, selections, day, courtIndices) {
     // Days can predate a later increase to schedule.courtCount, leaving
     // day.courts shorter than the court list currently shown — pad it so
     // every court index up to courtCount is a real array before scheduling.
@@ -4925,9 +4939,9 @@ var CLUBS = [
     // stages (already 1 match "ready" per pass, e.g. a bracket round) fall
     // out to chunk size 1, unchanged from before.
     function placeOnePass() {
-      var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
-      var chunkSizes = stages.map(function(stage) {
-        var n = (stage.teamIds || []).filter(Boolean).length;
+      var perStage = selections.map(function(sel) { return gatherSchedulableMatches(bracket, sel.stage, day, sel.roundIndex); });
+      var chunkSizes = selections.map(function(sel) {
+        var n = (sel.stage.teamIds || []).filter(Boolean).length;
         return Math.max(1, Math.floor(n / 2));
       });
       var pending = [];
@@ -5007,8 +5021,15 @@ var CLUBS = [
     return totalPlaced;
   }
 
-  function scheduleHandleHtml(itemId) {
-    return '<button type="button" class="icon-btn admin-only-flex" data-remove-schedule-item="' + esc(itemId) + '" title="Remove from schedule">✕</button>' +
+  // duplicable adds a ⎘ clone button — only offered for custom/break blocks,
+  // never matches (cloning a match's schedule entry would schedule the same
+  // match twice, which makes no sense).
+  function scheduleHandleHtml(itemId, duplicable) {
+    var dupBtn = duplicable
+      ? '<button type="button" class="icon-btn admin-only-flex" data-duplicate-schedule-item="' + esc(itemId) + '" title="Duplicate">⎘</button>'
+      : '';
+    return dupBtn +
+      '<button type="button" class="icon-btn admin-only-flex" data-remove-schedule-item="' + esc(itemId) + '" title="Remove from schedule">✕</button>' +
       '<button type="button" class="schedule-item-handle admin-only-flex" title="Drag to move">⠿</button>';
   }
 
@@ -5017,7 +5038,19 @@ var CLUBS = [
       return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><strong>' + esc(item.label) + '</strong><span class="schedule-item-duration">' + duration + ' min</span></div>' +
-        scheduleHandleHtml(item.id) +
+        scheduleHandleHtml(item.id, true) +
+      '</div>';
+    }
+    // Breaks only shift the timing of what follows — spectators never see them,
+    // so this is the one item type that's simply absent from the schedule DOM
+    // outside admin edit mode (the timing math still runs over the underlying
+    // data regardless, in renderScheduleDayBlock's cumMinutes loop).
+    if (item.type === 'break') {
+      if (!document.body.classList.contains('admin-edit-mode')) return '';
+      return '<div class="schedule-item schedule-item-break" data-item-id="' + esc(item.id) + '">' +
+        '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
+        '<div class="schedule-item-body"><strong>' + esc(item.label || 'Break') + '</strong><span class="schedule-item-duration">' + duration + ' min · hidden from public schedule</span></div>' +
+        scheduleHandleHtml(item.id, true) +
       '</div>';
     }
     var found = findMatchAnywhere(currentBracket, item.matchId);
@@ -5045,11 +5078,30 @@ var CLUBS = [
     var vsHtml = winner
       ? '<span class="schedule-match-result">' + esc(formatSetsSummary(matchForResult)) + '</span>'
       : '<span class="schedule-match-vs">vs</span>';
+    var scoreEntryHtml = '';
+    if (matchForResult.teamAId && matchForResult.teamBId) {
+      var fmt = matchForResult.format || currentBracket.defaultFormat;
+      var existingSets = matchForResult.sets || [];
+      var setPairs = '';
+      for (var si = 0; si < 5; si++) {
+        var s = existingSets[si];
+        setPairs += '<div class="set-input-pair" data-set-slot="' + si + '"' + (si >= fmt.bestOf ? ' hidden' : '') + '>' +
+          '<input type="number" class="set-a" value="' + (s ? esc(s[0]) : '') + '">' +
+          '<span>:</span>' +
+          '<input type="number" class="set-b" value="' + (s ? esc(s[1]) : '') + '">' +
+        '</div>';
+      }
+      scoreEntryHtml = '<div class="schedule-score-entry admin-only-flex">' +
+        '<div class="set-inputs">' + setPairs + '</div>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-save-schedule-match="' + esc(found.match.id) + '">Save</button>' +
+      '</div>';
+    }
     return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
         '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(found.stage.label) + '</span>' +
+        scoreEntryHtml +
       '</div>' +
       scheduleHandleHtml(item.id) +
     '</div>';
@@ -5074,6 +5126,10 @@ var CLUBS = [
           '<input class="new-block-label" placeholder="e.g. Fan\'s Challenge">' +
           '<input type="number" class="new-block-duration" placeholder="min" min="1" value="10">' +
           '<button type="button" class="reg-action-btn" data-add-block="' + esc(day.id) + ':' + i + '">+ Add</button>' +
+        '</div>' +
+        '<div class="admin-only-flex schedule-add-block">' +
+          '<input type="number" class="new-break-duration" placeholder="min" min="1" value="5">' +
+          '<button type="button" class="reg-action-btn" data-add-break="' + esc(day.id) + ':' + i + '">+ Break</button>' +
         '</div>' +
       '</div>');
     }
@@ -5124,7 +5180,18 @@ var CLUBS = [
     var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
     var rows = bracket.stages.map(function(stage) {
       var divisionTag = stage.competition ? ' <span class="player-club">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
-      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong> <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>' + divisionTag + '</span></label>';
+      var typeTag = ' <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>';
+      // Bracket/Modified-Pool rounds aren't necessarily played on the same day
+      // or court (e.g. Semifinals spread across several courts, but Final +
+      // 3rd place only on Court 1 once the field has narrowed) — offer one
+      // checkbox per round instead of one for the whole stage. Group/Swiss
+      // have no such split; they schedule as a single unit as before.
+      if ((stage.type === 'bracket' || stage.type === 'doubleElim' || stage.type === 'modifiedPool') && stage.rounds && stage.rounds.length) {
+        return stage.rounds.map(function(round, ri) {
+          return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id + ':' + ri) + '"><span><strong>' + esc(stage.label) + ' – ' + esc(round.name) + '</strong>' + typeTag + divisionTag + '</span></label>';
+        }).join('');
+      }
+      return '<label class="checkbox-row"><input type="checkbox" data-schedule-stage-check="' + esc(stage.id) + '"><span><strong>' + esc(stage.label) + '</strong>' + typeTag + divisionTag + '</span></label>';
     }).join('');
     // Courts default to all-checked (matches the old "spread across every
     // court" behavior) — uncheck down to just the court(s) these stages'
@@ -5242,6 +5309,24 @@ var CLUBS = [
   }
 
   function wireScheduleEvents() {
+    document.querySelectorAll('[data-save-schedule-match]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var matchId = btn.dataset.saveScheduleMatch;
+        var found = findMatchAnywhere(currentBracket, matchId);
+        if (!found) return;
+        var container = btn.closest('.schedule-score-entry');
+        var sets = [];
+        container.querySelectorAll('.set-input-pair').forEach(function(pair) {
+          var a = pair.querySelector('.set-a').value.trim();
+          var b = pair.querySelector('.set-b').value.trim();
+          if (a !== '' && b !== '') sets.push([parseInt(a, 10), parseInt(b, 10)]);
+        });
+        found.match.sets = sets;
+        persistBracketSchedule();
+      });
+    });
+
     var saveCourtCountBtn = document.getElementById('saveCourtCountBtn');
     if (saveCourtCountBtn) saveCourtCountBtn.addEventListener('click', function() {
       if (!isAdmin) return;
@@ -5267,11 +5352,16 @@ var CLUBS = [
       if (!isAdmin) return;
       var checkedIds = Array.prototype.slice.call(document.querySelectorAll('[data-schedule-stage-check]:checked')).map(function(cb) { return cb.dataset.scheduleStageCheck; });
       if (!checkedIds.length) return;
-      var stages = checkedIds.map(function(id) { return findStage(currentBracket, id); }).filter(Boolean);
+      var selections = checkedIds.map(function(id) {
+        var parts = id.split(':');
+        var stage = findStage(currentBracket, parts[0]);
+        if (!stage) return null;
+        return { stage: stage, roundIndex: parts.length > 1 ? parseInt(parts[1], 10) : null };
+      }).filter(Boolean);
       var day = currentBracket.schedule.days[parseInt(document.getElementById('multiScheduleDaySelect').value, 10)];
       if (!day) return;
       var courtIndices = Array.prototype.slice.call(document.querySelectorAll('.multi-schedule-court:checked')).map(function(cb) { return parseInt(cb.value, 10); });
-      autoScheduleStagesToDay(currentBracket, stages, day, courtIndices);
+      autoScheduleStagesToDay(currentBracket, selections, day, courtIndices);
       persistBracketSchedule();
     });
 
@@ -5287,6 +5377,34 @@ var CLUBS = [
         var duration = parseInt(wrap.querySelector('.new-block-duration').value, 10) || 10;
         if (!label) return;
         day.courts[courtIndex].push({ id: genId('sked'), type: 'custom', label: label, durationMin: duration });
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-add-break]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var parts = btn.dataset.addBreak.split(':');
+        var day = currentBracket.schedule.days.filter(function(d) { return d.id === parts[0]; })[0];
+        if (!day) return;
+        var courtIndex = parseInt(parts[1], 10);
+        var wrap = btn.closest('.schedule-add-block');
+        var duration = parseInt(wrap.querySelector('.new-break-duration').value, 10) || 5;
+        day.courts[courtIndex].push({ id: genId('sked'), type: 'break', label: 'Break', durationMin: duration });
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-duplicate-schedule-item]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var itemId = btn.dataset.duplicateScheduleItem;
+        currentBracket.schedule.days.forEach(function(day) {
+          day.courts.forEach(function(items) {
+            var idx = items.findIndex(function(it) { return it.id === itemId; });
+            if (idx !== -1) items.splice(idx + 1, 0, Object.assign({}, items[idx], { id: genId('sked') }));
+          });
+        });
         persistBracketSchedule();
       });
     });
