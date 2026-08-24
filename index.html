@@ -326,6 +326,7 @@
   .schedule-item { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; display:flex; gap:10px; align-items:flex-start; }
   .schedule-item-custom { background:rgba(0,242,255,0.06); border-color:var(--cyan-ink); }
   .schedule-item-break { background:transparent; border-style:dashed; opacity:0.7; }
+  .schedule-item-external { background:var(--tint-pending); border-color:var(--pending-text); }
   .schedule-item-time { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; flex-shrink:0; width:44px; }
   .schedule-item-body { display:flex; flex-direction:column; gap:2px; font-size:13px; flex:1; min-width:0; }
   .schedule-item-duration { font-size:11px; color:var(--text-muted); }
@@ -4824,7 +4825,7 @@ var CLUBS = [
   }
 
   function scheduleItemDuration(item) {
-    if (item.type === 'custom' || item.type === 'break') return item.durationMin || 0;
+    if (item.type === 'custom' || item.type === 'break' || item.type === 'external') return item.durationMin || 0;
     var found = findMatchAnywhere(currentBracket, item.matchId);
     if (!found) return 0;
     return matchDurationMinutes(found.match, currentBracket.defaultFormat);
@@ -5067,21 +5068,49 @@ var CLUBS = [
       '<button type="button" class="schedule-item-handle admin-only-flex" title="Drag to move">⠿</button>';
   }
 
+  // Roughly aligns same-clock-time items across court columns: every item's
+  // box grows with its own duration on this shared px/minute scale, so two
+  // columns that drifted apart (a longer earlier match, a break, ...) still
+  // land a same-time item at close to the same height — no absolute
+  // positioning needed, just tall-enough boxes in normal document flow.
+  var SCHEDULE_PX_PER_MIN = 5;
+  function scheduleItemMinHeightStyle(duration) {
+    return ' style="min-height:' + (duration * SCHEDULE_PX_PER_MIN) + 'px"';
+  }
+
   function renderScheduleItem(item, startLabel, duration) {
     if (item.type === 'custom') {
-      return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '">' +
+      return '<div class="schedule-item schedule-item-custom" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><strong>' + esc(item.label) + '</strong><span class="schedule-item-duration">' + duration + ' min</span></div>' +
         scheduleHandleHtml(item.id, true) +
       '</div>';
     }
+    // A slot for a match that has nothing to do with the LoC bracket system
+    // (a different competition sharing the same courts/day) — just a
+    // competition name and two free-text team names, still occupying its
+    // proper place (and duration) in the schedule.
+    if (item.type === 'external') {
+      return '<div class="schedule-item schedule-item-external" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
+        '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
+        '<div class="schedule-item-body">' +
+          '<div class="schedule-match-teams"><span class="match-team">' + esc(item.teamA) + '</span><span class="schedule-match-vs">vs</span><span class="match-team">' + esc(item.teamB) + '</span></div>' +
+          '<span class="schedule-item-duration">' + duration + ' min · ' + esc(item.competition) + '</span>' +
+        '</div>' +
+        scheduleHandleHtml(item.id, true) +
+      '</div>';
+    }
     // Breaks only shift the timing of what follows — spectators never see them,
-    // so this is the one item type that's simply absent from the schedule DOM
-    // outside admin edit mode (the timing math still runs over the underlying
-    // data regardless, in renderScheduleDayBlock's cumMinutes loop).
+    // so outside admin edit mode this renders as an unlabeled spacer that
+    // still holds its proportional height, keeping later items aligned,
+    // rather than being fully absent from the DOM (the timing math itself
+    // always runs over the underlying data regardless, in
+    // renderScheduleDayBlock's cumMinutes loop).
     if (item.type === 'break') {
-      if (!document.body.classList.contains('admin-edit-mode')) return '';
-      return '<div class="schedule-item schedule-item-break" data-item-id="' + esc(item.id) + '">' +
+      if (!document.body.classList.contains('admin-edit-mode')) {
+        return '<div class="schedule-item-spacer" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '></div>';
+      }
+      return '<div class="schedule-item schedule-item-break" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><strong>' + esc(item.label || 'Break') + '</strong><span class="schedule-item-duration">' + duration + ' min · hidden from public schedule</span></div>' +
         scheduleHandleHtml(item.id, true) +
@@ -5089,7 +5118,7 @@ var CLUBS = [
     }
     var found = findMatchAnywhere(currentBracket, item.matchId);
     if (!found) {
-      return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
+      return '<div class="schedule-item" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
         '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
         '<div class="schedule-item-body"><em>Match removed</em></div>' +
         scheduleHandleHtml(item.id) +
@@ -5135,7 +5164,7 @@ var CLUBS = [
         '<button type="button" class="btn btn-outline btn-sm" data-save-schedule-match="' + esc(found.match.id) + '">Save</button>' +
       '</div>';
     }
-    return '<div class="schedule-item" data-item-id="' + esc(item.id) + '">' +
+    return '<div class="schedule-item" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
         '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
@@ -5158,9 +5187,15 @@ var CLUBS = [
         cumMinutes += duration;
         return html;
       }).join('');
+      // A court holding only hidden breaks still produces non-empty HTML (a
+      // blank spacer, for time-alignment) even though nothing is actually
+      // visible to a spectator — check for a real item, not just non-empty
+      // markup, so "No matches yet" still shows correctly for them.
+      var isEditMode = document.body.classList.contains('admin-edit-mode');
+      var hasVisibleItems = isEditMode ? items.length > 0 : items.some(function(it) { return it.type !== 'break'; });
       cols.push('<div class="schedule-court-col"><div class="schedule-court-title">Court ' + (i + 1) + '</div>' +
         '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
-        (itemsHtml ? '' : '<p class="empty-note">No matches yet.</p>') +
+        (hasVisibleItems ? '' : '<p class="empty-note">No matches yet.</p>') +
         '<div class="admin-only-flex schedule-add-block">' +
           '<input class="new-block-label" placeholder="e.g. Fan\'s Challenge">' +
           '<input type="number" class="new-block-duration" placeholder="min" min="1" value="10">' +
@@ -5169,6 +5204,13 @@ var CLUBS = [
         '<div class="admin-only-flex schedule-add-block">' +
           '<input type="number" class="new-break-duration" placeholder="min" min="1" value="5">' +
           '<button type="button" class="reg-action-btn" data-add-break="' + esc(day.id) + ':' + i + '">+ Break</button>' +
+        '</div>' +
+        '<div class="admin-only-flex schedule-add-block">' +
+          '<input class="new-external-competition" placeholder="Competition (e.g. Intermediario)">' +
+          '<input class="new-external-teama" placeholder="Team A">' +
+          '<input class="new-external-teamb" placeholder="Team B">' +
+          '<input type="number" class="new-external-duration" placeholder="min" min="1" value="45">' +
+          '<button type="button" class="reg-action-btn" data-add-external="' + esc(day.id) + ':' + i + '">+ Match</button>' +
         '</div>' +
       '</div>');
     }
@@ -5430,6 +5472,24 @@ var CLUBS = [
         var wrap = btn.closest('.schedule-add-block');
         var duration = parseInt(wrap.querySelector('.new-break-duration').value, 10) || 5;
         day.courts[courtIndex].push({ id: genId('sked'), type: 'break', label: 'Break', durationMin: duration });
+        persistBracketSchedule();
+      });
+    });
+
+    document.querySelectorAll('[data-add-external]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var parts = btn.dataset.addExternal.split(':');
+        var day = currentBracket.schedule.days.filter(function(d) { return d.id === parts[0]; })[0];
+        if (!day) return;
+        var courtIndex = parseInt(parts[1], 10);
+        var wrap = btn.closest('.schedule-add-block');
+        var competition = wrap.querySelector('.new-external-competition').value.trim();
+        var teamA = wrap.querySelector('.new-external-teama').value.trim();
+        var teamB = wrap.querySelector('.new-external-teamb').value.trim();
+        var duration = parseInt(wrap.querySelector('.new-external-duration').value, 10) || 45;
+        if (!competition || !teamA || !teamB) return;
+        day.courts[courtIndex].push({ id: genId('sked'), type: 'external', competition: competition, teamA: teamA, teamB: teamB, durationMin: duration });
         persistBracketSchedule();
       });
     });
