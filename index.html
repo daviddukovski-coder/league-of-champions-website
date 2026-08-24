@@ -1138,6 +1138,35 @@ var CLUBS = [
   // day.courts is always a plain array-of-arrays in memory — accepts either
   // shape on the way in so already-saved demo-mode data (raw arrays, written
   // before this existed) still loads correctly.
+  // Firestore rejects arrays-of-arrays ("Nested arrays are not supported"), but
+  // match.sets is naturally [[18,10],[18,12],...] — swap to {a,b} objects for
+  // storage and back to tuples for in-memory use (same trick already used for
+  // schedule.days[].courts below).
+  function setsForFirestore(sets) {
+    return (sets || []).map(function(s) { return { a: s[0], b: s[1] }; });
+  }
+  function setsFromFirestore(sets) {
+    return (sets || []).map(function(s) { return Array.isArray(s) ? s : [s.a, s.b]; });
+  }
+  function mapBracketMatchSets(bracket, convert) {
+    return Object.assign({}, bracket, {
+      stages: (bracket.stages || []).map(function(stage) {
+        var patch = {};
+        if (stage.matches) {
+          patch.matches = stage.matches.map(function(m) { return Object.assign({}, m, { sets: convert(m.sets) }); });
+        }
+        if (stage.rounds) {
+          patch.rounds = stage.rounds.map(function(round) {
+            return Object.assign({}, round, {
+              matches: (round.matches || []).map(function(m) { return Object.assign({}, m, { sets: convert(m.sets) }); })
+            });
+          });
+        }
+        return Object.keys(patch).length ? Object.assign({}, stage, patch) : stage;
+      })
+    });
+  }
+
   function normalizeBracket(raw) {
     var bracket = Object.assign(emptyBracket(), raw || {});
     if (bracket.schedule && bracket.schedule.days && bracket.schedule.days.length) {
@@ -1149,14 +1178,15 @@ var CLUBS = [
         })
       });
     }
-    return bracket;
+    return mapBracketMatchSets(bracket, setsFromFirestore);
   }
 
   function denormalizeBracketForSave(bracket) {
-    if (!bracket.schedule || !bracket.schedule.days || !bracket.schedule.days.length) return bracket;
-    return Object.assign({}, bracket, {
-      schedule: Object.assign({}, bracket.schedule, {
-        days: bracket.schedule.days.map(function(d) {
+    var out = mapBracketMatchSets(bracket, setsForFirestore);
+    if (!out.schedule || !out.schedule.days || !out.schedule.days.length) return out;
+    return Object.assign({}, out, {
+      schedule: Object.assign({}, out.schedule, {
+        days: out.schedule.days.map(function(d) {
           return Object.assign({}, d, { courts: (d.courts || []).map(function(items) { return { items: items }; }) });
         })
       })
@@ -3260,7 +3290,9 @@ var CLUBS = [
   }
 
   function persistBracket() {
-    return saveBracket(currentBracketTournament.id, currentBracket).then(renderLive);
+    return saveBracket(currentBracketTournament.id, currentBracket).then(renderLive).catch(function(err) {
+      window.alert('Save failed: ' + (err && err.message ? err.message : err));
+    });
   }
 
   function renderLive() {
@@ -4704,7 +4736,9 @@ var CLUBS = [
   }
 
   function persistBracketSchedule() {
-    return saveBracket(currentBracketTournament.id, currentBracket).then(renderSchedule);
+    return saveBracket(currentBracketTournament.id, currentBracket).then(renderSchedule).catch(function(err) {
+      window.alert('Save failed: ' + (err && err.message ? err.message : err));
+    });
   }
 
   function matchDurationMinutes(match, defaultFormat) {
