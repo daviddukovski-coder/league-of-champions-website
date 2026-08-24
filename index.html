@@ -1649,6 +1649,34 @@ var CLUBS = [
     return null;
   }
 
+  // Correcting a seed in "Teams in this stage" after matches were already
+  // generated would otherwise leave the old team behind in two different
+  // places depending on stage type: Group/Swiss matches store the team
+  // directly as match.teamAId/teamBId, while Bracket/Modified-Pool rounds
+  // resolve slots dynamically from round.slots[].source.teamId (and Modified
+  // Pool's seed-1v4/seed-2v3 pairing reorders slots relative to stage.teamIds,
+  // so this must match by team id, not by position). Swap every reference in
+  // place so already-entered scores and downstream "winner of previous match"
+  // links stay intact.
+  function replaceTeamInStageMatches(stage, oldId, newId) {
+    if (!oldId || oldId === newId) return;
+    (stage.matches || []).forEach(function(m) {
+      if (m.teamAId === oldId) m.teamAId = newId;
+      if (m.teamBId === oldId) m.teamBId = newId;
+    });
+    (stage.rounds || []).forEach(function(round) {
+      (round.matches || []).forEach(function(m) {
+        if (m.teamAId === oldId) m.teamAId = newId;
+        if (m.teamBId === oldId) m.teamBId = newId;
+      });
+      (round.slots || []).forEach(function(slot) {
+        if (slot.source && slot.source.type === 'manual' && slot.source.teamId === oldId) {
+          slot.source.teamId = newId;
+        }
+      });
+    });
+  }
+
   // Dynamically resolves which team occupies a bracket slot — recomputed on every
   // render (not cached) so it self-heals if an earlier group/match result is corrected.
   function resolveSlotTeam(bracket, stage, roundIndex, slotIndex, depth) {
@@ -4327,11 +4355,14 @@ var CLUBS = [
         input.value = team ? team.name : '';
         hiddenInput.value = item.dataset.teamId;
         dropdown.hidden = true;
+        var oldId = stage.teamIds[slotIndex] || null;
+        var newId = item.dataset.teamId;
         var arr = stage.teamIds.slice();
         while (arr.length <= slotIndex) arr.push(null);
-        arr[slotIndex] = item.dataset.teamId;
+        arr[slotIndex] = newId;
         while (arr.length && !arr[arr.length - 1]) arr.pop();
         stage.teamIds = arr;
+        replaceTeamInStageMatches(stage, oldId, newId);
         persistBracket();
       });
       document.addEventListener('click', function(e) {
