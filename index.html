@@ -4817,27 +4817,29 @@ var CLUBS = [
   }
 
   // Earliest a slot's team could be known/available, in minutes since targetDay's
-  // start. null = not ready yet (its source isn't scheduled anywhere yet). A source
-  // scheduled on a different day is treated as already satisfied (days are sequential).
+  // start. A dependency that isn't scheduled anywhere yet (or a group/swiss stage
+  // that isn't fully scheduled yet) doesn't block this slot — it just doesn't add
+  // any wait, same as a manual pick, so a later round can be placed on its own
+  // (e.g. reserving the Final's slot before the Semifinals are even scheduled)
+  // and shows "TBD – winner of previous match" until the real result is in.
+  // A source scheduled on a different day is treated as already satisfied (days
+  // are sequential).
   function slotReadyTime(bracket, slot, targetDay) {
     var src = slot.source;
     if (!src || src.type === 'manual' || src.type === 'bye') return 0;
     if (src.type === 'matchWinner' || src.type === 'loser') {
       var found = findScheduledItem(bracket, src.matchId);
-      if (!found) return null;
+      if (!found) return 0;
       return found.day === targetDay ? found.endMin : 0;
     }
     if (src.type === 'rank') {
       var srcStage = findStage(bracket, src.stageId);
       if (!srcStage) return 0;
-      var matches = stageAllMatches(srcStage);
-      if (!matches.length) return 0;
       var maxEnd = 0;
-      for (var i = 0; i < matches.length; i++) {
-        var f = findScheduledItem(bracket, matches[i].id);
-        if (!f) return null;
-        if (f.day === targetDay && f.endMin > maxEnd) maxEnd = f.endMin;
-      }
+      stageAllMatches(srcStage).forEach(function(m) {
+        var f = findScheduledItem(bracket, m.id);
+        if (f && f.day === targetDay && f.endMin > maxEnd) maxEnd = f.endMin;
+      });
       return maxEnd;
     }
     return 0;
@@ -4845,8 +4847,6 @@ var CLUBS = [
 
   // Collects this stage's matches that aren't on the schedule anywhere yet, each with
   // its resolved team ids (null if still TBD) and earliest-possible start on targetDay.
-  // Matches whose dependency isn't itself scheduled yet are left out — the admin just
-  // re-clicks "Add to schedule" for this stage once that earlier round is scheduled.
   // roundIndex restricts gathering to a single round of a Bracket/Modified-Pool
   // stage (e.g. just "Semifinals", not the whole "Finals" stage) — needed so
   // rounds that won't be played on the same day/court can be scheduled
@@ -4870,7 +4870,6 @@ var CLUBS = [
           if ((slotA.source && slotA.source.type === 'bye') || (slotB.source && slotB.source.type === 'bye')) return;
           var readyA = slotReadyTime(bracket, slotA, targetDay);
           var readyB = slotReadyTime(bracket, slotB, targetDay);
-          if (readyA === null || readyB === null) return;
           var teamA = resolveSlotTeam(bracket, stage, ri, m.slotAIndex);
           var teamB = resolveSlotTeam(bracket, stage, ri, m.slotBIndex);
           out.push({ matchId: m.id, teamAId: teamA, teamBId: teamB, readyTime: Math.max(readyA, readyB), format: m.format });
@@ -5356,31 +5355,13 @@ var CLUBS = [
         var parts = id.split(':');
         var stage = findStage(currentBracket, parts[0]);
         if (!stage) return null;
-        var roundIndex = parts.length > 1 ? parseInt(parts[1], 10) : null;
-        var label = stage.label + (roundIndex != null && stage.rounds[roundIndex] ? ' – ' + stage.rounds[roundIndex].name : '');
-        return { stage: stage, roundIndex: roundIndex, label: label };
+        return { stage: stage, roundIndex: parts.length > 1 ? parseInt(parts[1], 10) : null };
       }).filter(Boolean);
       var day = currentBracket.schedule.days[parseInt(document.getElementById('multiScheduleDaySelect').value, 10)];
       if (!day) return;
       var courtIndices = Array.prototype.slice.call(document.querySelectorAll('.multi-schedule-court:checked')).map(function(cb) { return parseInt(cb.value, 10); });
       autoScheduleStagesToDay(currentBracket, selections, day, courtIndices);
       persistBracketSchedule();
-
-      // A round whose matches are still all TBD (e.g. "Quarterfinals" when the
-      // "Round of 16" it depends on isn't scheduled anywhere yet) silently gets
-      // 0 matches placed — gatherSchedulableMatches has no start time to give
-      // them. Selecting both rounds together already schedules the earlier one
-      // first and cascades into this one, so the fix is usually "select the
-      // earlier round too" — say so instead of looking like nothing happened.
-      var blocked = selections.filter(function(sel) {
-        if (sel.roundIndex == null) return false;
-        var round = sel.stage.rounds[sel.roundIndex];
-        var stillUnscheduled = round.matches.some(function(m) { return !findScheduledItem(currentBracket, m.id); });
-        return stillUnscheduled && gatherSchedulableMatches(currentBracket, sel.stage, day, sel.roundIndex).length === 0;
-      });
-      if (blocked.length) {
-        window.alert('Not added yet: ' + blocked.map(function(s) { return s.label; }).join(', ') + '.\n\nThese matches are still fully TBD because the earlier round they depend on isn\'t on the schedule yet. Select that earlier round together with this one (or add it first), then try again.');
-      }
     });
 
     document.querySelectorAll('[data-add-block]').forEach(function(btn) {
