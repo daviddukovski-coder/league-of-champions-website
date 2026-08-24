@@ -4745,12 +4745,30 @@ var CLUBS = [
 
     var targetIndices = (courtIndices && courtIndices.length) ? courtIndices : day.courts.map(function(_, i) { return i; });
 
+    // Weaves whole rounds, not single matches: a 4-team round-robin group
+    // plays out as 3 rounds of 2 simultaneous matches (round-robin order
+    // pairs 1v3+2v4, then 1v4+2v3, then 3v4+1v2 — each pair covers all 4
+    // teams once). Two such groups sharing a court should alternate whole
+    // rounds — A's round, B's round, A's round, B's round — not a single
+    // match at a time, which would split a group's own round across the
+    // other group's matches and break the "everyone plays, then everyone
+    // rests while the other group plays" pattern this organizer actually
+    // runs. Chunk size is teamCount/2 (a group's round size); non-group
+    // stages (already 1 match "ready" per pass, e.g. a bracket round) fall
+    // out to chunk size 1, unchanged from before.
     function placeOnePass() {
       var perStage = stages.map(function(stage) { return gatherSchedulableMatches(bracket, stage, day); });
+      var chunkSizes = stages.map(function(stage) {
+        var n = (stage.teamIds || []).filter(Boolean).length;
+        return Math.max(1, Math.floor(n / 2));
+      });
       var pending = [];
-      var maxLen = perStage.reduce(function(m, arr) { return Math.max(m, arr.length); }, 0);
-      for (var i = 0; i < maxLen; i++) {
-        perStage.forEach(function(arr) { if (arr[i]) pending.push(arr[i]); });
+      var maxChunks = perStage.reduce(function(m, arr, idx) { return Math.max(m, Math.ceil(arr.length / chunkSizes[idx])); }, 0);
+      for (var i = 0; i < maxChunks; i++) {
+        perStage.forEach(function(arr, idx) {
+          var size = chunkSizes[idx];
+          for (var j = i * size; j < i * size + size && j < arr.length; j++) pending.push(arr[j]);
+        });
       }
       if (!pending.length) return 0;
 
