@@ -3798,12 +3798,19 @@ var CLUBS = [
 
   function renderAddRoundPanel(stage) {
     var suggested = stage.rounds.length ? stage.rounds[stage.rounds.length - 1].matches.length : 8;
+    var fmt = stage.defaultFormat || currentBracket.defaultFormat;
     return '<div class="admin-only" style="margin-top:14px;">' +
       '<div class="form-row">' +
         '<div class="form-group"><label>Round name</label><input class="new-round-name" placeholder="e.g. Crossover, Quarterfinal, Final"></div>' +
         '<div class="form-group"><label>Slots</label><select class="new-round-slots">' +
           [2, 4, 8, 16, 32].map(function(n) { return '<option value="' + n + '"' + (n === suggested ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
         '</select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Best of (sets)</label><select class="new-round-bestof">' +
+          [1, 3, 5].map(function(n) { return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="form-group"><label>Set points</label><input class="new-round-setpoints" value="' + esc(fmt.setPoints.join(',')) + '"></div>' +
       '</div>' +
       '<button type="button" class="btn btn-cyan btn-sm" data-add-round="' + esc(stage.id) + '">+ Add round</button>' +
     '</div>';
@@ -4463,7 +4470,10 @@ var CLUBS = [
           }
         }
         var matches = [];
-        var addRoundFmt = stage.defaultFormat || currentBracket.defaultFormat;
+        var fallbackFmt = stage.defaultFormat || currentBracket.defaultFormat;
+        var roundBestOf = parseInt(card.querySelector('.new-round-bestof').value, 10) || fallbackFmt.bestOf;
+        var roundSetPoints = card.querySelector('.new-round-setpoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
+        var addRoundFmt = { bestOf: roundBestOf, setPoints: roundSetPoints.length ? roundSetPoints : fallbackFmt.setPoints };
         for (var j = 0; j < numSlots; j += 2) {
           matches.push({
             id: genId('match'), slotAIndex: j, slotBIndex: j + 1,
