@@ -186,12 +186,12 @@
   /* Same look as .edit-pencil/.edit-text-input/-save/-cancel above, but a
      separate class family — see the comment in wireLiveEvents for why this
      control can't share those classes with the generic content-field editor. */
-  .team-rename-pencil { display:none; background:var(--cyan); color:var(--pill-text); border:none; width:22px; height:22px; border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-left:8px; vertical-align:middle; flex-shrink:0; }
-  body.admin-edit-mode .team-rename-pencil { display:inline-flex; align-items:center; justify-content:center; }
-  .team-rename-input { font:inherit; color:#111; background:#fff; border:2px solid var(--cyan); border-radius:4px; padding:2px 6px; width:auto; min-width:120px; }
-  .team-rename-save, .team-rename-cancel { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; margin-left:4px; }
-  .team-rename-save { background:var(--paid); color:#fff; }
-  .team-rename-cancel { background:#b3401f; color:#fff; }
+  .inline-rename-pencil { display:none; background:var(--cyan); color:var(--pill-text); border:none; width:22px; height:22px; border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-left:8px; vertical-align:middle; flex-shrink:0; }
+  body.admin-edit-mode .inline-rename-pencil { display:inline-flex; align-items:center; justify-content:center; }
+  .inline-rename-input { font:inherit; color:#111; background:#fff; border:2px solid var(--cyan); border-radius:4px; padding:2px 6px; width:auto; min-width:120px; }
+  .inline-rename-save, .inline-rename-cancel { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; flex-shrink:0; margin-left:4px; }
+  .inline-rename-save { background:var(--paid); color:#fff; }
+  .inline-rename-cancel { background:#b3401f; color:#fff; }
   .sortable-block { position:relative; }
   .sortable-block.dragging { opacity:0.5; }
   .sortable-handle { display:none; position:absolute; top:8px; right:8px; z-index:6; width:30px; height:30px; border-radius:50%; border:none; background:var(--cyan); color:var(--pill-text); font-size:15px; align-items:center; justify-content:center; cursor:grab; touch-action:none; }
@@ -3330,7 +3330,7 @@ var CLUBS = [
       '<div class="roster-row-teams">' + clubAvatarHtml(findClub(team.club)) +
         '<div><span class="team-name-wrap" data-team-name-wrap="' + esc(team.id) + '" data-raw-name="' + esc(team.name) + '">' +
             '<strong class="team-name-value">' + esc(team.name) + '</strong>' +
-            '<button type="button" class="team-rename-pencil" data-rename-team="' + esc(team.id) + '" title="Rename team">✎</button>' +
+            '<button type="button" class="inline-rename-pencil" data-rename-team="' + esc(team.id) + '" title="Rename team">✎</button>' +
           '</span>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
       '</div>' +
       '<div class="roster-row-actions">' +
@@ -3740,10 +3740,16 @@ var CLUBS = [
     var slot = stage.rounds[roundIndex].slots[slotIndex];
     var src = slot.source || { type: 'manual' };
     var displayType = (src.type === 'matchWinner' || src.type === 'loser') ? 'manual' : src.type;
-    var stageOptions = currentBracket.stages.filter(function(s) { return s.type !== 'bracket' && s.type !== 'doubleElim'; }).map(function(s) {
+    // Both dropdowns are scoped to this stage's own division (when it has
+    // one) — a Women's bracket slot has no business offering Men's teams or
+    // Men's group/Swiss stages to pull a rank from.
+    var stageOptions = currentBracket.stages.filter(function(s) {
+      return s.type !== 'bracket' && s.type !== 'doubleElim' && (!stage.competition || s.competition === stage.competition);
+    }).map(function(s) {
       return '<option value="' + esc(s.id) + '"' + (src.type === 'rank' && src.stageId === s.id ? ' selected' : '') + '>' + esc(s.label) + '</option>';
     }).join('');
-    var teamOptions = '<option value="">—</option>' + currentBracket.teams.map(function(t) {
+    var teamPool = stage.competition ? currentBracket.teams.filter(function(t) { return t.competition === stage.competition; }) : currentBracket.teams;
+    var teamOptions = '<option value="">—</option>' + teamPool.map(function(t) {
       return '<option value="' + esc(t.id) + '"' + (src.type === 'manual' && src.teamId === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>';
     }).join('');
     var key = stage.id + ':' + roundIndex + ':' + slotIndex;
@@ -3818,13 +3824,29 @@ var CLUBS = [
     '</div>';
   }
 
+  // A round's name (e.g. "Round 1", "Spiel um Platz 3"/renamed to "Bronze
+  // Final") is set once at creation (Add Round's name field, or hardcoded for
+  // the 3rd-place button) with no way to fix it afterward — renameable here
+  // the same way team names are, reusing the same inline-rename classes.
+  // Skipped for read-only previews (not-yet-saved stage objects — see
+  // renderDoubleElimPreview) since there's nothing persisted to rename yet.
+  function roundTitleHtml(stage, roundIndex, opts) {
+    var round = stage.rounds[roundIndex];
+    if (opts && opts.readOnly) return '<div class="bracket-round-title">' + esc(round.name) + '</div>';
+    var key = stage.id + ':' + roundIndex;
+    return '<div class="bracket-round-title"><span class="round-name-wrap" data-round-name-wrap="' + esc(key) + '" data-raw-name="' + esc(round.name) + '">' +
+        '<span class="round-name-value">' + esc(round.name) + '</span>' +
+        '<button type="button" class="inline-rename-pencil" data-rename-round="' + esc(key) + '" title="Rename round">✎</button>' +
+      '</span></div>';
+  }
+
   // Shared by any stage type whose rounds are the {slots,matches} bracket
   // shape (bracket, doubleElim's per-section slices, modifiedPool) — resolves
   // and renders each round as its own column.
   function renderBracketRoundsHtml(stage) {
     var cols = stage.rounds.map(function(round, ri) {
       var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
-      return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div><div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+      return '<div class="bracket-round-col">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
     }).join('');
     return stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '';
   }
@@ -3877,7 +3899,7 @@ var CLUBS = [
       var cols = indices.map(function(ri) {
         var round = stage.rounds[ri];
         var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi, opts); }).join('');
-        return '<div class="bracket-round-col"><div class="bracket-round-title">' + esc(round.name) + '</div><div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+        return '<div class="bracket-round-col">' + roundTitleHtml(stage, ri, opts) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
       }).join('');
       return '<h3>' + title + '</h3><div class="bracket-scroll">' + cols + '</div>';
     }).join('');
@@ -4120,10 +4142,10 @@ var CLUBS = [
         // edits bracket team data instead (persistBracket), so it needs its
         // own class names to avoid double-handling the same click/keydown.
         wrap.innerHTML =
-          '<input type="text" class="team-rename-input" value="' + esc(wrap.dataset.rawName) + '">' +
-          '<button type="button" class="team-rename-save" title="Save">✓</button>' +
-          '<button type="button" class="team-rename-cancel" title="Cancel">✕</button>';
-        var input = wrap.querySelector('.team-rename-input');
+          '<input type="text" class="inline-rename-input" value="' + esc(wrap.dataset.rawName) + '">' +
+          '<button type="button" class="inline-rename-save" title="Save">✓</button>' +
+          '<button type="button" class="inline-rename-cancel" title="Cancel">✕</button>';
+        var input = wrap.querySelector('.inline-rename-input');
         input.focus();
         input.select();
         function commit() {
@@ -4137,8 +4159,40 @@ var CLUBS = [
           if (e.key === 'Enter') { e.preventDefault(); commit(); }
           if (e.key === 'Escape') { e.preventDefault(); renderLive(); }
         });
-        wrap.querySelector('.team-rename-save').addEventListener('click', commit);
-        wrap.querySelector('.team-rename-cancel').addEventListener('click', function() { renderLive(); });
+        wrap.querySelector('.inline-rename-save').addEventListener('click', commit);
+        wrap.querySelector('.inline-rename-cancel').addEventListener('click', function() { renderLive(); });
+      });
+    });
+
+    // Renames a bracket-shaped stage's round.name in place (e.g. "Spiel um
+    // Platz 3" → "Bronze Final") — same pattern as team rename above, keyed
+    // by "stageId:roundIndex" since rounds have no id of their own.
+    document.querySelectorAll('[data-rename-round]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var wrap = btn.closest('[data-round-name-wrap]');
+        wrap.innerHTML =
+          '<input type="text" class="inline-rename-input" value="' + esc(wrap.dataset.rawName) + '">' +
+          '<button type="button" class="inline-rename-save" title="Save">✓</button>' +
+          '<button type="button" class="inline-rename-cancel" title="Cancel">✕</button>';
+        var input = wrap.querySelector('.inline-rename-input');
+        input.focus();
+        input.select();
+        function commit() {
+          var next = input.value.trim();
+          if (!next) { renderLive(); return; }
+          var parts = wrap.dataset.roundNameWrap.split(':');
+          var stage = findStage(currentBracket, parts[0]);
+          var round = stage && stage.rounds[parseInt(parts[1], 10)];
+          if (round) round.name = next;
+          persistBracket();
+        }
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); renderLive(); }
+        });
+        wrap.querySelector('.inline-rename-save').addEventListener('click', commit);
+        wrap.querySelector('.inline-rename-cancel').addEventListener('click', function() { renderLive(); });
       });
     });
 
