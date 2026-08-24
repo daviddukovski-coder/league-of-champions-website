@@ -3656,6 +3656,22 @@ var CLUBS = [
     '</div>';
   }
 
+  // A bracket match whose teams aren't both known yet (still "TBD – winner of
+  // previous match") gets this instead of the full renderMatchRow — there's no
+  // winner to record without a real matchup, but Best-of/set-points is a
+  // property of the round, not the teams, so it's still worth setting (or
+  // fixing after a typo) ahead of time.
+  function renderMatchFormatEditor(match) {
+    var fmt = match.format || currentBracket.defaultFormat;
+    return '<div class="match-sets admin-only-flex">' +
+      '<div class="match-format-row">Best of ' +
+        '<select class="match-bestof">' + [1, 3, 5].map(function(n) { return '<option value="' + n + '"' + (n === fmt.bestOf ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
+        ' — points <input class="match-setpoints" value="' + esc(fmt.setPoints.join(',')) + '" size="8">' +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-save-match-format="' + esc(match.id) + '">Save format</button>' +
+    '</div>';
+  }
+
   function missingRoundRobinPairs(stage) {
     var existing = {};
     stage.matches.forEach(function(m) {
@@ -3855,7 +3871,8 @@ var CLUBS = [
         (teamA ? teamNameHtml(teamA) : '<span class="match-team tbd">' + esc(slotSourceLabel(bracket, stage, roundIndex, m.slotAIndex)) + '</span>') +
         '<span class="match-score-summary">vs</span>' +
         (teamB ? teamNameHtml(teamB) : '<span class="match-team tbd">' + esc(slotSourceLabel(bracket, stage, roundIndex, m.slotBIndex)) + '</span>') +
-      '</div>';
+      '</div>' +
+      (opts.readOnly ? '' : renderMatchFormatEditor(m));
     }
     var editors = opts.readOnly ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
     return '<div class="bracket-slot-block">' + body + editors + '</div>';
@@ -4496,6 +4513,20 @@ var CLUBS = [
         });
         match.format = { bestOf: bestOf, setPoints: setPoints.length ? setPoints : [21] };
         match.sets = sets;
+        persistBracket();
+      });
+    });
+
+    document.querySelectorAll('[data-save-match-format]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var matchId = btn.dataset.saveMatchFormat;
+        var found = findMatchAnywhere(currentBracket, matchId);
+        if (!found) return;
+        var row = btn.closest('.match-sets');
+        var bestOf = parseInt(row.querySelector('.match-bestof').value, 10) || 3;
+        var setPoints = row.querySelector('.match-setpoints').value.split(',').map(function(n) { return parseInt(n.trim(), 10); }).filter(function(n) { return !isNaN(n); });
+        found.match.format = { bestOf: bestOf, setPoints: setPoints.length ? setPoints : [21] };
         persistBracket();
       });
     });
