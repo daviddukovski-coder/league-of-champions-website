@@ -5356,13 +5356,31 @@ var CLUBS = [
         var parts = id.split(':');
         var stage = findStage(currentBracket, parts[0]);
         if (!stage) return null;
-        return { stage: stage, roundIndex: parts.length > 1 ? parseInt(parts[1], 10) : null };
+        var roundIndex = parts.length > 1 ? parseInt(parts[1], 10) : null;
+        var label = stage.label + (roundIndex != null && stage.rounds[roundIndex] ? ' – ' + stage.rounds[roundIndex].name : '');
+        return { stage: stage, roundIndex: roundIndex, label: label };
       }).filter(Boolean);
       var day = currentBracket.schedule.days[parseInt(document.getElementById('multiScheduleDaySelect').value, 10)];
       if (!day) return;
       var courtIndices = Array.prototype.slice.call(document.querySelectorAll('.multi-schedule-court:checked')).map(function(cb) { return parseInt(cb.value, 10); });
       autoScheduleStagesToDay(currentBracket, selections, day, courtIndices);
       persistBracketSchedule();
+
+      // A round whose matches are still all TBD (e.g. "Quarterfinals" when the
+      // "Round of 16" it depends on isn't scheduled anywhere yet) silently gets
+      // 0 matches placed — gatherSchedulableMatches has no start time to give
+      // them. Selecting both rounds together already schedules the earlier one
+      // first and cascades into this one, so the fix is usually "select the
+      // earlier round too" — say so instead of looking like nothing happened.
+      var blocked = selections.filter(function(sel) {
+        if (sel.roundIndex == null) return false;
+        var round = sel.stage.rounds[sel.roundIndex];
+        var stillUnscheduled = round.matches.some(function(m) { return !findScheduledItem(currentBracket, m.id); });
+        return stillUnscheduled && gatherSchedulableMatches(currentBracket, sel.stage, day, sel.roundIndex).length === 0;
+      });
+      if (blocked.length) {
+        window.alert('Not added yet: ' + blocked.map(function(s) { return s.label; }).join(', ') + '.\n\nThese matches are still fully TBD because the earlier round they depend on isn\'t on the schedule yet. Select that earlier round together with this one (or add it first), then try again.');
+      }
     });
 
     document.querySelectorAll('[data-add-block]').forEach(function(btn) {
