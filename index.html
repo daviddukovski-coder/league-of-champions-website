@@ -30,6 +30,7 @@
     --cyan-soft: #6bf5ff;
     --cyan-ink: #007a8f;
     --paid: #2f9e6e;
+    --lost: #d64545;
     --pending-text: #a97a1a;
     --pill-bg: #00f2ff;
     --pill-text: #0b0d63;
@@ -292,6 +293,11 @@
   .standings-table th, .standings-table td { padding:9px 8px; text-align:center; border-bottom:1px solid var(--border); }
   .standings-table th { font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; }
   .standings-table td:first-child, .standings-table th:first-child { text-align:left; }
+  .pool-record { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; letter-spacing:1px; }
+  .pool-record .win { color:var(--paid); }
+  .pool-record .loss { color:var(--lost); }
+  .pool-record .pending { color:var(--text-muted); }
+  .pool-placement { display:inline-block; width:22px; height:22px; line-height:22px; border-radius:50%; background:var(--tint-ink); font-weight:700; }
   .standings-team { display:flex; align-items:center; gap:8px; font-weight:600; color:var(--heading); }
   .standings-team .club-avatar { width:22px; height:22px; }
   .match-list { display:flex; flex-direction:column; gap:10px; margin:14px 0; }
@@ -1306,6 +1312,55 @@ var CLUBS = [
       return out;
     }
     return [];
+  }
+
+  // A Modified Pool's 4 teams each play exactly two matches — their Round 1
+  // match, then either the Final (if they won it) or the 3rd-place match (if
+  // they lost it) — so the whole group's placement reduces to two W/L
+  // letters per team: WW=1st, WL=2nd, LW=3rd, LL=4th. resolvedStageMatches
+  // returns this stage's 4 matches in round order (Round 1's two, then
+  // Final, then 3rd place), which is all this needs.
+  function computeModifiedPoolStandings(bracket, stage) {
+    var matches = resolvedStageMatches(bracket, stage);
+    if (matches.length < 4) return [];
+    var fmt = stage.defaultFormat || bracket.defaultFormat;
+    var wFinal = matchWinner(matches[2], fmt);
+    var wThird = matchWinner(matches[3], fmt);
+
+    function buildRow(teamId, r1Winner) {
+      var wonR1 = r1Winner === teamId;
+      var secondWinner = wonR1 ? wFinal : wThird;
+      var r2 = secondWinner ? (secondWinner === teamId ? 'W' : 'L') : null;
+      var placement = r2 ? (r2 === 'W' ? (wonR1 ? 1 : 3) : (wonR1 ? 2 : 4)) : null;
+      return { teamId: teamId, r1: r1Winner ? (wonR1 ? 'W' : 'L') : null, r2: r2, placement: placement };
+    }
+
+    var rows = [];
+    [matches[0], matches[1]].forEach(function(rm) {
+      var w = matchWinner(rm, fmt);
+      if (rm.teamAId) rows.push(buildRow(rm.teamAId, w));
+      if (rm.teamBId) rows.push(buildRow(rm.teamBId, w));
+    });
+    rows.sort(function(a, b) { return (a.placement || 99) - (b.placement || 99); });
+    return rows;
+  }
+
+  function renderModifiedPoolStandingsTable(bracket, stage) {
+    var rows = computeModifiedPoolStandings(bracket, stage);
+    if (!rows.length) return '';
+    function letterHtml(letter) {
+      if (letter === 'W') return '<span class="win">W</span>';
+      if (letter === 'L') return '<span class="loss">L</span>';
+      return '<span class="pending">–</span>';
+    }
+    return '<table class="standings-table"><thead><tr><th>Place</th><th>Team</th><th>Record</th></tr></thead><tbody>' +
+      rows.map(function(r) {
+        var team = findBracketTeam(bracket, r.teamId);
+        return '<tr><td>' + (r.placement ? '<span class="pool-placement">' + r.placement + '</span>' : '–') + '</td>' +
+          '<td><span class="standings-team">' + (team ? clubAvatarHtml(findClub(team.club)) : '') + esc(team ? team.name : '?') + '</span></td>' +
+          '<td class="pool-record">' + letterHtml(r.r1) + letterHtml(r.r2) + '</td></tr>';
+      }).join('') +
+      '</tbody></table>';
   }
 
   // One bracket doc + the team id(s) belonging to one account -> their combined
@@ -4052,7 +4107,7 @@ var CLUBS = [
     }
     var matchRefs = [[0, 0], [0, 1], [1, 0], [2, 0]]; // seed1v4, seed2v3, winners' match, losers' match
     var matchesHtml = matchRefs.map(function(ref) { return renderBracketMatchCard(stage, ref[0], ref[1]); }).join('');
-    return '<div class="match-list">' + matchesHtml + '</div>';
+    return renderModifiedPoolStandingsTable(currentBracket, stage) + '<div class="match-list">' + matchesHtml + '</div>';
   }
 
   // Renders a doubleElim stage's rounds grouped into their three visual
