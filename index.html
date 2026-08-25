@@ -1381,25 +1381,40 @@ var CLUBS = [
   }
 
   // Ranking points per tournament tier (100/500/1000), keyed by placement
-  // label — supplied by the organizer, same numbers for Men's and Women's.
+  // label — default starting values; the organizer overrides these per tier
+  // from the "Ranking" panel's editable table (persisted via the same
+  // contentOverrides/saveContentField mechanism as every other admin-edited
+  // site setting, under key "rankingPoints", field = tier).
   var POINTS_TABLE = {
-    1000: { WINNER: 1000, FINALIST: 600, THIRD: 400, FOURTH: 300, QUARTERFINAL: 180, R16: 90, QUAL: 40, PARTICIPATION: 2 },
-    500:  { WINNER: 500,  FINALIST: 300, THIRD: 200, FOURTH: 150, QUARTERFINAL: 90,  R16: 40, QUAL: 20, PARTICIPATION: 2 },
-    100:  { WINNER: 100,  FINALIST: 60,  THIRD: 40,  FOURTH: 30,  QUARTERFINAL: 18,  R16: 9,  QUAL: 4,  PARTICIPATION: 2 }
+    1000: { WINNER: 1000, FINALIST: 600, THIRD: 400, FOURTH: 300, QUARTERFINAL: 180, R16: 90, R32: 0, QUAL: 40, PARTICIPATION: 2 },
+    500:  { WINNER: 500,  FINALIST: 300, THIRD: 200, FOURTH: 150, QUARTERFINAL: 90,  R16: 40, R32: 0, QUAL: 20, PARTICIPATION: 2 },
+    100:  { WINNER: 100,  FINALIST: 60,  THIRD: 40,  FOURTH: 30,  QUARTERFINAL: 18,  R16: 9,  R32: 0, QUAL: 4,  PARTICIPATION: 2 }
   };
   var PLACEMENT_TO_POINTS_KEY = {
     '1st': 'WINNER', '2nd': 'FINALIST', '3rd': 'THIRD', '4th': 'FOURTH',
-    'Quarterfinal': 'QUARTERFINAL', 'Round of 16': 'R16',
+    'Quarterfinal': 'QUARTERFINAL', 'Round of 16': 'R16', 'Round of 32': 'R32',
     'QUAL': 'QUAL', 'Participation': 'PARTICIPATION'
   };
+  // Order + friendly labels for the editable points table — also drives
+  // which placements get an input field in renderRankingPointsPanel.
+  var POINTS_KEY_LABELS = [
+    ['WINNER', '1st place'], ['FINALIST', '2nd place'], ['THIRD', '3rd place'], ['FOURTH', '4th place'],
+    ['QUARTERFINAL', 'Quarterfinal exit'], ['R16', 'Round of 16 exit'], ['R32', 'Round of 32 exit'],
+    ['QUAL', 'Group stage exit (QUAL)'], ['PARTICIPATION', 'Participation / qualifier only']
+  ];
 
-  // Points for one placement label at one tournament tier. Rounds larger
-  // than Round of 16 (e.g. Round of 32) have no defined tier in the
-  // organizer's table, so they resolve to 0 rather than guessing.
+  function effectivePointsTable(tier) {
+    var override = contentOverrides.rankingPoints && contentOverrides.rankingPoints[tier];
+    return Object.assign({}, POINTS_TABLE[tier] || {}, override || {});
+  }
+
+  // Points for one placement label at one tournament tier. A placement with
+  // no points entered anywhere (default or organizer override) resolves to
+  // 0 rather than guessing.
   function pointsForPlacement(tier, label) {
     var key = PLACEMENT_TO_POINTS_KEY[label];
-    var table = POINTS_TABLE[tier];
-    if (!key || !table || table[key] == null) return 0;
+    var table = effectivePointsTable(tier);
+    if (!key || table[key] == null) return 0;
     return table[key];
   }
 
@@ -3571,8 +3586,27 @@ var CLUBS = [
     '</div>';
   }
 
+  // Editable points-per-placement table for this tournament's tier — filled
+  // in by the organizer once results are final, read by pointsForPlacement
+  // when the sync button below sends points to the Ranking sheet.
+  function renderRankingPointsPanel(tier) {
+    var table = effectivePointsTable(tier);
+    var rows = POINTS_KEY_LABELS.map(function(pair) {
+      var key = pair[0], label = pair[1];
+      return '<div class="form-group"><label>' + esc(label) + '</label><input type="number" min="0" class="ranking-points-input" data-points-key="' + esc(key) + '" value="' + esc(table[key] != null ? table[key] : 0) + '"></div>';
+    }).join('');
+    return '<div class="live-panel admin-only" id="rankingPointsPanel">' +
+      '<h3>Points per placement — Tier ' + esc(tier) + '</h3>' +
+      '<p class="empty-note">Fill in once per tier — applies to every LoC ' + esc(tier) + ' tournament, Men\'s and Women\'s alike.</p>' +
+      '<div class="form-row" style="flex-wrap:wrap;">' + rows + '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" id="saveRankingPointsBtn" data-tier="' + esc(tier) + '">Save points</button>' +
+    '</div>';
+  }
+
   function renderRankingSyncPanel() {
-    return '<div class="live-panel admin-only" id="rankingSyncPanel">' +
+    var tier = currentBracketTournament.tier;
+    return renderRankingPointsPanel(tier) +
+      '<div class="live-panel admin-only" id="rankingSyncPanel">' +
       '<h2>Ranking</h2>' +
       '<p class="empty-note">Once this tournament is fully entered, transfer every team\'s points into the Ranking sheet.</p>' +
       '<button type="button" class="btn btn-outline" id="syncRankingBtn">Punkte ins Ranking übertragen</button>' +
@@ -4223,6 +4257,20 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
+
+    var saveRankingPointsBtn = document.getElementById('saveRankingPointsBtn');
+    if (saveRankingPointsBtn) saveRankingPointsBtn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var tier = saveRankingPointsBtn.dataset.tier;
+      var table = {};
+      document.querySelectorAll('.ranking-points-input').forEach(function(input) {
+        table[input.dataset.pointsKey] = parseInt(input.value, 10) || 0;
+      });
+      saveRankingPointsBtn.disabled = true;
+      saveContentField('rankingPoints', tier, table).finally(function() {
+        saveRankingPointsBtn.disabled = false;
+      });
+    });
 
     var syncRankingBtn = document.getElementById('syncRankingBtn');
     if (syncRankingBtn) syncRankingBtn.addEventListener('click', function() {
