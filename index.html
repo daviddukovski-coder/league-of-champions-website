@@ -3541,8 +3541,7 @@ var CLUBS = [
       teamPanels = rosterPanelHtml('Teams', bracket.teams);
     }
     return teamPanels +
-      '<div class="live-panel admin-only" id="addTeamPanel">' +
-        '<h2>Manage Teams</h2>' +
+      '<div class="live-panel admin-only" id="addTeamPanel"><details class="roster-details"><summary><h2>Manage Teams</h2></summary>' +
         '<h3>Add from registrations</h3>' +
         '<div id="regTeamPicker"><p class="empty-note">Loading registrations …</p></div>' +
         '<h3>Add manually</h3>' +
@@ -3558,7 +3557,7 @@ var CLUBS = [
           '<div class="form-group"><label>Division</label><select id="manualTeamCompetition">' + divisionOptionsHtml(liveDivisionFilter) + '</select></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline" id="addManualTeamBtn">+ Add team</button>' +
-      '</div>';
+      '</details></div>';
   }
 
   function refereeRowHtml(uid) {
@@ -3576,41 +3575,32 @@ var CLUBS = [
 
   function renderRefereesPanel(bracket) {
     var referees = bracket.referees || [];
-    return '<div class="live-panel admin-only">' +
-      '<h2>Referees (' + referees.length + ')</h2>' +
+    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Referees (' + referees.length + ')</h2></summary>' +
       (referees.length ? referees.map(refereeRowHtml).join('') : '<p class="empty-note">No referees assigned yet.</p>') +
       '<div class="admin-only combo-group" id="addRefereePanel">' +
         '<h3>Add referee</h3>' +
         '<div class="form-group"><label>Search players</label><input id="refSearch" placeholder="Type a name…" autocomplete="off"><div class="combo-dropdown" id="refDropdown" hidden></div></div>' +
       '</div>' +
-    '</div>';
+    '</details></div>';
   }
 
   // Editable points-per-placement table for this tournament's tier — filled
   // in by the organizer once results are final, read by pointsForPlacement
   // when the sync button below sends points to the Ranking sheet.
-  // Collapsed by default — filled in once per tier and rarely touched again,
-  // so it doesn't need to sit open taking up space every time this admin
-  // visits the page. Plain DOM show/hide on toggle (not a re-render), so any
-  // values already typed but not yet saved survive collapsing and reopening.
-  var rankingPointsCollapsed = true;
+  // Collapsed by default (same <details>/<summary> ▸/▾ pattern as the roster
+  // panels above) — filled in once per tier and rarely touched again, so it
+  // doesn't need to sit open taking up admin-mode space every visit.
   function renderRankingPointsPanel(tier) {
     var table = effectivePointsTable(tier);
     var rows = POINTS_KEY_LABELS.map(function(pair) {
       var key = pair[0], label = pair[1];
       return '<div class="form-group"><label>' + esc(label) + '</label><input type="number" min="0" class="ranking-points-input" data-points-key="' + esc(key) + '" value="' + esc(table[key] != null ? table[key] : 0) + '"></div>';
     }).join('');
-    return '<div class="live-panel admin-only" id="rankingPointsPanel">' +
-      '<div class="stage-card-head">' +
-        '<h3>Points per placement — Tier ' + esc(tier) + '</h3>' +
-        '<button type="button" class="icon-btn" id="toggleRankingPointsBtn" title="' + (rankingPointsCollapsed ? 'Expand' : 'Collapse') + '">' + (rankingPointsCollapsed ? '▾' : '▴') + '</button>' +
-      '</div>' +
-      '<div id="rankingPointsBody"' + (rankingPointsCollapsed ? ' hidden' : '') + '>' +
+    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Points per placement — Tier ' + esc(tier) + '</h2></summary>' +
         '<p class="empty-note">Fill in once per tier — applies to every LoC ' + esc(tier) + ' tournament, Men\'s and Women\'s alike.</p>' +
         '<div class="form-row" style="flex-wrap:wrap;">' + rows + '</div>' +
         '<button type="button" class="btn btn-outline btn-sm" id="saveRankingPointsBtn" data-tier="' + esc(tier) + '">Save points</button>' +
-      '</div>' +
-    '</div>';
+    '</details></div>';
   }
 
   function renderRankingSyncPanel() {
@@ -4267,15 +4257,6 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
-
-    var toggleRankingPointsBtn = document.getElementById('toggleRankingPointsBtn');
-    if (toggleRankingPointsBtn) toggleRankingPointsBtn.addEventListener('click', function() {
-      rankingPointsCollapsed = !rankingPointsCollapsed;
-      var body = document.getElementById('rankingPointsBody');
-      body.hidden = rankingPointsCollapsed;
-      toggleRankingPointsBtn.textContent = rankingPointsCollapsed ? '▾' : '▴';
-      toggleRankingPointsBtn.title = rankingPointsCollapsed ? 'Expand' : 'Collapse';
-    });
 
     var saveRankingPointsBtn = document.getElementById('saveRankingPointsBtn');
     if (saveRankingPointsBtn) saveRankingPointsBtn.addEventListener('click', function() {
