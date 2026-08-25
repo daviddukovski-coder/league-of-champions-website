@@ -4990,11 +4990,23 @@ var CLUBS = [
   // `selections` is a list of { stage, roundIndex } — roundIndex is null/undefined
   // for Group/Swiss (whole stage) or a Bracket/Modified-Pool round picked
   // individually (see gatherSchedulableMatches).
+  // Courts are per-day, not a single global count — a tournament often runs
+  // more courts on a busy day than a light one (e.g. 4 on Saturday, 1 on
+  // Sunday). day.courtCount is the explicit value once a day has been given
+  // one; before that, falling back to day.courts.length (which only ever
+  // grows, never shrinks on its own) means a day that already has scheduled
+  // matches on 4 courts keeps showing all 4 even if the global default was
+  // since lowered for other days — schedule.courtCount now only matters as
+  // the starting value for a newly created day.
+  function dayCourtCount(day) {
+    return Math.max(day.courtCount || 1, day.courts.length);
+  }
+
   function autoScheduleStagesToDay(bracket, selections, day, courtIndices) {
-    // Days can predate a later increase to schedule.courtCount, leaving
+    // Days can predate a later increase to their own court count, leaving
     // day.courts shorter than the court list currently shown — pad it so
     // every court index up to courtCount is a real array before scheduling.
-    while (day.courts.length < bracket.schedule.courtCount) day.courts.push([]);
+    while (day.courts.length < dayCourtCount(day)) day.courts.push([]);
 
     var targetIndices = (courtIndices && courtIndices.length) ? courtIndices : day.courts.map(function(_, i) { return i; });
 
@@ -5216,7 +5228,7 @@ var CLUBS = [
 
   function renderScheduleDayBlock(day) {
     var cols = [];
-    for (var i = 0; i < currentBracket.schedule.courtCount; i++) {
+    for (var i = 0; i < dayCourtCount(day); i++) {
       var items = day.courts[i] || [];
       var cumMinutes = 0;
       var itemsHtml = items.map(function(item) {
@@ -5262,6 +5274,7 @@ var CLUBS = [
         '<div class="form-row">' +
           '<div class="form-group"><label>Label</label><input class="edit-day-label" value="' + esc(day.label) + '"></div>' +
           '<div class="form-group"><label>Start time</label><input type="time" class="edit-day-start" value="' + esc(day.startTime) + '"></div>' +
+          '<div class="form-group"><label>Courts</label><input type="number" class="edit-day-courts" min="1" value="' + dayCourtCount(day) + '"></div>' +
         '</div>' +
         '<button type="button" class="btn btn-outline btn-sm" data-save-day="' + esc(day.id) + '">Save day</button>' +
       '</div>' +
@@ -5271,17 +5284,18 @@ var CLUBS = [
   }
 
   function renderScheduleSetupPanel(bracket) {
+    // Courts are set per day (edit a day below to change just its own count)
+    // — this is only the starting value a newly added day gets.
     var dayList = bracket.schedule.days.map(function(d) {
-      return '<p class="empty-note" style="padding:2px 0;">' + esc(d.label) + ' — starts ' + esc(d.startTime) + '</p>';
+      return '<p class="empty-note" style="padding:2px 0;">' + esc(d.label) + ' — starts ' + esc(d.startTime) + ' · ' + dayCourtCount(d) + ' courts</p>';
     }).join('');
     return '<div class="live-panel">' +
       '<h2>Schedule Setup</h2>' +
-      '<p>' + bracket.schedule.courtCount + ' courts</p>' +
       '<div class="admin-only">' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Number of courts</label><input type="number" id="courtCountInput" min="1" value="' + bracket.schedule.courtCount + '"></div>' +
+          '<div class="form-group"><label>Default courts for new days</label><input type="number" id="courtCountInput" min="1" value="' + bracket.schedule.courtCount + '"></div>' +
         '</div>' +
-        '<button type="button" class="btn btn-outline btn-sm" id="saveCourtCountBtn">Save court count</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="saveCourtCountBtn">Save default</button>' +
       '</div>' +
       '<h3>Days</h3>' +
       dayList +
@@ -5316,8 +5330,11 @@ var CLUBS = [
     // Courts default to all-checked (matches the old "spread across every
     // court" behavior) — uncheck down to just the court(s) these stages'
     // matches should actually interleave on, e.g. 2 pools sharing 1 court.
+    // This list isn't re-rendered when the day dropdown below changes, so it
+    // covers the largest court count among all days rather than just one.
+    var maxCourts = bracket.schedule.days.reduce(function(m, d) { return Math.max(m, dayCourtCount(d)); }, bracket.schedule.courtCount);
     var courtChecks = [];
-    for (var c = 0; c < bracket.schedule.courtCount; c++) {
+    for (var c = 0; c < maxCourts; c++) {
       courtChecks.push('<label class="checkbox-row"><input type="checkbox" class="multi-schedule-court" value="' + c + '" checked><span>Court ' + (c + 1) + '</span></label>');
     }
     return '<div class="live-panel admin-only">' +
@@ -5461,9 +5478,10 @@ var CLUBS = [
       var label = document.getElementById('newDayLabel').value.trim();
       var start = document.getElementById('newDayStart').value || '09:00';
       if (!label) return;
+      var count = currentBracket.schedule.courtCount;
       var courts = [];
-      for (var i = 0; i < currentBracket.schedule.courtCount; i++) courts.push([]);
-      currentBracket.schedule.days.push({ id: genId('day'), label: label, startTime: start, courts: courts });
+      for (var i = 0; i < count; i++) courts.push([]);
+      currentBracket.schedule.days.push({ id: genId('day'), label: label, startTime: start, courtCount: count, courts: courts });
       persistBracketSchedule();
     });
 
@@ -5568,8 +5586,15 @@ var CLUBS = [
         var panel = btn.closest('.admin-only');
         var label = panel.querySelector('.edit-day-label').value.trim();
         var start = panel.querySelector('.edit-day-start').value;
+        var courts = parseInt(panel.querySelector('.edit-day-courts').value, 10);
         if (label) day.label = label;
         if (start) day.startTime = start;
+        // Never allowed to drop below what's already scheduled here (see
+        // dayCourtCount) — this can only grow a day's courts, not hide any.
+        if (courts && courts > 0) {
+          day.courtCount = courts;
+          while (day.courts.length < courts) day.courts.push([]);
+        }
         persistBracketSchedule();
       });
     });
