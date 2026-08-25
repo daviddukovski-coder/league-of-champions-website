@@ -334,7 +334,7 @@
   .schedule-match-teams { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; width:100%; }
   .schedule-match-teams .match-team { white-space:nowrap; }
   .schedule-score-entry { flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border); }
-  .schedule-score-entry .set-a, .schedule-score-entry .set-b { width:36px; }
+  .schedule-score-entry .set-a, .schedule-score-entry .set-b { width:48px; }
   .schedule-match-vs { font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
   .schedule-match-result { font-size:11.5px; color:var(--paid); font-weight:700; }
   .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
@@ -1747,11 +1747,22 @@ var CLUBS = [
     var words = key.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
     return words.slice(0, 3).map(function(w) { return w[0].toUpperCase(); }).join('') || 'M';
   }
+  // A tournament that splits into many same-shaped stages (Modified Pool's
+  // Group A, Group B, ... each with their own "Round 1"/"Final") would
+  // otherwise produce the exact same code for a match in every group — division
+  // + round name alone doesn't say WHICH group. Pull out the letter/number that
+  // actually distinguishes "Group E" from "Group F"; a stage that isn't one of
+  // several same-named groups (e.g. the single "Finals" bracket) needs no
+  // extra part, keeping codes like "WQF1" as short as before.
+  function abbreviateStageLabel(label) {
+    var m = (label || '').match(/(?:group|gruppe)\s*([a-z0-9]+)/i);
+    return m ? m[1].toUpperCase() : '';
+  }
   function matchCode(stage, roundIndex, matchIndex) {
     var round = stage.rounds[roundIndex];
     if (!round) return '';
     var divLetter = stage.competition === 'Women' ? 'W' : (stage.competition === 'Men' ? 'M' : '');
-    return divLetter + abbreviateRoundName(round.name) + (matchIndex + 1);
+    return divLetter + abbreviateStageLabel(stage.label) + abbreviateRoundName(round.name) + (matchIndex + 1);
   }
 
   function slotSourceLabel(bracket, stage, roundIndex, slotIndex) {
@@ -5427,6 +5438,20 @@ var CLUBS = [
     });
   }
 
+  // Which day's block is shown on the Schedule page — with several tournament
+  // days this avoided one long stacked page (mostly scrolling past days you
+  // don't care about right now) in favor of picking one, same as the
+  // Men's/Women's division tabs on the Live Bracket page.
+  var scheduleSelectedDayIndex = 0;
+  function renderScheduleDayTabs(bracket) {
+    if (bracket.schedule.days.length < 2) return '';
+    return '<div class="division-filter-tabs">' +
+      bracket.schedule.days.map(function(d, i) {
+        return '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (i === scheduleSelectedDayIndex ? ' active' : '') + '" data-select-schedule-day="' + i + '">' + esc(d.label) + '</button>';
+      }).join('') +
+    '</div>';
+  }
+
   function renderSchedule() {
     var t = currentBracketTournament;
     var bracket = currentBracket;
@@ -5435,17 +5460,27 @@ var CLUBS = [
     var liveLinkHtml = liveLinkDisabled
       ? '<span style="opacity:.5;">' + liveBracketLabel(t) + ' →</span>'
       : '<a href="#/event/' + esc(t.id) + '/live">' + liveBracketLabel(t) + ' →</a>';
+    if (scheduleSelectedDayIndex >= bracket.schedule.days.length) scheduleSelectedDayIndex = 0;
+    var visibleDays = bracket.schedule.days.length ? [bracket.schedule.days[scheduleSelectedDayIndex]] : [];
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule · ' + liveLinkHtml + '</div></div>' +
       renderScheduleSetupPanel(bracket) +
       renderStageScheduleControls(bracket) +
-      bracket.schedule.days.map(renderScheduleDayBlock).join('') +
+      renderScheduleDayTabs(bracket) +
+      visibleDays.map(renderScheduleDayBlock).join('') +
       (bracket.schedule.days.length ? '' : '<p class="empty-note">No days set up yet.</p>');
     wireScheduleEvents();
     initScheduleSortable();
   }
 
   function wireScheduleEvents() {
+    document.querySelectorAll('[data-select-schedule-day]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        scheduleSelectedDayIndex = parseInt(btn.dataset.selectScheduleDay, 10);
+        renderSchedule();
+      });
+    });
+
     document.querySelectorAll('[data-save-schedule-match]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (!isAdmin) return;
