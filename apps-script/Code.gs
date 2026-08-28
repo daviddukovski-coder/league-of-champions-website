@@ -108,7 +108,8 @@ function registerTeam_(body) {
     id, new Date(), body.tournamentId, body.competition,
     body.firstName, body.lastName, body.email, body.phone,
     body.partner, body.club, 'pending', '',
-    body.uid || '', body.partnerUid || ''
+    body.uid || '', body.partnerUid || '',
+    body.companyName || '', body.vatNumber || ''
   ]);
   return { ok: true, id: id };
 }
@@ -136,8 +137,45 @@ function updateRegistration_(id, fields) {
 // single-operator tournament; add a shared-secret or token check here first if that's
 // not an acceptable risk once real payments are flowing.
 function markPaid_(body) {
-  var ok = updateRegistration_(body.id, { Status: 'paid' });
+  var ok = updateRegistration_(body.id, { Status: 'paid', PaymentMethod: body.paymentMethod || '' });
+  if (ok) sendInvoiceIfNeeded_(body.id);
   return ok ? { ok: true } : { error: 'not found' };
+}
+
+// Invoicing rule (per team owner, 2026-08-27): a "Rechnung" only ever goes out
+// once a registration actually becomes paid/confirmed — never at "pay later"
+// time, since nothing has been charged yet. That happens at exactly two
+// call sites, both already funneling through updateRegistration_(id, {Status:'paid'}):
+// this function (admin manually confirms, e.g. cash/bank transfer) and
+// confirmPayment_ below (Stripe checkout verified paid — covers both "pay now"
+// immediately and "pay later" finished off afterward, since both end up here).
+//
+// Not implemented yet — intentionally a placeholder until the site is off
+// demo mode: there's no invoice-number ledger (the agreed series starts at
+// "2026/01"), no PDF template wired into Apps Script (the Musterrechnung was
+// built with docx-js outside this project), and no verified sender address
+// for MailApp/GmailApp. Wire this up before relying on it; for now it only
+// logs so the two trigger points stay visible in the execution log.
+//
+// Email spec (per team owner, 2026-08-27) for once this is wired up —
+// MailApp/GmailApp always sends as the Google account that owns this Apps
+// Script deployment (or a verified Gmail send-as alias on it), so the
+// "sending address" the owner provides needs to be that account, not an
+// arbitrary From: header:
+//   To: the registrant's email (registration row)
+//   Subject: "Your League of Champions Invoice – " + tournament name
+//   Body (English):
+//     "Dear " + club name + " team,
+//
+//      Please find your invoice for " + tournament name + " attached.
+//
+//      Thank you for registering with League of Champions!
+//
+//      If you have any questions, feel free to reach out at this email
+//      address or on Instagram @footvolleyleagueofchampions."
+//   Attachment: the generated invoice (PDF).
+function sendInvoiceIfNeeded_(registrationId) {
+  Logger.log('TODO: generate & email invoice for registration ' + registrationId);
 }
 
 function deleteRegistration_(body) {
@@ -179,7 +217,15 @@ function createCheckout_(body) {
     'line_items[0][price_data][product_data][name]': 'Entry fee – ' + cfg.name,
     'line_items[0][price_data][unit_amount]': cfg.feeCents,
     'line_items[0][quantity]': 1,
-    'metadata[registrationId]': body.id
+    'metadata[registrationId]': body.id,
+    // Lets a business customer enter their VAT/tax number right in Stripe's
+    // hosted checkout — confirmPayment_ reads it back from customer_details.
+    // Note: this only collects the number for the invoice. It does NOT by
+    // itself remove the 20% VAT or apply reverse charge — that requires
+    // separately setting up Stripe Tax (registrations + product tax codes).
+    // Confirm the correct reverse-charge handling with your Steuerberater
+    // before treating a supplied VAT number as "no VAT due".
+    'tax_id_collection[enabled]': 'true'
   };
 
   var res = UrlFetchApp.fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -211,7 +257,16 @@ function confirmPayment_(body) {
   // needing a signed webhook.
   var matches = data.metadata && data.metadata.registrationId === body.id;
   if (matches && data.payment_status === 'paid') {
-    updateRegistration_(body.id, { Status: 'paid' });
+    // Stripe Checkout's own tax_id_collection (enabled in createCheckout_)
+    // lets a business customer enter their VAT number right there in the
+    // hosted checkout page — if they did, it shows up here so we don't need
+    // a separate manual-entry step for the Stripe path.
+    var taxIds = data.customer_details && data.customer_details.tax_ids;
+    var vatFromStripe = (taxIds && taxIds.length) ? taxIds[0].value : '';
+    var fields = { Status: 'paid', PaymentMethod: 'stripe' };
+    if (vatFromStripe) fields.VatNumber = vatFromStripe;
+    updateRegistration_(body.id, fields);
+    sendInvoiceIfNeeded_(body.id);
     return { ok: true, status: 'paid' };
   }
   return { ok: true, status: 'pending' };

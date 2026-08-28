@@ -98,12 +98,22 @@
   .wordmark .mark { font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; letter-spacing:0.5px; color:var(--nav-text); }
   .wordmark .sub { font-size:11px; color:var(--cyan); font-weight:600; letter-spacing:0.5px; }
   .nav-right { display:flex; align-items:center; gap:22px; }
+  /* Buttons/links in here must never shrink below their content width — a
+     shrinking flex item with wrappable text wraps mid-word instead (ugly
+     letter-stack), rather than the row cleanly dropping to its own line via
+     .nav-inner's flex-wrap:wrap. Same fix the <640px rule below already
+     applies, just not width-gated, since this can bite at any width once the
+     row's content is wide enough (e.g. after adding the language select). */
+  .nav-right > * { flex-shrink:0; white-space:nowrap; }
   .nav-links { display:flex; align-items:center; gap:20px; }
-  .nav-link { background:none; border:none; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.5px; color:rgba(255,255,255,0.75); padding:4px 0; border-bottom:2px solid transparent; }
+  .nav-link { background:none; border:none; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.5px; color:rgba(255,255,255,0.75); padding:4px 0; border-bottom:2px solid transparent; white-space:nowrap; flex-shrink:0; }
   .nav-link:hover { color:var(--nav-text); }
   .nav-link.active { color:var(--nav-text); border-bottom-color:var(--cyan); }
   .ig-link { display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.8); transition:border-color .15s, color .15s; }
   .ig-link:hover { border-color:var(--cyan); color:var(--cyan); }
+  .lang-select { width:auto; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.8); font-family:inherit; font-size:12px; font-weight:600; letter-spacing:0.3px; border-radius:14px; padding:4px 8px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .lang-select:hover { border-color:var(--cyan); color:var(--cyan); }
+  .lang-select option { background:var(--nav-bg, #0b0d63); color:#fff; }
   .season-tag { font-size:11px; color:rgba(255,255,255,0.55); letter-spacing:0.5px; }
   .auth-nav { display:flex; align-items:center; gap:14px; }
   .nav-user-menu { position:relative; }
@@ -483,6 +493,7 @@
         <button class="nav-link" id="editModeBtn" hidden>Edit Mode: Off</button>
         <button class="nav-link" id="logoutBtn" data-ui-key="nav.logout">Log Out</button>
       </div>
+      <select class="lang-select" id="langSelect" aria-label="Language"></select>
       <a class="ig-link" id="igLink" href="#" target="_blank" rel="noopener" aria-label="Instagram">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/></svg>
       </a>
@@ -525,42 +536,42 @@
 
   <section id="view-detail" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="home">← All Tournaments</button>
+      <button class="back-btn" data-back="home" data-ui-key="detail.backLink">← All Tournaments</button>
       <div id="detailContent"></div>
     </div>
   </section>
 
   <section id="view-compselect" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <button class="back-btn" data-back="detail" data-ui-key="compselect.backLink">← Back to Tournament</button>
       <div id="compSelectContent"></div>
     </div>
   </section>
 
   <section id="view-register" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <button class="back-btn" data-back="detail" data-ui-key="register.backLink">← Back to Tournament</button>
       <div class="register-inner" id="registerContent"></div>
     </div>
   </section>
 
   <section id="view-live" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <button class="back-btn" data-back="detail" data-ui-key="register.backLink">← Back to Tournament</button>
       <div id="liveContent"></div>
     </div>
   </section>
 
   <section id="view-schedule" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="detail">← Back to Tournament</button>
+      <button class="back-btn" data-back="detail" data-ui-key="register.backLink">← Back to Tournament</button>
       <div id="scheduleContent"></div>
     </div>
   </section>
 
   <section id="view-player" class="view" hidden>
     <div class="container">
-      <button class="back-btn" data-back="home">← Back</button>
+      <button class="back-btn" data-back="home" data-ui-key="player.backLink">← Back</button>
       <div id="playerContent"></div>
     </div>
   </section>
@@ -685,10 +696,17 @@
     { id:'faro-finals', name:'Faro Finals', tier:1000, dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
   ];
 
-  var DIVISION_LABEL = { Men:"Men's", Women:"Women's" };
+  // A function (not a static map) so it can reach the active-language
+  // translations — arbitrary admin-typed categories (e.g. "Men 100") fall
+  // through untranslated, same as before.
+  function divisionWord(comp) {
+    if (comp === 'Men') return uiText('division.men');
+    if (comp === 'Women') return uiText('division.women');
+    return comp;
+  }
   var STAGE_TYPE_LABEL = { group: 'Group', swiss: 'Swiss', bracket: 'Bracket', doubleElim: 'Double Elim', modifiedPool: 'Modified Pool' };
-  function divisionLabel(comp) { return (DIVISION_LABEL[comp] || comp) + ' Division'; }
-  function divisionsText(t) { return t.competitions.map(function(c){ return DIVISION_LABEL[c] || c; }).join(' & '); }
+  function divisionLabel(comp) { return divisionWord(comp) + uiText('division.suffix'); }
+  function divisionsText(t) { return t.competitions.map(divisionWord).join(' & '); }
 
 var CLUBS = [
     { name:'1. FC Barfuß', logo:'data:image/png;base64,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' },
@@ -868,6 +886,9 @@ var CLUBS = [
     return apiPost('createCheckout', { id:id, tournamentId:tournamentId, successPath:successPath, cancelPath:cancelPath });
   }
   function backendConfirmPayment(id, sessionId) {
+    // Invoicing lives server-side (see sendInvoiceIfNeeded_ in Code.gs) — it
+    // fires here on real Stripe confirmation, covering both "pay now" and a
+    // resumed "pay later". Demo mode has no backend, so nothing to hook.
     if (DEMO_MODE) return Promise.resolve({ ok:true, status:'paid' });
     return apiPost('confirmPayment', { id:id, sessionId:sessionId });
   }
@@ -886,15 +907,19 @@ var CLUBS = [
 
   // Admin-only actions from the tournament detail page (manually confirm a cash
   // payment, remove a duplicate/cancelled registration).
-  function backendAdminMarkPaid(id) {
+  function backendAdminMarkPaid(id, paymentMethod) {
+    // Invoicing lives server-side (see sendInvoiceIfNeeded_ in Code.gs) — it
+    // fires here too, since a manual admin confirm (e.g. cash/bank transfer)
+    // is just as much a real payment as a Stripe one. Demo mode has no
+    // backend, so nothing to hook.
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
     if (DEMO_MODE) {
       var list = demoAll();
       var e = list.find(function(r){ return r.id === id; });
-      if (e) { e.status = 'paid'; demoSave(list); }
+      if (e) { e.status = 'paid'; e.paymentMethod = paymentMethod; demoSave(list); }
       return Promise.resolve({ ok:true });
     }
-    return apiPost('markPaid', { id:id });
+    return apiPost('markPaid', { id:id, paymentMethod:paymentMethod });
   }
   function backendAdminDeleteRegistration(id) {
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
@@ -2078,6 +2103,21 @@ var CLUBS = [
   }
 
   /* ==================================================================
+     LANGUAGE — public-facing pages only (admin tools stay English).
+     English lives in UI_DEFAULTS below; TRANSLATIONS holds the other 12.
+     ================================================================== */
+  var SUPPORTED_LANGS = ['en','de','es','pt','da','sv','fi','it','fr','hr','el','tr','no'];
+  var LANG_LABELS = { en:'English', de:'Deutsch', es:'Español', pt:'Português', da:'Dansk', sv:'Svenska', fi:'Suomi', it:'Italiano', fr:'Français', hr:'Hrvatski', el:'Ελληνικά', tr:'Türkçe', no:'Norsk' };
+  function detectInitialLang() {
+    var saved = null;
+    try { saved = localStorage.getItem('loc_lang'); } catch (e) {}
+    if (saved && SUPPORTED_LANGS.indexOf(saved) > -1) return saved;
+    var nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return SUPPORTED_LANGS.indexOf(nav) > -1 ? nav : 'en';
+  }
+  var currentLang = detectInitialLang();
+
+  /* ==================================================================
      UI TEXT — every static label/heading/button/message on the site,
      editable the same way as tournament fields (key 'ui', field = below).
      ================================================================== */
@@ -2129,6 +2169,10 @@ var CLUBS = [
     'register.partnerPlaceholder': 'First and last name',
     'register.clubLabel': 'Club *',
     'register.clubPlaceholder': 'Search club …',
+    'register.businessToggle': "I need a VAT invoice (registering as a business)",
+    'register.companyNameLabel': 'Company Name *',
+    'register.vatNumberLabel': 'VAT Number *',
+    'register.vatNumberPlaceholder': 'e.g. ATU12345678',
     'register.consentLabel': 'I agree to the processing of my data for tournament registration. *',
     'register.submitBtn': 'Register',
     'register.tournamentLabel': 'Tournament',
@@ -2165,13 +2209,506 @@ var CLUBS = [
     'registerAccount.switchText': 'Already have an account?',
     'registerAccount.switchBtn': 'Log In',
     'footer.questions': 'Questions?',
-    'footer.imprint': 'Imprint'
+    'footer.imprint': 'Imprint',
+    'player.backLink': '← Back',
+    'home.subtitle': '{n} tournaments across Europe, three formats – LoC 1000, 500 and 100.',
+    'home.badgeOpen': 'Registration open',
+    'home.badgeCompleted': 'Completed',
+    'home.teamRegisteredOne': '{n} team registered',
+    'home.teamRegisteredMany': '{n} teams registered',
+    'home.seasonTag': 'SEASON {year} · {n} TOURNAMENTS',
+    'division.men': "Men's",
+    'division.women': "Women's",
+    'division.suffix': ' Division',
+    'schedule.scrollHint': '← Scroll to see all {n} courts →',
+    'schedule.court': 'Court {n}',
+    'schedule.noDays': 'No days set up yet.',
+    'schedule.label': 'Schedule',
+    'schedule.viewLink': 'View Schedule',
+    'live.bracketLabel': 'Live Bracket',
+    'live.resultsLabel': 'Results',
+    'live.formatLabel': 'Tournament Format'
+  };
+
+  // Translations for the public-facing surface (nav, footer, landing, home,
+  // tournament-detail labels, registration/login/account flows). Admin-only
+  // screens and JS-rendered views not wired through uiText() (ranking,
+  // schedule/bracket internals, impressum body, player profiles) stay
+  // English for now — out of scope per the agreed incremental rollout.
+  // Brand/format-invariant keys (nav.mark, nav.sub, detail.formatValue) are
+  // deliberately omitted so they always fall through to UI_DEFAULTS.
+  var TRANSLATIONS = {
+    de: {
+      'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
+      'demoBanner.text': 'DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)',
+      'landing.eyebrow': 'Saison 2026', 'landing.headline': 'Europas Footvolley-Elite. Eine Tour.',
+      'landing.subtitle': 'Erstelle dein Konto und sichere dir deinen Platz im Sand.',
+      'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
+      'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
+      'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
+      'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
+      'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
+      'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
+      'detail.paidLabel': 'Bestätigt', 'detail.pendingLabel': 'Ausstehend',
+      'compselect.backLink': '← Zurück zum Turnier', 'compselect.question': 'Für welche Kategorie möchtest du dich anmelden?', 'compselect.teamReg': 'Team-Anmeldung (2v2)',
+      'register.backLink': '← Zurück zum Turnier', 'register.heading': 'Team-Anmeldung', 'register.firstNameLabel': 'Vorname *', 'register.lastNameLabel': 'Nachname *',
+      'register.emailLabel': 'E-Mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. Spieler) *', 'register.partnerPlaceholder': 'Vor- und Nachname',
+      'register.clubLabel': 'Verein *', 'register.clubPlaceholder': 'Verein suchen …',
+      'register.businessToggle': 'Ich benötige eine Rechnung mit USt-IdNr. (Anmeldung als Unternehmen)',
+      'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
+      'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *',
+      'register.submitBtn': 'Registrieren', 'register.tournamentLabel': 'Turnier', 'register.divisionLabel': 'Kategorie', 'register.teamLabel': 'Team', 'register.feeLabel': 'Startgeld',
+      'register.payBtn': 'Startgeld jetzt bezahlen', 'register.payLaterBtn': 'Ich bezahle später',
+      'register.payNote': 'Sichere Zahlung über Stripe. Die Anmeldung ist erst nach Zahlungseingang offiziell bestätigt.',
+      'register.pendingHeading': 'Vorläufige Anmeldung erhalten', 'register.pendingText': 'Dein Team steht auf der Liste. Um dir deinen Platz zu sichern, bezahle jetzt das Startgeld.',
+      'register.confirmedHeading': 'Anmeldung bestätigt!', 'register.confirmedText': 'Dein Team ist bestätigt. Wir sehen uns auf dem Feld!', 'register.backToTournament': 'Zurück zum Turnier',
+      'register.paymentPendingHeading': 'Zahlung noch ausstehend', 'register.paymentPendingText': 'Wir konnten die Zahlung noch nicht bestätigen. Du kannst es von der Turnierseite aus erneut versuchen.',
+      'login.heading': 'Anmelden', 'login.demoNote': 'Demo-Modus — Konten werden nur in diesem Browser gespeichert, nicht in einem echten Konto-Dienst.',
+      'login.emailLabel': 'E-Mail *', 'login.passwordLabel': 'Passwort *', 'login.submitBtn': 'Anmelden', 'login.switchText': 'Noch kein Konto?', 'login.switchBtn': 'Registrieren',
+      'registerAccount.heading': 'Konto erstellen', 'registerAccount.demoNote': 'Demo-Modus — Konten werden nur in diesem Browser gespeichert, nicht in einem echten Konto-Dienst.',
+      'registerAccount.firstNameLabel': 'Vorname *', 'registerAccount.lastNameLabel': 'Nachname *', 'registerAccount.emailLabel': 'E-Mail *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Passwort *', 'registerAccount.confirmPasswordLabel': 'Passwort bestätigen *',
+      'registerAccount.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Kontoerstellung zu. *', 'registerAccount.submitBtn': 'Konto erstellen',
+      'registerAccount.switchText': 'Bereits ein Konto?', 'registerAccount.switchBtn': 'Anmelden', 'footer.questions': 'Fragen?', 'footer.imprint': 'Impressum',
+      'player.backLink': '← Zurück', 'home.subtitle': '{n} Turniere in ganz Europa, drei Formate – LoC 1000, 500 und 100.',
+      'home.badgeOpen': 'Anmeldung offen', 'home.badgeCompleted': 'Abgeschlossen',
+      'home.teamRegisteredOne': '{n} Team angemeldet', 'home.teamRegisteredMany': '{n} Teams angemeldet', 'home.seasonTag': 'SAISON {year} · {n} TURNIERE',
+      'division.men': 'Herren', 'division.women': 'Damen', 'division.suffix': ' Kategorie',
+      'schedule.scrollHint': '← Scrollen, um alle {n} Plätze zu sehen →', 'schedule.court': 'Platz {n}', 'schedule.noDays': 'Noch keine Tage eingerichtet.',
+      'schedule.label': 'Spielplan', 'schedule.viewLink': 'Spielplan ansehen',
+      'live.bracketLabel': 'Live-Turnierbaum', 'live.resultsLabel': 'Ergebnisse', 'live.formatLabel': 'Turnierformat'
+    },
+    es: {
+      'nav.tournaments': 'Torneos', 'nav.ranking': 'Clasificación', 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sesión', 'nav.register': 'Registrarse', 'nav.logout': 'Cerrar sesión',
+      'demoBanner.text': 'MODO DEMO: las inscripciones solo se guardan localmente en este navegador (sin backend real conectado)',
+      'landing.eyebrow': 'Temporada 2026', 'landing.headline': 'La élite europea del fútbol vóley. Un solo tour.',
+      'landing.subtitle': '17 paradas, tres formatos, cientos de equipos persiguiendo el título de la League of Champions. Crea tu cuenta y asegura tu lugar en la arena.',
+      'landing.registerBtn': 'Registrarse', 'landing.loginBtn': 'Iniciar sesión', 'landing.browseLink': 'Ver torneos →', 'landing.browseBtnLoggedIn': 'Ver torneos',
+      'home.headline': 'El tour de fútbol vóley más grande de Europa', 'home.tabUpcoming': 'Próximos torneos', 'home.tabPast': 'Torneos pasados',
+      'detail.backLink': '← Todos los torneos', 'detail.formatLabel': 'Formato', 'detail.feeLabel': 'Cuota de inscripción', 'detail.deadlineLabel': 'Fecha límite de inscripción', 'detail.divisionsLabel': 'Categorías',
+      'detail.registerNow': 'Inscribirse ahora', 'detail.alreadyRegisteredNote': 'Ya estás inscrito en este torneo.', 'detail.registeredTeams': 'Equipos inscritos',
+      'detail.noRegistrations': 'Aún no hay inscripciones – ¡sé el primer equipo!', 'detail.closedNote': 'La inscripción para este torneo está cerrada.',
+      'detail.resumeText': 'Tienes una inscripción pendiente – paga la cuota ahora para asegurar tu lugar.', 'detail.resumeBtn': 'Pagar ahora',
+      'detail.paidLabel': 'Confirmado', 'detail.pendingLabel': 'Pendiente',
+      'compselect.backLink': '← Volver al torneo', 'compselect.question': '¿En qué categoría te gustaría inscribirte?', 'compselect.teamReg': 'Inscripción de equipo (2v2)',
+      'register.backLink': '← Volver al torneo', 'register.heading': 'Inscripción de equipo', 'register.firstNameLabel': 'Nombre *', 'register.lastNameLabel': 'Apellido *',
+      'register.emailLabel': 'Correo electrónico *', 'register.phoneLabel': 'Teléfono *', 'register.partnerLabel': 'Compañero/a (2º jugador) *', 'register.partnerPlaceholder': 'Nombre y apellido',
+      'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Buscar club …',
+      'register.businessToggle': 'Necesito una factura con NIF/IVA (me registro como empresa)',
+      'register.companyNameLabel': 'Nombre de la empresa *', 'register.vatNumberLabel': 'Número de IVA *', 'register.vatNumberPlaceholder': 'p. ej. ATU12345678',
+      'register.consentLabel': 'Acepto el tratamiento de mis datos para la inscripción al torneo. *',
+      'register.submitBtn': 'Registrarse', 'register.tournamentLabel': 'Torneo', 'register.divisionLabel': 'Categoría', 'register.teamLabel': 'Equipo', 'register.feeLabel': 'Cuota de inscripción',
+      'register.payBtn': 'Pagar la cuota ahora', 'register.payLaterBtn': 'Pagaré más tarde',
+      'register.payNote': 'Pago seguro a través de Stripe. La inscripción solo se confirma oficialmente una vez recibido el pago.',
+      'register.pendingHeading': 'Inscripción provisional recibida', 'register.pendingText': 'Tu equipo está en la lista. Para asegurar tu lugar, paga la cuota ahora.',
+      'register.confirmedHeading': '¡Inscripción confirmada!', 'register.confirmedText': 'Tu equipo está confirmado para jugar. ¡Nos vemos en la cancha!', 'register.backToTournament': 'Volver al torneo',
+      'register.paymentPendingHeading': 'Pago aún pendiente', 'register.paymentPendingText': 'Todavía no pudimos confirmar el pago. Puedes intentarlo de nuevo desde la página del torneo.',
+      'login.heading': 'Iniciar sesión', 'login.demoNote': 'Modo demo: las cuentas solo se guardan en este navegador, no en un servicio de cuentas real.',
+      'login.emailLabel': 'Correo electrónico *', 'login.passwordLabel': 'Contraseña *', 'login.submitBtn': 'Iniciar sesión', 'login.switchText': '¿Aún no tienes una cuenta?', 'login.switchBtn': 'Registrarse',
+      'registerAccount.heading': 'Crear cuenta', 'registerAccount.demoNote': 'Modo demo: las cuentas solo se guardan en este navegador, no en un servicio de cuentas real.',
+      'registerAccount.firstNameLabel': 'Nombre *', 'registerAccount.lastNameLabel': 'Apellido *', 'registerAccount.emailLabel': 'Correo electrónico *', 'registerAccount.phoneLabel': 'Teléfono *',
+      'registerAccount.passwordLabel': 'Contraseña *', 'registerAccount.confirmPasswordLabel': 'Confirmar contraseña *',
+      'registerAccount.consentLabel': 'Acepto el tratamiento de mis datos para la creación de la cuenta. *', 'registerAccount.submitBtn': 'Crear cuenta',
+      'registerAccount.switchText': '¿Ya tienes una cuenta?', 'registerAccount.switchBtn': 'Iniciar sesión', 'footer.questions': '¿Preguntas?', 'footer.imprint': 'Aviso legal',
+      'player.backLink': '← Volver', 'home.subtitle': '{n} torneos en toda Europa, tres formatos – LoC 1000, 500 y 100.',
+      'home.badgeOpen': 'Inscripción abierta', 'home.badgeCompleted': 'Finalizado',
+      'home.teamRegisteredOne': '{n} equipo inscrito', 'home.teamRegisteredMany': '{n} equipos inscritos', 'home.seasonTag': 'TEMPORADA {year} · {n} TORNEOS',
+      'division.men': 'Masculino', 'division.women': 'Femenino', 'division.suffix': ' División',
+      'schedule.scrollHint': '← Desplázate para ver las {n} pistas →', 'schedule.court': 'Pista {n}', 'schedule.noDays': 'Aún no se han configurado días.',
+      'schedule.label': 'Calendario', 'schedule.viewLink': 'Ver calendario',
+      'live.bracketLabel': 'Cuadro en vivo', 'live.resultsLabel': 'Resultados', 'live.formatLabel': 'Formato del torneo'
+    },
+    pt: {
+      'nav.tournaments': 'Torneios', 'nav.ranking': 'Classificação', 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sessão', 'nav.register': 'Registar', 'nav.logout': 'Terminar sessão',
+      'demoBanner.text': 'MODO DEMO – as inscrições são guardadas apenas localmente neste navegador (sem backend real ligado)',
+      'landing.eyebrow': 'Época 2026', 'landing.headline': 'A elite europeia do futevólei. Um só circuito.',
+      'landing.subtitle': '17 etapas, três formatos, centenas de equipas em busca do título da League of Champions. Cria a tua conta e garante o teu lugar na areia.',
+      'landing.registerBtn': 'Registar', 'landing.loginBtn': 'Iniciar sessão', 'landing.browseLink': 'Ver torneios →', 'landing.browseBtnLoggedIn': 'Ver torneios',
+      'home.headline': 'O maior circuito de futevólei da Europa', 'home.tabUpcoming': 'Próximos torneios', 'home.tabPast': 'Torneios anteriores',
+      'detail.backLink': '← Todos os torneios', 'detail.formatLabel': 'Formato', 'detail.feeLabel': 'Taxa de inscrição', 'detail.deadlineLabel': 'Prazo de inscrição', 'detail.divisionsLabel': 'Categorias',
+      'detail.registerNow': 'Inscrever agora', 'detail.alreadyRegisteredNote': 'Já estás inscrito neste torneio.', 'detail.registeredTeams': 'Equipas inscritas',
+      'detail.noRegistrations': 'Ainda sem inscrições – sê a primeira equipa!', 'detail.closedNote': 'As inscrições para este torneio estão encerradas.',
+      'detail.resumeText': 'Tens uma inscrição pendente – paga a taxa agora para garantires o teu lugar.', 'detail.resumeBtn': 'Pagar agora',
+      'detail.paidLabel': 'Confirmado', 'detail.pendingLabel': 'Pendente',
+      'compselect.backLink': '← Voltar ao torneio', 'compselect.question': 'Em que categoria gostarias de te inscrever?', 'compselect.teamReg': 'Inscrição de equipa (2x2)',
+      'register.backLink': '← Voltar ao torneio', 'register.heading': 'Inscrição de Equipa', 'register.firstNameLabel': 'Nome *', 'register.lastNameLabel': 'Apelido *',
+      'register.emailLabel': 'E-mail *', 'register.phoneLabel': 'Telefone *', 'register.partnerLabel': 'Parceiro/a (2º jogador) *', 'register.partnerPlaceholder': 'Nome e apelido',
+      'register.clubLabel': 'Clube *', 'register.clubPlaceholder': 'Procurar clube …',
+      'register.businessToggle': 'Preciso de fatura com NIF/IVA (registo como empresa)',
+      'register.companyNameLabel': 'Nome da empresa *', 'register.vatNumberLabel': 'Número de IVA *', 'register.vatNumberPlaceholder': 'ex.: ATU12345678',
+      'register.consentLabel': 'Concordo com o tratamento dos meus dados para a inscrição no torneio. *',
+      'register.submitBtn': 'Registar', 'register.tournamentLabel': 'Torneio', 'register.divisionLabel': 'Categoria', 'register.teamLabel': 'Equipa', 'register.feeLabel': 'Taxa de inscrição',
+      'register.payBtn': 'Pagar taxa de inscrição agora', 'register.payLaterBtn': 'Pagarei mais tarde',
+      'register.payNote': 'Pagamento seguro através da Stripe. A inscrição só é oficialmente confirmada após a receção do pagamento.',
+      'register.pendingHeading': 'Inscrição Provisória Recebida', 'register.pendingText': 'A tua equipa está na lista. Para garantires o teu lugar, paga a taxa agora.',
+      'register.confirmedHeading': 'Inscrição Confirmada!', 'register.confirmedText': 'A tua equipa está confirmada para jogar. Vemo-nos na areia!', 'register.backToTournament': 'Voltar ao Torneio',
+      'register.paymentPendingHeading': 'Pagamento Ainda Pendente', 'register.paymentPendingText': 'Ainda não conseguimos confirmar o pagamento. Podes tentar novamente a partir da página do torneio.',
+      'login.heading': 'Iniciar Sessão', 'login.demoNote': 'Modo demo — as contas são guardadas apenas neste navegador, não num serviço de contas real.',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Palavra-passe *', 'login.submitBtn': 'Iniciar Sessão', 'login.switchText': 'Ainda não tens conta?', 'login.switchBtn': 'Registar',
+      'registerAccount.heading': 'Criar Conta', 'registerAccount.demoNote': 'Modo demo — as contas são guardadas apenas neste navegador, não num serviço de contas real.',
+      'registerAccount.firstNameLabel': 'Nome *', 'registerAccount.lastNameLabel': 'Apelido *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefone *',
+      'registerAccount.passwordLabel': 'Palavra-passe *', 'registerAccount.confirmPasswordLabel': 'Confirmar Palavra-passe *',
+      'registerAccount.consentLabel': 'Concordo com o tratamento dos meus dados para a criação da conta. *', 'registerAccount.submitBtn': 'Criar Conta',
+      'registerAccount.switchText': 'Já tens conta?', 'registerAccount.switchBtn': 'Iniciar Sessão', 'footer.questions': 'Perguntas?', 'footer.imprint': 'Aviso legal',
+      'player.backLink': '← Voltar', 'home.subtitle': '{n} torneios em toda a Europa, três formatos – LoC 1000, 500 e 100.',
+      'home.badgeOpen': 'Inscrições abertas', 'home.badgeCompleted': 'Concluído',
+      'home.teamRegisteredOne': '{n} equipa inscrita', 'home.teamRegisteredMany': '{n} equipas inscritas', 'home.seasonTag': 'ÉPOCA {year} · {n} TORNEIOS',
+      'division.men': 'Masculino', 'division.women': 'Feminino', 'division.suffix': ' Divisão',
+      'schedule.scrollHint': '← Desliza para ver os {n} campos →', 'schedule.court': 'Campo {n}', 'schedule.noDays': 'Ainda não há dias configurados.',
+      'schedule.label': 'Calendário', 'schedule.viewLink': 'Ver calendário',
+      'live.bracketLabel': 'Quadro ao vivo', 'live.resultsLabel': 'Resultados', 'live.formatLabel': 'Formato do torneio'
+    },
+    da: {
+      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Log ind', 'nav.register': 'Tilmeld', 'nav.logout': 'Log ud',
+      'demoBanner.text': 'DEMOTILSTAND – tilmeldinger gemmes kun lokalt i denne browser (ingen rigtig backend forbundet)',
+      'landing.eyebrow': 'Sæson 2026', 'landing.headline': 'Europas footvolley-elite. Én tour.',
+      'landing.subtitle': '17 stop, tre formater, hundredvis af hold, der jagter League of Champions-titlen. Opret din konto, og sikr din plads i sandet.',
+      'landing.registerBtn': 'Tilmeld', 'landing.loginBtn': 'Log ind', 'landing.browseLink': 'Se turneringer →', 'landing.browseBtnLoggedIn': 'Se turneringer',
+      'home.headline': 'Europas største footvolley-tour', 'home.tabUpcoming': 'Kommende turneringer', 'home.tabPast': 'Tidligere turneringer',
+      'detail.backLink': '← Alle turneringer', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Deltagergebyr', 'detail.deadlineLabel': 'Tilmeldingsfrist', 'detail.divisionsLabel': 'Kategorier',
+      'detail.registerNow': 'Tilmeld nu', 'detail.alreadyRegisteredNote': 'Du er allerede tilmeldt denne turnering.', 'detail.registeredTeams': 'Tilmeldte hold',
+      'detail.noRegistrations': 'Endnu ingen tilmeldinger – vær det første hold!', 'detail.closedNote': 'Tilmelding til denne turnering er lukket.',
+      'detail.resumeText': 'Du har en afventende tilmelding – betal deltagergebyret nu for at sikre din plads.', 'detail.resumeBtn': 'Betal nu',
+      'detail.paidLabel': 'Bekræftet', 'detail.pendingLabel': 'Afventer',
+      'compselect.backLink': '← Tilbage til turneringen', 'compselect.question': 'Hvilken kategori vil du gerne tilmelde dig?', 'compselect.teamReg': 'Holdtilmelding (2v2)',
+      'register.backLink': '← Tilbage til turneringen', 'register.heading': 'Holdtilmelding', 'register.firstNameLabel': 'Fornavn *', 'register.lastNameLabel': 'Efternavn *',
+      'register.emailLabel': 'E-mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Makker (2. spiller) *', 'register.partnerPlaceholder': 'For- og efternavn',
+      'register.clubLabel': 'Klub *', 'register.clubPlaceholder': 'Søg klub …',
+      'register.businessToggle': 'Jeg har brug for en faktura med moms-nr. (tilmelding som virksomhed)',
+      'register.companyNameLabel': 'Firmanavn *', 'register.vatNumberLabel': 'Moms-nr. *', 'register.vatNumberPlaceholder': 'f.eks. ATU12345678',
+      'register.consentLabel': 'Jeg accepterer behandlingen af mine data i forbindelse med turneringstilmeldingen. *',
+      'register.submitBtn': 'Tilmeld', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Hold', 'register.feeLabel': 'Deltagergebyr',
+      'register.payBtn': 'Betal deltagergebyr nu', 'register.payLaterBtn': 'Jeg betaler senere',
+      'register.payNote': 'Sikker betaling via Stripe. Tilmeldingen er først officielt bekræftet, når betalingen er modtaget.',
+      'register.pendingHeading': 'Foreløbig tilmelding modtaget', 'register.pendingText': 'Dit hold er på listen. Betal deltagergebyret nu for at sikre din plads.',
+      'register.confirmedHeading': 'Tilmelding bekræftet!', 'register.confirmedText': 'Dit hold er bekræftet til at spille. Vi ses på banen!', 'register.backToTournament': 'Tilbage til turneringen',
+      'register.paymentPendingHeading': 'Betaling stadig afventende', 'register.paymentPendingText': 'Vi kunne endnu ikke bekræfte betalingen. Du kan prøve igen fra turneringssiden.',
+      'login.heading': 'Log ind', 'login.demoNote': 'Demotilstand — konti gemmes kun i denne browser, ikke i en rigtig kontotjeneste.',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Adgangskode *', 'login.submitBtn': 'Log ind', 'login.switchText': 'Har du ikke en konto endnu?', 'login.switchBtn': 'Tilmeld',
+      'registerAccount.heading': 'Opret konto', 'registerAccount.demoNote': 'Demotilstand — konti gemmes kun i denne browser, ikke i en rigtig kontotjeneste.',
+      'registerAccount.firstNameLabel': 'Fornavn *', 'registerAccount.lastNameLabel': 'Efternavn *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Adgangskode *', 'registerAccount.confirmPasswordLabel': 'Bekræft adgangskode *',
+      'registerAccount.consentLabel': 'Jeg accepterer behandlingen af mine data i forbindelse med oprettelse af konto. *', 'registerAccount.submitBtn': 'Opret konto',
+      'registerAccount.switchText': 'Har du allerede en konto?', 'registerAccount.switchBtn': 'Log ind', 'footer.questions': 'Spørgsmål?', 'footer.imprint': 'Impressum',
+      'player.backLink': '← Tilbage', 'home.subtitle': '{n} turneringer i hele Europa, tre formater – LoC 1000, 500 og 100.',
+      'home.badgeOpen': 'Tilmelding åben', 'home.badgeCompleted': 'Afsluttet',
+      'home.teamRegisteredOne': '{n} hold tilmeldt', 'home.teamRegisteredMany': '{n} hold tilmeldt', 'home.seasonTag': 'SÆSON {year} · {n} TURNERINGER',
+      'division.men': 'Herrer', 'division.women': 'Damer', 'division.suffix': ' Division',
+      'schedule.scrollHint': '← Scroll for at se alle {n} baner →', 'schedule.court': 'Bane {n}', 'schedule.noDays': 'Ingen dage oprettet endnu.',
+      'schedule.label': 'Tidsplan', 'schedule.viewLink': 'Se tidsplan',
+      'live.bracketLabel': 'Live-skema', 'live.resultsLabel': 'Resultater', 'live.formatLabel': 'Turneringsformat'
+    },
+    sv: {
+      'nav.tournaments': 'Turneringar', 'nav.ranking': 'Rankning', 'nav.imprint': 'Impressum', 'nav.login': 'Logga in', 'nav.register': 'Registrera', 'nav.logout': 'Logga ut',
+      'demoBanner.text': 'DEMOLÄGE – anmälningar sparas endast lokalt i den här webbläsaren (ingen riktig backend ansluten)',
+      'landing.eyebrow': 'Säsong 2026', 'landing.headline': 'Europas footvolley-elit. En tour.',
+      'landing.subtitle': '17 stopp, tre format, hundratals lag som jagar League of Champions-titeln. Skapa ditt konto och säkra din plats i sanden.',
+      'landing.registerBtn': 'Registrera', 'landing.loginBtn': 'Logga in', 'landing.browseLink': 'Se turneringar →', 'landing.browseBtnLoggedIn': 'Se turneringar',
+      'home.headline': 'Europas största footvolley-tour', 'home.tabUpcoming': 'Kommande turneringar', 'home.tabPast': 'Tidigare turneringar',
+      'detail.backLink': '← Alla turneringar', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Anmälningsavgift', 'detail.deadlineLabel': 'Anmälningsfrist', 'detail.divisionsLabel': 'Kategorier',
+      'detail.registerNow': 'Anmäl dig nu', 'detail.alreadyRegisteredNote': 'Du är redan anmäld till den här turneringen.', 'detail.registeredTeams': 'Anmälda lag',
+      'detail.noRegistrations': 'Inga anmälningar än – bli det första laget!', 'detail.closedNote': 'Anmälan till den här turneringen är stängd.',
+      'detail.resumeText': 'Du har en väntande anmälan – betala anmälningsavgiften nu för att säkra din plats.', 'detail.resumeBtn': 'Betala nu',
+      'detail.paidLabel': 'Bekräftad', 'detail.pendingLabel': 'Väntande',
+      'compselect.backLink': '← Tillbaka till turneringen', 'compselect.question': 'Vilken kategori vill du anmäla dig till?', 'compselect.teamReg': 'Laganmälan (2v2)',
+      'register.backLink': '← Tillbaka till turneringen', 'register.heading': 'Laganmälan', 'register.firstNameLabel': 'Förnamn *', 'register.lastNameLabel': 'Efternamn *',
+      'register.emailLabel': 'E-post *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (spelare 2) *', 'register.partnerPlaceholder': 'För- och efternamn',
+      'register.clubLabel': 'Klubb *', 'register.clubPlaceholder': 'Sök klubb …',
+      'register.businessToggle': 'Jag behöver en faktura med momsnummer (anmälan som företag)',
+      'register.companyNameLabel': 'Företagsnamn *', 'register.vatNumberLabel': 'Momsnummer *', 'register.vatNumberPlaceholder': 't.ex. ATU12345678',
+      'register.consentLabel': 'Jag godkänner behandlingen av mina uppgifter för turneringsanmälan. *',
+      'register.submitBtn': 'Registrera', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Lag', 'register.feeLabel': 'Anmälningsavgift',
+      'register.payBtn': 'Betala anmälningsavgift nu', 'register.payLaterBtn': 'Jag betalar senare',
+      'register.payNote': 'Säker betalning via Stripe. Anmälan är officiellt bekräftad först när betalningen har mottagits.',
+      'register.pendingHeading': 'Preliminär anmälan mottagen', 'register.pendingText': 'Ditt lag står på listan. Betala anmälningsavgiften nu för att säkra din plats.',
+      'register.confirmedHeading': 'Anmälan bekräftad!', 'register.confirmedText': 'Ditt lag är bekräftat att spela. Vi ses på planen!', 'register.backToTournament': 'Tillbaka till turneringen',
+      'register.paymentPendingHeading': 'Betalning fortfarande väntande', 'register.paymentPendingText': 'Vi kunde inte bekräfta betalningen än. Du kan försöka igen från turneringssidan.',
+      'login.heading': 'Logga in', 'login.demoNote': 'Demoläge — konton sparas endast i den här webbläsaren, inte i en riktig kontotjänst.',
+      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Lösenord *', 'login.submitBtn': 'Logga in', 'login.switchText': 'Har du inget konto än?', 'login.switchBtn': 'Registrera',
+      'registerAccount.heading': 'Skapa konto', 'registerAccount.demoNote': 'Demoläge — konton sparas endast i den här webbläsaren, inte i en riktig kontotjänst.',
+      'registerAccount.firstNameLabel': 'Förnamn *', 'registerAccount.lastNameLabel': 'Efternamn *', 'registerAccount.emailLabel': 'E-post *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Lösenord *', 'registerAccount.confirmPasswordLabel': 'Bekräfta lösenord *',
+      'registerAccount.consentLabel': 'Jag godkänner behandlingen av mina uppgifter för kontoskapande. *', 'registerAccount.submitBtn': 'Skapa konto',
+      'registerAccount.switchText': 'Har du redan ett konto?', 'registerAccount.switchBtn': 'Logga in', 'footer.questions': 'Frågor?', 'footer.imprint': 'Impressum',
+      'player.backLink': '← Tillbaka', 'home.subtitle': '{n} turneringar över hela Europa, tre format – LoC 1000, 500 och 100.',
+      'home.badgeOpen': 'Anmälan öppen', 'home.badgeCompleted': 'Avslutad',
+      'home.teamRegisteredOne': '{n} lag anmält', 'home.teamRegisteredMany': '{n} lag anmälda', 'home.seasonTag': 'SÄSONG {year} · {n} TURNERINGAR',
+      'division.men': 'Herrar', 'division.women': 'Damer', 'division.suffix': ' Division',
+      'schedule.scrollHint': '← Skrolla för att se alla {n} banor →', 'schedule.court': 'Bana {n}', 'schedule.noDays': 'Inga dagar inställda ännu.',
+      'schedule.label': 'Schema', 'schedule.viewLink': 'Visa schema',
+      'live.bracketLabel': 'Live-schema', 'live.resultsLabel': 'Resultat', 'live.formatLabel': 'Turneringsformat'
+    },
+    fi: {
+      'nav.tournaments': 'Turnaukset', 'nav.ranking': 'Ranking', 'nav.imprint': 'Tietoa sivustosta', 'nav.login': 'Kirjaudu sisään', 'nav.register': 'Rekisteröidy', 'nav.logout': 'Kirjaudu ulos',
+      'demoBanner.text': 'DEMOTILA – ilmoittautumiset tallennetaan vain paikallisesti tähän selaimeen (ei oikeaa taustajärjestelmää yhdistettynä)',
+      'landing.eyebrow': 'Kausi 2026', 'landing.headline': 'Euroopan footvolley-eliitti. Yksi kiertue.',
+      'landing.subtitle': '17 pysähdystä, kolme formaattia, satoja joukkueita tavoittelemassa League of Champions -titteliä. Luo tili ja varmista paikkasi hiekalla.',
+      'landing.registerBtn': 'Rekisteröidy', 'landing.loginBtn': 'Kirjaudu sisään', 'landing.browseLink': 'Selaa turnauksia →', 'landing.browseBtnLoggedIn': 'Selaa turnauksia',
+      'home.headline': 'Euroopan suurin footvolley-kiertue', 'home.tabUpcoming': 'Tulevat turnaukset', 'home.tabPast': 'Menneet turnaukset',
+      'detail.backLink': '← Kaikki turnaukset', 'detail.formatLabel': 'Formaatti', 'detail.feeLabel': 'Osallistumismaksu', 'detail.deadlineLabel': 'Ilmoittautumisen määräaika', 'detail.divisionsLabel': 'Sarjat',
+      'detail.registerNow': 'Ilmoittaudu nyt', 'detail.alreadyRegisteredNote': 'Olet jo ilmoittautunut tähän turnaukseen.', 'detail.registeredTeams': 'Ilmoittautuneet joukkueet',
+      'detail.noRegistrations': 'Ei vielä ilmoittautumisia – ole ensimmäinen joukkue!', 'detail.closedNote': 'Ilmoittautuminen tähän turnaukseen on suljettu.',
+      'detail.resumeText': 'Sinulla on kesken oleva ilmoittautuminen – maksa osallistumismaksu nyt varmistaaksesi paikkasi.', 'detail.resumeBtn': 'Maksa nyt',
+      'detail.paidLabel': 'Vahvistettu', 'detail.pendingLabel': 'Odottaa',
+      'compselect.backLink': '← Takaisin turnaukseen', 'compselect.question': 'Mihin sarjaan haluaisit ilmoittautua?', 'compselect.teamReg': 'Joukkueilmoittautuminen (2v2)',
+      'register.backLink': '← Takaisin turnaukseen', 'register.heading': 'Joukkueen ilmoittautuminen', 'register.firstNameLabel': 'Etunimi *', 'register.lastNameLabel': 'Sukunimi *',
+      'register.emailLabel': 'Sähköposti *', 'register.phoneLabel': 'Puhelin *', 'register.partnerLabel': 'Pari (2. pelaaja) *', 'register.partnerPlaceholder': 'Etu- ja sukunimi',
+      'register.clubLabel': 'Seura *', 'register.clubPlaceholder': 'Hae seuraa …',
+      'register.businessToggle': 'Tarvitsen laskun ALV-numerolla (ilmoittautuminen yrityksenä)',
+      'register.companyNameLabel': 'Yrityksen nimi *', 'register.vatNumberLabel': 'ALV-numero *', 'register.vatNumberPlaceholder': 'esim. ATU12345678',
+      'register.consentLabel': 'Hyväksyn tietojeni käsittelyn turnausilmoittautumista varten. *',
+      'register.submitBtn': 'Rekisteröidy', 'register.tournamentLabel': 'Turnaus', 'register.divisionLabel': 'Sarja', 'register.teamLabel': 'Joukkue', 'register.feeLabel': 'Osallistumismaksu',
+      'register.payBtn': 'Maksa osallistumismaksu nyt', 'register.payLaterBtn': 'Maksan myöhemmin',
+      'register.payNote': 'Turvallinen maksaminen Stripen kautta. Ilmoittautuminen vahvistetaan virallisesti vasta maksun saavuttua.',
+      'register.pendingHeading': 'Alustava ilmoittautuminen vastaanotettu', 'register.pendingText': 'Joukkueesi on listalla. Varmista paikkasi maksamalla osallistumismaksu nyt.',
+      'register.confirmedHeading': 'Ilmoittautuminen vahvistettu!', 'register.confirmedText': 'Joukkueesi on vahvistettu pelaamaan. Nähdään kentällä!', 'register.backToTournament': 'Takaisin turnaukseen',
+      'register.paymentPendingHeading': 'Maksu vielä kesken', 'register.paymentPendingText': 'Emme voineet vielä vahvistaa maksua. Voit yrittää uudelleen turnaussivulta.',
+      'login.heading': 'Kirjaudu sisään', 'login.demoNote': 'Demotila — tilit tallennetaan vain tähän selaimeen, ei oikeaan tilipalveluun.',
+      'login.emailLabel': 'Sähköposti *', 'login.passwordLabel': 'Salasana *', 'login.submitBtn': 'Kirjaudu sisään', 'login.switchText': 'Eikö sinulla ole vielä tiliä?', 'login.switchBtn': 'Rekisteröidy',
+      'registerAccount.heading': 'Luo tili', 'registerAccount.demoNote': 'Demotila — tilit tallennetaan vain tähän selaimeen, ei oikeaan tilipalveluun.',
+      'registerAccount.firstNameLabel': 'Etunimi *', 'registerAccount.lastNameLabel': 'Sukunimi *', 'registerAccount.emailLabel': 'Sähköposti *', 'registerAccount.phoneLabel': 'Puhelin *',
+      'registerAccount.passwordLabel': 'Salasana *', 'registerAccount.confirmPasswordLabel': 'Vahvista salasana *',
+      'registerAccount.consentLabel': 'Hyväksyn tietojeni käsittelyn tilin luomista varten. *', 'registerAccount.submitBtn': 'Luo tili',
+      'registerAccount.switchText': 'Onko sinulla jo tili?', 'registerAccount.switchBtn': 'Kirjaudu sisään', 'footer.questions': 'Kysyttävää?', 'footer.imprint': 'Tietoa sivustosta',
+      'player.backLink': '← Takaisin', 'home.subtitle': '{n} turnausta ympäri Eurooppaa, kolme formaattia – LoC 1000, 500 ja 100.',
+      'home.badgeOpen': 'Ilmoittautuminen avoinna', 'home.badgeCompleted': 'Päättynyt',
+      'home.teamRegisteredOne': '{n} joukkue ilmoittautunut', 'home.teamRegisteredMany': '{n} joukkuetta ilmoittautunut', 'home.seasonTag': 'KAUSI {year} · {n} TURNAUSTA',
+      'division.men': 'Miehet', 'division.women': 'Naiset', 'division.suffix': ' Sarja',
+      'schedule.scrollHint': '← Vieritä nähdäksesi kaikki {n} kenttää →', 'schedule.court': 'Kenttä {n}', 'schedule.noDays': 'Päiviä ei ole vielä määritetty.',
+      'schedule.label': 'Aikataulu', 'schedule.viewLink': 'Näytä aikataulu',
+      'live.bracketLabel': 'Live-kaavio', 'live.resultsLabel': 'Tulokset', 'live.formatLabel': 'Turnausformaatti'
+    },
+    it: {
+      'nav.tournaments': 'Tornei', 'nav.ranking': 'Classifica', 'nav.imprint': 'Note legali', 'nav.login': 'Accedi', 'nav.register': 'Registrati', 'nav.logout': 'Esci',
+      'demoBanner.text': 'MODALITÀ DEMO – le iscrizioni vengono salvate solo localmente in questo browser (nessun backend reale collegato)',
+      'landing.eyebrow': 'Stagione 2026', 'landing.headline': "L'élite europea del footvolley. Un solo tour.",
+      'landing.subtitle': "17 tappe, tre formati, centinaia di squadre a caccia del titolo League of Champions. Crea il tuo account e assicurati il tuo posto sulla sabbia.",
+      'landing.registerBtn': 'Registrati', 'landing.loginBtn': 'Accedi', 'landing.browseLink': 'Sfoglia i tornei →', 'landing.browseBtnLoggedIn': 'Sfoglia i tornei',
+      'home.headline': "Il più grande tour di footvolley d'Europa", 'home.tabUpcoming': 'Prossimi tornei', 'home.tabPast': 'Tornei passati',
+      'detail.backLink': '← Tutti i tornei', 'detail.formatLabel': 'Formato', 'detail.feeLabel': "Quota d'iscrizione", 'detail.deadlineLabel': 'Scadenza iscrizione', 'detail.divisionsLabel': 'Categorie',
+      'detail.registerNow': 'Iscriviti ora', 'detail.alreadyRegisteredNote': 'Sei già iscritto a questo torneo.', 'detail.registeredTeams': 'Squadre iscritte',
+      'detail.noRegistrations': 'Ancora nessuna iscrizione – sii la prima squadra!', 'detail.closedNote': 'Le iscrizioni a questo torneo sono chiuse.',
+      'detail.resumeText': "Hai un'iscrizione in sospeso – paga subito la quota per assicurarti il posto.", 'detail.resumeBtn': 'Paga ora',
+      'detail.paidLabel': 'Confermato', 'detail.pendingLabel': 'In sospeso',
+      'compselect.backLink': '← Torna al torneo', 'compselect.question': 'A quale categoria vorresti iscriverti?', 'compselect.teamReg': 'Iscrizione squadra (2v2)',
+      'register.backLink': '← Torna al torneo', 'register.heading': 'Iscrizione Squadra', 'register.firstNameLabel': 'Nome *', 'register.lastNameLabel': 'Cognome *',
+      'register.emailLabel': 'Email *', 'register.phoneLabel': 'Telefono *', 'register.partnerLabel': 'Partner (2° giocatore) *', 'register.partnerPlaceholder': 'Nome e cognome',
+      'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Cerca club …',
+      'register.businessToggle': 'Ho bisogno di una fattura con Partita IVA (registrazione come azienda)',
+      'register.companyNameLabel': 'Ragione sociale *', 'register.vatNumberLabel': 'Partita IVA *', 'register.vatNumberPlaceholder': 'es. ATU12345678',
+      'register.consentLabel': "Acconsento al trattamento dei miei dati per l'iscrizione al torneo. *",
+      'register.submitBtn': 'Registrati', 'register.tournamentLabel': 'Torneo', 'register.divisionLabel': 'Categoria', 'register.teamLabel': 'Squadra', 'register.feeLabel': "Quota d'iscrizione",
+      'register.payBtn': "Paga subito la quota d'iscrizione", 'register.payLaterBtn': 'Pagherò più tardi',
+      'register.payNote': "Pagamento sicuro tramite Stripe. L'iscrizione è confermata ufficialmente solo dopo la ricezione del pagamento.",
+      'register.pendingHeading': 'Iscrizione Provvisoria Ricevuta', 'register.pendingText': 'La tua squadra è in lista. Per assicurarti il posto, paga subito la quota.',
+      'register.confirmedHeading': 'Iscrizione Confermata!', 'register.confirmedText': 'La tua squadra è confermata per giocare. Ci vediamo in campo!', 'register.backToTournament': 'Torna al Torneo',
+      'register.paymentPendingHeading': 'Pagamento Ancora in Sospeso', 'register.paymentPendingText': 'Non siamo ancora riusciti a confermare il pagamento. Puoi riprovare dalla pagina del torneo.',
+      'login.heading': 'Accedi', 'login.demoNote': 'Modalità demo — gli account vengono salvati solo in questo browser, non in un vero servizio account.',
+      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Password *', 'login.submitBtn': 'Accedi', 'login.switchText': 'Non hai ancora un account?', 'login.switchBtn': 'Registrati',
+      'registerAccount.heading': 'Crea Account', 'registerAccount.demoNote': 'Modalità demo — gli account vengono salvati solo in questo browser, non in un vero servizio account.',
+      'registerAccount.firstNameLabel': 'Nome *', 'registerAccount.lastNameLabel': 'Cognome *', 'registerAccount.emailLabel': 'Email *', 'registerAccount.phoneLabel': 'Telefono *',
+      'registerAccount.passwordLabel': 'Password *', 'registerAccount.confirmPasswordLabel': 'Conferma Password *',
+      'registerAccount.consentLabel': "Acconsento al trattamento dei miei dati per la creazione dell'account. *", 'registerAccount.submitBtn': 'Crea Account',
+      'registerAccount.switchText': 'Hai già un account?', 'registerAccount.switchBtn': 'Accedi', 'footer.questions': 'Domande?', 'footer.imprint': 'Note legali',
+      'player.backLink': '← Indietro', 'home.subtitle': '{n} tornei in tutta Europa, tre formati – LoC 1000, 500 e 100.',
+      'home.badgeOpen': 'Iscrizioni aperte', 'home.badgeCompleted': 'Concluso',
+      'home.teamRegisteredOne': '{n} squadra iscritta', 'home.teamRegisteredMany': '{n} squadre iscritte', 'home.seasonTag': 'STAGIONE {year} · {n} TORNEI',
+      'division.men': 'Maschile', 'division.women': 'Femminile', 'division.suffix': ' Divisione',
+      'schedule.scrollHint': '← Scorri per vedere tutti i {n} campi →', 'schedule.court': 'Campo {n}', 'schedule.noDays': 'Nessun giorno ancora impostato.',
+      'schedule.label': 'Programma', 'schedule.viewLink': 'Vedi programma',
+      'live.bracketLabel': 'Tabellone live', 'live.resultsLabel': 'Risultati', 'live.formatLabel': 'Formato del torneo'
+    },
+    fr: {
+      'nav.tournaments': 'Tournois', 'nav.ranking': 'Classement', 'nav.imprint': 'Mentions légales', 'nav.login': 'Se connecter', 'nav.register': "S'inscrire", 'nav.logout': 'Se déconnecter',
+      'demoBanner.text': 'MODE DÉMO – les inscriptions ne sont enregistrées que localement dans ce navigateur (aucun backend réel connecté)',
+      'landing.eyebrow': 'Saison 2026', 'landing.headline': "L'élite européenne du footvolley. Un seul tour.",
+      'landing.subtitle': "17 étapes, trois formats, des centaines d'équipes en quête du titre de la League of Champions. Créez votre compte et réservez votre place sur le sable.",
+      'landing.registerBtn': "S'inscrire", 'landing.loginBtn': 'Se connecter', 'landing.browseLink': 'Voir les tournois →', 'landing.browseBtnLoggedIn': 'Voir les tournois',
+      'home.headline': 'Le plus grand tour de footvolley d’Europe', 'home.tabUpcoming': 'Tournois à venir', 'home.tabPast': 'Tournois passés',
+      'detail.backLink': '← Tous les tournois', 'detail.formatLabel': 'Format', 'detail.feeLabel': "Frais d'inscription", 'detail.deadlineLabel': "Date limite d'inscription", 'detail.divisionsLabel': 'Catégories',
+      'detail.registerNow': "S'inscrire maintenant", 'detail.alreadyRegisteredNote': 'Vous êtes déjà inscrit(e) à ce tournoi.', 'detail.registeredTeams': 'Équipes inscrites',
+      'detail.noRegistrations': 'Aucune inscription pour le moment – soyez la première équipe !', 'detail.closedNote': 'Les inscriptions à ce tournoi sont closes.',
+      'detail.resumeText': "Vous avez une inscription en attente – payez les frais d'inscription maintenant pour garantir votre place.", 'detail.resumeBtn': 'Payer maintenant',
+      'detail.paidLabel': 'Confirmé', 'detail.pendingLabel': 'En attente',
+      'compselect.backLink': '← Retour au tournoi', 'compselect.question': 'Pour quelle catégorie souhaitez-vous vous inscrire ?', 'compselect.teamReg': "Inscription d'équipe (2v2)",
+      'register.backLink': '← Retour au tournoi', 'register.heading': "Inscription d'équipe", 'register.firstNameLabel': 'Prénom *', 'register.lastNameLabel': 'Nom *',
+      'register.emailLabel': 'E-mail *', 'register.phoneLabel': 'Téléphone *', 'register.partnerLabel': 'Partenaire (2ᵉ joueur) *', 'register.partnerPlaceholder': 'Prénom et nom',
+      'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Rechercher un club …',
+      'register.businessToggle': "J'ai besoin d'une facture avec numéro de TVA (inscription en tant qu'entreprise)",
+      'register.companyNameLabel': "Nom de l'entreprise *", 'register.vatNumberLabel': 'Numéro de TVA *', 'register.vatNumberPlaceholder': 'ex. ATU12345678',
+      'register.consentLabel': "J'accepte le traitement de mes données pour l'inscription au tournoi. *",
+      'register.submitBtn': "S'inscrire", 'register.tournamentLabel': 'Tournoi', 'register.divisionLabel': 'Catégorie', 'register.teamLabel': 'Équipe', 'register.feeLabel': "Frais d'inscription",
+      'register.payBtn': 'Payer les frais d’inscription maintenant', 'register.payLaterBtn': 'Je paierai plus tard',
+      'register.payNote': "Paiement sécurisé via Stripe. L'inscription n'est officiellement confirmée qu'une fois le paiement reçu.",
+      'register.pendingHeading': 'Inscription Provisoire Reçue', 'register.pendingText': 'Votre équipe est sur la liste. Pour garantir votre place, payez les frais d’inscription maintenant.',
+      'register.confirmedHeading': 'Inscription Confirmée !', 'register.confirmedText': 'Votre équipe est confirmée pour jouer. Rendez-vous sur le terrain !', 'register.backToTournament': 'Retour au Tournoi',
+      'register.paymentPendingHeading': 'Paiement Toujours en Attente', 'register.paymentPendingText': "Nous n'avons pas encore pu confirmer le paiement. Vous pouvez réessayer depuis la page du tournoi.",
+      'login.heading': 'Se Connecter', 'login.demoNote': 'Mode démo — les comptes ne sont enregistrés que dans ce navigateur, pas dans un vrai service de comptes.',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Mot de passe *', 'login.submitBtn': 'Se Connecter', 'login.switchText': "Vous n'avez pas encore de compte ?", 'login.switchBtn': "S'inscrire",
+      'registerAccount.heading': 'Créer un Compte', 'registerAccount.demoNote': 'Mode démo — les comptes ne sont enregistrés que dans ce navigateur, pas dans un vrai service de comptes.',
+      'registerAccount.firstNameLabel': 'Prénom *', 'registerAccount.lastNameLabel': 'Nom *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Téléphone *',
+      'registerAccount.passwordLabel': 'Mot de passe *', 'registerAccount.confirmPasswordLabel': 'Confirmer le Mot de passe *',
+      'registerAccount.consentLabel': "J'accepte le traitement de mes données pour la création du compte. *", 'registerAccount.submitBtn': 'Créer un Compte',
+      'registerAccount.switchText': 'Vous avez déjà un compte ?', 'registerAccount.switchBtn': 'Se Connecter', 'footer.questions': 'Des questions ?', 'footer.imprint': 'Mentions légales',
+      'player.backLink': '← Retour', 'home.subtitle': "{n} tournois à travers l'Europe, trois formats – LoC 1000, 500 et 100.",
+      'home.badgeOpen': 'Inscriptions ouvertes', 'home.badgeCompleted': 'Terminé',
+      'home.teamRegisteredOne': '{n} équipe inscrite', 'home.teamRegisteredMany': '{n} équipes inscrites', 'home.seasonTag': 'SAISON {year} · {n} TOURNOIS',
+      'division.men': 'Hommes', 'division.women': 'Femmes', 'division.suffix': ' Division',
+      'schedule.scrollHint': '← Faites défiler pour voir les {n} terrains →', 'schedule.court': 'Terrain {n}', 'schedule.noDays': 'Aucun jour encore configuré.',
+      'schedule.label': 'Programme', 'schedule.viewLink': 'Voir le programme',
+      'live.bracketLabel': 'Tableau en direct', 'live.resultsLabel': 'Résultats', 'live.formatLabel': 'Format du tournoi'
+    },
+    hr: {
+      'nav.tournaments': 'Turniri', 'nav.ranking': 'Ljestvica', 'nav.imprint': 'Impresum', 'nav.login': 'Prijava', 'nav.register': 'Registracija', 'nav.logout': 'Odjava',
+      'demoBanner.text': 'DEMO NAČIN – prijave se pohranjuju samo lokalno u ovom pregledniku (nema stvarnog povezanog backenda)',
+      'landing.eyebrow': 'Sezona 2026.', 'landing.headline': 'Europska elita footvolleyja. Jedna turneja.',
+      'landing.subtitle': '17 postaja, tri formata, stotine timova u potrazi za titulom League of Champions. Otvorite svoj račun i osigurajte svoje mjesto na pijesku.',
+      'landing.registerBtn': 'Registracija', 'landing.loginBtn': 'Prijava', 'landing.browseLink': 'Pregledaj turnire →', 'landing.browseBtnLoggedIn': 'Pregledaj turnire',
+      'home.headline': 'Najveća footvolley turneja u Europi', 'home.tabUpcoming': 'Nadolazeći turniri', 'home.tabPast': 'Prošli turniri',
+      'detail.backLink': '← Svi turniri', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Kotizacija', 'detail.deadlineLabel': 'Rok za prijavu', 'detail.divisionsLabel': 'Kategorije',
+      'detail.registerNow': 'Prijavi se sada', 'detail.alreadyRegisteredNote': 'Već ste prijavljeni za ovaj turnir.', 'detail.registeredTeams': 'Prijavljeni timovi',
+      'detail.noRegistrations': 'Još nema prijava – budite prvi tim!', 'detail.closedNote': 'Prijave za ovaj turnir su zatvorene.',
+      'detail.resumeText': 'Imate prijavu na čekanju – uplatite kotizaciju sada kako biste osigurali svoje mjesto.', 'detail.resumeBtn': 'Plati sada',
+      'detail.paidLabel': 'Potvrđeno', 'detail.pendingLabel': 'Na čekanju',
+      'compselect.backLink': '← Natrag na turnir', 'compselect.question': 'Za koju kategoriju biste se željeli prijaviti?', 'compselect.teamReg': 'Prijava tima (2v2)',
+      'register.backLink': '← Natrag na turnir', 'register.heading': 'Prijava Tima', 'register.firstNameLabel': 'Ime *', 'register.lastNameLabel': 'Prezime *',
+      'register.emailLabel': 'E-mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. igrač) *', 'register.partnerPlaceholder': 'Ime i prezime',
+      'register.clubLabel': 'Klub *', 'register.clubPlaceholder': 'Pretraži klub …',
+      'register.businessToggle': 'Trebam račun s OIB-om/PDV brojem (prijava kao tvrtka)',
+      'register.companyNameLabel': 'Naziv tvrtke *', 'register.vatNumberLabel': 'PDV broj *', 'register.vatNumberPlaceholder': 'npr. ATU12345678',
+      'register.consentLabel': 'Suglasan/na sam s obradom mojih podataka radi prijave na turnir. *',
+      'register.submitBtn': 'Registracija', 'register.tournamentLabel': 'Turnir', 'register.divisionLabel': 'Kategorija', 'register.teamLabel': 'Tim', 'register.feeLabel': 'Kotizacija',
+      'register.payBtn': 'Plati kotizaciju sada', 'register.payLaterBtn': 'Platit ću kasnije',
+      'register.payNote': 'Sigurno plaćanje putem Stripea. Prijava je službeno potvrđena tek nakon primitka uplate.',
+      'register.pendingHeading': 'Privremena Prijava Zaprimljena', 'register.pendingText': 'Vaš je tim na popisu. Kako biste osigurali svoje mjesto, uplatite kotizaciju sada.',
+      'register.confirmedHeading': 'Prijava Potvrđena!', 'register.confirmedText': 'Vaš je tim potvrđen za igru. Vidimo se na terenu!', 'register.backToTournament': 'Natrag na Turnir',
+      'register.paymentPendingHeading': 'Plaćanje Još Uvijek na Čekanju', 'register.paymentPendingText': 'Uplatu još nismo mogli potvrditi. Možete pokušati ponovno sa stranice turnira.',
+      'login.heading': 'Prijava', 'login.demoNote': 'Demo način — računi se pohranjuju samo u ovom pregledniku, a ne u stvarnoj usluzi računa.',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Lozinka *', 'login.submitBtn': 'Prijava', 'login.switchText': 'Još nemate račun?', 'login.switchBtn': 'Registracija',
+      'registerAccount.heading': 'Otvori Račun', 'registerAccount.demoNote': 'Demo način — računi se pohranjuju samo u ovom pregledniku, a ne u stvarnoj usluzi računa.',
+      'registerAccount.firstNameLabel': 'Ime *', 'registerAccount.lastNameLabel': 'Prezime *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Lozinka *', 'registerAccount.confirmPasswordLabel': 'Potvrdi Lozinku *',
+      'registerAccount.consentLabel': 'Suglasan/na sam s obradom mojih podataka radi otvaranja računa. *', 'registerAccount.submitBtn': 'Otvori Račun',
+      'registerAccount.switchText': 'Već imate račun?', 'registerAccount.switchBtn': 'Prijava', 'footer.questions': 'Pitanja?', 'footer.imprint': 'Impresum'
+    },
+    el: {
+      'nav.tournaments': 'Τουρνουά', 'nav.ranking': 'Κατάταξη', 'nav.imprint': 'Νομικές πληροφορίες', 'nav.login': 'Σύνδεση', 'nav.register': 'Εγγραφή', 'nav.logout': 'Αποσύνδεση',
+      'demoBanner.text': 'ΛΕΙΤΟΥΡΓΙΑ DEMO – οι εγγραφές αποθηκεύονται μόνο τοπικά σε αυτό το πρόγραμμα περιήγησης (χωρίς πραγματικό backend)',
+      'landing.eyebrow': 'Σεζόν 2026', 'landing.headline': 'Η ευρωπαϊκή ελίτ του footvolley. Ένα tour.',
+      'landing.subtitle': 'Δημιούργησε τον λογαριασμό σου και κλείσε τη θέση σου στην άμμο.',
+      'landing.registerBtn': 'Εγγραφή', 'landing.loginBtn': 'Σύνδεση', 'landing.browseLink': 'Δες τα τουρνουά →', 'landing.browseBtnLoggedIn': 'Δες τα τουρνουά',
+      'home.headline': 'Το μεγαλύτερο tour footvolley της Ευρώπης', 'home.tabUpcoming': 'Επερχόμενα τουρνουά', 'home.tabPast': 'Παλαιότερα τουρνουά',
+      'detail.backLink': '← Όλα τα τουρνουά', 'detail.formatLabel': 'Φορμά', 'detail.feeLabel': 'Κόστος συμμετοχής', 'detail.deadlineLabel': 'Προθεσμία εγγραφής', 'detail.divisionsLabel': 'Κατηγορίες',
+      'detail.registerNow': 'Εγγραφή τώρα', 'detail.alreadyRegisteredNote': 'Είσαι ήδη εγγεγραμμένος/η σε αυτό το τουρνουά.', 'detail.registeredTeams': 'Εγγεγραμμένες ομάδες',
+      'detail.noRegistrations': 'Καμία εγγραφή ακόμη – γίνε η πρώτη ομάδα!', 'detail.closedNote': 'Οι εγγραφές για αυτό το τουρνουά έχουν κλείσει.',
+      'detail.resumeText': 'Έχεις μια εκκρεμή εγγραφή – πλήρωσε το κόστος συμμετοχής τώρα για να κλείσεις τη θέση σου.', 'detail.resumeBtn': 'Πλήρωσε τώρα',
+      'detail.paidLabel': 'Επιβεβαιωμένο', 'detail.pendingLabel': 'Εκκρεμεί',
+      'compselect.backLink': '← Πίσω στο τουρνουά', 'compselect.question': 'Σε ποια κατηγορία θα ήθελες να εγγραφείς;', 'compselect.teamReg': 'Εγγραφή ομάδας (2v2)',
+      'register.backLink': '← Πίσω στο τουρνουά', 'register.heading': 'Εγγραφή Ομάδας', 'register.firstNameLabel': 'Όνομα *', 'register.lastNameLabel': 'Επώνυμο *',
+      'register.emailLabel': 'Email *', 'register.phoneLabel': 'Τηλέφωνο *', 'register.partnerLabel': 'Σύντροφος (2ος παίκτης) *', 'register.partnerPlaceholder': 'Ονοματεπώνυμο',
+      'register.clubLabel': 'Σύλλογος *', 'register.clubPlaceholder': 'Αναζήτηση συλλόγου …',
+      'register.businessToggle': 'Χρειάζομαι τιμολόγιο με ΑΦΜ/VAT (εγγραφή ως επιχείρηση)',
+      'register.companyNameLabel': 'Επωνυμία εταιρείας *', 'register.vatNumberLabel': 'Αριθμός ΦΠΑ *', 'register.vatNumberPlaceholder': 'π.χ. ATU12345678',
+      'register.consentLabel': 'Συμφωνώ με την επεξεργασία των δεδομένων μου για την εγγραφή στο τουρνουά. *',
+      'register.submitBtn': 'Εγγραφή', 'register.tournamentLabel': 'Τουρνουά', 'register.divisionLabel': 'Κατηγορία', 'register.teamLabel': 'Ομάδα', 'register.feeLabel': 'Κόστος συμμετοχής',
+      'register.payBtn': 'Πλήρωσε το κόστος συμμετοχής τώρα', 'register.payLaterBtn': 'Θα πληρώσω αργότερα',
+      'register.payNote': 'Ασφαλής πληρωμή μέσω Stripe. Η εγγραφή επιβεβαιώνεται επίσημα μόνο μετά την παραλαβή της πληρωμής.',
+      'register.pendingHeading': 'Λήφθηκε Προσωρινή Εγγραφή', 'register.pendingText': 'Η ομάδα σου είναι στη λίστα. Για να κλείσεις τη θέση σου, πλήρωσε το κόστος συμμετοχής τώρα.',
+      'register.confirmedHeading': 'Η Εγγραφή Επιβεβαιώθηκε!', 'register.confirmedText': 'Η ομάδα σου έχει επιβεβαιωθεί για συμμετοχή. Τα λέμε στο γήπεδο!', 'register.backToTournament': 'Πίσω στο Τουρνουά',
+      'register.paymentPendingHeading': 'Η Πληρωμή Εκκρεμεί Ακόμη', 'register.paymentPendingText': 'Δεν μπορέσαμε ακόμη να επιβεβαιώσουμε την πληρωμή. Μπορείς να ξαναπροσπαθήσεις από τη σελίδα του τουρνουά.',
+      'login.heading': 'Σύνδεση', 'login.demoNote': 'Λειτουργία demo — οι λογαριασμοί αποθηκεύονται μόνο σε αυτό το πρόγραμμα περιήγησης, όχι σε πραγματική υπηρεσία λογαριασμών.',
+      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Κωδικός πρόσβασης *', 'login.submitBtn': 'Σύνδεση', 'login.switchText': 'Δεν έχεις ακόμη λογαριασμό;', 'login.switchBtn': 'Εγγραφή',
+      'registerAccount.heading': 'Δημιουργία Λογαριασμού', 'registerAccount.demoNote': 'Λειτουργία demo — οι λογαριασμοί αποθηκεύονται μόνο σε αυτό το πρόγραμμα περιήγησης, όχι σε πραγματική υπηρεσία λογαριασμών.',
+      'registerAccount.firstNameLabel': 'Όνομα *', 'registerAccount.lastNameLabel': 'Επώνυμο *', 'registerAccount.emailLabel': 'Email *', 'registerAccount.phoneLabel': 'Τηλέφωνο *',
+      'registerAccount.passwordLabel': 'Κωδικός πρόσβασης *', 'registerAccount.confirmPasswordLabel': 'Επιβεβαίωση Κωδικού Πρόσβασης *',
+      'registerAccount.consentLabel': 'Συμφωνώ με την επεξεργασία των δεδομένων μου για τη δημιουργία λογαριασμού. *', 'registerAccount.submitBtn': 'Δημιουργία Λογαριασμού',
+      'registerAccount.switchText': 'Έχεις ήδη λογαριασμό;', 'registerAccount.switchBtn': 'Σύνδεση', 'footer.questions': 'Ερωτήσεις;', 'footer.imprint': 'Νομικές πληροφορίες'
+    },
+    tr: {
+      'nav.tournaments': 'Turnuvalar', 'nav.ranking': 'Sıralama', 'nav.imprint': 'Yasal Bilgiler', 'nav.login': 'Giriş Yap', 'nav.register': 'Kayıt Ol', 'nav.logout': 'Çıkış Yap',
+      'demoBanner.text': 'DEMO MODU – kayıtlar yalnızca bu tarayıcıda yerel olarak saklanır (gerçek bir backend bağlı değildir)',
+      'landing.eyebrow': '2026 Sezonu', 'landing.headline': "Avrupa'nın footvolley elitleri. Tek bir tur.",
+      'landing.subtitle': "17 durak, üç format, League of Champions unvanı için yarışan yüzlerce takım. Hesabını oluştur ve kumdaki yerini garantile.",
+      'landing.registerBtn': 'Kayıt Ol', 'landing.loginBtn': 'Giriş Yap', 'landing.browseLink': 'Turnuvalara göz at →', 'landing.browseBtnLoggedIn': 'Turnuvalara Göz At',
+      'home.headline': "Avrupa'nın en büyük footvolley turu", 'home.tabUpcoming': 'Yaklaşan Turnuvalar', 'home.tabPast': 'Geçmiş Turnuvalar',
+      'detail.backLink': '← Tüm Turnuvalar', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Katılım ücreti', 'detail.deadlineLabel': 'Kayıt son tarihi', 'detail.divisionsLabel': 'Kategoriler',
+      'detail.registerNow': 'Şimdi kayıt ol', 'detail.alreadyRegisteredNote': 'Bu turnuvaya zaten kayıtlısın.', 'detail.registeredTeams': 'Kayıtlı Takımlar',
+      'detail.noRegistrations': 'Henüz kayıt yok – ilk takım siz olun!', 'detail.closedNote': 'Bu turnuva için kayıtlar kapalı.',
+      'detail.resumeText': 'Bekleyen bir kaydın var – yerini garantilemek için katılım ücretini şimdi öde.', 'detail.resumeBtn': 'Şimdi öde',
+      'detail.paidLabel': 'Onaylandı', 'detail.pendingLabel': 'Beklemede',
+      'compselect.backLink': '← Turnuvaya Dön', 'compselect.question': 'Hangi kategoriye kayıt olmak istersin?', 'compselect.teamReg': 'Takım kaydı (2v2)',
+      'register.backLink': '← Turnuvaya Dön', 'register.heading': 'Takım Kaydı', 'register.firstNameLabel': 'Ad *', 'register.lastNameLabel': 'Soyad *',
+      'register.emailLabel': 'E-posta *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. Oyuncu) *', 'register.partnerPlaceholder': 'Ad ve soyad',
+      'register.clubLabel': 'Kulüp *', 'register.clubPlaceholder': 'Kulüp ara …',
+      'register.businessToggle': 'VAT/vergi numaralı fatura istiyorum (şirket olarak kayıt)',
+      'register.companyNameLabel': 'Şirket Adı *', 'register.vatNumberLabel': 'Vergi Numarası *', 'register.vatNumberPlaceholder': 'örn. ATU12345678',
+      'register.consentLabel': 'Turnuva kaydı için verilerimin işlenmesini kabul ediyorum. *',
+      'register.submitBtn': 'Kayıt Ol', 'register.tournamentLabel': 'Turnuva', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Takım', 'register.feeLabel': 'Katılım ücreti',
+      'register.payBtn': 'Katılım ücretini şimdi öde', 'register.payLaterBtn': 'Daha sonra ödeyeceğim',
+      'register.payNote': 'Stripe ile güvenli ödeme. Kayıt, yalnızca ödeme alındıktan sonra resmi olarak onaylanır.',
+      'register.pendingHeading': 'Geçici Kayıt Alındı', 'register.pendingText': 'Takımın listede. Yerini garantilemek için katılım ücretini şimdi öde.',
+      'register.confirmedHeading': 'Kayıt Onaylandı!', 'register.confirmedText': 'Takımın oynamak üzere onaylandı. Sahada görüşürüz!', 'register.backToTournament': 'Turnuvaya Dön',
+      'register.paymentPendingHeading': 'Ödeme Hâlâ Beklemede', 'register.paymentPendingText': 'Ödemeyi henüz onaylayamadık. Turnuva sayfasından tekrar deneyebilirsin.',
+      'login.heading': 'Giriş Yap', 'login.demoNote': 'Demo modu — hesaplar yalnızca bu tarayıcıda saklanır, gerçek bir hesap hizmetinde değil.',
+      'login.emailLabel': 'E-posta *', 'login.passwordLabel': 'Şifre *', 'login.submitBtn': 'Giriş Yap', 'login.switchText': 'Henüz bir hesabın yok mu?', 'login.switchBtn': 'Kayıt Ol',
+      'registerAccount.heading': 'Hesap Oluştur', 'registerAccount.demoNote': 'Demo modu — hesaplar yalnızca bu tarayıcıda saklanır, gerçek bir hesap hizmetinde değil.',
+      'registerAccount.firstNameLabel': 'Ad *', 'registerAccount.lastNameLabel': 'Soyad *', 'registerAccount.emailLabel': 'E-posta *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Şifre *', 'registerAccount.confirmPasswordLabel': 'Şifreyi Onayla *',
+      'registerAccount.consentLabel': 'Hesap oluşturma için verilerimin işlenmesini kabul ediyorum. *', 'registerAccount.submitBtn': 'Hesap Oluştur',
+      'registerAccount.switchText': 'Zaten bir hesabın var mı?', 'registerAccount.switchBtn': 'Giriş Yap', 'footer.questions': 'Sorularınız mı var?', 'footer.imprint': 'Yasal Bilgiler'
+    },
+    no: {
+      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangering', 'nav.imprint': 'Impressum', 'nav.login': 'Logg inn', 'nav.register': 'Registrer', 'nav.logout': 'Logg ut',
+      'demoBanner.text': 'DEMOMODUS – påmeldinger lagres kun lokalt i denne nettleseren (ingen ekte backend tilkoblet)',
+      'landing.eyebrow': 'Sesong 2026', 'landing.headline': 'Europas footvolley-elite. Én tour.',
+      'landing.subtitle': '17 stopp, tre formater, hundrevis av lag som jakter på League of Champions-tittelen. Opprett kontoen din og sikre deg en plass i sanden.',
+      'landing.registerBtn': 'Registrer', 'landing.loginBtn': 'Logg inn', 'landing.browseLink': 'Se turneringer →', 'landing.browseBtnLoggedIn': 'Se turneringer',
+      'home.headline': 'Europas største footvolley-tour', 'home.tabUpcoming': 'Kommende turneringer', 'home.tabPast': 'Tidligere turneringer',
+      'detail.backLink': '← Alle turneringer', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Deltakeravgift', 'detail.deadlineLabel': 'Påmeldingsfrist', 'detail.divisionsLabel': 'Kategorier',
+      'detail.registerNow': 'Meld deg på nå', 'detail.alreadyRegisteredNote': 'Du er allerede påmeldt denne turneringen.', 'detail.registeredTeams': 'Påmeldte lag',
+      'detail.noRegistrations': 'Ingen påmeldinger ennå – bli det første laget!', 'detail.closedNote': 'Påmelding til denne turneringen er stengt.',
+      'detail.resumeText': 'Du har en avventende påmelding – betal deltakeravgiften nå for å sikre plassen din.', 'detail.resumeBtn': 'Betal nå',
+      'detail.paidLabel': 'Bekreftet', 'detail.pendingLabel': 'Avventer',
+      'compselect.backLink': '← Tilbake til turneringen', 'compselect.question': 'Hvilken kategori vil du melde deg på?', 'compselect.teamReg': 'Lagpåmelding (2v2)',
+      'register.backLink': '← Tilbake til turneringen', 'register.heading': 'Lagpåmelding', 'register.firstNameLabel': 'Fornavn *', 'register.lastNameLabel': 'Etternavn *',
+      'register.emailLabel': 'E-post *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. spiller) *', 'register.partnerPlaceholder': 'For- og etternavn',
+      'register.clubLabel': 'Klubb *', 'register.clubPlaceholder': 'Søk klubb …',
+      'register.businessToggle': 'Jeg trenger en faktura med MVA-nummer (påmelding som bedrift)',
+      'register.companyNameLabel': 'Firmanavn *', 'register.vatNumberLabel': 'MVA-nummer *', 'register.vatNumberPlaceholder': 'f.eks. ATU12345678',
+      'register.consentLabel': 'Jeg godtar behandlingen av mine data for turneringspåmeldingen. *',
+      'register.submitBtn': 'Registrer', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Lag', 'register.feeLabel': 'Deltakeravgift',
+      'register.payBtn': 'Betal deltakeravgift nå', 'register.payLaterBtn': 'Jeg betaler senere',
+      'register.payNote': 'Sikker betaling via Stripe. Påmeldingen er først offisielt bekreftet når betalingen er mottatt.',
+      'register.pendingHeading': 'Foreløpig Påmelding Mottatt', 'register.pendingText': 'Laget ditt står på listen. For å sikre plassen din, betal deltakeravgiften nå.',
+      'register.confirmedHeading': 'Påmelding Bekreftet!', 'register.confirmedText': 'Laget ditt er bekreftet for å spille. Vi sees på banen!', 'register.backToTournament': 'Tilbake til Turneringen',
+      'register.paymentPendingHeading': 'Betaling Fremdeles Avventende', 'register.paymentPendingText': 'Vi kunne ikke bekrefte betalingen ennå. Du kan prøve igjen fra turneringssiden.',
+      'login.heading': 'Logg Inn', 'login.demoNote': 'Demomodus — kontoer lagres kun i denne nettleseren, ikke i en ekte kontotjeneste.',
+      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Passord *', 'login.submitBtn': 'Logg Inn', 'login.switchText': 'Har du ikke en konto ennå?', 'login.switchBtn': 'Registrer',
+      'registerAccount.heading': 'Opprett Konto', 'registerAccount.demoNote': 'Demomodus — kontoer lagres kun i denne nettleseren, ikke i en ekte kontotjeneste.',
+      'registerAccount.firstNameLabel': 'Fornavn *', 'registerAccount.lastNameLabel': 'Etternavn *', 'registerAccount.emailLabel': 'E-post *', 'registerAccount.phoneLabel': 'Telefon *',
+      'registerAccount.passwordLabel': 'Passord *', 'registerAccount.confirmPasswordLabel': 'Bekreft Passord *',
+      'registerAccount.consentLabel': 'Jeg godtar behandlingen av mine data for kontoopprettelse. *', 'registerAccount.submitBtn': 'Opprett Konto',
+      'registerAccount.switchText': 'Har du allerede en konto?', 'registerAccount.switchBtn': 'Logg Inn', 'footer.questions': 'Spørsmål?', 'footer.imprint': 'Impressum'
+    }
   };
 
   function uiText(key) {
+    if (currentLang !== 'en' && TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key] != null) {
+      return TRANSLATIONS[currentLang][key];
+    }
     var o = contentOverrides.ui;
     if (o && o[key] != null && o[key] !== '') return o[key];
     return UI_DEFAULTS[key] != null ? UI_DEFAULTS[key] : '';
+  }
+
+  // uiText() with {placeholder} substitution, for the handful of strings
+  // that need a runtime value (a count, a year) spliced into any language.
+  function uiFormat(key, vars) {
+    var str = uiText(key);
+    Object.keys(vars).forEach(function(k) {
+      str = str.split('{' + k + '}').join(vars[k]);
+    });
+    return str;
   }
 
   // For text built dynamically inside JS-generated HTML (detail/register/etc.)
@@ -2365,6 +2902,7 @@ var CLUBS = [
       l.classList.toggle('active', l.dataset.route === VIEW_TO_ROUTE[view]);
     });
     instrumentUIText(document);
+    renderHeroSub();
     window.scrollTo({ top:0, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
@@ -2544,6 +3082,23 @@ var CLUBS = [
     authLogout().then(function() { navigate(''); });
   });
 
+  (function initLangSelect() {
+    var sel = document.getElementById('langSelect');
+    SUPPORTED_LANGS.forEach(function(code) {
+      var opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = LANG_LABELS[code] || code;
+      sel.appendChild(opt);
+    });
+    sel.value = currentLang;
+    sel.addEventListener('change', function() {
+      currentLang = sel.value;
+      try { localStorage.setItem('loc_lang', currentLang); } catch (e) {}
+      instrumentUIText(document);
+      route();
+    });
+  })();
+
   document.getElementById('editModeBtn').addEventListener('click', function() {
     setEditMode(!editMode);
     route();
@@ -2576,8 +3131,8 @@ var CLUBS = [
 
   function renderCard(t) {
     var statusBadge = t.status === 'upcoming'
-      ? '<span class="badge badge-upcoming">Registration open</span>'
-      : '<span class="badge badge-past">Completed</span>';
+      ? '<span class="badge badge-upcoming">' + esc(uiText('home.badgeOpen')) + '</span>'
+      : '<span class="badge badge-past">' + esc(uiText('home.badgeCompleted')) + '</span>';
     var countSpan = t.status === 'upcoming' ? '<span class="tcard-count mono" data-count-for="' + t.id + '"></span>' : '';
     return (
       '<button class="tcard" data-id="' + t.id + '">' +
@@ -2611,7 +3166,7 @@ var CLUBS = [
       year = upcoming.length ? upcoming[0].dateSort.slice(0, 4) : String(new Date().getFullYear());
     }
     var count = TOURNAMENTS.filter(function(t) { return t.dateSort.slice(0, 4) === year; }).length;
-    document.getElementById('seasonTag').textContent = 'SEASON ' + year + ' · ' + count + ' TOURNAMENTS';
+    document.getElementById('seasonTag').textContent = uiFormat('home.seasonTag', { year: year, n: count });
   }
 
   function renderGrid(filter) {
@@ -2640,7 +3195,7 @@ var CLUBS = [
     upcoming.forEach(function(t) {
       backendListRegistrations(t.id).then(function(list) {
         var el = document.querySelector('[data-count-for="' + t.id + '"]');
-        if (el && list.length > 0) el.textContent = list.length + (list.length === 1 ? ' team registered' : ' teams registered');
+        if (el && list.length > 0) el.textContent = uiFormat(list.length === 1 ? 'home.teamRegisteredOne' : 'home.teamRegisteredMany', { n: list.length });
       });
     });
   }
@@ -2749,7 +3304,13 @@ var CLUBS = [
           '</div>' +
           '<div class="player-row-actions">' +
             '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
-            (p.status !== 'paid' ? '<button type="button" class="reg-action-btn admin-only-inline" data-confirm-reg="' + esc(p.id) + '">Confirm</button>' : '') +
+            (p.status !== 'paid' ?
+              '<select class="reg-payment-method admin-only-inline" data-payment-method-for="' + esc(p.id) + '">' +
+                '<option value="cash">Cash</option>' +
+                '<option value="bank_transfer">Bank Transfer</option>' +
+              '</select>' +
+              '<button type="button" class="reg-action-btn admin-only-inline" data-confirm-reg="' + esc(p.id) + '">Confirm</button>'
+              : '') +
             '<button type="button" class="icon-btn admin-only-flex" data-delete-reg="' + esc(p.id) + '" title="Delete registration">✕</button>' +
           '</div>' +
         '</div>'
@@ -2856,8 +3417,8 @@ var CLUBS = [
 
   function liveBracketLabel(t) {
     var phase = tournamentPhase(t);
-    if (phase === 'live') return 'Live Bracket';
-    return phase === 'past' ? 'Results' : 'Tournament Format';
+    if (phase === 'live') return uiText('live.bracketLabel');
+    return phase === 'past' ? uiText('live.resultsLabel') : uiText('live.formatLabel');
   }
 
   // Schedule only makes sense while Live (always shown) or Upcoming (the
@@ -2875,7 +3436,7 @@ var CLUBS = [
   function bracketLinksHtml(t) {
     var primary = '<a class="btn btn-outline" id="liveBracketLink" href="#/event/' + esc(t.id) + '/live">' + liveBracketLabel(t) + ' →</a>';
     var schedule = scheduleLinkVisible(t)
-      ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">Schedule →</a>'
+      ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.label') + ' →</a>'
       : '';
     return primary + schedule;
   }
@@ -3062,8 +3623,11 @@ var CLUBS = [
     document.querySelectorAll('[data-confirm-reg]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (!isAdmin) return;
+        var id = btn.dataset.confirmReg;
+        var methodSelect = document.querySelector('[data-payment-method-for="' + id + '"]');
+        var paymentMethod = methodSelect ? methodSelect.value : '';
         btn.disabled = true;
-        backendAdminMarkPaid(btn.dataset.confirmReg).then(function() { loadAndRenderPlayerLists(t); });
+        backendAdminMarkPaid(id, paymentMethod).then(function() { loadAndRenderPlayerLists(t); });
       });
     });
     document.querySelectorAll('[data-delete-reg]').forEach(function(btn) {
@@ -3430,6 +3994,30 @@ var CLUBS = [
   // doesn't require scrolling past 16 Women's teams each time. The Schedule
   // page is unaffected: it always reads the full bracket.stages regardless.
   var liveDivisionFilter = null;
+  // Second-level filter, only shown when a division (e.g. Men's) has stages
+  // spanning more than one tier — e.g. Copenhagen 1000's Men's draw also
+  // hosts a LoC 100 bracket for teams that didn't qualify for the 1000
+  // draw. Derived from each stage's label ("LoC 100" → 100) rather than a
+  // stored field, so existing stages need no migration: anything not
+  // explicitly labeled "LoC <n>" falls back to the tournament's own tier.
+  var liveTierFilter = null;
+
+  function stageTier(stage) {
+    var m = /^LoC\s*(\d+)/i.exec(stage.label || '');
+    if (m) return parseInt(m[1], 10);
+    return currentBracketTournament ? currentBracketTournament.tier : null;
+  }
+
+  function bracketTiersForDivision(bracket, comp) {
+    var list = [];
+    bracket.stages.forEach(function(s) {
+      if (comp && s.competition !== comp) return;
+      var tr = stageTier(s);
+      if (list.indexOf(tr) === -1) list.push(tr);
+    });
+    list.sort(function(a, b) { return b - a; });
+    return list;
+  }
 
   function unsubscribeBracketLive() {
     if (bracketUnsub) { bracketUnsub(); bracketUnsub = null; }
@@ -3454,6 +4042,7 @@ var CLUBS = [
       var comps = bracketCompetitions(bracket);
       var match = divisionParam && comps.find(function(c) { return c.toLowerCase() === divisionParam.toLowerCase(); });
       liveDivisionFilter = match || comps[0] || null;
+      liveTierFilter = null;
       renderLive();
       if (!AUTH_DEMO_MODE) {
         // Real-time push so spectators watching this page see results update
@@ -3482,13 +4071,24 @@ var CLUBS = [
     var visibleStages = liveDivisionFilter
       ? bracket.stages.filter(function(s) { return s.competition === liveDivisionFilter; })
       : bracket.stages;
+    // Second-level tier filter (LoC 1000 / LoC 100 etc.), only relevant once
+    // a single division is selected and that division actually spans more
+    // than one tier — matches liveDivisionFilter's own reset-when-moot rule.
+    var tiersHere = bracketTiersForDivision(bracket, liveDivisionFilter);
+    if (tiersHere.length < 2) {
+      liveTierFilter = null;
+    } else {
+      if (liveTierFilter === null || tiersHere.indexOf(liveTierFilter) === -1) liveTierFilter = tiersHere[0];
+      visibleStages = visibleStages.filter(function(s) { return stageTier(s) === liveTierFilter; });
+    }
     el.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + liveBracketLabel(t) + (scheduleLinkVisible(t) ? ' · <a href="#/event/' + esc(t.id) + '/schedule">View Schedule →</a>' : '') + '</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + liveBracketLabel(t) + (scheduleLinkVisible(t) ? ' · <a href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.viewLink') + ' →</a>' : '') + '</div></div>' +
       renderDivisionFilterTabs(bracket) +
+      renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
-      '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(DIVISION_LABEL[liveDivisionFilter] || liveDivisionFilter) : '') + '</h2>' +
+      '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
       generateAllGroupMatchesHtml(bracket.stages) +
       '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
@@ -3515,7 +4115,7 @@ var CLUBS = [
   function divisionOptionsHtml(selected) {
     var comps = (currentBracketTournament && currentBracketTournament.competitions) || ['Men', 'Women'];
     return comps.map(function(c) {
-      return '<option value="' + esc(c) + '"' + (c === selected ? ' selected' : '') + '>' + esc(DIVISION_LABEL[c] || c) + '</option>';
+      return '<option value="' + esc(c) + '"' + (c === selected ? ' selected' : '') + '>' + esc(divisionWord(c)) + '</option>';
     }).join('');
   }
 
@@ -3540,7 +4140,10 @@ var CLUBS = [
         '<div><span class="team-name-wrap" data-team-name-wrap="' + esc(team.id) + '" data-raw-name="' + esc(team.name) + '">' +
             '<strong class="team-name-value">' + esc(team.name) + '</strong>' +
             '<button type="button" class="inline-rename-pencil" data-rename-team="' + esc(team.id) + '" title="Rename team">✎</button>' +
-          '</span>' + (team.club ? '<span class="player-club">' + esc(team.club) + '</span>' : '') + '</div>' +
+          '</span>' + '<span class="player-club club-name-wrap" data-club-wrap="' + esc(team.id) + '" data-raw-club="' + esc(team.club || '') + '">' +
+            (team.club ? esc(team.club) : '<em>No club</em>') +
+            '<button type="button" class="inline-rename-pencil" data-rename-club="' + esc(team.id) + '" title="Edit club">✎</button>' +
+          '</span>' + '</div>' +
       '</div>' +
       '<div class="roster-row-actions">' +
         promoteBtn +
@@ -3592,9 +4195,20 @@ var CLUBS = [
     if (comps.length < 2) return '';
     var base = '#/event/' + esc(currentBracketTournament.id) + '/live';
     var tabs = comps.map(function(c) {
-        return '<a href="' + base + '/' + esc(encodeURIComponent(c.toLowerCase())) + '" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '">' + esc(DIVISION_LABEL[c] || c) + '</a>';
+        return '<a href="' + base + '/' + esc(encodeURIComponent(c.toLowerCase())) + '" class="btn btn-outline btn-sm division-filter-tab' + (liveDivisionFilter === c ? ' active' : '') + '">' + esc(divisionWord(c)) + '</a>';
       }).join('');
     return '<div class="division-filter-tabs" id="divisionFilterTabs">' + tabs + '</div>';
+  }
+
+  // Plain click-handled buttons rather than links — unlike the division
+  // filter, the tier filter isn't a bookmarkable subpage (no third URL
+  // segment), just view-only state scoped to the current division.
+  function renderTierFilterTabs(tiers) {
+    if (tiers.length < 2) return '';
+    var tabs = tiers.map(function(tr) {
+        return '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (liveTierFilter === tr ? ' active' : '') + '" data-tier-filter="' + tr + '">LoC ' + tr + '</button>';
+      }).join('');
+    return '<div class="division-filter-tabs" id="tierFilterTabs">' + tabs + '</div>';
   }
 
   // Roster count is what matters at a glance now that group/KO assignment
@@ -3612,7 +4226,7 @@ var CLUBS = [
       var shown = liveDivisionFilter ? competitions.filter(function(c) { return c === liveDivisionFilter; }) : competitions;
       teamPanels = shown.map(function(comp) {
         var teams = bracket.teams.filter(function(t) { return t.competition === comp; });
-        return rosterPanelHtml((DIVISION_LABEL[comp] || comp) + ' Teams', teams);
+        return rosterPanelHtml(divisionWord(comp) + ' Teams', teams);
       }).join('');
       // Always shown (not gated by the active tab) - with no "All" view left,
       // a stray team with no division set would otherwise never appear under
@@ -3746,7 +4360,7 @@ var CLUBS = [
       : stage.type === 'doubleElim' ? renderDoubleElimStageBody(stage)
       : stage.type === 'modifiedPool' ? renderModifiedPoolStageBody(stage)
       : '<p class="empty-note">Match list coming in a later build step.</p>';
-    var divisionPill = stage.competition ? ' <span class="stage-type-pill">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
+    var divisionPill = stage.competition ? ' <span class="stage-type-pill">' + esc(divisionWord(stage.competition)) + '</span>' : '';
     return '<div class="stage-card sortable-block" data-stage-id="' + esc(stage.id) + '" data-block-key="' + esc(stage.id) + '">' +
       '<button type="button" class="sortable-handle" title="Drag to reorder">⠿</button>' +
       '<div class="stage-card-head"><h3>' + esc(stage.label) + ' <span class="stage-type-pill">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>' + divisionPill + '</h3>' +
@@ -3930,7 +4544,7 @@ var CLUBS = [
     };
     var m3rd = newMatch(0, 1);
     var thirdRound = {
-      name: 'Spiel um Platz 3', side: 'thirdPlace',
+      name: '3rd Place Match', side: 'thirdPlace',
       slots: [
         { source: { type: 'loser', matchId: m1.id } },
         { source: { type: 'loser', matchId: m2.id } }
@@ -4075,7 +4689,7 @@ var CLUBS = [
   function renderThirdPlacePanel(stage) {
     if (!thirdPlaceEligible(stage)) return '';
     return '<div class="admin-only" style="margin-top:10px;">' +
-      '<button type="button" class="btn btn-outline btn-sm" data-add-third-place="' + esc(stage.id) + '">+ Spiel um Platz 3</button>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-add-third-place="' + esc(stage.id) + '">+ 3rd Place Match</button>' +
     '</div>';
   }
 
@@ -4342,6 +4956,13 @@ var CLUBS = [
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
 
+    document.querySelectorAll('[data-tier-filter]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        liveTierFilter = parseInt(btn.dataset.tierFilter, 10);
+        renderLive();
+      });
+    });
+
     var saveRankingPointsBtn = document.getElementById('saveRankingPointsBtn');
     if (saveRankingPointsBtn) saveRankingPointsBtn.addEventListener('click', function() {
       if (!isAdmin) return;
@@ -4422,6 +5043,35 @@ var CLUBS = [
           if (!next) { renderLive(); return; }
           var team = findBracketTeam(currentBracket, wrap.dataset.teamNameWrap);
           if (team) team.name = next;
+          persistBracket();
+        }
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); renderLive(); }
+        });
+        wrap.querySelector('.inline-rename-save').addEventListener('click', commit);
+        wrap.querySelector('.inline-rename-cancel').addEventListener('click', function() { renderLive(); });
+      });
+    });
+
+    // Edits team.club in place — same pattern as the team-name rename above.
+    // Free-text (not the club-search combo) since this is a rare correction,
+    // not the primary add-team flow; the admin types the exact CLUBS entry name.
+    document.querySelectorAll('[data-rename-club]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var wrap = btn.closest('[data-club-wrap]');
+        wrap.innerHTML =
+          '<input type="text" class="inline-rename-input" value="' + esc(wrap.dataset.rawClub) + '">' +
+          '<button type="button" class="inline-rename-save" title="Save">✓</button>' +
+          '<button type="button" class="inline-rename-cancel" title="Cancel">✕</button>';
+        var input = wrap.querySelector('.inline-rename-input');
+        input.focus();
+        input.select();
+        function commit() {
+          var next = input.value.trim();
+          var team = findBracketTeam(currentBracket, wrap.dataset.clubWrap);
+          if (team) team.club = next;
           persistBracket();
         }
         input.addEventListener('keydown', function(e) {
@@ -4781,7 +5431,7 @@ var CLUBS = [
           format: { bestOf: thirdPlaceFmt.bestOf, setPoints: thirdPlaceFmt.setPoints.slice() },
           sets: []
         }];
-        stage.rounds.push({ name: 'Spiel um Platz 3', side: 'thirdPlace', slots: slots, matches: matches });
+        stage.rounds.push({ name: '3rd Place Match', side: 'thirdPlace', slots: slots, matches: matches });
         persistBracket();
       });
     });
@@ -5386,7 +6036,7 @@ var CLUBS = [
       // markup, so "No matches yet" still shows correctly for them.
       var isEditMode = document.body.classList.contains('admin-edit-mode');
       var hasVisibleItems = isEditMode ? items.length > 0 : items.some(function(it) { return it.type !== 'break'; });
-      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">Court ' + (i + 1) + '</div>' +
+      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + uiFormat('schedule.court', { n: i + 1 }) + '</div>' +
         '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
         (hasVisibleItems ? '' : '<p class="empty-note">No matches yet.</p>') +
         '<div class="admin-only-flex schedule-add-block">' +
@@ -5420,7 +6070,7 @@ var CLUBS = [
         '</div>' +
         '<button type="button" class="btn btn-outline btn-sm" data-save-day="' + esc(day.id) + '">Save day</button>' +
       '</div>' +
-      (cols.length > 3 ? '<p class="empty-note">← Scroll to see all ' + cols.length + ' courts →</p>' : '') +
+      (cols.length > 3 ? '<p class="empty-note">' + uiFormat('schedule.scrollHint', { n: cols.length }) + '</p>' : '') +
       '<div class="schedule-scroll">' + cols.join('') + '</div>' +
     '</div>';
   }
@@ -5455,7 +6105,7 @@ var CLUBS = [
     if (!bracket.schedule.days.length || !bracket.stages.length) return '';
     var dayOptions = bracket.schedule.days.map(function(d, i) { return '<option value="' + i + '">' + esc(d.label) + '</option>'; }).join('');
     var rows = bracket.stages.map(function(stage) {
-      var divisionTag = stage.competition ? ' <span class="player-club">' + esc(DIVISION_LABEL[stage.competition] || stage.competition) + '</span>' : '';
+      var divisionTag = stage.competition ? ' <span class="player-club">' + esc(divisionWord(stage.competition)) + '</span>' : '';
       var typeTag = ' <span class="player-club">' + esc(STAGE_TYPE_LABEL[stage.type] || stage.type) + '</span>';
       // Bracket/Modified-Pool rounds aren't necessarily played on the same day
       // or court (e.g. Semifinals spread across several courts, but Final +
@@ -5594,12 +6244,12 @@ var CLUBS = [
     if (scheduleSelectedDayIndex >= bracket.schedule.days.length) scheduleSelectedDayIndex = 0;
     var visibleDays = bracket.schedule.days.length ? [bracket.schedule.days[scheduleSelectedDayIndex]] : [];
     el.innerHTML =
-      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">Schedule · ' + liveLinkHtml + '</div></div>' +
+      '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + uiText('schedule.label') + ' · ' + liveLinkHtml + '</div></div>' +
       renderScheduleSetupPanel(bracket) +
       renderStageScheduleControls(bracket) +
       renderScheduleDayTabs(bracket) +
       visibleDays.map(renderScheduleDayBlock).join('') +
-      (bracket.schedule.days.length ? '' : '<p class="empty-note">No days set up yet.</p>');
+      (bracket.schedule.days.length ? '' : '<p class="empty-note">' + uiText('schedule.noDays') + '</p>');
     wireScheduleEvents();
     initScheduleSortable();
   }
@@ -5951,6 +6601,11 @@ var CLUBS = [
           '<div id="clubDropdown" class="combo-dropdown" hidden></div>' +
           '<input type="hidden" id="rClub">' +
         '</div>' +
+        '<label class="checkbox-row"><input type="checkbox" id="rBusinessToggle"><span>' + uiEdit('register.businessToggle') + '</span></label>' +
+        '<div id="rBusinessFields" class="form-row" hidden>' +
+          '<div class="form-group"><label>' + uiEdit('register.companyNameLabel') + '</label><input id="rCompanyName"></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.vatNumberLabel') + '</label><input id="rVatNumber" placeholder="' + esc(uiText('register.vatNumberPlaceholder')) + '"></div>' +
+        '</div>' +
         '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>' + uiEdit('register.consentLabel') + '</span></label>' +
         '<button type="submit" class="btn btn-cyan btn-block">' + uiText('register.submitBtn') + '</button>' +
         '<p id="regError" class="form-error"></p>' +
@@ -5971,6 +6626,13 @@ var CLUBS = [
 
     setupClubCombo();
     setupPartnerCombo();
+
+    document.getElementById('rBusinessToggle').addEventListener('change', function() {
+      var fields = document.getElementById('rBusinessFields');
+      fields.hidden = !this.checked;
+      document.getElementById('rCompanyName').required = this.checked;
+      document.getElementById('rVatNumber').required = this.checked;
+    });
 
     if (currentUser) {
       var nameParts = (currentUser.name || '').trim().split(/\s+/);
@@ -6026,8 +6688,11 @@ var CLUBS = [
       var clubTyped = document.getElementById('rClubSearch').value.trim();
       var club = clubHidden || clubTyped;
       var consent = document.getElementById('rConsent').checked;
+      var isBusiness = document.getElementById('rBusinessToggle').checked;
+      var companyName = isBusiness ? document.getElementById('rCompanyName').value.trim() : '';
+      var vatNumber = isBusiness ? document.getElementById('rVatNumber').value.trim() : '';
 
-      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent) {
+      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || (isBusiness && (!companyName || !vatNumber))) {
         err.textContent = 'Please fill in all required fields.';
         return;
       }
@@ -6036,7 +6701,7 @@ var CLUBS = [
       submitBtn.disabled = true;
       submitBtn.textContent = 'One moment …';
 
-      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, uid:currentUser.uid, partnerUid:partnerUid };
+      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber };
 
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');
@@ -6130,7 +6795,10 @@ var CLUBS = [
   /* ==================================================================
      NAV / GLOBAL LISTENERS
      ================================================================== */
-  document.getElementById('heroSub').textContent = TOURNAMENTS.length + ' tournaments across Europe, three formats – LoC 1000, 500 and 100.';
+  function renderHeroSub() {
+    document.getElementById('heroSub').textContent = uiFormat('home.subtitle', { n: TOURNAMENTS.length });
+  }
+  renderHeroSub();
   document.getElementById('igLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igTourLink').href = CONFIG.INSTAGRAM_TOUR_URL;
   document.getElementById('igBolaoLink').href = CONFIG.INSTAGRAM_BOLAO_URL;
