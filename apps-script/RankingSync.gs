@@ -5,12 +5,13 @@
  * spreadsheet ("DO NOT TOUCH! LoC Ranking - Website") — separate from the
  * registrations Code.gs, since it's bound to a different sheet.
  *
- * Only handles WRITING points into the raw entry columns of a ranking tab
- * (Club1 | Club2 | Player name | <one column per tournament> for player
- * sheets; Club name | <one column per tournament> for club sheets). The
- * sheet's own existing "DO NOT TOUCH — WILL UPDATE AUTOMATICALLY" formulas
- * recompute the sorted Points/Ranking mirror section automatically — this
- * script never touches that side.
+ * Writes points into the raw entry columns of a ranking tab (Club1 | Club2 |
+ * Player name | <one column per tournament> for player sheets; Club name |
+ * <one column per tournament> for club sheets), then reads back the sheet's
+ * own "DO NOT TOUCH — WILL UPDATE AUTOMATICALLY" mirror section (same
+ * columns, sorted by total points, plus a Points/Total and a Ranking column)
+ * so the caller can push a fresh snapshot to the website — this script never
+ * WRITES to that side, only reads it after the sheet's formulas recompute.
  *
  * Trust model matches the registrations Code.gs: no server-side identity
  * check on who calls this endpoint. Fine for a small, single-operator site;
@@ -97,5 +98,49 @@ function syncRanking_(body) {
     results.push({ name: entry.name, row: rowIndex, points: entry.points });
   });
 
-  return { ok: true, sheet: body.sheetName, updated: results.length, results: results };
+  SpreadsheetApp.flush(); // force the sheet's own formulas to recompute before we read the mirror back
+  var mirror = readMirror_(sheet, headerRow, header, isPlayerSheet, nameCol);
+
+  return { ok: true, sheet: body.sheetName, updated: results.length, results: results, mirror: mirror };
+}
+
+// The mirror section is a column-for-column copy of the raw section (same
+// tournament headers, repeated) plus a trailing Points/Total column and a
+// Ranking column — so its position is found from the raw section's own
+// layout rather than hardcoded, and survives new tournament columns being
+// added over time. Returns null if a sheet doesn't have a mirror section
+// (no "Ranking" header found) instead of guessing.
+function readMirror_(sheet, headerRow, header, isPlayerSheet, nameCol) {
+  var firstTourCol = isPlayerSheet ? nameCol + 1 : nameCol + 2;
+  var firstTourName = header[firstTourCol - 1];
+  var mirrorFirstTourCol = header.lastIndexOf(firstTourName) + 1;
+  var rankingCol = header.indexOf('Ranking') + 1;
+  if (!firstTourName || mirrorFirstTourCol === firstTourCol || rankingCol === 0) return null;
+
+  var mirrorNameCol = isPlayerSheet ? mirrorFirstTourCol - 1 : mirrorFirstTourCol - 2;
+  var mirrorClub1Col = isPlayerSheet ? mirrorNameCol - 2 : null;
+  var mirrorClub2Col = isPlayerSheet ? mirrorNameCol - 1 : null;
+  var mirrorPointsCol = rankingCol - 1;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= headerRow) return [];
+  var numRows = lastRow - headerRow;
+  var names = sheet.getRange(headerRow + 1, mirrorNameCol, numRows, 1).getValues();
+  var points = sheet.getRange(headerRow + 1, mirrorPointsCol, numRows, 1).getValues();
+  var ranks = sheet.getRange(headerRow + 1, rankingCol, numRows, 1).getValues();
+  var clubs1 = isPlayerSheet ? sheet.getRange(headerRow + 1, mirrorClub1Col, numRows, 1).getValues() : null;
+  var clubs2 = isPlayerSheet ? sheet.getRange(headerRow + 1, mirrorClub2Col, numRows, 1).getValues() : null;
+
+  var out = [];
+  for (var i = 0; i < numRows; i++) {
+    var name = names[i][0];
+    if (!name) continue;
+    var row = { rank: ranks[i][0] || null, name: String(name), points: points[i][0] || 0 };
+    if (isPlayerSheet) {
+      row.club1 = clubs1[i][0] || null;
+      row.club2 = clubs2[i][0] || null;
+    }
+    out.push(row);
+  }
+  return out;
 }

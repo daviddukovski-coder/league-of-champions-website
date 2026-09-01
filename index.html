@@ -1522,6 +1522,20 @@ var CLUBS = [
     var reachedKnockout = {};
     var fmt = bracket.defaultFormat;
 
+    // A modifiedPool stage pulled into a later stage via a 'rank' slot
+    // source is a feeder pool, not the tournament decider — its own
+    // winner isn't the tournament's '1st', so it must be excluded from
+    // the terminal-placement branch below (else every parallel pool's
+    // winner would wrongly get tournament-winner points).
+    var poolFeedsForward = {};
+    (bracket.stages || []).forEach(function(s) {
+      (s.rounds || []).forEach(function(r) {
+        (r.slots || []).forEach(function(slot) {
+          if (slot.source && slot.source.type === 'rank') poolFeedsForward[slot.source.stageId] = true;
+        });
+      });
+    });
+
     (bracket.teams || []).forEach(function(t) {
       if (t.category === 'quali') placements[t.id] = 'Participation';
     });
@@ -1537,7 +1551,7 @@ var CLUBS = [
     }
 
     bracket.stages.forEach(function(stage) {
-      if (stage.type === 'bracket' || stage.type === 'modifiedPool') {
+      if (stage.type === 'bracket' || (stage.type === 'modifiedPool' && !poolFeedsForward[stage.id])) {
         var mainRounds = stage.rounds.filter(function(r) { return r.side !== 'thirdPlace'; });
         var thirdRound = stage.rounds.find(function(r) { return r.side === 'thirdPlace'; });
         mainRounds.forEach(function(round, ri) {
@@ -1581,7 +1595,8 @@ var CLUBS = [
     });
 
     bracket.stages.forEach(function(stage) {
-      if (stage.type !== 'group' && stage.type !== 'swiss') return;
+      var isFeederPool = stage.type === 'modifiedPool' && poolFeedsForward[stage.id];
+      if (stage.type !== 'group' && stage.type !== 'swiss' && !isFeederPool) return;
       (stage.teamIds || []).forEach(function(teamId) {
         if (!reachedKnockout[teamId] && placements[teamId] === undefined) {
           placements[teamId] = 'QUAL';
@@ -1646,17 +1661,20 @@ var CLUBS = [
     });
 
     var requests = [];
+    var requestKeys = [];
     ['Men', 'Women'].forEach(function(gender) {
       var bucket = byGenderType[gender];
       var playerSheet = gender === 'Men' ? sheetNames.menPlayers : sheetNames.womenPlayers;
       var clubSheet = gender === 'Men' ? sheetNames.menClubs : sheetNames.womenClubs;
       if (bucket.players.length) {
+        requestKeys.push(gender === 'Men' ? 'menPlayers' : 'womenPlayers');
         requests.push(postRankingSync_({ sheetName: playerSheet, tournamentColumn: tournament.name, entries: bucket.players }));
       }
       var clubEntries = Object.keys(bucket.clubTotals).map(function(club) {
         return { name: club, points: bucket.clubTotals[club] };
       });
       if (clubEntries.length) {
+        requestKeys.push(gender === 'Men' ? 'menClubs' : 'womenClubs');
         requests.push(postRankingSync_({ sheetName: clubSheet, tournamentColumn: tournament.name, entries: clubEntries }));
       }
     });
@@ -1664,7 +1682,23 @@ var CLUBS = [
     return Promise.all(requests).then(function(results) {
       var errors = results.filter(function(r) { return r && r.error; }).map(function(r) { return r.error; });
       var updated = results.reduce(function(sum, r) { return sum + (r && r.updated ? r.updated : 0); }, 0);
-      return { updated: updated, errors: errors, skipped: skipped };
+
+      // Each response carries a freshly-read snapshot of the sheet's own
+      // sorted mirror section (see RankingSync.gs) — push it into the same
+      // content/site doc every other admin edit uses, merged on top of
+      // whatever this year already had so a Men-only sync doesn't wipe the
+      // Women's tables. The Sheet stays the sole source of truth; this is
+      // just a live cache of its own computed output for the ranking page.
+      var yearRankings = Object.assign({}, (contentOverrides.rankings && contentOverrides.rankings[year]) || {});
+      var rankingChanged = false;
+      results.forEach(function(r, i) {
+        if (r && r.mirror) { yearRankings[requestKeys[i]] = r.mirror; rankingChanged = true; }
+      });
+      var savePromise = rankingChanged ? saveContentField('rankings', year, yearRankings) : Promise.resolve();
+
+      return savePromise.then(function() {
+        return { updated: updated, errors: errors, skipped: skipped, rankingUpdated: rankingChanged };
+      });
     });
   }
 
@@ -3232,12 +3266,13 @@ var CLUBS = [
 
   function rankingRows(year, gender, type) {
     var key = gender === 'men' ? (type === 'players' ? 'menPlayers' : 'menClubs') : (type === 'players' ? 'womenPlayers' : 'womenClubs');
-    return (RANKINGS[year] && RANKINGS[year][key]) || [];
+    var live = contentOverrides.rankings && contentOverrides.rankings[year] && contentOverrides.rankings[year][key];
+    return live || (RANKINGS[year] && RANKINGS[year][key]) || [];
   }
 
   function renderRanking() {
     var el = document.getElementById('rankingContent');
-    var years = Object.keys(RANKINGS).sort().reverse();
+    var years = Object.keys(Object.assign({}, RANKINGS, contentOverrides.rankings || {})).sort().reverse();
     var rows = rankingRows(rankingYear, rankingGender, rankingType);
     var controls =
       '<div class="tabs">' +
@@ -4986,6 +5021,7 @@ var CLUBS = [
       resultEl.innerHTML = '';
       syncTournamentToRanking(currentBracket, currentBracketTournament).then(function(summary) {
         var parts = [summary.updated + ' Einträge aktualisiert.'];
+        if (summary.rankingUpdated) parts.push('Website-Ranking aktualisiert.');
         if (summary.skipped.length) parts.push('Übersprungen (keine Division gesetzt): ' + summary.skipped.join(', '));
         if (summary.errors.length) parts.push('Fehler: ' + summary.errors.join(' / '));
         resultEl.innerHTML = '<p class="empty-note">' + esc(parts.join(' ')) + '</p>';
