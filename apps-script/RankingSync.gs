@@ -7,11 +7,18 @@
  *
  * Writes points into the raw entry columns of a ranking tab (Club1 | Club2 |
  * Player name | <one column per tournament> for player sheets; Club name |
- * <one column per tournament> for club sheets), then reads back the sheet's
- * own "DO NOT TOUCH — WILL UPDATE AUTOMATICALLY" mirror section (same
- * columns, sorted by total points, plus a Points/Total and a Ranking column)
- * so the caller can push a fresh snapshot to the website — this script never
- * WRITES to that side, only reads it after the sheet's formulas recompute.
+ * <one column per tournament> for club sheets). A separate action reads back
+ * the sheet's own "DO NOT TOUCH — WILL UPDATE AUTOMATICALLY" mirror section
+ * (same columns, sorted by total points, plus a Points/Total and a Ranking
+ * column) so the caller can push a fresh snapshot to the website — this
+ * script never WRITES to that side, only reads it. The read is a separate
+ * action (not bundled into the write's response) on purpose: a write already
+ * does many individual setValue() calls, and up to four of these run
+ * concurrently (one per sheet) from the site's sync button — adding a
+ * flush() + several range reads on top of that pushed some real syncs past
+ * the request's time budget ("Failed to fetch"). A second, read-only
+ * request has nothing to wait on but the sheet's own (already-committed)
+ * recalculation, so it stays fast even under that same concurrency.
  *
  * Trust model matches the registrations Code.gs: no server-side identity
  * check on who calls this endpoint. Fine for a small, single-operator site;
@@ -22,6 +29,7 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     if (body.action === 'syncRanking') return jsonOut_(syncRanking_(body));
+    if (body.action === 'getRankingMirror') return jsonOut_(getRankingMirror_(body));
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
     return jsonOut_({ error: String(err) });
@@ -98,10 +106,23 @@ function syncRanking_(body) {
     results.push({ name: entry.name, row: rowIndex, points: entry.points });
   });
 
-  SpreadsheetApp.flush(); // force the sheet's own formulas to recompute before we read the mirror back
-  var mirror = readMirror_(sheet, headerRow, header, isPlayerSheet, nameCol);
+  return { ok: true, sheet: body.sheetName, updated: results.length, results: results };
+}
 
-  return { ok: true, sheet: body.sheetName, updated: results.length, results: results, mirror: mirror };
+// body: { sheetName: 'Mens ranking 2026' } — read-only, call after
+// syncRanking_ has already returned (so the sheet's formulas have already
+// recomputed on its own; no flush() needed for a request that isn't also
+// writing).
+function getRankingMirror_(body) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(body.sheetName);
+  if (!sheet) return { error: 'Sheet tab not found: ' + body.sheetName };
+
+  var headerRow = findHeaderRow_(sheet);
+  var header = sheet.getRange(headerRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var isPlayerSheet = header.indexOf('Player name') !== -1;
+  var nameCol = isPlayerSheet ? (header.indexOf('Player name') + 1) : 1;
+
+  return { ok: true, sheet: body.sheetName, mirror: readMirror_(sheet, headerRow, header, isPlayerSheet, nameCol) };
 }
 
 // The mirror section is a column-for-column copy of the raw section (same
