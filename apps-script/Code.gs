@@ -83,7 +83,13 @@ function listRegistrations_(tournamentId) {
       competition: r[idx.Competition],
       status: r[idx.Status],
       uid: r[idx.UserId],
-      partnerUid: r[idx.PartnerId]
+      partnerUid: r[idx.PartnerId],
+      jerseyFit: r[idx.JerseyFit],
+      jerseySize: r[idx.JerseySize],
+      jerseyName: r[idx.JerseyName],
+      partnerJerseyFit: r[idx.PartnerJerseyFit],
+      partnerJerseySize: r[idx.PartnerJerseySize],
+      partnerJerseyName: r[idx.PartnerJerseyName]
     });
   });
   return out;
@@ -109,7 +115,9 @@ function registerTeam_(body) {
     body.firstName, body.lastName, body.email, body.phone,
     body.partner, body.club, 'pending', '',
     body.uid || '', body.partnerUid || '',
-    body.companyName || '', body.vatNumber || ''
+    body.companyName || '', body.vatNumber || '',
+    body.jerseyFit || '', body.jerseySize || '', body.jerseyName || '',
+    body.partnerJerseyFit || '', body.partnerJerseySize || '', body.partnerJerseyName || ''
   ]);
   return { ok: true, id: id };
 }

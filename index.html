@@ -2295,6 +2295,13 @@ var CLUBS = [
     'register.phoneLabel': 'Phone *',
     'register.partnerLabel': 'Partner (2nd Player) *',
     'register.partnerPlaceholder': 'First and last name',
+    'register.jerseyFitLabel': 'Jersey fit *',
+    'register.jerseySizeLabel': 'Jersey size *',
+    'register.jerseyNameLabel': 'Jersey name *',
+    'register.jerseyNamePlaceholder': 'Name for the back of the jersey',
+    'register.partnerJerseyFitLabel': "Partner's jersey fit *",
+    'register.partnerJerseySizeLabel': "Partner's jersey size *",
+    'register.partnerJerseyNameLabel': "Partner's jersey name *",
     'register.clubLabel': 'Club *',
     'register.clubPlaceholder': 'Search club …',
     'register.businessToggle': "I need a VAT invoice (registering as a business)",
@@ -2381,6 +2388,8 @@ var CLUBS = [
       'compselect.backLink': '← Zurück zum Turnier', 'compselect.question': 'Für welche Kategorie möchtest du dich anmelden?', 'compselect.teamReg': 'Team-Anmeldung (2v2)',
       'register.backLink': '← Zurück zum Turnier', 'register.heading': 'Team-Anmeldung', 'register.firstNameLabel': 'Vorname *', 'register.lastNameLabel': 'Nachname *',
       'register.emailLabel': 'E-Mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. Spieler) *', 'register.partnerPlaceholder': 'Vor- und Nachname',
+      'register.jerseyFitLabel': 'Trikot-Schnitt *', 'register.jerseySizeLabel': 'Trikot-Größe *', 'register.jerseyNameLabel': 'Trikot-Name *', 'register.jerseyNamePlaceholder': 'Name für den Trikot-Rücken',
+      'register.partnerJerseyFitLabel': 'Trikot-Schnitt Partner *', 'register.partnerJerseySizeLabel': 'Trikot-Größe Partner *', 'register.partnerJerseyNameLabel': 'Trikot-Name Partner *',
       'register.clubLabel': 'Verein *', 'register.clubPlaceholder': 'Verein suchen …',
       'register.businessToggle': 'Ich benötige eine Rechnung mit USt-IdNr. (Anmeldung als Unternehmen)',
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
@@ -6739,6 +6748,9 @@ var CLUBS = [
      REGISTER
      ================================================================== */
   var registerContent = document.getElementById('registerContent');
+  var JERSEY_SIZE_OPTIONS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(function(s) {
+    return '<option value="' + s + '">' + s + '</option>';
+  }).join('');
 
   function showRegister(t, competition, query) {
     var isResuming = query && (query.resume || (query.paid && query.session_id));
@@ -6760,6 +6772,24 @@ var CLUBS = [
           '<div id="partnerDropdown" class="combo-dropdown" hidden></div>' +
           '<input type="hidden" id="rPartnerUid">' +
         '</div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>' + uiEdit('register.jerseyFitLabel') + '</label><select id="rJerseyFit" required>' +
+            '<option value="Men">Men</option><option value="Women">Women</option>' +
+          '</select></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.jerseySizeLabel') + '</label><select id="rJerseySize" required>' +
+            JERSEY_SIZE_OPTIONS +
+          '</select></div>' +
+        '</div>' +
+        '<div class="form-group"><label>' + uiEdit('register.jerseyNameLabel') + '</label><input id="rJerseyName" required placeholder="' + esc(uiText('register.jerseyNamePlaceholder')) + '"></div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>' + uiEdit('register.partnerJerseyFitLabel') + '</label><select id="rPartnerJerseyFit" required>' +
+            '<option value="Men">Men</option><option value="Women">Women</option>' +
+          '</select></div>' +
+          '<div class="form-group"><label>' + uiEdit('register.partnerJerseySizeLabel') + '</label><select id="rPartnerJerseySize" required>' +
+            JERSEY_SIZE_OPTIONS +
+          '</select></div>' +
+        '</div>' +
+        '<div class="form-group"><label>' + uiEdit('register.partnerJerseyNameLabel') + '</label><input id="rPartnerJerseyName" required placeholder="' + esc(uiText('register.jerseyNamePlaceholder')) + '"></div>' +
         '<div class="form-group combo-group">' +
           '<label>' + uiEdit('register.clubLabel') + '</label>' +
           '<input id="rClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '" required>' +
@@ -6849,6 +6879,12 @@ var CLUBS = [
       var phone = document.getElementById('rPhone').value.trim();
       var partner = document.getElementById('rPartner').value.trim();
       var partnerUid = document.getElementById('rPartnerUid').value.trim();
+      var jerseyFit = document.getElementById('rJerseyFit').value;
+      var jerseySize = document.getElementById('rJerseySize').value;
+      var jerseyName = document.getElementById('rJerseyName').value.trim();
+      var partnerJerseyFit = document.getElementById('rPartnerJerseyFit').value;
+      var partnerJerseySize = document.getElementById('rPartnerJerseySize').value;
+      var partnerJerseyName = document.getElementById('rPartnerJerseyName').value.trim();
       var clubHidden = document.getElementById('rClub').value.trim();
       var clubTyped = document.getElementById('rClubSearch').value.trim();
       var club = clubHidden || clubTyped;
@@ -6857,7 +6893,7 @@ var CLUBS = [
       var companyName = isBusiness ? document.getElementById('rCompanyName').value.trim() : '';
       var vatNumber = isBusiness ? document.getElementById('rVatNumber').value.trim() : '';
 
-      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || (isBusiness && (!companyName || !vatNumber))) {
+      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || !jerseyName || !partnerJerseyName || (isBusiness && (!companyName || !vatNumber))) {
         err.textContent = 'Please fill in all required fields.';
         return;
       }
@@ -6866,7 +6902,7 @@ var CLUBS = [
       submitBtn.disabled = true;
       submitBtn.textContent = 'One moment …';
 
-      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber };
+      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber, jerseyFit:jerseyFit, jerseySize:jerseySize, jerseyName:jerseyName, partnerJerseyFit:partnerJerseyFit, partnerJerseySize:partnerJerseySize, partnerJerseyName:partnerJerseyName };
 
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');
