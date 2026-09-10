@@ -358,6 +358,24 @@
   .schedule-match-row .match-team { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; padding-right:8px; margin-right:8px; border-right:1px solid var(--border); white-space:nowrap; }
   .schedule-set-score { min-width:18px; text-align:center; font-size:13px; font-weight:600; color:var(--text-muted); }
   .schedule-match-winner .match-team, .schedule-match-winner .schedule-set-score { color:var(--paid); font-weight:700; }
+
+  .exchange-sub { color:var(--text-muted); font-size:14px; max-width:560px; }
+  .exchange-my-panel { margin:18px 0; }
+  .exchange-my-panel .form-row { align-items:flex-end; gap:14px; }
+  .exchange-list { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .exchange-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); flex-wrap:wrap; }
+  .inbox-list { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+  .inbox-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); cursor:pointer; flex-wrap:wrap; }
+  .inbox-row:hover { border-color:var(--cyan-ink); }
+  .inbox-tournament { display:block; font-size:12px; color:var(--text-muted); font-weight:500; }
+  .inbox-preview { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:13px; }
+  .conversation-request { border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); padding:14px 16px; margin:16px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .conversation-request p { margin:0; flex:1; min-width:200px; }
+  .conversation-messages { display:flex; flex-direction:column; gap:8px; min-height:120px; max-height:420px; overflow-y:auto; padding:14px 0; }
+  .conversation-bubble { align-self:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:8px 14px; max-width:70%; font-size:14px; }
+  .conversation-bubble.mine { align-self:flex-end; background:var(--cyan); color:var(--heading); border-color:transparent; }
+  .conversation-send { display:flex; gap:10px; padding-top:12px; border-top:1px solid var(--border); }
+  .conversation-send input { flex:1; }
   .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
   .schedule-add-block { gap:6px; align-items:center; margin-top:8px; }
   .schedule-add-block input { width:auto; padding:7px 8px; font-size:12px; }
@@ -499,6 +517,7 @@
             <button type="button" data-nav-user-action="edit">Edit profile</button>
           </div>
         </div>
+        <button class="nav-link" data-route="inbox" data-ui-key="nav.inbox">Inbox</button>
         <button class="nav-link" id="editModeBtn" hidden>Edit Mode: Off</button>
         <button class="nav-link" id="logoutBtn" data-ui-key="nav.logout">Log Out</button>
       </div>
@@ -575,6 +594,19 @@
     <div class="container">
       <button class="back-btn" data-back="detail" data-ui-key="register.backLink">← Back to Tournament</button>
       <div id="scheduleContent"></div>
+    </div>
+  </section>
+
+  <section id="view-exchange" class="view" hidden>
+    <div class="container">
+      <button class="back-btn" data-back data-ui-key="register.backLink">← Back to Tournament</button>
+      <div id="exchangeContent"></div>
+    </div>
+  </section>
+
+  <section id="view-inbox" class="view" hidden>
+    <div class="container">
+      <div id="inboxContent"></div>
     </div>
   </section>
 
@@ -2298,6 +2330,34 @@ var CLUBS = [
     'register.lastNameLabel': 'Last Name *',
     'register.emailLabel': 'Email *',
     'register.phoneLabel': 'Phone *',
+    'nav.inbox': 'Inbox',
+    'exchange.navLabel': 'Player Exchange',
+    'exchange.heading': 'Player Exchange',
+    'exchange.subheading': "Looking for a partner for this tournament, or someone else's partner? List yourself here so other players can find and contact you.",
+    'exchange.sideLabel': 'Preferred side',
+    'exchange.sideLeft': 'Left',
+    'exchange.sideRight': 'Right',
+    'exchange.sideAny': 'Either',
+    'exchange.addListingBtn': 'List myself',
+    'exchange.myListingLabel': 'Your listing',
+    'exchange.cancelListingBtn': 'Remove my listing',
+    'exchange.contactBtn': 'Contact',
+    'exchange.emptyNote': 'No one looking for a partner here yet.',
+    'exchange.matchedNote': "You're already partnered up for this tournament.",
+    'inbox.heading': 'Inbox',
+    'inbox.emptyNote': "No conversations yet — contact someone from a tournament's Player Exchange to get started.",
+    'inbox.pendingBadge': 'Request pending',
+    'inbox.acceptedBadge': 'Accepted',
+    'inbox.declinedBadge': 'Declined',
+    'conversation.backLink': '← Back to Inbox',
+    'conversation.acceptBtn': 'Accept',
+    'conversation.declineBtn': 'Decline',
+    'conversation.messagePlaceholder': 'Write a message…',
+    'conversation.sendBtn': 'Send',
+    'conversation.goToRegisterBtn': 'Start registration together →',
+    'conversation.declinedNote': 'This partner request was declined.',
+    'conversation.acceptedNote': "You're partnered up for this tournament!",
+    'conversation.requestNote': 'wants to be your partner for',
     'register.partnerLabel': 'Partner (2nd Player) *',
     'register.partnerPlaceholder': 'First and last name',
     'register.jerseyFitLabel': 'Jersey fit *',
@@ -2395,6 +2455,18 @@ var CLUBS = [
       'register.emailLabel': 'E-Mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. Spieler) *', 'register.partnerPlaceholder': 'Vor- und Nachname',
       'register.jerseyFitLabel': 'Trikot-Schnitt *', 'register.jerseySizeLabel': 'Trikot-Größe *', 'register.jerseyNameLabel': 'Trikot-Name *', 'register.jerseyNamePlaceholder': 'Name für den Trikot-Rücken',
       'register.partnerJerseyFitLabel': 'Trikot-Schnitt Partner *', 'register.partnerJerseySizeLabel': 'Trikot-Größe Partner *', 'register.partnerJerseyNameLabel': 'Trikot-Name Partner *',
+      'nav.inbox': 'Postfach', 'exchange.navLabel': 'Spielerbörse', 'exchange.heading': 'Spielerbörse',
+      'exchange.subheading': 'Suchst du einen Partner für dieses Turnier? Trag dich hier ein, damit andere Spieler dich finden und kontaktieren können.',
+      'exchange.sideLabel': 'Bevorzugte Seite', 'exchange.sideLeft': 'Links', 'exchange.sideRight': 'Rechts', 'exchange.sideAny': 'Egal',
+      'exchange.addListingBtn': 'Mich eintragen', 'exchange.myListingLabel': 'Deine Anzeige', 'exchange.cancelListingBtn': 'Anzeige entfernen',
+      'exchange.contactBtn': 'Kontaktieren', 'exchange.emptyNote': 'Hier sucht aktuell niemand einen Partner.',
+      'exchange.matchedNote': 'Du bist für dieses Turnier schon verpartnert.',
+      'inbox.heading': 'Postfach', 'inbox.emptyNote': 'Noch keine Unterhaltungen — kontaktiere jemanden über die Spielerbörse eines Turniers.',
+      'inbox.pendingBadge': 'Anfrage offen', 'inbox.acceptedBadge': 'Angenommen', 'inbox.declinedBadge': 'Abgelehnt',
+      'conversation.backLink': '← Zurück zum Postfach', 'conversation.acceptBtn': 'Annehmen', 'conversation.declineBtn': 'Ablehnen',
+      'conversation.messagePlaceholder': 'Nachricht schreiben…', 'conversation.sendBtn': 'Senden',
+      'conversation.goToRegisterBtn': 'Gemeinsam anmelden →', 'conversation.declinedNote': 'Diese Partneranfrage wurde abgelehnt.',
+      'conversation.acceptedNote': 'Ihr seid für dieses Turnier verpartnert!', 'conversation.requestNote': 'möchte dein Partner sein für',
       'register.clubLabel': 'Verein *', 'register.clubPlaceholder': 'Verein suchen …',
       'register.businessToggle': 'Ich benötige eine Rechnung mit USt-IdNr. (Anmeldung als Unternehmen)',
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
@@ -3034,10 +3106,10 @@ var CLUBS = [
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var currentFilter = 'upcoming';
 
-  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', impressum:'impressum', login:'login', registeraccount:'register-account' };
+  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', impressum:'impressum', login:'login', registeraccount:'register-account', inbox:'inbox' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','player','ranking','impressum','login','registeraccount'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','player','ranking','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -3083,6 +3155,9 @@ var CLUBS = [
         showLive(t, p[3] && decodeURIComponent(p[3]));
       } else if (p[2] === 'schedule') {
         showSchedule(t);
+      } else if (p[2] === 'exchange') {
+        if (!currentUser) { pendingPath = h.parts.join('/'); navigate('login'); return; }
+        showExchange(t);
       } else {
         showDetail(t);
       }
@@ -3099,6 +3174,9 @@ var CLUBS = [
       showLogin();
     } else if (p[0] === 'register-account') {
       showRegisterAccount();
+    } else if (p[0] === 'inbox') {
+      if (!currentUser) { pendingPath = h.parts.join('/'); navigate('login'); return; }
+      if (p[1]) { showConversation(p[1]); } else { showInbox(); }
     } else {
       showLanding();
     }
@@ -3584,7 +3662,10 @@ var CLUBS = [
     var schedule = scheduleLinkVisible(t)
       ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.label') + ' →</a>'
       : '';
-    return primary + schedule;
+    var exchange = t.status === 'upcoming'
+      ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/exchange">' + uiText('exchange.navLabel') + ' →</a>'
+      : '';
+    return primary + schedule + exchange;
   }
 
   // Visitors shouldn't be able to click into an empty bracket page — admins
@@ -6770,6 +6851,399 @@ var CLUBS = [
     return '<option value="' + s + '">' + s + '</option>';
   }).join('');
 
+  /* ==================================================================
+     PLAYER EXCHANGE (per-tournament partner-finder marketplace) + INBOX
+     (direct messaging with a lightweight accept/decline request on top —
+     "Contact" both creates the request AND opens the chat in one action,
+     so declining or just chatting doesn't require a separate step).
+     Firestore collections: exchangeListings/{tournamentId_uid},
+     conversations/{tournamentId__uidA__uidB} + its messages subcollection.
+     Demo mode mirrors the same shape into localStorage, non-reactive
+     (each action re-renders locally instead of listening for pushes).
+     ================================================================== */
+  function exchangeListingId(tournamentId, uid) { return tournamentId + '_' + uid; }
+
+  function loadExchangeListings(tournamentId, competition) {
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
+      return Promise.resolve(Object.keys(all).map(function(k){ return all[k]; }).filter(function(l) {
+        return l.tournamentId === tournamentId && l.competition === competition && l.status === 'open';
+      }));
+    }
+    return firebase.firestore().collection('exchangeListings')
+      .where('tournamentId', '==', tournamentId).where('competition', '==', competition).where('status', '==', 'open')
+      .get().then(function(snap) { return snap.docs.map(function(d) { return d.data(); }); });
+  }
+
+  function myExchangeListing(tournamentId) {
+    if (!currentUser) return Promise.resolve(null);
+    var id = exchangeListingId(tournamentId, currentUser.uid);
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
+      return Promise.resolve(all[id] || null);
+    }
+    return firebase.firestore().collection('exchangeListings').doc(id).get().then(function(doc) { return doc.exists ? doc.data() : null; });
+  }
+
+  function saveExchangeListing(tournamentId, competition, side, club) {
+    var id = exchangeListingId(tournamentId, currentUser.uid);
+    var data = { id: id, tournamentId: tournamentId, competition: competition, side: side, club: club || '', uid: currentUser.uid, name: currentUser.name, status: 'open', createdAt: Date.now() };
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
+      all[id] = data;
+      localStorage.setItem('loc_exchange_listings', JSON.stringify(all));
+      return Promise.resolve(data);
+    }
+    return firebase.firestore().collection('exchangeListings').doc(id).set(data).then(function() { return data; });
+  }
+
+  function removeExchangeListing(tournamentId) {
+    var id = exchangeListingId(tournamentId, currentUser.uid);
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
+      delete all[id];
+      localStorage.setItem('loc_exchange_listings', JSON.stringify(all));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('exchangeListings').doc(id).delete();
+  }
+
+  function markListingMatched(tournamentId, uid) {
+    var id = exchangeListingId(tournamentId, uid);
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
+      if (all[id]) { all[id].status = 'matched'; localStorage.setItem('loc_exchange_listings', JSON.stringify(all)); }
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('exchangeListings').doc(id).set({ status: 'matched' }, { merge: true });
+  }
+
+  function sideLabel(side) {
+    return side === 'left' ? uiText('exchange.sideLeft') : side === 'right' ? uiText('exchange.sideRight') : uiText('exchange.sideAny');
+  }
+
+  // Deterministic id (sorted uid pair, scoped to the tournament) so
+  // contacting the same person twice for the same event reuses one thread
+  // instead of spawning duplicates.
+  function conversationId(tournamentId, uidA, uidB) {
+    var pair = [uidA, uidB].sort();
+    return tournamentId + '__' + pair[0] + '__' + pair[1];
+  }
+
+  function getConversation(id) {
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+      return Promise.resolve(all[id] || null);
+    }
+    return firebase.firestore().collection('conversations').doc(id).get().then(function(doc) { return doc.exists ? doc.data() : null; });
+  }
+
+  function findOrCreateConversation(tournamentId, tournamentName, competition, otherUid, otherName) {
+    var id = conversationId(tournamentId, currentUser.uid, otherUid);
+    return getConversation(id).then(function(existing) {
+      if (existing) return existing;
+      var participantNames = {};
+      participantNames[currentUser.uid] = currentUser.name;
+      participantNames[otherUid] = otherName;
+      var data = {
+        id: id, tournamentId: tournamentId, tournamentName: tournamentName, competition: competition,
+        participants: [currentUser.uid, otherUid], participantNames: participantNames,
+        requestStatus: 'pending', requestedBy: currentUser.uid, requestFor: otherUid,
+        createdAt: Date.now(), lastMessageAt: Date.now(), lastMessageText: ''
+      };
+      if (AUTH_DEMO_MODE) {
+        var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+        all[id] = data;
+        localStorage.setItem('loc_conversations', JSON.stringify(all));
+        return data;
+      }
+      return firebase.firestore().collection('conversations').doc(id).set(data).then(function() { return data; });
+    });
+  }
+
+  function loadMyConversations() {
+    if (!currentUser) return Promise.resolve([]);
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+      var list = Object.keys(all).map(function(k) { return all[k]; }).filter(function(c) { return c.participants.indexOf(currentUser.uid) !== -1; });
+      list.sort(function(a, b) { return (b.lastMessageAt || 0) - (a.lastMessageAt || 0); });
+      return Promise.resolve(list);
+    }
+    return firebase.firestore().collection('conversations').where('participants', 'array-contains', currentUser.uid).get()
+      .then(function(snap) {
+        var list = snap.docs.map(function(d) { return d.data(); });
+        list.sort(function(a, b) { return (b.lastMessageAt || 0) - (a.lastMessageAt || 0); });
+        return list;
+      });
+  }
+
+  // Only the current (accepting) user's own listing gets marked here —
+  // exchangeListings write rules only allow a user to touch their own doc,
+  // so marking the OTHER participant's listing has to wait until THEY
+  // load the conversation (see the opportunistic cleanup in
+  // renderConversation) rather than happening as a side effect here.
+  function respondToRequest(convo, accept) {
+    var status = accept ? 'accepted' : 'declined';
+    var applyMatch = function() {
+      if (!accept) return Promise.resolve();
+      return markListingMatched(convo.tournamentId, currentUser.uid);
+    };
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+      if (all[convo.id]) { all[convo.id].requestStatus = status; localStorage.setItem('loc_conversations', JSON.stringify(all)); }
+      return applyMatch();
+    }
+    return firebase.firestore().collection('conversations').doc(convo.id).set({ requestStatus: status }, { merge: true }).then(applyMatch);
+  }
+
+  function loadMessages(convoId) {
+    if (AUTH_DEMO_MODE) {
+      return Promise.resolve(JSON.parse(localStorage.getItem('loc_messages_' + convoId) || '[]'));
+    }
+    return firebase.firestore().collection('conversations').doc(convoId).collection('messages').orderBy('createdAt').get()
+      .then(function(snap) { return snap.docs.map(function(d) { return d.data(); }); });
+  }
+
+  function sendMessage(convo, text) {
+    var msg = { id: genId('msg'), senderId: currentUser.uid, text: text, createdAt: Date.now() };
+    if (AUTH_DEMO_MODE) {
+      var key = 'loc_messages_' + convo.id;
+      var list = JSON.parse(localStorage.getItem(key) || '[]');
+      list.push(msg);
+      localStorage.setItem(key, JSON.stringify(list));
+      var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+      if (all[convo.id]) { all[convo.id].lastMessageAt = msg.createdAt; all[convo.id].lastMessageText = text; localStorage.setItem('loc_conversations', JSON.stringify(all)); }
+      return Promise.resolve(msg);
+    }
+    var db = firebase.firestore();
+    return db.collection('conversations').doc(convo.id).collection('messages').add(msg).then(function() {
+      return db.collection('conversations').doc(convo.id).set({ lastMessageAt: Date.now(), lastMessageText: text }, { merge: true });
+    });
+  }
+
+  var exchangeCompetition = null;
+
+  function showExchange(t) {
+    exchangeCompetition = (exchangeCompetition && t.competitions.indexOf(exchangeCompetition) !== -1) ? exchangeCompetition : t.competitions[0];
+    document.getElementById('exchangeContent').innerHTML = '<p class="empty-note">Loading …</p>';
+    setView('exchange');
+    renderExchange(t);
+  }
+
+  function renderExchange(t) {
+    var el = document.getElementById('exchangeContent');
+    var tabsHtml = t.competitions.length > 1
+      ? '<div class="tabs">' + t.competitions.map(function(c) {
+          return '<button class="tab' + (c === exchangeCompetition ? ' active' : '') + '" data-exchange-comp="' + esc(c) + '">' + esc(divisionLabel(c)) + '</button>';
+        }).join('') + '</div>'
+      : '';
+    el.innerHTML =
+      '<div class="register-head"><span class="eyebrow mono">' + esc(t.name) + ' · ' + t.dateLabel + '</span><h1>' + uiEdit('exchange.heading') + '</h1><p class="exchange-sub">' + uiEdit('exchange.subheading') + '</p></div>' +
+      tabsHtml +
+      '<div id="exchangeMyListing"></div>' +
+      '<div id="exchangeList" class="exchange-list"><p class="empty-note">Loading …</p></div>';
+
+    el.querySelectorAll('[data-exchange-comp]').forEach(function(btn) {
+      btn.addEventListener('click', function() { exchangeCompetition = btn.dataset.exchangeComp; renderExchange(t); });
+    });
+
+    renderMyListingPanel(t);
+    renderExchangeList(t);
+  }
+
+  function renderMyListingPanel(t) {
+    var wrap = document.getElementById('exchangeMyListing');
+    myExchangeListing(t.id).then(function(listing) {
+      if (listing && listing.status === 'matched') {
+        wrap.innerHTML = '<div class="exchange-my-panel"><p class="empty-note">' + uiEdit('exchange.matchedNote') + '</p></div>';
+        return;
+      }
+      if (listing) {
+        wrap.innerHTML = '<div class="exchange-my-panel"><div class="exchange-card">' +
+          '<div><strong>' + esc(listing.name) + '</strong> · ' + esc(listing.club || '–') + ' · ' + sideLabel(listing.side) + '</div>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="exCancelListing">' + uiEdit('exchange.cancelListingBtn') + '</button>' +
+        '</div></div>';
+        document.getElementById('exCancelListing').addEventListener('click', function() {
+          removeExchangeListing(t.id).then(function() { renderMyListingPanel(t); renderExchangeList(t); });
+        });
+        return;
+      }
+      wrap.innerHTML =
+        '<div class="exchange-my-panel"><form id="exListingForm" class="form-row">' +
+          '<div class="form-group"><label>' + uiEdit('exchange.sideLabel') + '</label><select id="exSide">' +
+            '<option value="any">' + uiEdit('exchange.sideAny') + '</option>' +
+            '<option value="left">' + uiEdit('exchange.sideLeft') + '</option>' +
+            '<option value="right">' + uiEdit('exchange.sideRight') + '</option>' +
+          '</select></div>' +
+          '<div class="form-group combo-group"><label>' + uiEdit('register.clubLabel') + '</label>' +
+            '<input id="exClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '">' +
+            '<div id="exClubDropdown" class="combo-dropdown" hidden></div>' +
+            '<input type="hidden" id="exClub">' +
+          '</div>' +
+          '<button type="submit" class="btn btn-cyan">' + uiEdit('exchange.addListingBtn') + '</button>' +
+        '</form></div>';
+      setupExchangeClubCombo();
+      document.getElementById('exListingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var side = document.getElementById('exSide').value;
+        var club = document.getElementById('exClub').value || document.getElementById('exClubSearch').value;
+        saveExchangeListing(t.id, exchangeCompetition, side, club).then(function() { renderMyListingPanel(t); renderExchangeList(t); });
+      });
+    });
+  }
+
+  function renderExchangeList(t) {
+    var wrap = document.getElementById('exchangeList');
+    loadExchangeListings(t.id, exchangeCompetition).then(function(listings) {
+      var others = listings.filter(function(l) { return !currentUser || l.uid !== currentUser.uid; });
+      if (!others.length) { wrap.innerHTML = '<p class="empty-note">' + uiEdit('exchange.emptyNote') + '</p>'; return; }
+      wrap.innerHTML = others.map(function(l) {
+        var match = findPlayer(l.uid);
+        return '<div class="exchange-card">' +
+          '<div>' + playerNameLinkHtml(l.name, match ? match.uid : null) + ' · ' + esc(l.club || '–') + ' · ' + sideLabel(l.side) + '</div>' +
+          '<button type="button" class="btn btn-outline btn-sm" data-contact-uid="' + esc(l.uid) + '" data-contact-name="' + esc(l.name) + '">' + uiEdit('exchange.contactBtn') + '</button>' +
+        '</div>';
+      }).join('');
+      wrap.querySelectorAll('[data-contact-uid]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          btn.disabled = true;
+          findOrCreateConversation(t.id, t.name, exchangeCompetition, btn.dataset.contactUid, btn.dataset.contactName).then(function(convo) {
+            navigate('inbox/' + convo.id);
+          });
+        });
+      });
+    });
+  }
+
+  function setupExchangeClubCombo() {
+    var search = document.getElementById('exClubSearch');
+    var hiddenInput = document.getElementById('exClub');
+    var dropdown = document.getElementById('exClubDropdown');
+    search.addEventListener('input', function() {
+      var q = search.value.trim().toLowerCase();
+      hiddenInput.value = '';
+      if (!q) { dropdown.hidden = true; return; }
+      var matches = CLUBS.filter(function(c) { return c.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
+      if (!matches.length) { dropdown.hidden = true; return; }
+      dropdown.innerHTML = matches.map(function(c) {
+        return '<div class="combo-item" data-club="' + esc(c.name) + '">' + clubAvatarHtml(c) + '<span>' + esc(c.name) + '</span></div>';
+      }).join('');
+      dropdown.hidden = false;
+    });
+    dropdown.addEventListener('click', function(e) {
+      var item = e.target.closest('.combo-item');
+      if (!item) return;
+      search.value = item.dataset.club;
+      hiddenInput.value = item.dataset.club;
+      dropdown.hidden = true;
+    });
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.combo-group')) dropdown.hidden = true;
+    });
+  }
+
+  function showInbox() {
+    var el = document.getElementById('inboxContent');
+    el.innerHTML = '<p class="empty-note">Loading …</p>';
+    setView('inbox');
+    loadMyConversations().then(function(list) {
+      if (!list.length) {
+        el.innerHTML = '<h1>' + uiEdit('inbox.heading') + '</h1><p class="empty-note">' + uiEdit('inbox.emptyNote') + '</p>';
+        return;
+      }
+      el.innerHTML = '<h1>' + uiEdit('inbox.heading') + '</h1><div class="inbox-list">' + list.map(function(c) {
+        var otherUid = c.participants.filter(function(u) { return u !== currentUser.uid; })[0];
+        var otherName = c.participantNames[otherUid] || '';
+        var badgeKey = c.requestStatus === 'pending' ? 'inbox.pendingBadge' : c.requestStatus === 'accepted' ? 'inbox.acceptedBadge' : 'inbox.declinedBadge';
+        var badgeClass = c.requestStatus === 'accepted' ? 'status-paid' : 'status-pending';
+        return '<div class="inbox-row" data-conversation-id="' + esc(c.id) + '">' +
+          '<div><strong>' + esc(otherName) + '</strong><span class="inbox-tournament">' + esc(c.tournamentName) + '</span></div>' +
+          '<div class="inbox-preview">' + esc(c.lastMessageText || '') + '</div>' +
+          '<span class="status ' + badgeClass + '">' + uiText(badgeKey) + '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+      el.querySelectorAll('[data-conversation-id]').forEach(function(row) {
+        row.addEventListener('click', function() { navigate('inbox/' + row.dataset.conversationId); });
+      });
+    });
+  }
+
+  function showConversation(id) {
+    document.getElementById('inboxContent').innerHTML = '<p class="empty-note">Loading …</p>';
+    setView('inbox');
+    getConversation(id).then(function(convo) {
+      if (!convo || convo.participants.indexOf(currentUser.uid) === -1) { navigate('inbox'); return; }
+      renderConversation(convo);
+    });
+  }
+
+  function renderConversation(convo) {
+    var el = document.getElementById('inboxContent');
+    var otherUid = convo.participants.filter(function(u) { return u !== currentUser.uid; })[0];
+    var otherName = convo.participantNames[otherUid] || '';
+    var registerUrl = '#/event/' + esc(convo.tournamentId) + '/register/' + esc(encodeURIComponent(convo.competition || 'Men')) + '?partnerUid=' + esc(otherUid) + '&partnerName=' + esc(encodeURIComponent(otherName));
+
+    var requestHtml = '';
+    if (convo.requestStatus === 'pending' && convo.requestFor === currentUser.uid) {
+      requestHtml = '<div class="conversation-request">' +
+        '<p>' + esc(convo.participantNames[convo.requestedBy] || '') + ' ' + uiText('conversation.requestNote') + ' ' + esc(convo.tournamentName) + '.</p>' +
+        '<button type="button" class="btn btn-cyan btn-sm" id="convAccept">' + uiEdit('conversation.acceptBtn') + '</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="convDecline">' + uiEdit('conversation.declineBtn') + '</button>' +
+      '</div>';
+    } else if (convo.requestStatus === 'declined') {
+      requestHtml = '<p class="empty-note">' + uiEdit('conversation.declinedNote') + '</p>';
+    } else if (convo.requestStatus === 'accepted') {
+      requestHtml = '<div class="conversation-request">' +
+        '<p class="empty-note">' + uiEdit('conversation.acceptedNote') + '</p>' +
+        '<a class="btn btn-cyan btn-sm" href="' + registerUrl + '">' + uiEdit('conversation.goToRegisterBtn') + '</a>' +
+      '</div>';
+      // The user who clicked Accept already had their own listing marked
+      // matched there — this is the OTHER participant's turn to do the same
+      // to their own listing, the first time they see the accepted thread
+      // (each user can only write their own exchangeListings doc).
+      myExchangeListing(convo.tournamentId).then(function(listing) {
+        if (listing && listing.status === 'open') markListingMatched(convo.tournamentId, currentUser.uid);
+      });
+    }
+
+    el.innerHTML =
+      '<button class="back-btn" data-route="inbox">' + uiEdit('conversation.backLink') + '</button>' +
+      '<div class="register-head"><span class="eyebrow mono">' + esc(convo.tournamentName) + '</span><h1>' + esc(otherName) + '</h1></div>' +
+      requestHtml +
+      '<div class="conversation-messages" id="convoMessages"><p class="empty-note">…</p></div>' +
+      '<form id="convoSendForm" class="conversation-send"><input id="convoInput" autocomplete="off" placeholder="' + esc(uiText('conversation.messagePlaceholder')) + '" required><button type="submit" class="btn btn-cyan">' + uiEdit('conversation.sendBtn') + '</button></form>';
+
+    var acceptBtn = document.getElementById('convAccept');
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', function() {
+        respondToRequest(convo, true).then(function() { navigate('event/' + convo.tournamentId + '/register/' + encodeURIComponent(convo.competition || 'Men') + '?partnerUid=' + otherUid + '&partnerName=' + encodeURIComponent(otherName)); });
+      });
+    }
+    var declineBtn = document.getElementById('convDecline');
+    if (declineBtn) {
+      declineBtn.addEventListener('click', function() { respondToRequest(convo, false).then(function() { showConversation(convo.id); }); });
+    }
+
+    loadMessages(convo.id).then(function(messages) {
+      var box = document.getElementById('convoMessages');
+      if (!box) return;
+      if (!messages.length) { box.innerHTML = '<p class="empty-note">—</p>'; return; }
+      box.innerHTML = messages.map(function(m) {
+        return '<div class="conversation-bubble' + (m.senderId === currentUser.uid ? ' mine' : '') + '">' + esc(m.text) + '</div>';
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    });
+
+    document.getElementById('convoSendForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var input = document.getElementById('convoInput');
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      sendMessage(convo, text).then(function() { renderConversation(convo); });
+    });
+  }
+
   function showRegister(t, competition, query) {
     var isResuming = query && (query.resume || (query.paid && query.session_id));
     if (localStorage.getItem('loc_registered_' + t.id) && !isResuming) { navigate('event/' + t.id); return; }
@@ -6853,6 +7327,14 @@ var CLUBS = [
       document.getElementById('rLastName').value = nameParts.slice(1).join(' ');
       document.getElementById('rEmail').value = currentUser.email || '';
       document.getElementById('rPhone').value = currentUser.phone || '';
+    }
+
+    // Coming from an accepted Player Exchange conversation — the partner is
+    // already known, so skip the search step instead of making two people
+    // who just agreed to play together find each other again by name.
+    if (query && query.partnerUid) {
+      document.getElementById('rPartner').value = query.partnerName || '';
+      document.getElementById('rPartnerUid').value = query.partnerUid;
     }
 
     var pendingEntry = null;
