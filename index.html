@@ -353,6 +353,11 @@
   .schedule-score-entry .set-a, .schedule-score-entry .set-b { width:48px; }
   .schedule-match-vs { font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
   .schedule-match-result { font-size:11.5px; color:var(--paid); font-weight:700; }
+  .schedule-match-scored { gap:0; }
+  .schedule-match-row { display:flex; align-items:center; width:100%; }
+  .schedule-match-row .match-team { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; padding-right:8px; margin-right:8px; border-right:1px solid var(--border); white-space:nowrap; }
+  .schedule-set-score { min-width:18px; text-align:center; font-size:13px; font-weight:600; color:var(--text-muted); }
+  .schedule-match-winner .match-team, .schedule-match-winner .schedule-set-score { color:var(--paid); font-weight:700; }
   .schedule-item-handle { background:var(--cyan); color:var(--pill-text); border:none; width:26px; height:26px; border-radius:50%; font-size:12px; cursor:grab; touch-action:none; flex-shrink:0; align-items:center; justify-content:center; }
   .schedule-add-block { gap:6px; align-items:center; margin-top:8px; }
   .schedule-add-block input { width:auto; padding:7px 8px; font-size:12px; }
@@ -6056,7 +6061,7 @@ var CLUBS = [
   // columns that drifted apart (a longer earlier match, a break, ...) still
   // land a same-time item at close to the same height — no absolute
   // positioning needed, just tall-enough boxes in normal document flow.
-  var SCHEDULE_PX_PER_MIN = 5;
+  var SCHEDULE_PX_PER_MIN = 2;
   function scheduleItemMinHeightStyle(duration) {
     return ' style="min-height:' + (duration * SCHEDULE_PX_PER_MIN) + 'px"';
   }
@@ -6128,9 +6133,22 @@ var CLUBS = [
       matchForResult = found.match;
     }
     var winner = matchWinner(matchForResult, currentBracket.defaultFormat);
-    var vsHtml = winner
-      ? '<span class="schedule-match-result">' + esc(formatSetsSummary(matchForResult)) + '</span>'
-      : '<span class="schedule-match-vs">vs</span>';
+    // A decided match shows one score column per set, right next to each
+    // team's own name, instead of a single "22–20, 18–15" summary line —
+    // easier to scan who won which set at a glance on a small schedule card.
+    var teamsHtml;
+    if (winner) {
+      var resultSets = matchForResult.sets || [];
+      var aWon = matchForResult.teamAId === winner;
+      var scoresA = resultSets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[0]) + '</span>'; }).join('');
+      var scoresB = resultSets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[1]) + '</span>'; }).join('');
+      teamsHtml = '<div class="schedule-match-teams schedule-match-scored">' +
+        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamAHtml + scoresA + '</div>' +
+        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamBHtml + scoresB + '</div>' +
+      '</div>';
+    } else {
+      teamsHtml = '<div class="schedule-match-teams">' + teamAHtml + '<span class="schedule-match-vs">vs</span>' + teamBHtml + '</div>';
+    }
     var scoreEntryHtml = '';
     if (matchForResult.teamAId && matchForResult.teamBId) {
       var fmt = matchForResult.format || currentBracket.defaultFormat;
@@ -6152,7 +6170,7 @@ var CLUBS = [
     return '<div class="schedule-item" data-item-id="' + esc(item.id) + '"' + scheduleItemMinHeightStyle(duration) + '>' +
       '<div class="schedule-item-time">' + esc(startLabel) + '</div>' +
       '<div class="schedule-item-body">' +
-        '<div class="schedule-match-teams">' + teamAHtml + vsHtml + teamBHtml + '</div>' +
+        teamsHtml +
         '<span class="schedule-item-duration">' + duration + ' min · ' + esc(stageLabel) + (codeBadgeHtml ? ' · ' + codeBadgeHtml : '') + '</span>' +
         scoreEntryHtml +
       '</div>' +
