@@ -6927,7 +6927,12 @@ var CLUBS = [
     return datePart + ', ' + timePart;
   }
 
-  function exchangeListingId(tournamentId, uid) { return tournamentId + '_' + uid; }
+  // Keyed by (tournament, competition, uid) — Men's and Women's are separate
+  // marketplaces for the same tournament, so a listing must be too. Keying
+  // by tournament+uid alone (as this originally shipped) meant switching
+  // divisions showed the SAME listing on both tabs, and creating one for
+  // the other division would have silently overwritten it.
+  function exchangeListingId(tournamentId, competition, uid) { return tournamentId + '_' + competition + '_' + uid; }
 
   function loadExchangeListings(tournamentId, competition) {
     if (AUTH_DEMO_MODE) {
@@ -6941,9 +6946,9 @@ var CLUBS = [
       .get().then(function(snap) { return snap.docs.map(function(d) { return d.data(); }); });
   }
 
-  function myExchangeListing(tournamentId) {
+  function myExchangeListing(tournamentId, competition) {
     if (!currentUser) return Promise.resolve(null);
-    var id = exchangeListingId(tournamentId, currentUser.uid);
+    var id = exchangeListingId(tournamentId, competition, currentUser.uid);
     if (AUTH_DEMO_MODE) {
       var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
       return Promise.resolve(all[id] || null);
@@ -6952,7 +6957,7 @@ var CLUBS = [
   }
 
   function saveExchangeListing(tournamentId, competition, side, club) {
-    var id = exchangeListingId(tournamentId, currentUser.uid);
+    var id = exchangeListingId(tournamentId, competition, currentUser.uid);
     var data = { id: id, tournamentId: tournamentId, competition: competition, side: side, club: club || '', uid: currentUser.uid, name: currentUser.name, status: 'open', createdAt: Date.now() };
     if (AUTH_DEMO_MODE) {
       var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
@@ -6963,8 +6968,8 @@ var CLUBS = [
     return firebase.firestore().collection('exchangeListings').doc(id).set(data).then(function() { return data; });
   }
 
-  function removeExchangeListing(tournamentId) {
-    var id = exchangeListingId(tournamentId, currentUser.uid);
+  function removeExchangeListing(tournamentId, competition) {
+    var id = exchangeListingId(tournamentId, competition, currentUser.uid);
     if (AUTH_DEMO_MODE) {
       var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
       delete all[id];
@@ -6974,8 +6979,8 @@ var CLUBS = [
     return firebase.firestore().collection('exchangeListings').doc(id).delete();
   }
 
-  function markListingMatched(tournamentId, uid) {
-    var id = exchangeListingId(tournamentId, uid);
+  function markListingMatched(tournamentId, competition, uid) {
+    var id = exchangeListingId(tournamentId, competition, uid);
     if (AUTH_DEMO_MODE) {
       var all = JSON.parse(localStorage.getItem('loc_exchange_listings') || '{}');
       if (all[id]) { all[id].status = 'matched'; localStorage.setItem('loc_exchange_listings', JSON.stringify(all)); }
@@ -7052,7 +7057,7 @@ var CLUBS = [
     var status = accept ? 'accepted' : 'declined';
     var applyMatch = function() {
       if (!accept) return Promise.resolve();
-      return markListingMatched(convo.tournamentId, currentUser.uid);
+      return markListingMatched(convo.tournamentId, convo.competition, currentUser.uid);
     };
     if (AUTH_DEMO_MODE) {
       var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
@@ -7119,7 +7124,7 @@ var CLUBS = [
 
   function renderMyListingPanel(t) {
     var wrap = document.getElementById('exchangeMyListing');
-    myExchangeListing(t.id).then(function(listing) {
+    myExchangeListing(t.id, exchangeCompetition).then(function(listing) {
       if (listing && listing.status === 'matched') {
         wrap.innerHTML = '<div class="exchange-my-panel"><p class="empty-note">' + uiEdit('exchange.matchedNote') + '</p></div>';
         return;
@@ -7130,7 +7135,7 @@ var CLUBS = [
           '<button type="button" class="btn btn-outline btn-sm" id="exCancelListing">' + uiEdit('exchange.cancelListingBtn') + '</button>' +
         '</div></div>';
         document.getElementById('exCancelListing').addEventListener('click', function() {
-          removeExchangeListing(t.id).then(function() { renderMyListingPanel(t); renderExchangeList(t); });
+          removeExchangeListing(t.id, exchangeCompetition).then(function() { renderMyListingPanel(t); renderExchangeList(t); });
         });
         return;
       }
@@ -7268,8 +7273,8 @@ var CLUBS = [
       // matched there — this is the OTHER participant's turn to do the same
       // to their own listing, the first time they see the accepted thread
       // (each user can only write their own exchangeListings doc).
-      myExchangeListing(convo.tournamentId).then(function(listing) {
-        if (listing && listing.status === 'open') markListingMatched(convo.tournamentId, currentUser.uid);
+      myExchangeListing(convo.tournamentId, convo.competition).then(function(listing) {
+        if (listing && listing.status === 'open') markListingMatched(convo.tournamentId, convo.competition, currentUser.uid);
       });
     }
 
