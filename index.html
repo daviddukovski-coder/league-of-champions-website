@@ -369,6 +369,8 @@
   .inbox-row:hover { border-color:var(--cyan-ink); }
   .inbox-tournament { display:block; font-size:12px; color:var(--text-muted); font-weight:500; }
   .inbox-preview { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:13px; }
+  .inbox-time { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+  .conversation-bubble-time { display:block; font-size:10.5px; opacity:0.65; margin-top:3px; }
   .conversation-request { border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); padding:14px 16px; margin:16px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .conversation-request p { margin:0; flex:1; min-width:200px; }
   .conversation-messages { display:flex; flex-direction:column; gap:8px; min-height:120px; max-height:420px; overflow-y:auto; padding:14px 0; }
@@ -3447,6 +3449,27 @@ var CLUBS = [
   // Ranking rows only carry a name (from the spreadsheet), not an account uid —
   // resolved against the live players directory so a name matching a real
   // account becomes a link, same spirit as playerNameLinkHtml above.
+  // Reverse lookup for the player-profile "Ranking Points" field — account
+  // names aren't linked to ranking rows by id (the ranking sheet only ever
+  // had free-text names), so this matches by exact name, newest season
+  // first, checking men's then women's. Returns null (renders as "–") if
+  // this player has no ranking entry yet, same as an account with no stats.
+  function findRankingPointsForPlayer(name) {
+    if (!name) return null;
+    var n = name.trim().toLowerCase();
+    var years = Object.keys(Object.assign({}, RANKINGS, contentOverrides.rankings || {})).sort().reverse();
+    for (var yi = 0; yi < years.length; yi++) {
+      var genders = ['men', 'women'];
+      for (var gi = 0; gi < genders.length; gi++) {
+        var rows = rankingRows(years[yi], genders[gi], 'players');
+        for (var i = 0; i < rows.length; i++) {
+          if ((rows[i].name || '').trim().toLowerCase() === n) return rows[i].points;
+        }
+      }
+    }
+    return null;
+  }
+
   function findPlayerByName(name) {
     if (!name) return null;
     var n = name.trim().toLowerCase();
@@ -4078,7 +4101,7 @@ var CLUBS = [
           playerFieldBlockHtml(canEdit, 'Height', 'height', player.height, 'type="text"', 'e.g. 1.82m') +
           playerFieldBlockHtml(canEdit, 'Birthplace', 'birthplace', player.birthplace, 'type="text"', 'City, Country') +
           playerClubFieldHtml(canEdit, player.homeClub) +
-          '<div class="info-block"><span class="label">Ranking Points</span><span class="value">–</span></div>' +
+          '<div class="info-block"><span class="label">Ranking Points</span><span class="value" id="playerStatRanking">–</span></div>' +
           '<div class="info-block"><span class="label">Tournaments Played</span><span class="value" id="playerStatTournaments">–</span></div>' +
           '<div class="info-block"><span class="label">Won Games</span><span class="value" id="playerStatWins">–</span></div>' +
           '<div class="info-block"><span class="label">Lost Games</span><span class="value" id="playerStatLosses">–</span></div>' +
@@ -4190,6 +4213,11 @@ var CLUBS = [
     }
     renderPlayerProfile(player);
     setView('player');
+    var rankingEl = document.getElementById('playerStatRanking');
+    if (rankingEl) {
+      var points = findRankingPointsForPlayer(player.name);
+      rankingEl.textContent = points != null ? points : '–';
+    }
     computePlayerStats(uid).then(function(stats) {
       // Guard against a slow load resolving after the visitor has already
       // navigated elsewhere — only patch the DOM if we're still on this profile.
@@ -6861,6 +6889,15 @@ var CLUBS = [
      Demo mode mirrors the same shape into localStorage, non-reactive
      (each action re-renders locally instead of listening for pushes).
      ================================================================== */
+  function formatMessageTime(ms) {
+    if (!ms) return '';
+    var d = new Date(ms);
+    var sameYear = d.getFullYear() === new Date().getFullYear();
+    var datePart = d.toLocaleDateString(undefined, sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+    var timePart = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return datePart + ', ' + timePart;
+  }
+
   function exchangeListingId(tournamentId, uid) { return tournamentId + '_' + uid; }
 
   function loadExchangeListings(tournamentId, competition) {
@@ -7159,6 +7196,7 @@ var CLUBS = [
         return '<div class="inbox-row" data-conversation-id="' + esc(c.id) + '">' +
           '<div><strong>' + esc(otherName) + '</strong><span class="inbox-tournament">' + esc(c.tournamentName) + '</span></div>' +
           '<div class="inbox-preview">' + esc(c.lastMessageText || '') + '</div>' +
+          '<span class="inbox-time">' + esc(formatMessageTime(c.lastMessageAt)) + '</span>' +
           '<span class="status ' + badgeClass + '">' + uiText(badgeKey) + '</span>' +
         '</div>';
       }).join('') + '</div>';
@@ -7229,7 +7267,7 @@ var CLUBS = [
       if (!box) return;
       if (!messages.length) { box.innerHTML = '<p class="empty-note">—</p>'; return; }
       box.innerHTML = messages.map(function(m) {
-        return '<div class="conversation-bubble' + (m.senderId === currentUser.uid ? ' mine' : '') + '">' + esc(m.text) + '</div>';
+        return '<div class="conversation-bubble' + (m.senderId === currentUser.uid ? ' mine' : '') + '">' + esc(m.text) + '<span class="conversation-bubble-time">' + esc(formatMessageTime(m.createdAt)) + '</span></div>';
       }).join('');
       box.scrollTop = box.scrollHeight;
     });
