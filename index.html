@@ -402,7 +402,7 @@
   label { font-size:12px; font-weight:600; }
   input, select { font-family:'Inter',sans-serif; font-size:15px; padding:12px 13px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); color:var(--text); width:100%; transition:border-color .15s; }
   input:focus, select:focus { outline:none; border-color:var(--cyan); }
-  .combo-group { margin-bottom:18px; }
+  .combo-group { margin-bottom:18px; position:relative; }
   .combo-dropdown { position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 12px 24px var(--shadow); max-height:260px; overflow-y:auto; z-index:10; }
   .combo-item { display:flex; align-items:center; gap:10px; padding:9px 12px; font-size:14px; cursor:pointer; }
   .combo-item:hover { background:var(--bg); }
@@ -3342,8 +3342,18 @@ var CLUBS = [
       // the viewed uid changes, so seeding the uid here keeps it from resetting.
       playerProfileEditMode = true;
       lastViewedPlayerUid = currentUser.uid;
+    } else {
+      playerProfileEditMode = false;
     }
-    navigate('player/' + currentUser.uid);
+    var targetHash = '#/player/' + currentUser.uid;
+    if (location.hash === targetHash) {
+      // Already on your own profile — setting the same hash again wouldn't
+      // fire hashchange, so route() (and the edit-mode toggle above) would
+      // never run. Render directly instead of going through navigate().
+      showPlayer(currentUser.uid);
+    } else {
+      navigate('player/' + currentUser.uid);
+    }
   });
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.nav-user-menu')) document.getElementById('navUserDropdown').hidden = true;
@@ -4009,6 +4019,25 @@ var CLUBS = [
       '<button type="button" class="btn btn-outline btn-sm" data-save-player-field="birthDate">Save</button></span></div>';
   }
 
+  // A dropdown instead of free text — the old text field let people type
+  // "1.82m" and "183cm" for the same height, so nothing could reliably
+  // compare or sort on it. Value is stored as the full "NNN cm" string, so
+  // the read-only view (a dumb passthrough of whatever's stored) needs no
+  // special-casing and old free-text entries just keep displaying as-is.
+  function playerHeightFieldHtml(canEdit, value) {
+    if (!canEdit) {
+      return '<div class="info-block"><span class="label">Height</span><span class="value">' + (value ? esc(value) : '–') + '</span></div>';
+    }
+    var options = '<option value="">–</option>';
+    for (var cm = 140; cm <= 220; cm++) {
+      var v = cm + ' cm';
+      options += '<option value="' + v + '"' + (value === v ? ' selected' : '') + '>' + v + '</option>';
+    }
+    return '<div class="info-block"><span class="label">Height</span>' +
+      '<span class="value editable-field"><select id="playerField_height">' + options + '</select> ' +
+      '<button type="button" class="btn btn-outline btn-sm" data-save-player-field="height">Save</button></span></div>';
+  }
+
   function playerFieldBlockHtml(canEdit, label, field, value, inputAttrs, placeholder) {
     if (!canEdit) {
       return '<div class="info-block"><span class="label">' + label + '</span><span class="value">' + (value ? esc(value) : '–') + '</span></div>';
@@ -4098,7 +4127,7 @@ var CLUBS = [
       '<div class="profile-media-row">' +
         '<div class="detail-info-grid">' +
           playerAgeFieldHtml(canEdit, player.birthDate) +
-          playerFieldBlockHtml(canEdit, 'Height', 'height', player.height, 'type="text"', 'e.g. 1.82m') +
+          playerHeightFieldHtml(canEdit, player.height) +
           playerFieldBlockHtml(canEdit, 'Birthplace', 'birthplace', player.birthplace, 'type="text"', 'City, Country') +
           playerClubFieldHtml(canEdit, player.homeClub) +
           '<div class="info-block"><span class="label">Ranking Points</span><span class="value" id="playerStatRanking">–</span></div>' +
