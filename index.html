@@ -310,6 +310,8 @@
   .pool-placement { display:inline-block; width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; background:var(--tint-ink); font-weight:700; }
   .standings-team { display:flex; align-items:center; gap:8px; font-weight:600; color:var(--heading); }
   .standings-team .club-avatar { width:22px; height:22px; }
+  .ranking-clubs { display:flex; flex-direction:column; gap:6px; }
+  .ranking-clubs .standings-team { font-weight:500; font-size:13px; color:var(--text); }
   .match-list { display:flex; flex-direction:column; gap:10px; margin:14px 0; }
   .match-row { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
   .match-teams-line { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -3516,14 +3518,19 @@ var CLUBS = [
       table = '<table class="history-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
           var match = findPlayerByName(r.name);
-          var clubs = [r.club1, r.club2].filter(Boolean).join(' / ');
-          return '<tr><td>' + r.rank + '</td><td>' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + (clubs ? esc(clubs) : '–') + '</td><td>' + r.points + '</td></tr>';
+          var clubNames = [r.club1, r.club2].filter(Boolean);
+          var clubsHtml = clubNames.length
+            ? '<div class="ranking-clubs">' + clubNames.map(function(name) {
+                return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
+              }).join('') + '</div>'
+            : '–';
+          return '<tr><td>' + r.rank + '</td><td>' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td>' + r.points + '</td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
       table = '<table class="history-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr><td>' + r.rank + '</td><td>' + esc(r.name) + '</td><td>' + r.points + '</td></tr>';
+          return '<tr><td>' + r.rank + '</td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td>' + r.points + '</td></tr>';
         }).join('') +
         '</tbody></table>';
     }
