@@ -244,6 +244,8 @@
   .info-block { background:var(--surface); padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
   .info-block .label { font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
   .info-block .value { font-weight:600; color:var(--heading); font-size:15px; }
+  .venue-map-link { display:inline-block; margin-top:2px; font-size:12.5px; font-weight:600; color:var(--cyan-ink); text-decoration:none; }
+  .venue-map-link:hover { text-decoration:underline; }
   .closed-note { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; color:var(--text-muted); font-size:14px; margin-bottom:28px; display:flex; align-items:center; min-width:240px; height:56px; }
   .resume-banner { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; background:var(--tint-pending); border:1px solid var(--cyan); border-radius:var(--radius); padding:16px 20px; margin-bottom:28px; }
   .resume-banner p { font-size:13.5px; color:var(--pending-text); font-weight:600; }
@@ -2449,6 +2451,12 @@ var CLUBS = [
     'detail.feeLabel': 'Entry fee',
     'detail.deadlineLabel': 'Registration deadline',
     'detail.divisionsLabel': 'Divisions',
+    'detail.venueHeading': 'Venue',
+    'detail.venueAddressLabel': 'Address',
+    'detail.venueMapLabel': 'Map',
+    'detail.venueMapLinkText': 'Open in Maps ↗',
+    'detail.venueParkingLabel': 'Parking',
+    'detail.venueChangingLabel': 'Changing rooms',
     'detail.registerNow': 'Register now',
     'detail.alreadyRegisteredNote': "You're already registered for this tournament.",
     'detail.registeredTeams': 'Registered Teams',
@@ -2583,6 +2591,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -3999,7 +4008,31 @@ var CLUBS = [
     return '<div class="event-image edit-target">' + inner + editImageOverlayHtml(t.id) + '</div>';
   }
 
-  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'registerActions', 'teams'];
+  // Address/Map/Parking/Changing rooms — so travel questions have somewhere
+  // to land besides Instagram DMs. Same per-tournament contentOverrides[t.id]
+  // mechanism as every other editTextHtml field on this page. Admins always
+  // see all four rows (to fill them in); a regular visitor only sees rows
+  // that already have something in them, and the whole block disappears for
+  // a tournament that hasn't set any of this up yet rather than showing a
+  // wall of "–".
+  function venueBlockHtml(t) {
+    var fields = [
+      ['venueAddress', 'detail.venueAddressLabel', 'venue address', t.venueAddress],
+      ['venueMapUrl', 'detail.venueMapLabel', 'Google Maps link', t.venueMapUrl],
+      ['venueParking', 'detail.venueParkingLabel', 'parking info', t.venueParking],
+      ['venueChanging', 'detail.venueChangingLabel', 'changing rooms info', t.venueChanging]
+    ];
+    var visible = isAdmin ? fields : fields.filter(function(f) { return f[3]; });
+    if (!visible.length) return '';
+    var rows = visible.map(function(f) {
+      var key = f[0], uiKey = f[1], editLabel = f[2], value = f[3] || '';
+      var mapLink = (key === 'venueMapUrl' && value) ? ' <a class="venue-map-link" href="' + esc(value) + '" target="_blank" rel="noopener">' + esc(uiText('detail.venueMapLinkText')) + '</a>' : '';
+      return '<div class="info-block"><span class="label">' + uiEdit(uiKey) + '</span><span class="value">' + editTextHtml(t.id, key, value, value || '–', editLabel) + mapLink + '</span></div>';
+    }).join('');
+    return '<h2>' + uiEdit('detail.venueHeading') + '</h2><div class="detail-info-grid">' + rows + '</div>';
+  }
+
+  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'venue', 'registerActions', 'teams'];
   var DEFAULT_LANDING_ORDER = ['eyebrow', 'headline', 'subtitle', 'actions', 'browseLink'];
 
   function getBlockOrder(overrideKey, defaultOrder, rawOrderJson) {
@@ -4043,7 +4076,7 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
@@ -4061,6 +4094,7 @@ var CLUBS = [
       image: eventImageHtml(t),
       header: headerHtml,
       infoGrid: infoRows,
+      venue: venueBlockHtml(t),
       registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + bracketLinksHtml(t) + liveButtonHtml(t) + '</div>' + tournamentPhaseControlHtml(t),
       teams: '<div id="playerLists"></div>'
     };
