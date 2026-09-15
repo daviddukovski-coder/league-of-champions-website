@@ -1346,6 +1346,20 @@ var CLUBS = [
     return firebase.firestore().collection('content').doc('site').set({ removedTournaments: list }, { merge: true });
   }
 
+  // A season explicitly added via Admin > Tournaments > + Add Season, before
+  // it has any tournament of its own yet — otherwise adminSeasonOptions()
+  // would have nothing to show it with (a season is normally just whichever
+  // years already have a tournament in them).
+  function saveExtraSeasons(list) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    contentOverrides.extraSeasons = list;
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('content').doc('site').set({ extraSeasons: list }, { merge: true });
+  }
+
   function slugifyTournamentName(name) {
     var base = (name || 'tournament').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tournament';
     var existing = allTournaments().map(function(t) { return t.id; });
@@ -3685,19 +3699,17 @@ var CLUBS = [
   var adminTab = 'tournaments';
   var adminEditingTournamentId = null; // null = form hidden, 'NEW' = adding, else the id being edited
   var adminSeason = null; // null = not chosen yet, picks the latest season on first render
+  var adminAddingSeason = false;
 
-  // Every year that already has a tournament, plus a few years ahead so a
-  // brand-new season can be selected before it has any tournament of its
-  // own yet (a season only exists implicitly, via tournament dates — there
-  // is no separate "season" entity to create first).
+  // Every year that already has a tournament, plus any explicitly-added
+  // empty season (contentOverrides.extraSeasons — see + Add Season below).
+  // A season isn't a stored entity on its own otherwise; it's just however
+  // many tournaments happen to share a dateSort year.
   function adminSeasonOptions() {
     var years = {};
     allTournaments().forEach(function(t) { years[t.dateSort.slice(0, 4)] = true; });
-    var currentYear = new Date().getFullYear();
-    years[currentYear] = true;
-    var list = Object.keys(years).map(Number);
-    var maxYear = Math.max.apply(null, list.concat([currentYear]));
-    for (var y = maxYear + 1; y <= maxYear + 3; y++) years[y] = true;
+    (contentOverrides.extraSeasons || []).forEach(function(y) { years[y] = true; });
+    if (!Object.keys(years).length) years[new Date().getFullYear()] = true;
     return Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
   }
 
@@ -3728,6 +3740,7 @@ var CLUBS = [
       btn.addEventListener('click', function() {
         adminTab = btn.dataset.adminTab;
         adminEditingTournamentId = null;
+        adminAddingSeason = false;
         renderAdmin();
       });
     });
@@ -3769,9 +3782,17 @@ var CLUBS = [
   function renderAdminTournaments() {
     var seasonOptions = adminSeasonOptions();
     if (adminSeason == null || seasonOptions.indexOf(Number(adminSeason)) === -1) adminSeason = String(seasonOptions[0]);
-    var seasonSelectHtml = '<div class="form-row"><div class="form-group"><label>Season</label><select id="adminSeasonSelect">' +
-      seasonOptions.map(function(y) { return '<option value="' + y + '"' + (String(y) === adminSeason ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
-      '</select></div></div>';
+    var addSeasonHtml = adminAddingSeason
+      ? '<div class="form-group"><label>New season year</label><input type="number" id="newSeasonYear" placeholder="' + (Math.max.apply(null, seasonOptions) + 1) + '"></div>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="confirmAddSeasonBtn">Add</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="cancelAddSeasonBtn">Cancel</button>'
+      : '<button type="button" class="btn btn-outline btn-sm" id="addSeasonBtn">+ Add Season</button>';
+    var seasonSelectHtml = '<div class="form-row" style="align-items:flex-end;flex-wrap:wrap;">' +
+      '<div class="form-group"><label>Season</label><select id="adminSeasonSelect">' +
+        seasonOptions.map(function(y) { return '<option value="' + y + '"' + (String(y) === adminSeason ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
+      '</select></div>' +
+      addSeasonHtml +
+    '</div>';
 
     var all = allTournaments().sort(function(a, b) { return a.dateSort < b.dateSort ? 1 : -1; });
     var list = all.filter(function(t) { return t.dateSort.slice(0, 4) === adminSeason; });
@@ -3794,7 +3815,27 @@ var CLUBS = [
     el.querySelector('#adminSeasonSelect').addEventListener('change', function(e) {
       adminSeason = e.target.value;
       adminEditingTournamentId = null;
+      adminAddingSeason = false;
       renderAdmin();
+    });
+
+    var addSeasonBtn = el.querySelector('#addSeasonBtn');
+    if (addSeasonBtn) addSeasonBtn.addEventListener('click', function() { adminAddingSeason = true; renderAdmin(); });
+
+    var cancelAddSeasonBtn = el.querySelector('#cancelAddSeasonBtn');
+    if (cancelAddSeasonBtn) cancelAddSeasonBtn.addEventListener('click', function() { adminAddingSeason = false; renderAdmin(); });
+
+    var confirmAddSeasonBtn = el.querySelector('#confirmAddSeasonBtn');
+    if (confirmAddSeasonBtn) confirmAddSeasonBtn.addEventListener('click', function() {
+      var year = Number(document.getElementById('newSeasonYear').value.trim());
+      if (!year || !Number.isInteger(year) || year < 1900 || year > 2200) { window.alert('Enter a valid year.'); return; }
+      adminAddingSeason = false;
+      if (adminSeasonOptions().indexOf(year) !== -1) { adminSeason = String(year); renderAdmin(); return; }
+      var extra = (contentOverrides.extraSeasons || []).concat([year]);
+      saveExtraSeasons(extra).then(function() {
+        adminSeason = String(year);
+        renderAdmin();
+      });
     });
 
     var addBtn = el.querySelector('#addTournamentBtn');
