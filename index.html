@@ -3617,6 +3617,16 @@ var CLUBS = [
     return null;
   }
 
+  // A team's combined ranking points for seeding purposes — both players'
+  // current points (0 for a player with no ranking entry yet, same as their
+  // profile page shows "–"), same name-splitting convention team.name is
+  // always built with ("First Last & First Last").
+  function computeTeamRankingPoints(team) {
+    return (team.name || '').split(' & ').reduce(function(sum, name) {
+      return sum + (findRankingPointsForPlayer(name.trim()) || 0);
+    }, 0);
+  }
+
   function findPlayerByName(name) {
     if (!name) return null;
     var n = name.trim().toLowerCase();
@@ -4907,7 +4917,10 @@ var CLUBS = [
   // the full per-team list is still here for edits (remove/seed/division)
   // but collapsed behind a <details> toggle instead of always spelled out.
   function rosterPanelHtml(labelBase, teams) {
-    return '<div class="live-panel"><details class="roster-details"><summary><h2>' + esc(labelBase) + ' (' + teams.length + ')</h2></summary>' + categoryGroupsHtml(teams) + '</details></div>';
+    var autoSeedBtn = teams.length
+      ? '<button type="button" class="btn btn-outline btn-sm admin-only-inline" data-autoseed-team-ids="' + esc(JSON.stringify(teams.map(function(t) { return t.id; }))) + '" title="Seed 1 = most ranking points, ties keep their current order">Auto-seed by ranking points</button>'
+      : '';
+    return '<div class="live-panel"><details class="roster-details"><summary><h2>' + esc(labelBase) + ' (' + teams.length + ')</h2></summary>' + autoSeedBtn + categoryGroupsHtml(teams) + '</details></div>';
   }
 
   function renderRosterPanel(bracket) {
@@ -5698,6 +5711,18 @@ var CLUBS = [
       }).finally(function() {
         syncRankingBtn.disabled = false;
         syncRankingBtn.textContent = 'Punkte ins Ranking übertragen';
+      });
+    });
+
+    document.querySelectorAll('[data-autoseed-team-ids]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var ids;
+        try { ids = JSON.parse(btn.dataset.autoseedTeamIds); } catch (e) { return; }
+        var teams = ids.map(function(id) { return findBracketTeam(currentBracket, id); }).filter(Boolean);
+        teams.sort(function(a, b) { return computeTeamRankingPoints(b) - computeTeamRankingPoints(a); });
+        teams.forEach(function(team, i) { team.seed = i + 1; });
+        persistBracket();
       });
     });
 
