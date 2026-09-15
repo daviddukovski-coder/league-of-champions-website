@@ -757,7 +757,7 @@
     { id:'wiesloch-500', name:'Wiesloch 500', tier:500, dateLabel:'Aug 14–16', dateSort:'2026-08-14', city:'Wiesloch', country:'Germany', flag:'🇩🇪', competitions:['Men','Women'], status:'past', image:null },
     { id:'matosinhos-1000', name:'Matosinhos 1000', tier:1000, dateLabel:'Aug 21–23', dateSort:'2026-08-21', city:'Matosinhos', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'August 20, 2026', image:null },
     { id:'valencia-500', name:'Valencia 500 / Cullera 100', tier:500, dateLabel:'Sep 11–13', dateSort:'2026-09-11', city:'Valencia', country:'Spain', flag:'🇪🇸', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'September 8, 2026', image:null },
-    { id:'faro-finals', name:'Faro Finals', tier:1000, dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
+    { id:'faro-finals', name:'Faro Finals', tier:'FINALS', dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
   ];
 
   // The full tournament list as far as every render function is concerned:
@@ -1689,7 +1689,11 @@ var CLUBS = [
   // from the "Ranking" panel's editable table (persisted via the same
   // contentOverrides/saveContentField mechanism as every other admin-edited
   // site setting, under key "rankingPoints", field = tier).
+  // FINALS is the one season-ending tournament (not a numeric tier like the
+  // others) — seeded above the 1000 tier as a starting point; adjust the
+  // exact values any time in Admin > Ranking Points.
   var POINTS_TABLE = {
+    FINALS: { WINNER: 1500, FINALIST: 900, THIRD: 600, FOURTH: 450, QUARTERFINAL: 270, R16: 135, R32: 0, QUAL: 60, PARTICIPATION: 2 },
     1000: { WINNER: 1000, FINALIST: 600, THIRD: 400, FOURTH: 300, QUARTERFINAL: 180, R16: 90, R32: 0, QUAL: 40, PARTICIPATION: 2 },
     500:  { WINNER: 500,  FINALIST: 300, THIRD: 200, FOURTH: 150, QUARTERFINAL: 90,  R16: 40, R32: 0, QUAL: 20, PARTICIPATION: 2 },
     100:  { WINNER: 100,  FINALIST: 60,  THIRD: 40,  FOURTH: 30,  QUARTERFINAL: 18,  R16: 9,  R32: 0, QUAL: 4,  PARTICIPATION: 2 }
@@ -3724,7 +3728,7 @@ var CLUBS = [
       '<div class="form-row" style="flex-wrap:wrap;">' +
         '<div class="form-group"><label>Name</label><input type="text" id="tfName" value="' + esc(v.name || '') + '"></div>' +
         '<div class="form-group"><label>Tier</label><select id="tfTier">' +
-          [100,500,1000].map(function(tier) { return '<option value="' + tier + '"' + (v.tier === tier ? ' selected' : '') + '>' + tier + '</option>'; }).join('') +
+          [100,500,1000,'FINALS'].map(function(tier) { return '<option value="' + tier + '"' + (v.tier === tier ? ' selected' : '') + '>' + tier + '</option>'; }).join('') +
         '</select></div>' +
         '<div class="form-group"><label>Status</label><select id="tfStatus">' +
           '<option value="upcoming"' + (v.status === 'upcoming' ? ' selected' : '') + '>Upcoming</option>' +
@@ -3797,9 +3801,10 @@ var CLUBS = [
       var competitions = document.getElementById('tfCompetitions').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
       if (!competitions.length) { window.alert('At least one division is required.'); return; }
       var feeVal = document.getElementById('tfFee').value;
+      var tierRaw = document.getElementById('tfTier').value;
       var fields = {
         name: name,
-        tier: Number(document.getElementById('tfTier').value),
+        tier: tierRaw === 'FINALS' ? 'FINALS' : Number(tierRaw),
         status: document.getElementById('tfStatus').value,
         dateLabel: document.getElementById('tfDateLabel').value.trim() || dateSort,
         dateSort: dateSort,
@@ -3821,7 +3826,7 @@ var CLUBS = [
 
   function renderAdminRankingPoints() {
     return '<p class="empty-note">Fill in once per tier — applies to every LoC tournament at that tier, Men’s and Women’s alike.</p>' +
-      [1000, 500, 100].map(function(tier) { return renderRankingPointsPanel(tier).replace('admin-only', ''); }).join('');
+      ['FINALS', 1000, 500, 100].map(function(tier) { return renderRankingPointsPanel(tier).replace('admin-only', ''); }).join('');
   }
 
   function renderAdminSettings() {
