@@ -5,8 +5,12 @@
  * See the setup guide for step-by-step deployment instructions.
  *
  * Required Script Properties (Project Settings → Script Properties):
- *   STRIPE_SECRET_KEY  – Stripe secret key (test or live)
- *   SITE_BASE_URL      – e.g. https://<user>.github.io/league-of-champions-tour/
+ *   STRIPE_SECRET_KEY       – Stripe secret key (test or live)
+ *   SITE_BASE_URL           – e.g. https://<user>.github.io/league-of-champions-tour/
+ *   FCM_PROJECT_ID          – Firebase project ID (e.g. league-of-champions-website)
+ *   FCM_SERVICE_ACCOUNT_JSON – full contents of a Firebase service account JSON key
+ *                              (Firebase Console → Project settings → Service accounts
+ *                              → Generate new private key), pasted as one value
  *
  * Required sheet tabs (exact header row spelling matters):
  *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId | UserId | PartnerId
@@ -42,6 +46,7 @@ function doPost(e) {
     if (body.action === 'confirmPayment') return jsonOut_(confirmPayment_(body));
     if (body.action === 'markPaid') return jsonOut_(markPaid_(body));
     if (body.action === 'deleteRegistration') return jsonOut_(deleteRegistration_(body));
+    if (body.action === 'sendPush') return jsonOut_(sendPush_(body));
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
     return jsonOut_({ error: String(err) });
@@ -278,4 +283,84 @@ function confirmPayment_(body) {
     return { ok: true, status: 'paid' };
   }
   return { ok: true, status: 'pending' };
+}
+
+/* -------------------- Push Notifications (FCM) -------------------- */
+
+// Sends a web push to one or more device tokens via the FCM HTTP v1 API.
+// body: { tokens: [string,...], title, body, url } — url is a bare hash-path
+// (e.g. "inbox/xyz"), carried in the message's data.url and read by both the
+// service worker's notificationclick handler and the page's foreground
+// onMessage handler. A client can never call FCM directly (needs server
+// credentials), so this is the relay every push goes through.
+function sendPush_(body) {
+  var tokens = body.tokens || [];
+  if (!tokens.length) return { ok: true, sent: 0 };
+  var projectId = PropertiesService.getScriptProperties().getProperty('FCM_PROJECT_ID');
+  if (!projectId) return { error: 'FCM_PROJECT_ID not configured (Script Properties).' };
+
+  var accessToken;
+  try {
+    accessToken = getFcmAccessToken_();
+  } catch (err) {
+    return { error: String(err) };
+  }
+
+  var sent = 0;
+  var errors = [];
+  tokens.forEach(function(token) {
+    var message = {
+      message: {
+        token: token,
+        notification: { title: body.title || '', body: body.body || '' },
+        data: { url: String(body.url || '') }
+      }
+    };
+    var res = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send', {
+      method: 'post',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      payload: JSON.stringify(message),
+      muteHttpExceptions: true
+    });
+    var data = JSON.parse(res.getContentText());
+    if (data.error) errors.push(data.error.message); else sent++;
+  });
+  return { ok: true, sent: sent, errors: errors };
+}
+
+// Mints a short-lived OAuth2 access token for the Firebase service account,
+// scoped to Cloud Messaging only. Apps Script has no built-in service-account
+// support, but Utilities.computeRsaSha256Signature can sign the JWT by hand —
+// avoids needing a third-party OAuth2 library for just this one call.
+function getFcmAccessToken_() {
+  var props = PropertiesService.getScriptProperties();
+  var saJson = props.getProperty('FCM_SERVICE_ACCOUNT_JSON');
+  if (!saJson) throw new Error('FCM_SERVICE_ACCOUNT_JSON not configured (Script Properties).');
+  var sa = JSON.parse(saJson);
+
+  var now = Math.floor(Date.now() / 1000);
+  var header = { alg: 'RS256', typ: 'JWT' };
+  var claimSet = {
+    iss: sa.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600
+  };
+  var toSign = base64UrlEncode_(JSON.stringify(header)) + '.' + base64UrlEncode_(JSON.stringify(claimSet));
+  var signatureBytes = Utilities.computeRsaSha256Signature(toSign, sa.private_key);
+  var jwt = toSign + '.' + Utilities.base64EncodeWebSafe(signatureBytes).replace(/=+$/, '');
+
+  var res = UrlFetchApp.fetch('https://oauth2.googleapis.com/token', {
+    method: 'post',
+    payload: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt },
+    muteHttpExceptions: true
+  });
+  var data = JSON.parse(res.getContentText());
+  if (data.error) throw new Error('FCM auth failed: ' + (data.error_description || data.error));
+  return data.access_token;
+}
+
+function base64UrlEncode_(str) {
+  return Utilities.base64EncodeWebSafe(str).replace(/=+$/, '');
 }
