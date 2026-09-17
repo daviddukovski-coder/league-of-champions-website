@@ -7,7 +7,7 @@
 <meta name="description" content="Tournament overview, info and team registration for the Footvolley League of Champions Tour.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
@@ -246,6 +246,9 @@
   .info-block .value { font-weight:600; color:var(--heading); font-size:15px; }
   .venue-map-link { display:inline-block; margin-top:2px; font-size:12.5px; font-weight:600; color:var(--cyan-ink); text-decoration:none; }
   .venue-map-link:hover { text-decoration:underline; }
+  .export-graphic-results { display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; }
+  .export-graphic-wrap { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+  .export-graphic-wrap img { max-width:240px; border-radius:8px; border:1px solid var(--border); }
   .closed-note { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; color:var(--text-muted); font-size:14px; margin-bottom:28px; display:flex; align-items:center; min-width:240px; height:56px; }
   .resume-banner { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; background:var(--tint-pending); border:1px solid var(--cyan); border-radius:var(--radius); padding:16px 20px; margin-bottom:28px; }
   .resume-banner p { font-size:13.5px; color:var(--pending-text); font-weight:600; }
@@ -1248,15 +1251,46 @@ var CLUBS = [
     });
   }
 
-  function saveContentImage(key, file) {
+  // Generalized version of saveContentImage below — same upload path, but any
+  // field name instead of always 'image' (used for the optional per-tournament
+  // seeding-graphic photo, keyed separately from the tournament's main image).
+  function saveImageField(key, field, file) {
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
     if (AUTH_DEMO_MODE) {
-      return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, 'image', dataUrl); });
+      return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, field, dataUrl); });
     }
-    var ref = firebase.storage().ref('content/' + key + '/' + Date.now() + '-' + file.name);
+    var ref = firebase.storage().ref('content/' + key + '/' + field + '-' + Date.now() + '-' + file.name);
     return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
-      return saveContentField(key, 'image', url);
+      return saveContentField(key, field, url);
     });
+  }
+
+  function saveContentImage(key, file) {
+    return saveImageField(key, 'image', file);
+  }
+
+  // Sponsor logos shown on generated seeding/bracket share graphics — an
+  // admin-managed list (Site Settings), not a single field, so it gets its
+  // own upload path alongside saveImageField rather than reusing it directly.
+  function addSponsorLogo(file) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var existing = (contentOverrides.settings && contentOverrides.settings.sponsorLogos) || [];
+    if (AUTH_DEMO_MODE) {
+      return fileToDataUrl(file).then(function(dataUrl) {
+        return saveContentFields('settings', { sponsorLogos: existing.concat([dataUrl]) });
+      });
+    }
+    var ref = firebase.storage().ref('content/settings/sponsor-' + Date.now() + '-' + file.name);
+    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+      return saveContentFields('settings', { sponsorLogos: existing.concat([url]) });
+    });
+  }
+
+  function removeSponsorLogo(index) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var existing = ((contentOverrides.settings && contentOverrides.settings.sponsorLogos) || []).slice();
+    existing.splice(index, 1);
+    return saveContentFields('settings', { sponsorLogos: existing });
   }
 
   // Hero media accepts video OR image (unlike every other edit-target, which is
@@ -3945,9 +3979,24 @@ var CLUBS = [
       '</div>' +
     '</div>' +
     '<div class="live-panel">' +
+      '<h2>Sponsor logos</h2>' +
+      '<p class="empty-note">Shown on every generated seeding-list and bracket share graphic (Live Bracket → Export). Upload transparent PNGs for best results.</p>' +
+      '<div id="sponsorLogosList" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;">' +
+        (adminSponsorLogos().length ? adminSponsorLogos().map(function(url, i) {
+          return '<div style="position:relative;"><img src="' + esc(url) + '" alt="" style="height:40px;max-width:120px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;">' +
+            '<button type="button" class="icon-btn" data-remove-sponsor-logo="' + i + '" title="Remove logo" style="position:absolute;top:-8px;right:-8px;">✕</button></div>';
+        }).join('') : '<p class="empty-note">No sponsor logos yet.</p>') +
+      '</div>' +
+      '<input type="file" id="addSponsorLogoInput" accept="image/*">' +
+    '</div>' +
+    '<div class="live-panel">' +
       '<h2>Everything else</h2>' +
       '<p class="empty-note">The hero video/image on the landing page, the Imprint text, and every other label on the site are edited in place — turn on Edit Mode and click the pencil next to whatever you want to change.</p>' +
     '</div>';
+  }
+
+  function adminSponsorLogos() {
+    return (contentOverrides.settings && contentOverrides.settings.sponsorLogos) || [];
   }
 
   function wireAdminSettings(el) {
@@ -3969,6 +4018,16 @@ var CLUBS = [
       btn.addEventListener('click', function() {
         var extra = ((contentOverrides.settings && contentOverrides.settings.extraAdminEmails) || []).filter(function(e) { return e !== btn.dataset.removeAdmin; });
         saveContentFields('settings', { extraAdminEmails: extra }).then(function() { renderAdmin(); });
+      });
+    });
+    el.querySelector('#addSponsorLogoInput').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      addSponsorLogo(file).then(function() { renderAdmin(); }).catch(function() { window.alert('Upload failed.'); });
+    });
+    el.querySelectorAll('[data-remove-sponsor-logo]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        removeSponsorLogo(parseInt(btn.dataset.removeSponsorLogo, 10)).then(function() { renderAdmin(); });
       });
     });
   }
@@ -4821,6 +4880,7 @@ var CLUBS = [
       renderDivisionFilterTabs(bracket) +
       renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
+      renderExportPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
@@ -4944,6 +5004,345 @@ var CLUBS = [
         return '<button type="button" class="btn btn-outline btn-sm division-filter-tab' + (liveTierFilter === tr ? ' active' : '') + '" data-tier-filter="' + tr + '">LoC ' + tr + '</button>';
       }).join('');
     return '<div class="division-filter-tabs" id="tierFilterTabs">' + tabs + '</div>';
+  }
+
+  /* ==================================================================
+     SEEDING GRAPHIC EXPORT — share-ready PNG (Confirmed Teams: rank, club,
+     team, ranking points) in the navy/cyan brand look, Feed (1440×1080) or
+     Story (1080×1920). Pure <canvas> rendering so it exports at exact pixel
+     sizes regardless of the viewer's zoom/DPI, downloaded straight from the
+     browser — no server round-trip.
+     ================================================================== */
+  var GRAPHIC_FORMATS = { feed: { w: 1440, h: 1080 }, story: { w: 1080, h: 1920 } };
+
+  // Standard competition ranking — equal points share a rank and the next
+  // rank skips accordingly (1,2,2,4 not 1,2,2,3), same convention as the
+  // reference graphic (two teams tied at "10", next team is "12").
+  function rankedTeamsWithPoints(teams) {
+    var withPoints = teams.map(function(t) { return { team: t, points: computeTeamRankingPoints(t) }; })
+      .sort(function(a, b) { return b.points - a.points; });
+    var rank = 0;
+    return withPoints.map(function(row, i) {
+      if (i === 0 || row.points !== withPoints[i - 1].points) rank = i + 1;
+      return { team: row.team, points: row.points, rank: rank };
+    });
+  }
+
+  // At most `max` teams per graphic, split as evenly as possible across
+  // however many pages that takes (20 teams -> 10+10, not a full 12 then a
+  // half-empty 8) rather than always front-loading full pages.
+  function chunkForGraphics(list, max) {
+    if (list.length <= max) return [list];
+    var pages = Math.ceil(list.length / max);
+    var base = Math.floor(list.length / pages);
+    var remainder = list.length % pages;
+    var chunks = [];
+    var idx = 0;
+    for (var p = 0; p < pages; p++) {
+      var size = base + (p < remainder ? 1 : 0);
+      chunks.push(list.slice(idx, idx + size));
+      idx += size;
+    }
+    return chunks;
+  }
+
+  // Resolves to null (rather than rejecting) on a missing/broken image so
+  // one bad club logo or an unset photo can't take down the whole export.
+  function loadImageAsync(src) {
+    return new Promise(function(resolve) {
+      if (!src) { resolve(null); return; }
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() { resolve(img); };
+      img.onerror = function() { resolve(null); };
+      img.src = src;
+    });
+  }
+
+  function roundedRectPath(ctx, x, y, w, h, r) {
+    var rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function letterSpacedWidth(ctx, text, spacing) {
+    var w = 0;
+    for (var i = 0; i < text.length; i++) w += ctx.measureText(text[i]).width + spacing;
+    return w - spacing;
+  }
+  // Draws left-to-right starting at x — ctx.textAlign is ignored (each glyph
+  // is placed manually) so this works the same regardless of caller state.
+  function drawLetterSpaced(ctx, text, x, y, spacing) {
+    var prevAlign = ctx.textAlign;
+    ctx.textAlign = 'left';
+    var cx = x;
+    for (var i = 0; i < text.length; i++) {
+      ctx.fillText(text[i], cx, y);
+      cx += ctx.measureText(text[i]).width + spacing;
+    }
+    ctx.textAlign = prevAlign;
+  }
+  function drawLetterSpacedCentered(ctx, text, cx, cy, spacing) {
+    drawLetterSpaced(ctx, text, cx - letterSpacedWidth(ctx, text, spacing) / 2, cy, spacing);
+  }
+  // Shrinks the font size until `text` fits maxWidth (min 10px) — leaves
+  // ctx.font set to the size that fit, ready for the caller's own fillText.
+  function fitText(ctx, text, maxWidth, startSize, fontFamily, weight) {
+    var size = startSize;
+    var prefix = weight ? weight + ' ' : '';
+    ctx.font = prefix + size + 'px ' + fontFamily;
+    while (ctx.measureText(text).width > maxWidth && size > 10) {
+      size -= 1;
+      ctx.font = prefix + size + 'px ' + fontFamily;
+    }
+  }
+
+  // The actual render. Returns a Promise (image loading is async) resolving
+  // to the now-drawn canvas.
+  function drawSeedingGraphic(canvas, opts) {
+    var size = GRAPHIC_FORMATS[opts.format];
+    canvas.width = size.w;
+    canvas.height = size.h;
+    var ctx = canvas.getContext('2d');
+    var W = size.w, H = size.h, feed = opts.format === 'feed';
+
+    var bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#050726');
+    bg.addColorStop(0.55, '#0b0d63');
+    bg.addColorStop(1, '#1c2199');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    var margin = feed ? 56 : 64;
+    var sideColW = feed ? 190 : 150;
+    var titleY = feed ? 84 : 128;
+    var titleSize = feed ? 50 : 62;
+    var tableBottom = H - (feed ? 140 : 170);
+    var tableTop = titleY + 40;
+    var tableLeft = margin;
+    var tableRight = W - margin - sideColW;
+    var tableWidth = tableRight - tableLeft;
+    var rowGap = 10;
+    var rowCount = opts.rows.length;
+    var rowHeight = Math.min((tableBottom - tableTop - rowGap * (rowCount - 1)) / rowCount, feed ? 78 : 140);
+
+    return Promise.all([
+      loadImageAsync(BADGE_URI),
+      Promise.all(opts.rows.map(function(r) { return loadImageAsync(findClub(r.team.club).logo || null); }))
+    ]).then(function(loaded) {
+      var badgeImg = loaded[0], logoImgs = loaded[1];
+
+      if (badgeImg) {
+        ctx.save();
+        ctx.globalAlpha = 0.07;
+        var bsize = Math.min(W, H) * 0.9;
+        ctx.drawImage(badgeImg, W - bsize * 0.55, H * 0.12, bsize, bsize);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'alphabetic';
+      fitText(ctx, opts.tournament.name.toUpperCase(), tableWidth * 0.96, titleSize, '"Bebas Neue"');
+      drawLetterSpaced(ctx, opts.tournament.name.toUpperCase(), margin, titleY, 6);
+
+      var rankW = rowHeight * 0.9;
+      opts.rows.forEach(function(r, i) {
+        var y = tableTop + i * (rowHeight + rowGap);
+
+        ctx.fillStyle = '#ffffff';
+        roundedRectPath(ctx, tableLeft, y, rankW, rowHeight, rowHeight * 0.22);
+        ctx.fill();
+        ctx.fillStyle = '#0b0d63';
+        ctx.font = 'bold ' + Math.round(rowHeight * 0.42) + 'px Poppins';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(r.rank), tableLeft + rankW / 2, y + rowHeight / 2 + 2);
+
+        var pillX = tableLeft + rankW + 14;
+        var pillW = tableWidth - rankW - 14;
+        var pillGrad = ctx.createLinearGradient(pillX, y, pillX + pillW, y + rowHeight);
+        pillGrad.addColorStop(0, '#2a2f9e');
+        pillGrad.addColorStop(1, '#12154f');
+        ctx.fillStyle = pillGrad;
+        roundedRectPath(ctx, pillX, y, pillW, rowHeight, rowHeight * 0.22);
+        ctx.fill();
+
+        var logoR = rowHeight * 0.36;
+        var logoCx = pillX + rowHeight * 0.55;
+        var logoCy = y + rowHeight / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(logoCx, logoCy, logoR, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.clip();
+        if (logoImgs[i]) ctx.drawImage(logoImgs[i], logoCx - logoR, logoCy - logoR, logoR * 2, logoR * 2);
+        ctx.restore();
+
+        ctx.fillStyle = '#00f2ff';
+        ctx.font = 'bold ' + Math.round(rowHeight * 0.34) + 'px Poppins';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        var pointsX = pillX + pillW - 20;
+        ctx.fillText(String(r.points), pointsX, y + rowHeight / 2 + 2);
+        var pointsW = ctx.measureText(String(r.points)).width;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        var nameX = logoCx + logoR + 16;
+        var nameMaxW = pointsX - pointsW - 20 - nameX;
+        fitText(ctx, r.team.name.toUpperCase(), nameMaxW, rowHeight * 0.36, '"Bebas Neue"');
+        ctx.fillText(r.team.name.toUpperCase(), nameX, y + rowHeight / 2 + 2);
+      });
+
+      ctx.save();
+      ctx.translate(W - sideColW * 0.45, H * 0.55);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = (feed ? 44 : 40) + 'px "Bebas Neue"';
+      ctx.textBaseline = 'middle';
+      drawLetterSpacedCentered(ctx, 'CONFIRMED TEAMS', 0, 0, 7);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(W - sideColW * 0.82, H * 0.38);
+      ctx.rotate(-Math.PI / 2 + 0.12);
+      ctx.fillStyle = '#00f2ff';
+      ctx.font = (feed ? 30 : 27) + 'px Caveat';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('main stage', 0, 0);
+      ctx.restore();
+
+      if (opts.photoImg) {
+        var pw = feed ? 400 : 460;
+        var ph = pw * (opts.photoImg.height / opts.photoImg.width);
+        var px = W - pw + 30;
+        var py = tableBottom - ph + 30;
+        ctx.save();
+        roundedRectPath(ctx, px, py, pw, ph, 24);
+        ctx.clip();
+        ctx.drawImage(opts.photoImg, px, py, pw, ph);
+        ctx.restore();
+      }
+
+      if (opts.sponsorImgs.length) {
+        var sponsorY = H - (feed ? 84 : 100);
+        var sh = feed ? 42 : 50;
+        var gap = 34;
+        var widths = opts.sponsorImgs.map(function(img) { return sh * (img.width / img.height); });
+        var totalW = widths.reduce(function(a, b) { return a + b; }, 0) + gap * (widths.length - 1);
+        var sx = (W - totalW) / 2;
+        opts.sponsorImgs.forEach(function(img, i) {
+          ctx.drawImage(img, sx, sponsorY, widths[i], sh);
+          sx += widths[i] + gap;
+        });
+      }
+
+      if (opts.pageLabel) {
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '20px Poppins';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(opts.pageLabel, margin, H - (feed ? 20 : 24));
+      }
+
+      return canvas;
+    });
+  }
+
+  function generateSeedingGraphics(format) {
+    var comp = document.getElementById('exportDivisionSelect').value;
+    var teams = currentBracket.teams.filter(function(t) { return t.competition === comp; });
+    var ranked = rankedTeamsWithPoints(teams);
+    if (!ranked.length) { window.alert('No teams in this division yet.'); return Promise.resolve(); }
+    var pages = chunkForGraphics(ranked, 12);
+    var photoUrl = currentBracketTournament.seedingPhoto || null;
+    var sponsorUrls = adminSponsorLogos();
+    // Canvas text draws with whatever font is loaded at that instant — it
+    // won't wait on a @font-face by itself, so without this a graphic
+    // generated right after page load could render in the browser's
+    // fallback font instead of Bebas Neue/Caveat.
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return fontsReady.then(function() {
+      return Promise.all([loadImageAsync(photoUrl), Promise.all(sponsorUrls.map(loadImageAsync))]);
+    }).then(function(res) {
+      var photoImg = res[0], sponsorImgs = res[1].filter(Boolean);
+      var container = document.getElementById('exportGraphicResults');
+      container.innerHTML = '';
+      return pages.reduce(function(chain, pageRows, idx) {
+        return chain.then(function() {
+          var canvas = document.createElement('canvas');
+          var label = pages.length > 1 ? ('Ranks ' + pageRows[0].rank + '–' + pageRows[pageRows.length - 1].rank) : null;
+          return drawSeedingGraphic(canvas, {
+            tournament: currentBracketTournament, rows: pageRows, pageLabel: label,
+            photoImg: photoImg, sponsorImgs: sponsorImgs, format: format
+          }).then(function() {
+            var dataUrl = canvas.toDataURL('image/png');
+            var wrap = document.createElement('div');
+            wrap.className = 'export-graphic-wrap';
+            var img = document.createElement('img');
+            img.src = dataUrl;
+            var dl = document.createElement('a');
+            dl.href = dataUrl;
+            dl.download = currentBracketTournament.id + '-seeding-' + format + (pages.length > 1 ? '-' + (idx + 1) : '') + '.png';
+            dl.className = 'btn btn-outline btn-sm';
+            dl.textContent = pages.length > 1 ? 'Download (' + (idx + 1) + '/' + pages.length + ')' : 'Download';
+            wrap.appendChild(img);
+            wrap.appendChild(dl);
+            container.appendChild(wrap);
+          });
+        });
+      }, Promise.resolve());
+    });
+  }
+
+  function renderExportPanel(bracket) {
+    var comps = bracketCompetitions(bracket);
+    if (!comps.length) return '';
+    var t = currentBracketTournament;
+    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Export Seeding Graphic</h2></summary>' +
+      '<div class="form-row" style="flex-wrap:wrap;">' +
+        '<div class="form-group"><label>Division</label><select id="exportDivisionSelect">' +
+          comps.map(function(c) { return '<option value="' + esc(c) + '">' + esc(divisionWord(c)) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="form-group"><label>Format</label><select id="exportFormatSelect">' +
+          '<option value="feed">Feed (1440×1080)</option><option value="story">Story (1080×1920)</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Photo (optional)</label>' +
+          (t.seedingPhoto ? '<img src="' + esc(t.seedingPhoto) + '" alt="" style="height:50px;border-radius:8px;display:block;margin-bottom:6px;">' : '') +
+          '<input type="file" id="seedingPhotoInput" accept="image/*"></div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-cyan btn-sm" id="generateSeedingGraphicBtn">Generate</button>' +
+      '<div id="exportGraphicResults" class="export-graphic-results"></div>' +
+    '</details></div>';
+  }
+
+  function wireExportPanel() {
+    var photoInput = document.getElementById('seedingPhotoInput');
+    if (photoInput) photoInput.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      saveImageField(currentBracketTournament.id, 'seedingPhoto', file).then(function() {
+        currentBracketTournament = effectiveTournament(tourById(currentBracketTournament.id));
+        renderLive();
+      }).catch(function() { window.alert('Upload failed.'); });
+    });
+    var genBtn = document.getElementById('generateSeedingGraphicBtn');
+    if (genBtn) genBtn.addEventListener('click', function() {
+      genBtn.disabled = true;
+      genBtn.textContent = 'Generating…';
+      generateSeedingGraphics(document.getElementById('exportFormatSelect').value).finally(function() {
+        genBtn.disabled = false;
+        genBtn.textContent = 'Generate';
+      });
+    });
   }
 
   // Roster count is what matters at a glance now that group/KO assignment
@@ -5717,6 +6116,7 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
+    wireExportPanel();
 
     document.querySelectorAll('[data-tier-filter]').forEach(function(btn) {
       btn.addEventListener('click', function() {
