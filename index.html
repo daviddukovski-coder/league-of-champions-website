@@ -329,6 +329,7 @@
   .match-score-summary { font-family:'Poppins','Open Sans',sans-serif; font-weight:700; color:var(--heading); font-size:13px; white-space:nowrap; }
   .match-sets { flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
   .match-format-label { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+  .roster-points-badge { font-size:11.5px; font-weight:700; color:var(--cyan-ink); background:var(--tint-ink); padding:4px 9px; border-radius:999px; white-space:nowrap; }
   .match-format-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); }
   .match-format-row select, .match-format-row input { width:auto; padding:8px; font-size:12.5px; }
   .set-inputs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
@@ -425,6 +426,8 @@
   .club-avatar { width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:10px; font-weight:600; color:#fff; overflow:hidden; }
   .club-avatar img { width:100%; height:100%; object-fit:cover; }
   .checkbox-row { display:flex; gap:9px; align-items:flex-start; margin-bottom:24px; cursor:pointer; }
+  .schedule-stage-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:4px 18px; max-height:320px; overflow-y:auto; padding:12px; margin:16px 0; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); }
+  .schedule-stage-grid .checkbox-row { margin-bottom:0; padding:6px 0; }
   .checkbox-row input { width:16px; height:16px; margin-top:3px; flex-shrink:0; accent-color:var(--cyan); }
   .checkbox-row span { font-size:12.5px; color:var(--text-muted); }
   .form-error { color:#b3401f; font-size:13px; text-align:center; margin-top:12px; min-height:16px; }
@@ -4998,7 +5001,6 @@ var CLUBS = [
       renderDivisionFilterTabs(bracket) +
       renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
-      renderExportPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
@@ -5060,6 +5062,7 @@ var CLUBS = [
       '</div>' +
       '<div class="roster-row-actions">' +
         promoteBtn +
+        '<span class="roster-points-badge admin-only-flex" title="Combined ranking points (both players) — this drives Auto-seed by ranking points">' + computeTeamRankingPoints(team) + ' pts</span>' +
         '<select class="competition-select admin-only-flex" data-competition-team="' + esc(team.id) + '" title="Division">' +
           '<option value=""' + (!team.competition ? ' selected' : '') + '>Division?</option>' +
           divisionOptionsHtml(team.competition) +
@@ -5124,46 +5127,6 @@ var CLUBS = [
     return '<div class="division-filter-tabs" id="tierFilterTabs">' + tabs + '</div>';
   }
 
-  /* ==================================================================
-     SEEDING GRAPHIC EXPORT — share-ready PNG (Confirmed Teams: rank, club,
-     team, ranking points) in the navy/cyan brand look, Feed (1440×1080) or
-     Story (1080×1920). Pure <canvas> rendering so it exports at exact pixel
-     sizes regardless of the viewer's zoom/DPI, downloaded straight from the
-     browser — no server round-trip.
-     ================================================================== */
-  var GRAPHIC_FORMATS = { feed: { w: 1440, h: 1080 }, story: { w: 1080, h: 1920 } };
-
-  // Standard competition ranking — equal points share a rank and the next
-  // rank skips accordingly (1,2,2,4 not 1,2,2,3), same convention as the
-  // reference graphic (two teams tied at "10", next team is "12").
-  function rankedTeamsWithPoints(teams) {
-    var withPoints = teams.map(function(t) { return { team: t, points: computeTeamRankingPoints(t) }; })
-      .sort(function(a, b) { return b.points - a.points; });
-    var rank = 0;
-    return withPoints.map(function(row, i) {
-      if (i === 0 || row.points !== withPoints[i - 1].points) rank = i + 1;
-      return { team: row.team, points: row.points, rank: rank };
-    });
-  }
-
-  // At most `max` teams per graphic, split as evenly as possible across
-  // however many pages that takes (20 teams -> 10+10, not a full 12 then a
-  // half-empty 8) rather than always front-loading full pages.
-  function chunkForGraphics(list, max) {
-    if (list.length <= max) return [list];
-    var pages = Math.ceil(list.length / max);
-    var base = Math.floor(list.length / pages);
-    var remainder = list.length % pages;
-    var chunks = [];
-    var idx = 0;
-    for (var p = 0; p < pages; p++) {
-      var size = base + (p < remainder ? 1 : 0);
-      chunks.push(list.slice(idx, idx + size));
-      idx += size;
-    }
-    return chunks;
-  }
-
   // Resolves to null (rather than rejecting) on a missing/broken image so
   // one bad club logo or an unset photo can't take down the whole export.
   function loadImageAsync(src) {
@@ -5220,248 +5183,6 @@ var CLUBS = [
     }
   }
 
-  // The actual render. Returns a Promise (image loading is async) resolving
-  // to the now-drawn canvas.
-  function drawSeedingGraphic(canvas, opts) {
-    var size = GRAPHIC_FORMATS[opts.format];
-    canvas.width = size.w;
-    canvas.height = size.h;
-    var ctx = canvas.getContext('2d');
-    var W = size.w, H = size.h, feed = opts.format === 'feed';
-
-    var bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#050726');
-    bg.addColorStop(0.55, '#0b0d63');
-    bg.addColorStop(1, '#1c2199');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    var margin = feed ? 56 : 64;
-    var sideColW = feed ? 190 : 150;
-    var titleY = feed ? 84 : 128;
-    var titleSize = feed ? 50 : 62;
-    var tableBottom = H - (feed ? 140 : 170);
-    var tableTop = titleY + 40;
-    var tableLeft = margin;
-    var tableRight = W - margin - sideColW;
-    var tableWidth = tableRight - tableLeft;
-    var rowGap = 10;
-    var rowCount = opts.rows.length;
-    var rowHeight = Math.min((tableBottom - tableTop - rowGap * (rowCount - 1)) / rowCount, feed ? 78 : 140);
-
-    return Promise.all([
-      loadImageAsync(BADGE_URI),
-      Promise.all(opts.rows.map(function(r) { return loadImageAsync(findClub(r.team.club).logo || null); }))
-    ]).then(function(loaded) {
-      var badgeImg = loaded[0], logoImgs = loaded[1];
-
-      if (badgeImg) {
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        var bsize = Math.min(W, H) * 0.9;
-        ctx.drawImage(badgeImg, W - bsize * 0.55, H * 0.12, bsize, bsize);
-        ctx.restore();
-      }
-
-      ctx.fillStyle = '#ffffff';
-      ctx.textBaseline = 'alphabetic';
-      fitText(ctx, opts.tournament.name.toUpperCase(), tableWidth * 0.96, titleSize, '"Bebas Neue"');
-      drawLetterSpaced(ctx, opts.tournament.name.toUpperCase(), margin, titleY, 6);
-
-      var rankW = rowHeight * 0.9;
-      opts.rows.forEach(function(r, i) {
-        var y = tableTop + i * (rowHeight + rowGap);
-
-        ctx.fillStyle = '#ffffff';
-        roundedRectPath(ctx, tableLeft, y, rankW, rowHeight, rowHeight * 0.22);
-        ctx.fill();
-        ctx.fillStyle = '#0b0d63';
-        ctx.font = 'bold ' + Math.round(rowHeight * 0.42) + 'px Poppins';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(String(r.rank), tableLeft + rankW / 2, y + rowHeight / 2 + 2);
-
-        var pillX = tableLeft + rankW + 14;
-        var pillW = tableWidth - rankW - 14;
-        var pillGrad = ctx.createLinearGradient(pillX, y, pillX + pillW, y + rowHeight);
-        pillGrad.addColorStop(0, '#2a2f9e');
-        pillGrad.addColorStop(1, '#12154f');
-        ctx.fillStyle = pillGrad;
-        roundedRectPath(ctx, pillX, y, pillW, rowHeight, rowHeight * 0.22);
-        ctx.fill();
-
-        var logoR = rowHeight * 0.36;
-        var logoCx = pillX + rowHeight * 0.55;
-        var logoCy = y + rowHeight / 2;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(logoCx, logoCy, logoR, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.clip();
-        if (logoImgs[i]) ctx.drawImage(logoImgs[i], logoCx - logoR, logoCy - logoR, logoR * 2, logoR * 2);
-        ctx.restore();
-
-        ctx.fillStyle = '#00f2ff';
-        ctx.font = 'bold ' + Math.round(rowHeight * 0.34) + 'px Poppins';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        var pointsX = pillX + pillW - 20;
-        ctx.fillText(String(r.points), pointsX, y + rowHeight / 2 + 2);
-        var pointsW = ctx.measureText(String(r.points)).width;
-
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
-        var nameX = logoCx + logoR + 16;
-        var nameMaxW = pointsX - pointsW - 20 - nameX;
-        fitText(ctx, r.team.name.toUpperCase(), nameMaxW, rowHeight * 0.36, '"Bebas Neue"');
-        ctx.fillText(r.team.name.toUpperCase(), nameX, y + rowHeight / 2 + 2);
-      });
-
-      ctx.save();
-      ctx.translate(W - sideColW * 0.45, H * 0.55);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.font = (feed ? 44 : 40) + 'px "Bebas Neue"';
-      ctx.textBaseline = 'middle';
-      drawLetterSpacedCentered(ctx, 'CONFIRMED TEAMS', 0, 0, 7);
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(W - sideColW * 0.82, H * 0.38);
-      ctx.rotate(-Math.PI / 2 + 0.12);
-      ctx.fillStyle = '#00f2ff';
-      ctx.font = (feed ? 30 : 27) + 'px Caveat';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('main stage', 0, 0);
-      ctx.restore();
-
-      if (opts.photoImg) {
-        var pw = feed ? 400 : 460;
-        var ph = pw * (opts.photoImg.height / opts.photoImg.width);
-        var px = W - pw + 30;
-        var py = tableBottom - ph + 30;
-        ctx.save();
-        roundedRectPath(ctx, px, py, pw, ph, 24);
-        ctx.clip();
-        ctx.drawImage(opts.photoImg, px, py, pw, ph);
-        ctx.restore();
-      }
-
-      if (opts.sponsorImgs.length) {
-        var sponsorY = H - (feed ? 84 : 100);
-        var sh = feed ? 42 : 50;
-        var gap = 34;
-        var widths = opts.sponsorImgs.map(function(img) { return sh * (img.width / img.height); });
-        var totalW = widths.reduce(function(a, b) { return a + b; }, 0) + gap * (widths.length - 1);
-        var sx = (W - totalW) / 2;
-        opts.sponsorImgs.forEach(function(img, i) {
-          ctx.drawImage(img, sx, sponsorY, widths[i], sh);
-          sx += widths[i] + gap;
-        });
-      }
-
-      if (opts.pageLabel) {
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.font = '20px Poppins';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(opts.pageLabel, margin, H - (feed ? 20 : 24));
-      }
-
-      return canvas;
-    });
-  }
-
-  function generateSeedingGraphics(format) {
-    var comp = document.getElementById('exportDivisionSelect').value;
-    var teams = currentBracket.teams.filter(function(t) { return t.competition === comp; });
-    var ranked = rankedTeamsWithPoints(teams);
-    if (!ranked.length) { window.alert('No teams in this division yet.'); return Promise.resolve(); }
-    var pages = chunkForGraphics(ranked, 12);
-    var photoUrl = currentBracketTournament.seedingPhoto || null;
-    var sponsorUrls = adminSponsorLogos();
-    // Canvas text draws with whatever font is loaded at that instant — it
-    // won't wait on a @font-face by itself, so without this a graphic
-    // generated right after page load could render in the browser's
-    // fallback font instead of Bebas Neue/Caveat.
-    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-    return fontsReady.then(function() {
-      return Promise.all([loadImageAsync(photoUrl), Promise.all(sponsorUrls.map(loadImageAsync))]);
-    }).then(function(res) {
-      var photoImg = res[0], sponsorImgs = res[1].filter(Boolean);
-      var container = document.getElementById('exportGraphicResults');
-      container.innerHTML = '';
-      return pages.reduce(function(chain, pageRows, idx) {
-        return chain.then(function() {
-          var canvas = document.createElement('canvas');
-          var label = pages.length > 1 ? ('Ranks ' + pageRows[0].rank + '–' + pageRows[pageRows.length - 1].rank) : null;
-          return drawSeedingGraphic(canvas, {
-            tournament: currentBracketTournament, rows: pageRows, pageLabel: label,
-            photoImg: photoImg, sponsorImgs: sponsorImgs, format: format
-          }).then(function() {
-            var dataUrl = canvas.toDataURL('image/png');
-            var wrap = document.createElement('div');
-            wrap.className = 'export-graphic-wrap';
-            var img = document.createElement('img');
-            img.src = dataUrl;
-            var dl = document.createElement('a');
-            dl.href = dataUrl;
-            dl.download = currentBracketTournament.id + '-seeding-' + format + (pages.length > 1 ? '-' + (idx + 1) : '') + '.png';
-            dl.className = 'btn btn-outline btn-sm';
-            dl.textContent = pages.length > 1 ? 'Download (' + (idx + 1) + '/' + pages.length + ')' : 'Download';
-            wrap.appendChild(img);
-            wrap.appendChild(dl);
-            container.appendChild(wrap);
-          });
-        });
-      }, Promise.resolve());
-    });
-  }
-
-  function renderExportPanel(bracket) {
-    var comps = bracketCompetitions(bracket);
-    if (!comps.length) return '';
-    var t = currentBracketTournament;
-    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Export Seeding Graphic</h2></summary>' +
-      '<div class="form-row" style="flex-wrap:wrap;">' +
-        '<div class="form-group"><label>Division</label><select id="exportDivisionSelect">' +
-          comps.map(function(c) { return '<option value="' + esc(c) + '">' + esc(divisionWord(c)) + '</option>'; }).join('') +
-        '</select></div>' +
-        '<div class="form-group"><label>Format</label><select id="exportFormatSelect">' +
-          '<option value="feed">Feed (1440×1080)</option><option value="story">Story (1080×1920)</option>' +
-        '</select></div>' +
-        '<div class="form-group"><label>Photo (optional)</label>' +
-          (t.seedingPhoto ? '<img src="' + esc(t.seedingPhoto) + '" alt="" style="height:50px;border-radius:8px;display:block;margin-bottom:6px;">' : '') +
-          '<input type="file" id="seedingPhotoInput" accept="image/*"></div>' +
-      '</div>' +
-      '<button type="button" class="btn btn-cyan btn-sm" id="generateSeedingGraphicBtn">Generate</button>' +
-      '<div id="exportGraphicResults" class="export-graphic-results"></div>' +
-    '</details></div>';
-  }
-
-  function wireExportPanel() {
-    var photoInput = document.getElementById('seedingPhotoInput');
-    if (photoInput) photoInput.addEventListener('change', function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      saveImageField(currentBracketTournament.id, 'seedingPhoto', file).then(function() {
-        currentBracketTournament = effectiveTournament(tourById(currentBracketTournament.id));
-        renderLive();
-      }).catch(function() { window.alert('Upload failed.'); });
-    });
-    var genBtn = document.getElementById('generateSeedingGraphicBtn');
-    if (genBtn) genBtn.addEventListener('click', function() {
-      genBtn.disabled = true;
-      genBtn.textContent = 'Generating…';
-      generateSeedingGraphics(document.getElementById('exportFormatSelect').value).finally(function() {
-        genBtn.disabled = false;
-        genBtn.textContent = 'Generate';
-      });
-    });
-  }
 
   // Roster count is what matters at a glance now that group/KO assignment
   // happens via each stage's own search-dropdown slots (renderStageCard) —
@@ -5694,11 +5415,24 @@ var CLUBS = [
         '<input type="number" class="set-b" value="' + esc(s[1]) + '">' +
       '</div>';
     }).join('');
+    // Same per-set-score-next-to-name layout as the schedule cards (reuses
+    // its classes) instead of one combined "9–18" summary between the names —
+    // easier to see who won which set at a glance.
+    var teamsHtml;
+    if (winner) {
+      var aWon = match.teamAId === winner;
+      var scoresA = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[0]) + '</span>'; }).join('');
+      var scoresB = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[1]) + '</span>'; }).join('');
+      teamsHtml = '<div class="schedule-match-teams schedule-match-scored">' +
+        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamNameHtml(match.teamAId) + scoresA + '</div>' +
+        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '</div>' +
+      '</div>';
+    } else {
+      teamsHtml = '<div class="schedule-match-teams">' + teamNameHtml(match.teamAId) + '<span class="schedule-match-vs">vs</span>' + teamNameHtml(match.teamBId) + '</div>';
+    }
     return '<div class="match-row" data-match-id="' + esc(match.id) + '">' +
       '<div class="match-teams-line">' +
-        teamNameHtml(match.teamAId) +
-        '<span class="match-score-summary">' + esc(formatSetsSummary(match)) + '</span>' +
-        teamNameHtml(match.teamBId) +
+        teamsHtml +
         '<span class="status ' + statusClass + '">' + status + '</span>' +
         '<span class="match-format-label">Best of ' + fmt.bestOf + ' · ' + esc(fmt.setPoints.join('/')) + '</span>' +
         (opts.allowRemove === false ? '' : '<button type="button" class="icon-btn admin-only-flex" data-remove-match="' + esc(match.id) + '" title="Remove match">✕</button>') +
@@ -6234,7 +5968,6 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
-    wireExportPanel();
 
     document.querySelectorAll('[data-tier-filter]').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -7076,6 +6809,277 @@ var CLUBS = [
     return Math.max(day.courtCount || 1, day.courts.length);
   }
 
+  /* ==================================================================
+     SCHEDULE GRAPHIC EXPORT — share-ready PNG of one day's schedule
+     (grouped by stage/round: club logo, names, time, match code), same
+     navy/cyan brand look as the rest of the site. Height grows with however
+     many matches that day has — no page limit, unlike a fixed social-media
+     format — and renders at 2x pixel density (SCHEDULE_GRAPHIC_SCALE) so it
+     stays crisp at print/full-screen size, not just thumbnail size.
+     ================================================================== */
+  var SCHEDULE_GRAPHIC_SCALE = 2;
+
+  // "First Last & First Last" -> two lines; anything else (a free-text
+  // external-match name, or a team name with no " & ") stays one line.
+  function splitTeamNameLines(name) {
+    var parts = (name || '').split(' & ');
+    return parts.length === 2 ? parts : [name || ''];
+  }
+
+  // Every real match on this day, in schedule order, grouped by stage/round
+  // (or by the free-text competition name for an "external" match) regardless
+  // of which court it's on — a promo graphic reads better grouped by round
+  // than interleaved by court. Skips breaks/custom blocks (nothing to show)
+  // and any match still waiting on both teams (nothing worth posting yet).
+  function collectDayGraphicMatches(day) {
+    var groupsMap = {};
+    var groupOrder = [];
+    for (var ci = 0; ci < dayCourtCount(day); ci++) {
+      var items = day.courts[ci] || [];
+      var cumMinutes = 0;
+      items.forEach(function(item) {
+        var startLabel = addMinutesToTime(day.startTime, cumMinutes);
+        cumMinutes += scheduleItemDuration(item);
+        var row = null;
+        if (item.type === 'external') {
+          row = { time: startLabel, code: '', group: item.competition || 'Match', teamAName: item.teamA, teamBName: item.teamB, teamAClub: null, teamBClub: null };
+        } else if (item.type === 'break' || item.type === 'custom') {
+          return;
+        } else {
+          var found = findMatchAnywhere(currentBracket, item.matchId);
+          if (!found) return;
+          var teamAId, teamBId, code, group;
+          if (found.round) {
+            var ri = found.stage.rounds.indexOf(found.round);
+            var mi = found.round.matches.indexOf(found.match);
+            teamAId = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotAIndex);
+            teamBId = resolveSlotTeam(currentBracket, found.stage, ri, found.match.slotBIndex);
+            code = matchCode(found.stage, ri, mi);
+            group = found.stage.label + ' – ' + found.round.name;
+          } else {
+            teamAId = found.match.teamAId;
+            teamBId = found.match.teamBId;
+            code = '';
+            group = found.stage.label;
+          }
+          if (!teamAId || !teamBId) return;
+          var teamA = findBracketTeam(currentBracket, teamAId);
+          var teamB = findBracketTeam(currentBracket, teamBId);
+          row = {
+            time: startLabel, code: code, group: group,
+            teamAName: teamA ? teamA.name : 'TBD', teamBName: teamB ? teamB.name : 'TBD',
+            teamAClub: teamA ? findClub(teamA.club) : null, teamBClub: teamB ? findClub(teamB.club) : null
+          };
+        }
+        if (!groupsMap[row.group]) { groupsMap[row.group] = []; groupOrder.push(row.group); }
+        groupsMap[row.group].push(row);
+      });
+    }
+    groupOrder.forEach(function(g) { groupsMap[g].sort(function(a, b) { return a.time.localeCompare(b.time); }); });
+    groupOrder.sort(function(a, b) { return groupsMap[a][0].time.localeCompare(groupsMap[b][0].time); });
+    return groupOrder.map(function(g) { return { title: g, matches: groupsMap[g] }; });
+  }
+
+  function drawScheduleGraphic(canvas, opts) {
+    var W = 1080;
+    var margin = 60;
+    var headerH = 210;
+    var groupHeaderH = 58;
+    var groupGap = 16;
+    var rowH = 118;
+    var rowGap = 14;
+    var footerH = opts.sponsorImgs.length ? 150 : 70;
+
+    var y = headerH;
+    opts.groups.forEach(function(g, gi) {
+      if (gi > 0) y += groupGap;
+      y += groupHeaderH + 10;
+      y += g.matches.length * (rowH + rowGap) - rowGap;
+    });
+    var H = y + footerH;
+
+    var scale = SCHEDULE_GRAPHIC_SCALE;
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    var bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#050726');
+    bg.addColorStop(0.55, '#0b0d63');
+    bg.addColorStop(1, '#1c2199');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    return loadImageAsync(BADGE_URI).then(function(badgeImg) {
+      if (badgeImg) {
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        var bsize = Math.min(W, H) * 0.7;
+        ctx.drawImage(badgeImg, W - bsize * 0.6, 20, bsize, bsize);
+        ctx.restore();
+      }
+
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      fitText(ctx, opts.tournament.name.toUpperCase(), W - margin * 2, 58, '"Bebas Neue"');
+      drawLetterSpacedCentered(ctx, opts.tournament.name.toUpperCase(), W / 2, 92, 5);
+      if (opts.dayLabel) {
+        ctx.font = '24px Poppins';
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillText(opts.dayLabel, W / 2, 134);
+      }
+
+      var rowY = headerH;
+      var logoR = 34;
+      var centerColW = 170;
+      var nameMaxW = (W / 2) - margin - logoR * 2 - 16 - centerColW / 2 - 10;
+
+      function drawSide(cx, name, club, align) {
+        var lines = splitTeamNameLines(name);
+        ctx.font = 'bold 22px Poppins';
+        var lineH = 26;
+        var totalH = lines.length * lineH;
+        var startY = cx.y - totalH / 2 + lineH * 0.75;
+        ctx.textAlign = align;
+        ctx.fillStyle = '#ffffff';
+        lines.forEach(function(line, i) {
+          fitText(ctx, line.toUpperCase(), nameMaxW, 22, 'Poppins', 'bold');
+          ctx.fillText(line.toUpperCase(), cx.textX, startY + i * lineH);
+        });
+      }
+
+      return opts.groups.reduce(function(chain, group, gi) {
+        return chain.then(function() {
+          if (gi > 0) rowY += groupGap;
+          ctx.fillStyle = 'rgba(255,255,255,0.92)';
+          roundedRectPath(ctx, margin, rowY, W - margin * 2, groupHeaderH, 12);
+          ctx.fill();
+          ctx.fillStyle = '#0b0d63';
+          ctx.textAlign = 'left';
+          ctx.font = 'bold 24px "Bebas Neue"';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(group.title.toUpperCase(), margin + 20, rowY + groupHeaderH / 2 + 1);
+          rowY += groupHeaderH + 10;
+
+          return group.matches.reduce(function(innerChain, m) {
+            return innerChain.then(function() {
+              return Promise.all([loadImageAsync(m.teamAClub && m.teamAClub.logo), loadImageAsync(m.teamBClub && m.teamBClub.logo)]).then(function(logos) {
+                var cardY = rowY;
+                ctx.fillStyle = 'rgba(255,255,255,0.07)';
+                roundedRectPath(ctx, margin, cardY, W - margin * 2, rowH, 16);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+                ctx.lineWidth = 1;
+                roundedRectPath(ctx, margin, cardY, W - margin * 2, rowH, 16);
+                ctx.stroke();
+
+                var midY = cardY + rowH / 2;
+
+                function drawLogo(cxPos, img) {
+                  ctx.save();
+                  ctx.beginPath();
+                  ctx.arc(cxPos, midY, logoR, 0, Math.PI * 2);
+                  ctx.closePath();
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fill();
+                  ctx.clip();
+                  if (img) ctx.drawImage(img, cxPos - logoR, midY - logoR, logoR * 2, logoR * 2);
+                  ctx.restore();
+                }
+
+                var logoAx = margin + 24 + logoR;
+                drawLogo(logoAx, logos[0]);
+                drawSide({ y: midY, textX: logoAx + logoR + 16 }, m.teamAName, m.teamAClub, 'left');
+
+                var logoBx = W - margin - 24 - logoR;
+                drawLogo(logoBx, logos[1]);
+                drawSide({ y: midY, textX: logoBx - logoR - 16 }, m.teamBName, m.teamBClub, 'right');
+
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#00f2ff';
+                ctx.font = 'bold 30px Poppins';
+                ctx.fillText(m.time, W / 2, midY - (m.code ? 8 : -6));
+                if (m.code) {
+                  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                  ctx.font = '13px Poppins';
+                  ctx.fillText(m.code.toUpperCase(), W / 2, midY + 16);
+                }
+
+                rowY += rowH + rowGap;
+              });
+            });
+          }, Promise.resolve());
+        });
+      }, Promise.resolve()).then(function() {
+        if (opts.sponsorImgs.length) {
+          var sponsorY = H - footerH + 30;
+          var sh = 46;
+          var gap = 34;
+          var widths = opts.sponsorImgs.map(function(img) { return sh * (img.width / img.height); });
+          var totalW = widths.reduce(function(a, b) { return a + b; }, 0) + gap * (widths.length - 1);
+          var sx = (W - totalW) / 2;
+          opts.sponsorImgs.forEach(function(img, i) {
+            ctx.drawImage(img, sx, sponsorY, widths[i], sh);
+            sx += widths[i] + gap;
+          });
+        }
+        return canvas;
+      });
+    });
+  }
+
+  function generateScheduleGraphic() {
+    var day = currentBracket.schedule.days[scheduleSelectedDayIndex];
+    if (!day) return Promise.resolve();
+    var checked = Array.prototype.slice.call(document.querySelectorAll('[data-graphic-group-check]:checked')).map(function(cb) { return cb.dataset.graphicGroupCheck; });
+    if (!checked.length) { window.alert('Select at least one round to include.'); return Promise.resolve(); }
+    var groups = collectDayGraphicMatches(day).filter(function(g) { return checked.indexOf(g.title) !== -1; });
+    if (!groups.length) { window.alert('No scheduled matches with both teams known yet in the selected rounds.'); return Promise.resolve(); }
+    var sponsorUrls = adminSponsorLogos();
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return fontsReady.then(function() {
+      return Promise.all(sponsorUrls.map(loadImageAsync));
+    }).then(function(sponsorImgs) {
+      var canvas = document.createElement('canvas');
+      return drawScheduleGraphic(canvas, {
+        tournament: currentBracketTournament, dayLabel: day.label, groups: groups,
+        sponsorImgs: sponsorImgs.filter(Boolean)
+      });
+    }).then(function(canvas) {
+      var dataUrl = canvas.toDataURL('image/png');
+      var container = document.getElementById('scheduleGraphicResults');
+      container.innerHTML = '';
+      var wrap = document.createElement('div');
+      wrap.className = 'export-graphic-wrap';
+      var img = document.createElement('img');
+      img.src = dataUrl;
+      var dl = document.createElement('a');
+      dl.href = dataUrl;
+      dl.download = currentBracketTournament.id + '-schedule-' + day.id + '.png';
+      dl.className = 'btn btn-outline btn-sm';
+      dl.textContent = 'Download';
+      wrap.appendChild(img);
+      wrap.appendChild(dl);
+      container.appendChild(wrap);
+    });
+  }
+
+  function renderScheduleGraphicPanel(day) {
+    var groups = collectDayGraphicMatches(day);
+    if (!groups.length) return '';
+    var rows = groups.map(function(g) {
+      return '<label class="checkbox-row"><input type="checkbox" data-graphic-group-check="' + esc(g.title) + '"><span><strong>' + esc(g.title) + '</strong> — ' + g.matches.length + ' match' + (g.matches.length === 1 ? '' : 'es') + '</span></label>';
+    }).join('');
+    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Export Schedule Graphic</h2></summary>' +
+      '<p class="empty-note">Pick which round(s) from ' + esc(day.label) + ' go on one poster — e.g. just the finals, not the whole (much longer) day.</p>' +
+      '<div class="schedule-stage-grid">' + rows + '</div>' +
+      '<button type="button" class="btn btn-cyan btn-sm" id="generateScheduleGraphicBtn">Generate</button>' +
+      '<div id="scheduleGraphicResults" class="export-graphic-results"></div>' +
+    '</details></div>';
+  }
+
   function autoScheduleStagesToDay(bracket, selections, day, courtIndices) {
     // Days can predate a later increase to their own court count, leaving
     // day.courts shorter than the court list currently shown — pad it so
@@ -7426,7 +7430,7 @@ var CLUBS = [
     return '<div class="live-panel admin-only">' +
       '<h2>Add matches to schedule</h2>' +
       '<p class="empty-note">Select one or more stages to schedule together — their matches interleave across the same courts instead of one stage finishing before the next starts.</p>' +
-      rows +
+      '<div class="schedule-stage-grid">' + rows + '</div>' +
       '<p class="empty-note" style="margin-top:12px;">Which court(s) should these matches go on? Uncheck the rest — e.g. 2 groups sharing 1 court.</p>' +
       courtChecks.join('') +
       '<div class="roster-row-actions" style="margin-top:12px;">' +
@@ -7543,12 +7547,22 @@ var CLUBS = [
       renderStageScheduleControls(bracket) +
       renderScheduleDayTabs(bracket) +
       visibleDays.map(renderScheduleDayBlock).join('') +
-      (bracket.schedule.days.length ? '' : '<p class="empty-note">' + uiText('schedule.noDays') + '</p>');
+      (bracket.schedule.days.length ? '' : '<p class="empty-note">' + uiText('schedule.noDays') + '</p>') +
+      (visibleDays.length ? renderScheduleGraphicPanel(visibleDays[0]) : '');
     wireScheduleEvents();
     initScheduleSortable();
   }
 
   function wireScheduleEvents() {
+    var genGraphicBtn = document.getElementById('generateScheduleGraphicBtn');
+    if (genGraphicBtn) genGraphicBtn.addEventListener('click', function() {
+      genGraphicBtn.disabled = true;
+      genGraphicBtn.textContent = 'Generating…';
+      generateScheduleGraphic().finally(function() {
+        genGraphicBtn.disabled = false;
+        genGraphicBtn.textContent = 'Generate';
+      });
+    });
     document.querySelectorAll('[data-select-schedule-day]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         scheduleSelectedDayIndex = parseInt(btn.dataset.selectScheduleDay, 10);
