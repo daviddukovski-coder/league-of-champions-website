@@ -7,7 +7,7 @@
 <meta name="description" content="Tournament overview, info and team registration for the Footvolley League of Champions Tour.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
@@ -244,6 +244,11 @@
   .info-block { background:var(--surface); padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
   .info-block .label { font-family:'Poppins','Open Sans',Verdana,Arial,sans-serif; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
   .info-block .value { font-weight:600; color:var(--heading); font-size:15px; }
+  .venue-map-link { display:inline-block; margin-top:2px; font-size:12.5px; font-weight:600; color:var(--cyan-ink); text-decoration:none; }
+  .venue-map-link:hover { text-decoration:underline; }
+  .export-graphic-results { display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; }
+  .export-graphic-wrap { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+  .export-graphic-wrap img { max-width:240px; border-radius:8px; border:1px solid var(--border); }
   .closed-note { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; color:var(--text-muted); font-size:14px; margin-bottom:28px; display:flex; align-items:center; min-width:240px; height:56px; }
   .resume-banner { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; background:var(--tint-pending); border:1px solid var(--cyan); border-radius:var(--radius); padding:16px 20px; margin-bottom:28px; }
   .resume-banner p { font-size:13.5px; color:var(--pending-text); font-weight:600; }
@@ -310,6 +315,8 @@
   .pool-placement { display:inline-block; width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; background:var(--tint-ink); font-weight:700; }
   .standings-team { display:flex; align-items:center; gap:8px; font-weight:600; color:var(--heading); }
   .standings-team .club-avatar { width:22px; height:22px; }
+  .ranking-clubs { display:flex; flex-direction:column; gap:6px; }
+  .ranking-clubs .standings-team { font-weight:500; font-size:13px; color:var(--text); }
   .match-list { display:flex; flex-direction:column; gap:10px; margin:14px 0; }
   .match-row { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
   .match-teams-line { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -520,6 +527,7 @@
           </div>
         </div>
         <button class="nav-link" data-route="inbox" data-ui-key="nav.inbox">Inbox</button>
+        <button class="nav-link" id="adminNavLink" data-route="admin" data-ui-key="nav.admin" hidden>Admin</button>
         <button class="nav-link" id="editModeBtn" hidden>Edit Mode: Off</button>
         <button class="nav-link" id="logoutBtn" data-ui-key="nav.logout">Log Out</button>
       </div>
@@ -603,6 +611,15 @@
     <div class="container">
       <button class="back-btn" data-back data-ui-key="register.backLink">← Back to Tournament</button>
       <div id="exchangeContent"></div>
+    </div>
+  </section>
+
+  <section id="view-admin" class="view" hidden>
+    <div class="container">
+      <div class="home-hero">
+        <h1>Admin</h1>
+      </div>
+      <div id="adminContent"></div>
     </div>
   </section>
 
@@ -728,7 +745,7 @@
      DATA – tournaments & clubs. Images/logos can simply be swapped by
      setting the image / logo fields (currently null).
      ================================================================== */
-  var TOURNAMENTS = [
+  var BASE_TOURNAMENTS = [
     { id:'stockholm-100', name:'Stockholm 100', tier:100, dateLabel:'Jan 30–31', dateSort:'2026-01-30', city:'Stockholm', country:'Sweden', flag:'🇸🇪', competitions:['Men'], status:'past', image:null },
     { id:'amsterdam-500', name:'Amsterdam 500', tier:500, dateLabel:'Mar 7–8', dateSort:'2026-03-07', city:'Amsterdam', country:'Netherlands', flag:'🇳🇱', competitions:['Men','Women'], status:'past', image:null },
     { id:'barcelona-500', name:'Barcelona 500', tier:500, dateLabel:'Apr 3–5', dateSort:'2026-04-03', city:'Vilanova', country:'Spain', flag:'🇪🇸', competitions:['Men','Women'], status:'past', image:null },
@@ -745,8 +762,23 @@
     { id:'wiesloch-500', name:'Wiesloch 500', tier:500, dateLabel:'Aug 14–16', dateSort:'2026-08-14', city:'Wiesloch', country:'Germany', flag:'🇩🇪', competitions:['Men','Women'], status:'past', image:null },
     { id:'matosinhos-1000', name:'Matosinhos 1000', tier:1000, dateLabel:'Aug 21–23', dateSort:'2026-08-21', city:'Matosinhos', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'August 20, 2026', image:null },
     { id:'valencia-500', name:'Valencia 500 / Cullera 100', tier:500, dateLabel:'Sep 11–13', dateSort:'2026-09-11', city:'Valencia', country:'Spain', flag:'🇪🇸', competitions:['Men','Women'], status:'upcoming', fee:60, deadline:'September 8, 2026', image:null },
-    { id:'faro-finals', name:'Faro Finals', tier:1000, dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
+    { id:'faro-finals', name:'Faro Finals', tier:'FINALS', dateLabel:'Sep 25–27', dateSort:'2026-09-25', city:'Faro', country:'Portugal', flag:'🇵🇹', competitions:['Men','Women'], status:'upcoming', fee:80, deadline:'September 22, 2026', image:null }
   ];
+
+  // The full tournament list as far as every render function is concerned:
+  // BASE_TOURNAMENTS (hardcoded above) minus anything the admin deleted,
+  // plus anything the admin created from scratch in the Admin page. Deleting
+  // a hardcoded tournament can't mutate the const array, so it's tracked as
+  // an id to skip instead (contentOverrides.removedTournaments); a
+  // newly-created one is stored whole (contentOverrides.customTournaments).
+  // Field edits to EITHER kind reuse the existing per-tournament
+  // contentOverrides[t.id] mechanism (effectiveTournament), applied by every
+  // caller already — so this function only decides which base rows exist.
+  function allTournaments() {
+    var removed = contentOverrides.removedTournaments || [];
+    var custom = contentOverrides.customTournaments || [];
+    return BASE_TOURNAMENTS.filter(function(t) { return removed.indexOf(t.id) === -1; }).concat(custom).map(effectiveTournament);
+  }
 
   // A function (not a static map) so it can reach the active-language
   // translations — arbitrary admin-typed categories (e.g. "Men 100") fall
@@ -952,7 +984,7 @@ var CLUBS = [
   /* ==================================================================
      HELPERS
      ================================================================== */
-  function tourById(id) { return TOURNAMENTS.find(function(t){ return t.id === id; }); }
+  function tourById(id) { return allTournaments().find(function(t){ return t.id === id; }); }
   function rand() { return Math.random().toString(36).slice(2,8); }
   function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -1137,11 +1169,12 @@ var CLUBS = [
   function updateNavAuthUI() {
     document.getElementById('authNavLoggedOut').hidden = !!currentUser;
     document.getElementById('authNavLoggedIn').hidden = !currentUser;
-    isAdmin = !!currentUser && CONFIG.ADMIN_EMAILS.map(function(e){ return e.toLowerCase(); }).indexOf((currentUser.email || '').toLowerCase()) !== -1;
+    isAdmin = !!currentUser && effectiveAdminEmails().indexOf((currentUser.email || '').toLowerCase()) !== -1;
     if (currentUser) {
       document.getElementById('navUserName').textContent = 'Hi, ' + (currentUser.name || currentUser.email);
     }
     document.getElementById('editModeBtn').hidden = !isAdmin;
+    document.getElementById('adminNavLink').hidden = !isAdmin;
     if (!isAdmin) setEditMode(false);
     document.body.classList.toggle('is-admin', isAdmin);
   }
@@ -1218,15 +1251,46 @@ var CLUBS = [
     });
   }
 
-  function saveContentImage(key, file) {
+  // Generalized version of saveContentImage below — same upload path, but any
+  // field name instead of always 'image' (used for the optional per-tournament
+  // seeding-graphic photo, keyed separately from the tournament's main image).
+  function saveImageField(key, field, file) {
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
     if (AUTH_DEMO_MODE) {
-      return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, 'image', dataUrl); });
+      return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, field, dataUrl); });
     }
-    var ref = firebase.storage().ref('content/' + key + '/' + Date.now() + '-' + file.name);
+    var ref = firebase.storage().ref('content/' + key + '/' + field + '-' + Date.now() + '-' + file.name);
     return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
-      return saveContentField(key, 'image', url);
+      return saveContentField(key, field, url);
     });
+  }
+
+  function saveContentImage(key, file) {
+    return saveImageField(key, 'image', file);
+  }
+
+  // Sponsor logos shown on generated seeding/bracket share graphics — an
+  // admin-managed list (Site Settings), not a single field, so it gets its
+  // own upload path alongside saveImageField rather than reusing it directly.
+  function addSponsorLogo(file) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var existing = (contentOverrides.settings && contentOverrides.settings.sponsorLogos) || [];
+    if (AUTH_DEMO_MODE) {
+      return fileToDataUrl(file).then(function(dataUrl) {
+        return saveContentFields('settings', { sponsorLogos: existing.concat([dataUrl]) });
+      });
+    }
+    var ref = firebase.storage().ref('content/settings/sponsor-' + Date.now() + '-' + file.name);
+    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+      return saveContentFields('settings', { sponsorLogos: existing.concat([url]) });
+    });
+  }
+
+  function removeSponsorLogo(index) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var existing = ((contentOverrides.settings && contentOverrides.settings.sponsorLogos) || []).slice();
+    existing.splice(index, 1);
+    return saveContentFields('settings', { sponsorLogos: existing });
   }
 
   // Hero media accepts video OR image (unlike every other edit-target, which is
@@ -1261,6 +1325,108 @@ var CLUBS = [
   function effectiveHero() {
     var o = contentOverrides.hero || {};
     return { video: o.video || CONFIG.HERO_VIDEO_URL, image: o.image || CONFIG.HERO_IMAGE_URL };
+  }
+
+  // CONFIG.ADMIN_EMAILS always stay admins (hardcoded, so an admin can never
+  // accidentally lock themselves out via the Site Settings panel) — the
+  // panel only ever adds to that base list, via contentOverrides.settings.
+  function effectiveAdminEmails() {
+    var extra = (contentOverrides.settings && contentOverrides.settings.extraAdminEmails) || [];
+    return CONFIG.ADMIN_EMAILS.map(function(e) { return e.toLowerCase(); })
+      .concat(extra.map(function(e) { return e.toLowerCase(); }));
+  }
+
+  function effectiveInstagramLinks() {
+    var o = contentOverrides.settings || {};
+    return {
+      tour: o.instagramTour || CONFIG.INSTAGRAM_TOUR_URL,
+      bolao: o.instagramBolao || CONFIG.INSTAGRAM_BOLAO_URL
+    };
+  }
+
+  // Generic multi-field write for a contentOverrides[key] object — one
+  // Firestore write for several fields at once, instead of one saveContentField()
+  // round-trip per field (used by the admin forms below, which each submit
+  // many fields together).
+  function saveContentFields(key, fields) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (!contentOverrides[key]) contentOverrides[key] = {};
+    Object.assign(contentOverrides[key], fields);
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    var update = {};
+    update[key] = contentOverrides[key];
+    return firebase.firestore().collection('content').doc('site').set(update, { merge: true });
+  }
+
+  // Top-level (not nested under a per-tournament key) writes for the two
+  // lists that make up the admin-managed side of allTournaments().
+  function saveCustomTournaments(list) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    contentOverrides.customTournaments = list;
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('content').doc('site').set({ customTournaments: list }, { merge: true });
+  }
+  function saveRemovedTournaments(list) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    contentOverrides.removedTournaments = list;
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('content').doc('site').set({ removedTournaments: list }, { merge: true });
+  }
+
+  // A season explicitly added via Admin > Tournaments > + Add Season, before
+  // it has any tournament of its own yet — otherwise adminSeasonOptions()
+  // would have nothing to show it with (a season is normally just whichever
+  // years already have a tournament in them).
+  function saveExtraSeasons(list) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    contentOverrides.extraSeasons = list;
+    if (AUTH_DEMO_MODE) {
+      localStorage.setItem('loc_admin_content', JSON.stringify(contentOverrides));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('content').doc('site').set({ extraSeasons: list }, { merge: true });
+  }
+
+  function slugifyTournamentName(name) {
+    var base = (name || 'tournament').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tournament';
+    var existing = allTournaments().map(function(t) { return t.id; });
+    var slug = base, n = 2;
+    while (existing.indexOf(slug) !== -1) { slug = base + '-' + (n++); }
+    return slug;
+  }
+
+  // Single entry point for the Admin > Tournaments form, for both "add" and
+  // "edit". Every field edit — hardcoded tournament or admin-created one —
+  // goes through the same contentOverrides[id] merge that effectiveTournament()
+  // already applies everywhere tournaments are rendered, so a brand-new
+  // tournament only needs a minimal base row in customTournaments and can be
+  // edited again the exact same way as any BASE_TOURNAMENTS entry.
+  function adminSaveTournament(id, fields) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (id) return saveContentFields(id, fields);
+    var newId = slugifyTournamentName(fields.name);
+    var list = (contentOverrides.customTournaments || []).concat([Object.assign({ id: newId, image: null }, fields)]);
+    return saveCustomTournaments(list);
+  }
+
+  function adminDeleteTournament(id) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var isCustom = (contentOverrides.customTournaments || []).some(function(t) { return t.id === id; });
+    if (isCustom) {
+      return saveCustomTournaments((contentOverrides.customTournaments || []).filter(function(t) { return t.id !== id; }));
+    }
+    var removed = (contentOverrides.removedTournaments || []).slice();
+    if (removed.indexOf(id) === -1) removed.push(id);
+    return saveRemovedTournaments(removed);
   }
 
   /* ==================================================================
@@ -1573,7 +1739,11 @@ var CLUBS = [
   // from the "Ranking" panel's editable table (persisted via the same
   // contentOverrides/saveContentField mechanism as every other admin-edited
   // site setting, under key "rankingPoints", field = tier).
+  // FINALS is the one season-ending tournament (not a numeric tier like the
+  // others) — seeded above the 1000 tier as a starting point; adjust the
+  // exact values any time in Admin > Ranking Points.
   var POINTS_TABLE = {
+    FINALS: { WINNER: 1500, FINALIST: 900, THIRD: 600, FOURTH: 450, QUARTERFINAL: 270, R16: 135, R32: 0, QUAL: 60, PARTICIPATION: 2 },
     1000: { WINNER: 1000, FINALIST: 600, THIRD: 400, FOURTH: 300, QUARTERFINAL: 180, R16: 90, R32: 0, QUAL: 40, PARTICIPATION: 2 },
     500:  { WINNER: 500,  FINALIST: 300, THIRD: 200, FOURTH: 150, QUARTERFINAL: 90,  R16: 40, R32: 0, QUAL: 20, PARTICIPATION: 2 },
     100:  { WINNER: 100,  FINALIST: 60,  THIRD: 40,  FOURTH: 30,  QUARTERFINAL: 18,  R16: 9,  R32: 0, QUAL: 4,  PARTICIPATION: 2 }
@@ -1851,7 +2021,7 @@ var CLUBS = [
   function computePlayerStats(uid) {
     var tournamentsPlayed = 0, wins = 0, losses = 0, clubs = {}, history = [];
     var medals = { gold: 0, silver: 0, bronze: 0, referee: 0 };
-    return Promise.all(TOURNAMENTS.map(function(t) {
+    return Promise.all(allTournaments().map(function(t) {
       return loadBracket(t.id).then(function(bracket) {
         var teamIds = bracket.teams.filter(function(team) {
           return team.uid === uid || team.partnerUid === uid;
@@ -2293,6 +2463,7 @@ var CLUBS = [
     'nav.sub': 'FOOTVOLLEY',
     'nav.tournaments': 'Tournaments',
     'nav.ranking': 'Ranking',
+    'nav.admin': 'Admin',
     'nav.imprint': 'Imprint',
     'nav.login': 'Log In',
     'nav.register': 'Register',
@@ -2314,6 +2485,12 @@ var CLUBS = [
     'detail.feeLabel': 'Entry fee',
     'detail.deadlineLabel': 'Registration deadline',
     'detail.divisionsLabel': 'Divisions',
+    'detail.venueHeading': 'Venue',
+    'detail.venueAddressLabel': 'Address',
+    'detail.venueMapLabel': 'Map',
+    'detail.venueMapLinkText': 'Open in Maps ↗',
+    'detail.venueParkingLabel': 'Parking',
+    'detail.venueChangingLabel': 'Changing rooms',
     'detail.registerNow': 'Register now',
     'detail.alreadyRegisteredNote': "You're already registered for this tournament.",
     'detail.registeredTeams': 'Registered Teams',
@@ -2448,6 +2625,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -3108,10 +3286,10 @@ var CLUBS = [
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var currentFilter = 'upcoming';
 
-  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', impressum:'impressum', login:'login', registeraccount:'register-account', inbox:'inbox' };
+  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', admin:'admin', impressum:'impressum', login:'login', registeraccount:'register-account', inbox:'inbox' };
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','player','ranking','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
@@ -3170,6 +3348,8 @@ var CLUBS = [
       showPlayer(p[1]);
     } else if (p[0] === 'ranking') {
       showRanking();
+    } else if (p[0] === 'admin') {
+      showAdmin();
     } else if (p[0] === 'impressum') {
       showImpressum();
     } else if (p[0] === 'login') {
@@ -3384,7 +3564,7 @@ var CLUBS = [
   // sense for browsing past seasons — listed newest first.
   function pastYears() {
     var years = {};
-    TOURNAMENTS.forEach(function(t) { if (t.status === 'past') years[t.dateSort.slice(0, 4)] = true; });
+    allTournaments().forEach(function(t) { if (t.status === 'past') years[t.dateSort.slice(0, 4)] = true; });
     return Object.keys(years).sort().reverse();
   }
 
@@ -3397,10 +3577,10 @@ var CLUBS = [
     if (filter === 'past') {
       year = document.getElementById('pastYearFilter').value;
     } else {
-      var upcoming = TOURNAMENTS.filter(function(t) { return t.status === 'upcoming'; });
+      var upcoming = allTournaments().filter(function(t) { return t.status === 'upcoming'; });
       year = upcoming.length ? upcoming[0].dateSort.slice(0, 4) : String(new Date().getFullYear());
     }
-    var count = TOURNAMENTS.filter(function(t) { return t.dateSort.slice(0, 4) === year; }).length;
+    var count = allTournaments().filter(function(t) { return t.dateSort.slice(0, 4) === year; }).length;
     document.getElementById('seasonTag').textContent = uiFormat('home.seasonTag', { year: year, n: count });
   }
 
@@ -3414,10 +3594,10 @@ var CLUBS = [
         yearSelect.value = years[0] || '';
       }
       yearSelect.hidden = false;
-      list = TOURNAMENTS.filter(function(t) { return t.status === 'past' && t.dateSort.slice(0, 4) === yearSelect.value; });
+      list = allTournaments().filter(function(t) { return t.status === 'past' && t.dateSort.slice(0, 4) === yearSelect.value; });
     } else {
       yearSelect.hidden = true;
-      list = TOURNAMENTS.filter(function(t) { return t.status === filter; });
+      list = allTournaments().filter(function(t) { return t.status === filter; });
     }
     list = list.sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); }).map(effectiveTournament);
     grid.innerHTML = list.map(renderCard).join('');
@@ -3426,7 +3606,7 @@ var CLUBS = [
   }
 
   function loadCounts() {
-    var upcoming = TOURNAMENTS.filter(function(t){ return t.status === 'upcoming'; });
+    var upcoming = allTournaments().filter(function(t){ return t.status === 'upcoming'; });
     upcoming.forEach(function(t) {
       backendListRegistrations(t.id).then(function(list) {
         var el = document.querySelector('[data-count-for="' + t.id + '"]');
@@ -3480,6 +3660,16 @@ var CLUBS = [
     return null;
   }
 
+  // A team's combined ranking points for seeding purposes — both players'
+  // current points (0 for a player with no ranking entry yet, same as their
+  // profile page shows "–"), same name-splitting convention team.name is
+  // always built with ("First Last & First Last").
+  function computeTeamRankingPoints(team) {
+    return (team.name || '').split(' & ').reduce(function(sum, name) {
+      return sum + (findRankingPointsForPlayer(name.trim()) || 0);
+    }, 0);
+  }
+
   function findPlayerByName(name) {
     if (!name) return null;
     var n = name.trim().toLowerCase();
@@ -3516,14 +3706,19 @@ var CLUBS = [
       table = '<table class="history-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
           var match = findPlayerByName(r.name);
-          var clubs = [r.club1, r.club2].filter(Boolean).join(' / ');
-          return '<tr><td>' + r.rank + '</td><td>' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + (clubs ? esc(clubs) : '–') + '</td><td>' + r.points + '</td></tr>';
+          var clubNames = [r.club1, r.club2].filter(Boolean);
+          var clubsHtml = clubNames.length
+            ? '<div class="ranking-clubs">' + clubNames.map(function(name) {
+                return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
+              }).join('') + '</div>'
+            : '–';
+          return '<tr><td>' + r.rank + '</td><td>' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td>' + r.points + '</td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
       table = '<table class="history-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr><td>' + r.rank + '</td><td>' + esc(r.name) + '</td><td>' + r.points + '</td></tr>';
+          return '<tr><td>' + r.rank + '</td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td>' + r.points + '</td></tr>';
         }).join('') +
         '</tbody></table>';
     }
@@ -3545,6 +3740,296 @@ var CLUBS = [
   function showRanking() {
     renderRanking();
     setView('ranking');
+  }
+
+  /* ==================================================================
+     ADMIN — one place for everything that used to be scattered across
+     the site (tournament CRUD, ranking points per tier, site-wide
+     settings). Reuses the same contentOverrides/saveContentField(s)
+     plumbing as every other admin-edited value, so nothing here needs
+     its own persistence mechanism.
+     ================================================================== */
+  var adminTab = 'tournaments';
+  var adminEditingTournamentId = null; // null = form hidden, 'NEW' = adding, else the id being edited
+  var adminSeason = null; // null = not chosen yet, picks the latest season on first render
+  var adminAddingSeason = false;
+
+  // Every year that already has a tournament, plus any explicitly-added
+  // empty season (contentOverrides.extraSeasons — see + Add Season below).
+  // A season isn't a stored entity on its own otherwise; it's just however
+  // many tournaments happen to share a dateSort year.
+  function adminSeasonOptions() {
+    var years = {};
+    allTournaments().forEach(function(t) { years[t.dateSort.slice(0, 4)] = true; });
+    (contentOverrides.extraSeasons || []).forEach(function(y) { years[y] = true; });
+    if (!Object.keys(years).length) years[new Date().getFullYear()] = true;
+    return Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
+  }
+
+  function showAdmin() {
+    if (!isAdmin) { navigate(''); return; }
+    // Visiting Admin implies wanting to edit — turns on the same Edit Mode
+    // that reveals every other pencil/admin-only control site-wide (can
+    // still be switched off again from the nav if the admin wants to
+    // browse the public site view afterwards).
+    if (!editMode) setEditMode(true);
+    renderAdmin();
+    setView('admin');
+  }
+
+  function renderAdmin() {
+    var el = document.getElementById('adminContent');
+    var tabsHtml = '<div class="tabs">' +
+      '<button class="tab' + (adminTab === 'tournaments' ? ' active' : '') + '" data-admin-tab="tournaments">Tournaments</button>' +
+      '<button class="tab' + (adminTab === 'ranking-points' ? ' active' : '') + '" data-admin-tab="ranking-points">Ranking Points</button>' +
+      '<button class="tab' + (adminTab === 'settings' ? ' active' : '') + '" data-admin-tab="settings">Site Settings</button>' +
+    '</div>';
+    var body = adminTab === 'tournaments' ? renderAdminTournaments()
+      : adminTab === 'ranking-points' ? renderAdminRankingPoints()
+      : renderAdminSettings();
+    el.innerHTML = tabsHtml + body;
+
+    el.querySelectorAll('[data-admin-tab]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        adminTab = btn.dataset.adminTab;
+        adminEditingTournamentId = null;
+        adminAddingSeason = false;
+        renderAdmin();
+      });
+    });
+
+    if (adminTab === 'tournaments') wireAdminTournaments(el);
+    else if (adminTab === 'ranking-points') wireRankingPointsPanels(el);
+    else wireAdminSettings(el);
+  }
+
+  function tournamentFormHtml(t, season) {
+    var v = t || { tier:500, status:'upcoming', competitions:['Men','Women'], dateSort: season + '-01-01' };
+    return '<div class="live-panel" id="tournamentForm">' +
+      '<h2>' + (t ? 'Edit tournament' : 'Add tournament') + '</h2>' +
+      '<div class="form-row" style="flex-wrap:wrap;">' +
+        '<div class="form-group"><label>Name</label><input type="text" id="tfName" value="' + esc(v.name || '') + '"></div>' +
+        '<div class="form-group"><label>Tier</label><select id="tfTier">' +
+          [100,500,1000,'FINALS'].map(function(tier) { return '<option value="' + tier + '"' + (v.tier === tier ? ' selected' : '') + '>' + tier + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="form-group"><label>Status</label><select id="tfStatus">' +
+          '<option value="upcoming"' + (v.status === 'upcoming' ? ' selected' : '') + '>Upcoming</option>' +
+          '<option value="past"' + (v.status === 'past' ? ' selected' : '') + '>Past</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Date label</label><input type="text" id="tfDateLabel" placeholder="e.g. Sep 25–27" value="' + esc(v.dateLabel || '') + '"></div>' +
+        '<div class="form-group"><label>Date (for sorting)</label><input type="date" id="tfDateSort" value="' + esc(v.dateSort || '') + '"></div>' +
+        '<div class="form-group"><label>City</label><input type="text" id="tfCity" value="' + esc(v.city || '') + '"></div>' +
+        '<div class="form-group"><label>Country</label><input type="text" id="tfCountry" value="' + esc(v.country || '') + '"></div>' +
+        '<div class="form-group"><label>Flag emoji</label><input type="text" id="tfFlag" placeholder="🇵🇹" value="' + esc(v.flag || '') + '"></div>' +
+        '<div class="form-group"><label>Divisions (comma-separated)</label><input type="text" id="tfCompetitions" placeholder="Men, Women" value="' + esc((v.competitions || []).join(', ')) + '"></div>' +
+        '<div class="form-group"><label>Entry fee</label><input type="number" min="0" id="tfFee" value="' + esc(v.fee != null ? v.fee : '') + '"></div>' +
+        '<div class="form-group"><label>Registration deadline</label><input type="text" id="tfDeadline" placeholder="e.g. September 22, 2026" value="' + esc(v.deadline || '') + '"></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<button type="button" class="btn btn-cyan btn-sm" id="tfSaveBtn">Save tournament</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="tfCancelBtn">Cancel</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderAdminTournaments() {
+    var seasonOptions = adminSeasonOptions();
+    if (adminSeason == null || seasonOptions.indexOf(Number(adminSeason)) === -1) adminSeason = String(seasonOptions[0]);
+    var addSeasonHtml = adminAddingSeason
+      ? '<div class="form-group"><label>New season year</label><input type="number" id="newSeasonYear" placeholder="' + (Math.max.apply(null, seasonOptions) + 1) + '"></div>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="confirmAddSeasonBtn">Add</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="cancelAddSeasonBtn">Cancel</button>'
+      : '<button type="button" class="btn btn-outline btn-sm" id="addSeasonBtn">+ Add Season</button>';
+    var seasonSelectHtml = '<div class="form-row" style="align-items:flex-end;flex-wrap:wrap;">' +
+      '<div class="form-group"><label>Season</label><select id="adminSeasonSelect">' +
+        seasonOptions.map(function(y) { return '<option value="' + y + '"' + (String(y) === adminSeason ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
+      '</select></div>' +
+      addSeasonHtml +
+    '</div>';
+
+    var all = allTournaments().sort(function(a, b) { return a.dateSort < b.dateSort ? 1 : -1; });
+    var list = all.filter(function(t) { return t.dateSort.slice(0, 4) === adminSeason; });
+    var formHtml = adminEditingTournamentId
+      ? tournamentFormHtml(adminEditingTournamentId === 'NEW' ? null : all.find(function(t) { return t.id === adminEditingTournamentId; }), adminSeason)
+      : '<button type="button" class="btn btn-cyan btn-sm" id="addTournamentBtn">+ Add tournament to ' + esc(adminSeason) + '</button>';
+    var table = !list.length
+      ? '<p class="empty-note">No tournaments in ' + esc(adminSeason) + ' yet.</p>'
+      : '<table class="history-table"><thead><tr><th>Name</th><th>Tier</th><th>Status</th><th>Date</th><th>Divisions</th><th></th></tr></thead><tbody>' +
+        list.map(function(t) {
+          return '<tr><td>' + esc(t.flag || '') + ' ' + esc(t.name) + '</td><td>' + t.tier + '</td><td>' + esc(t.status) + '</td><td>' + esc(t.dateLabel) + '</td><td>' + esc(divisionsText(t)) + '</td>' +
+            '<td class="admin-row-actions"><button type="button" class="btn btn-outline btn-sm" data-edit-tournament="' + esc(t.id) + '">Edit</button> ' +
+            '<button type="button" class="icon-btn" data-delete-tournament="' + esc(t.id) + '" title="Delete tournament">✕</button></td></tr>';
+        }).join('') +
+        '</tbody></table>';
+    return '<div class="live-panel">' + seasonSelectHtml + '</div><div class="live-panel">' + formHtml + '</div>' + table;
+  }
+
+  function wireAdminTournaments(el) {
+    el.querySelector('#adminSeasonSelect').addEventListener('change', function(e) {
+      adminSeason = e.target.value;
+      adminEditingTournamentId = null;
+      adminAddingSeason = false;
+      renderAdmin();
+    });
+
+    var addSeasonBtn = el.querySelector('#addSeasonBtn');
+    if (addSeasonBtn) addSeasonBtn.addEventListener('click', function() { adminAddingSeason = true; renderAdmin(); });
+
+    var cancelAddSeasonBtn = el.querySelector('#cancelAddSeasonBtn');
+    if (cancelAddSeasonBtn) cancelAddSeasonBtn.addEventListener('click', function() { adminAddingSeason = false; renderAdmin(); });
+
+    var confirmAddSeasonBtn = el.querySelector('#confirmAddSeasonBtn');
+    if (confirmAddSeasonBtn) confirmAddSeasonBtn.addEventListener('click', function() {
+      var year = Number(document.getElementById('newSeasonYear').value.trim());
+      if (!year || !Number.isInteger(year) || year < 1900 || year > 2200) { window.alert('Enter a valid year.'); return; }
+      adminAddingSeason = false;
+      if (adminSeasonOptions().indexOf(year) !== -1) { adminSeason = String(year); renderAdmin(); return; }
+      var extra = (contentOverrides.extraSeasons || []).concat([year]);
+      saveExtraSeasons(extra).then(function() {
+        adminSeason = String(year);
+        renderAdmin();
+      });
+    });
+
+    var addBtn = el.querySelector('#addTournamentBtn');
+    if (addBtn) addBtn.addEventListener('click', function() { adminEditingTournamentId = 'NEW'; renderAdmin(); });
+
+    el.querySelectorAll('[data-edit-tournament]').forEach(function(btn) {
+      btn.addEventListener('click', function() { adminEditingTournamentId = btn.dataset.editTournament; renderAdmin(); });
+    });
+    el.querySelectorAll('[data-delete-tournament]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.dataset.deleteTournament;
+        var actions = btn.closest('.admin-row-actions');
+        actions.innerHTML =
+          '<span class="confirm-delete-text">Delete this tournament?</span>' +
+          '<button type="button" class="reg-action-btn reg-action-danger confirm-delete-yes">Yes, delete</button>' +
+          '<button type="button" class="reg-action-btn confirm-delete-cancel">Cancel</button>';
+        actions.querySelector('.confirm-delete-yes').addEventListener('click', function() {
+          adminDeleteTournament(id).then(function() { renderAdmin(); });
+        });
+        actions.querySelector('.confirm-delete-cancel').addEventListener('click', function() {
+          renderAdmin();
+        });
+      });
+    });
+
+    var cancelBtn = el.querySelector('#tfCancelBtn');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { adminEditingTournamentId = null; renderAdmin(); });
+
+    var saveBtn = el.querySelector('#tfSaveBtn');
+    if (saveBtn) saveBtn.addEventListener('click', function() {
+      var name = document.getElementById('tfName').value.trim();
+      if (!name) { window.alert('Name is required.'); return; }
+      var dateSort = document.getElementById('tfDateSort').value;
+      if (!dateSort) { window.alert('Date is required.'); return; }
+      var competitions = document.getElementById('tfCompetitions').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      if (!competitions.length) { window.alert('At least one division is required.'); return; }
+      var feeVal = document.getElementById('tfFee').value;
+      var tierRaw = document.getElementById('tfTier').value;
+      var fields = {
+        name: name,
+        tier: tierRaw === 'FINALS' ? 'FINALS' : Number(tierRaw),
+        status: document.getElementById('tfStatus').value,
+        dateLabel: document.getElementById('tfDateLabel').value.trim() || dateSort,
+        dateSort: dateSort,
+        city: document.getElementById('tfCity').value.trim(),
+        country: document.getElementById('tfCountry').value.trim(),
+        flag: document.getElementById('tfFlag').value.trim(),
+        competitions: competitions,
+        fee: feeVal ? Number(feeVal) : null,
+        deadline: document.getElementById('tfDeadline').value.trim() || null
+      };
+      var id = adminEditingTournamentId === 'NEW' ? null : adminEditingTournamentId;
+      saveBtn.disabled = true;
+      adminSaveTournament(id, fields).then(function() {
+        adminEditingTournamentId = null;
+        renderAdmin();
+      }).catch(function() { window.alert('Save failed. Please try again.'); saveBtn.disabled = false; });
+    });
+  }
+
+  function renderAdminRankingPoints() {
+    return '<p class="empty-note">Fill in once per tier — applies to every LoC tournament at that tier, Men’s and Women’s alike.</p>' +
+      ['FINALS', 1000, 500, 100].map(function(tier) { return renderRankingPointsPanel(tier).replace('admin-only', ''); }).join('');
+  }
+
+  function renderAdminSettings() {
+    var ig = effectiveInstagramLinks();
+    var extraAdmins = (contentOverrides.settings && contentOverrides.settings.extraAdminEmails) || [];
+    return '<div class="live-panel">' +
+      '<h2>Instagram links</h2>' +
+      '<div class="form-row" style="flex-wrap:wrap;">' +
+        '<div class="form-group"><label>League of Champions</label><input type="text" id="stgIgTour" value="' + esc(ig.tour) + '"></div>' +
+        '<div class="form-group"><label>Bolao Sports</label><input type="text" id="stgIgBolao" value="' + esc(ig.bolao) + '"></div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" id="saveIgBtn">Save Instagram links</button>' +
+    '</div>' +
+    '<div class="live-panel">' +
+      '<h2>Additional admins</h2>' +
+      '<p class="empty-note">These accounts get full admin access (Edit Mode, this page) alongside the accounts already set in the site config.</p>' +
+      '<div id="extraAdminsList">' +
+        (extraAdmins.length ? extraAdmins.map(function(email) {
+          return '<div class="form-row"><span style="flex:1;">' + esc(email) + '</span><button type="button" class="icon-btn" data-remove-admin="' + esc(email) + '" title="Remove admin">✕</button></div>';
+        }).join('') : '<p class="empty-note">No additional admins yet.</p>') +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group" style="flex:1;"><input type="email" id="newAdminEmail" placeholder="name@example.com"></div>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="addAdminBtn">Add admin</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="live-panel">' +
+      '<h2>Sponsor logos</h2>' +
+      '<p class="empty-note">Shown on every generated seeding-list and bracket share graphic (Live Bracket → Export). Upload transparent PNGs for best results.</p>' +
+      '<div id="sponsorLogosList" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;">' +
+        (adminSponsorLogos().length ? adminSponsorLogos().map(function(url, i) {
+          return '<div style="position:relative;"><img src="' + esc(url) + '" alt="" style="height:40px;max-width:120px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;">' +
+            '<button type="button" class="icon-btn" data-remove-sponsor-logo="' + i + '" title="Remove logo" style="position:absolute;top:-8px;right:-8px;">✕</button></div>';
+        }).join('') : '<p class="empty-note">No sponsor logos yet.</p>') +
+      '</div>' +
+      '<input type="file" id="addSponsorLogoInput" accept="image/*">' +
+    '</div>' +
+    '<div class="live-panel">' +
+      '<h2>Everything else</h2>' +
+      '<p class="empty-note">The hero video/image on the landing page, the Imprint text, and every other label on the site are edited in place — turn on Edit Mode and click the pencil next to whatever you want to change.</p>' +
+    '</div>';
+  }
+
+  function adminSponsorLogos() {
+    return (contentOverrides.settings && contentOverrides.settings.sponsorLogos) || [];
+  }
+
+  function wireAdminSettings(el) {
+    el.querySelector('#saveIgBtn').addEventListener('click', function() {
+      saveContentFields('settings', {
+        instagramTour: document.getElementById('stgIgTour').value.trim(),
+        instagramBolao: document.getElementById('stgIgBolao').value.trim()
+      }).then(function() { refreshInstagramLinks(); renderAdmin(); });
+    });
+    el.querySelector('#addAdminBtn').addEventListener('click', function() {
+      var input = document.getElementById('newAdminEmail');
+      var email = input.value.trim().toLowerCase();
+      if (!email) return;
+      var extra = ((contentOverrides.settings && contentOverrides.settings.extraAdminEmails) || []).slice();
+      if (extra.indexOf(email) === -1) extra.push(email);
+      saveContentFields('settings', { extraAdminEmails: extra }).then(function() { renderAdmin(); });
+    });
+    el.querySelectorAll('[data-remove-admin]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var extra = ((contentOverrides.settings && contentOverrides.settings.extraAdminEmails) || []).filter(function(e) { return e !== btn.dataset.removeAdmin; });
+        saveContentFields('settings', { extraAdminEmails: extra }).then(function() { renderAdmin(); });
+      });
+    });
+    el.querySelector('#addSponsorLogoInput').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      addSponsorLogo(file).then(function() { renderAdmin(); }).catch(function() { window.alert('Upload failed.'); });
+    });
+    el.querySelectorAll('[data-remove-sponsor-logo]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        removeSponsorLogo(parseInt(btn.dataset.removeSponsorLogo, 10)).then(function() { renderAdmin(); });
+      });
+    });
   }
 
   function renderPlayerList(players) {
@@ -3582,7 +4067,31 @@ var CLUBS = [
     return '<div class="event-image edit-target">' + inner + editImageOverlayHtml(t.id) + '</div>';
   }
 
-  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'registerActions', 'teams'];
+  // Address/Map/Parking/Changing rooms — so travel questions have somewhere
+  // to land besides Instagram DMs. Same per-tournament contentOverrides[t.id]
+  // mechanism as every other editTextHtml field on this page. Admins always
+  // see all four rows (to fill them in); a regular visitor only sees rows
+  // that already have something in them, and the whole block disappears for
+  // a tournament that hasn't set any of this up yet rather than showing a
+  // wall of "–".
+  function venueBlockHtml(t) {
+    var fields = [
+      ['venueAddress', 'detail.venueAddressLabel', 'venue address', t.venueAddress],
+      ['venueMapUrl', 'detail.venueMapLabel', 'Google Maps link', t.venueMapUrl],
+      ['venueParking', 'detail.venueParkingLabel', 'parking info', t.venueParking],
+      ['venueChanging', 'detail.venueChangingLabel', 'changing rooms info', t.venueChanging]
+    ];
+    var visible = isAdmin ? fields : fields.filter(function(f) { return f[3]; });
+    if (!visible.length) return '';
+    var rows = visible.map(function(f) {
+      var key = f[0], uiKey = f[1], editLabel = f[2], value = f[3] || '';
+      var mapLink = (key === 'venueMapUrl' && value) ? ' <a class="venue-map-link" href="' + esc(value) + '" target="_blank" rel="noopener">' + esc(uiText('detail.venueMapLinkText')) + '</a>' : '';
+      return '<div class="info-block"><span class="label">' + uiEdit(uiKey) + '</span><span class="value">' + editTextHtml(t.id, key, value, value || '–', editLabel) + mapLink + '</span></div>';
+    }).join('');
+    return '<h2>' + uiEdit('detail.venueHeading') + '</h2><div class="detail-info-grid">' + rows + '</div>';
+  }
+
+  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'venue', 'registerActions', 'teams'];
   var DEFAULT_LANDING_ORDER = ['eyebrow', 'headline', 'subtitle', 'actions', 'browseLink'];
 
   function getBlockOrder(overrideKey, defaultOrder, rawOrderJson) {
@@ -3626,7 +4135,7 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
@@ -3644,6 +4153,7 @@ var CLUBS = [
       image: eventImageHtml(t),
       header: headerHtml,
       infoGrid: infoRows,
+      venue: venueBlockHtml(t),
       registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + bracketLinksHtml(t) + liveButtonHtml(t) + '</div>' + tournamentPhaseControlHtml(t),
       teams: '<div id="playerLists"></div>'
     };
@@ -4370,6 +4880,7 @@ var CLUBS = [
       renderDivisionFilterTabs(bracket) +
       renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
+      renderExportPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
@@ -4495,12 +5006,354 @@ var CLUBS = [
     return '<div class="division-filter-tabs" id="tierFilterTabs">' + tabs + '</div>';
   }
 
+  /* ==================================================================
+     SEEDING GRAPHIC EXPORT — share-ready PNG (Confirmed Teams: rank, club,
+     team, ranking points) in the navy/cyan brand look, Feed (1440×1080) or
+     Story (1080×1920). Pure <canvas> rendering so it exports at exact pixel
+     sizes regardless of the viewer's zoom/DPI, downloaded straight from the
+     browser — no server round-trip.
+     ================================================================== */
+  var GRAPHIC_FORMATS = { feed: { w: 1440, h: 1080 }, story: { w: 1080, h: 1920 } };
+
+  // Standard competition ranking — equal points share a rank and the next
+  // rank skips accordingly (1,2,2,4 not 1,2,2,3), same convention as the
+  // reference graphic (two teams tied at "10", next team is "12").
+  function rankedTeamsWithPoints(teams) {
+    var withPoints = teams.map(function(t) { return { team: t, points: computeTeamRankingPoints(t) }; })
+      .sort(function(a, b) { return b.points - a.points; });
+    var rank = 0;
+    return withPoints.map(function(row, i) {
+      if (i === 0 || row.points !== withPoints[i - 1].points) rank = i + 1;
+      return { team: row.team, points: row.points, rank: rank };
+    });
+  }
+
+  // At most `max` teams per graphic, split as evenly as possible across
+  // however many pages that takes (20 teams -> 10+10, not a full 12 then a
+  // half-empty 8) rather than always front-loading full pages.
+  function chunkForGraphics(list, max) {
+    if (list.length <= max) return [list];
+    var pages = Math.ceil(list.length / max);
+    var base = Math.floor(list.length / pages);
+    var remainder = list.length % pages;
+    var chunks = [];
+    var idx = 0;
+    for (var p = 0; p < pages; p++) {
+      var size = base + (p < remainder ? 1 : 0);
+      chunks.push(list.slice(idx, idx + size));
+      idx += size;
+    }
+    return chunks;
+  }
+
+  // Resolves to null (rather than rejecting) on a missing/broken image so
+  // one bad club logo or an unset photo can't take down the whole export.
+  function loadImageAsync(src) {
+    return new Promise(function(resolve) {
+      if (!src) { resolve(null); return; }
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() { resolve(img); };
+      img.onerror = function() { resolve(null); };
+      img.src = src;
+    });
+  }
+
+  function roundedRectPath(ctx, x, y, w, h, r) {
+    var rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function letterSpacedWidth(ctx, text, spacing) {
+    var w = 0;
+    for (var i = 0; i < text.length; i++) w += ctx.measureText(text[i]).width + spacing;
+    return w - spacing;
+  }
+  // Draws left-to-right starting at x — ctx.textAlign is ignored (each glyph
+  // is placed manually) so this works the same regardless of caller state.
+  function drawLetterSpaced(ctx, text, x, y, spacing) {
+    var prevAlign = ctx.textAlign;
+    ctx.textAlign = 'left';
+    var cx = x;
+    for (var i = 0; i < text.length; i++) {
+      ctx.fillText(text[i], cx, y);
+      cx += ctx.measureText(text[i]).width + spacing;
+    }
+    ctx.textAlign = prevAlign;
+  }
+  function drawLetterSpacedCentered(ctx, text, cx, cy, spacing) {
+    drawLetterSpaced(ctx, text, cx - letterSpacedWidth(ctx, text, spacing) / 2, cy, spacing);
+  }
+  // Shrinks the font size until `text` fits maxWidth (min 10px) — leaves
+  // ctx.font set to the size that fit, ready for the caller's own fillText.
+  function fitText(ctx, text, maxWidth, startSize, fontFamily, weight) {
+    var size = startSize;
+    var prefix = weight ? weight + ' ' : '';
+    ctx.font = prefix + size + 'px ' + fontFamily;
+    while (ctx.measureText(text).width > maxWidth && size > 10) {
+      size -= 1;
+      ctx.font = prefix + size + 'px ' + fontFamily;
+    }
+  }
+
+  // The actual render. Returns a Promise (image loading is async) resolving
+  // to the now-drawn canvas.
+  function drawSeedingGraphic(canvas, opts) {
+    var size = GRAPHIC_FORMATS[opts.format];
+    canvas.width = size.w;
+    canvas.height = size.h;
+    var ctx = canvas.getContext('2d');
+    var W = size.w, H = size.h, feed = opts.format === 'feed';
+
+    var bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#050726');
+    bg.addColorStop(0.55, '#0b0d63');
+    bg.addColorStop(1, '#1c2199');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    var margin = feed ? 56 : 64;
+    var sideColW = feed ? 190 : 150;
+    var titleY = feed ? 84 : 128;
+    var titleSize = feed ? 50 : 62;
+    var tableBottom = H - (feed ? 140 : 170);
+    var tableTop = titleY + 40;
+    var tableLeft = margin;
+    var tableRight = W - margin - sideColW;
+    var tableWidth = tableRight - tableLeft;
+    var rowGap = 10;
+    var rowCount = opts.rows.length;
+    var rowHeight = Math.min((tableBottom - tableTop - rowGap * (rowCount - 1)) / rowCount, feed ? 78 : 140);
+
+    return Promise.all([
+      loadImageAsync(BADGE_URI),
+      Promise.all(opts.rows.map(function(r) { return loadImageAsync(findClub(r.team.club).logo || null); }))
+    ]).then(function(loaded) {
+      var badgeImg = loaded[0], logoImgs = loaded[1];
+
+      if (badgeImg) {
+        ctx.save();
+        ctx.globalAlpha = 0.07;
+        var bsize = Math.min(W, H) * 0.9;
+        ctx.drawImage(badgeImg, W - bsize * 0.55, H * 0.12, bsize, bsize);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'alphabetic';
+      fitText(ctx, opts.tournament.name.toUpperCase(), tableWidth * 0.96, titleSize, '"Bebas Neue"');
+      drawLetterSpaced(ctx, opts.tournament.name.toUpperCase(), margin, titleY, 6);
+
+      var rankW = rowHeight * 0.9;
+      opts.rows.forEach(function(r, i) {
+        var y = tableTop + i * (rowHeight + rowGap);
+
+        ctx.fillStyle = '#ffffff';
+        roundedRectPath(ctx, tableLeft, y, rankW, rowHeight, rowHeight * 0.22);
+        ctx.fill();
+        ctx.fillStyle = '#0b0d63';
+        ctx.font = 'bold ' + Math.round(rowHeight * 0.42) + 'px Poppins';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(r.rank), tableLeft + rankW / 2, y + rowHeight / 2 + 2);
+
+        var pillX = tableLeft + rankW + 14;
+        var pillW = tableWidth - rankW - 14;
+        var pillGrad = ctx.createLinearGradient(pillX, y, pillX + pillW, y + rowHeight);
+        pillGrad.addColorStop(0, '#2a2f9e');
+        pillGrad.addColorStop(1, '#12154f');
+        ctx.fillStyle = pillGrad;
+        roundedRectPath(ctx, pillX, y, pillW, rowHeight, rowHeight * 0.22);
+        ctx.fill();
+
+        var logoR = rowHeight * 0.36;
+        var logoCx = pillX + rowHeight * 0.55;
+        var logoCy = y + rowHeight / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(logoCx, logoCy, logoR, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.clip();
+        if (logoImgs[i]) ctx.drawImage(logoImgs[i], logoCx - logoR, logoCy - logoR, logoR * 2, logoR * 2);
+        ctx.restore();
+
+        ctx.fillStyle = '#00f2ff';
+        ctx.font = 'bold ' + Math.round(rowHeight * 0.34) + 'px Poppins';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        var pointsX = pillX + pillW - 20;
+        ctx.fillText(String(r.points), pointsX, y + rowHeight / 2 + 2);
+        var pointsW = ctx.measureText(String(r.points)).width;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        var nameX = logoCx + logoR + 16;
+        var nameMaxW = pointsX - pointsW - 20 - nameX;
+        fitText(ctx, r.team.name.toUpperCase(), nameMaxW, rowHeight * 0.36, '"Bebas Neue"');
+        ctx.fillText(r.team.name.toUpperCase(), nameX, y + rowHeight / 2 + 2);
+      });
+
+      ctx.save();
+      ctx.translate(W - sideColW * 0.45, H * 0.55);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = (feed ? 44 : 40) + 'px "Bebas Neue"';
+      ctx.textBaseline = 'middle';
+      drawLetterSpacedCentered(ctx, 'CONFIRMED TEAMS', 0, 0, 7);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(W - sideColW * 0.82, H * 0.38);
+      ctx.rotate(-Math.PI / 2 + 0.12);
+      ctx.fillStyle = '#00f2ff';
+      ctx.font = (feed ? 30 : 27) + 'px Caveat';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('main stage', 0, 0);
+      ctx.restore();
+
+      if (opts.photoImg) {
+        var pw = feed ? 400 : 460;
+        var ph = pw * (opts.photoImg.height / opts.photoImg.width);
+        var px = W - pw + 30;
+        var py = tableBottom - ph + 30;
+        ctx.save();
+        roundedRectPath(ctx, px, py, pw, ph, 24);
+        ctx.clip();
+        ctx.drawImage(opts.photoImg, px, py, pw, ph);
+        ctx.restore();
+      }
+
+      if (opts.sponsorImgs.length) {
+        var sponsorY = H - (feed ? 84 : 100);
+        var sh = feed ? 42 : 50;
+        var gap = 34;
+        var widths = opts.sponsorImgs.map(function(img) { return sh * (img.width / img.height); });
+        var totalW = widths.reduce(function(a, b) { return a + b; }, 0) + gap * (widths.length - 1);
+        var sx = (W - totalW) / 2;
+        opts.sponsorImgs.forEach(function(img, i) {
+          ctx.drawImage(img, sx, sponsorY, widths[i], sh);
+          sx += widths[i] + gap;
+        });
+      }
+
+      if (opts.pageLabel) {
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '20px Poppins';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(opts.pageLabel, margin, H - (feed ? 20 : 24));
+      }
+
+      return canvas;
+    });
+  }
+
+  function generateSeedingGraphics(format) {
+    var comp = document.getElementById('exportDivisionSelect').value;
+    var teams = currentBracket.teams.filter(function(t) { return t.competition === comp; });
+    var ranked = rankedTeamsWithPoints(teams);
+    if (!ranked.length) { window.alert('No teams in this division yet.'); return Promise.resolve(); }
+    var pages = chunkForGraphics(ranked, 12);
+    var photoUrl = currentBracketTournament.seedingPhoto || null;
+    var sponsorUrls = adminSponsorLogos();
+    // Canvas text draws with whatever font is loaded at that instant — it
+    // won't wait on a @font-face by itself, so without this a graphic
+    // generated right after page load could render in the browser's
+    // fallback font instead of Bebas Neue/Caveat.
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return fontsReady.then(function() {
+      return Promise.all([loadImageAsync(photoUrl), Promise.all(sponsorUrls.map(loadImageAsync))]);
+    }).then(function(res) {
+      var photoImg = res[0], sponsorImgs = res[1].filter(Boolean);
+      var container = document.getElementById('exportGraphicResults');
+      container.innerHTML = '';
+      return pages.reduce(function(chain, pageRows, idx) {
+        return chain.then(function() {
+          var canvas = document.createElement('canvas');
+          var label = pages.length > 1 ? ('Ranks ' + pageRows[0].rank + '–' + pageRows[pageRows.length - 1].rank) : null;
+          return drawSeedingGraphic(canvas, {
+            tournament: currentBracketTournament, rows: pageRows, pageLabel: label,
+            photoImg: photoImg, sponsorImgs: sponsorImgs, format: format
+          }).then(function() {
+            var dataUrl = canvas.toDataURL('image/png');
+            var wrap = document.createElement('div');
+            wrap.className = 'export-graphic-wrap';
+            var img = document.createElement('img');
+            img.src = dataUrl;
+            var dl = document.createElement('a');
+            dl.href = dataUrl;
+            dl.download = currentBracketTournament.id + '-seeding-' + format + (pages.length > 1 ? '-' + (idx + 1) : '') + '.png';
+            dl.className = 'btn btn-outline btn-sm';
+            dl.textContent = pages.length > 1 ? 'Download (' + (idx + 1) + '/' + pages.length + ')' : 'Download';
+            wrap.appendChild(img);
+            wrap.appendChild(dl);
+            container.appendChild(wrap);
+          });
+        });
+      }, Promise.resolve());
+    });
+  }
+
+  function renderExportPanel(bracket) {
+    var comps = bracketCompetitions(bracket);
+    if (!comps.length) return '';
+    var t = currentBracketTournament;
+    return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Export Seeding Graphic</h2></summary>' +
+      '<div class="form-row" style="flex-wrap:wrap;">' +
+        '<div class="form-group"><label>Division</label><select id="exportDivisionSelect">' +
+          comps.map(function(c) { return '<option value="' + esc(c) + '">' + esc(divisionWord(c)) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="form-group"><label>Format</label><select id="exportFormatSelect">' +
+          '<option value="feed">Feed (1440×1080)</option><option value="story">Story (1080×1920)</option>' +
+        '</select></div>' +
+        '<div class="form-group"><label>Photo (optional)</label>' +
+          (t.seedingPhoto ? '<img src="' + esc(t.seedingPhoto) + '" alt="" style="height:50px;border-radius:8px;display:block;margin-bottom:6px;">' : '') +
+          '<input type="file" id="seedingPhotoInput" accept="image/*"></div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-cyan btn-sm" id="generateSeedingGraphicBtn">Generate</button>' +
+      '<div id="exportGraphicResults" class="export-graphic-results"></div>' +
+    '</details></div>';
+  }
+
+  function wireExportPanel() {
+    var photoInput = document.getElementById('seedingPhotoInput');
+    if (photoInput) photoInput.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      saveImageField(currentBracketTournament.id, 'seedingPhoto', file).then(function() {
+        currentBracketTournament = effectiveTournament(tourById(currentBracketTournament.id));
+        renderLive();
+      }).catch(function() { window.alert('Upload failed.'); });
+    });
+    var genBtn = document.getElementById('generateSeedingGraphicBtn');
+    if (genBtn) genBtn.addEventListener('click', function() {
+      genBtn.disabled = true;
+      genBtn.textContent = 'Generating…';
+      generateSeedingGraphics(document.getElementById('exportFormatSelect').value).finally(function() {
+        genBtn.disabled = false;
+        genBtn.textContent = 'Generate';
+      });
+    });
+  }
+
   // Roster count is what matters at a glance now that group/KO assignment
   // happens via each stage's own search-dropdown slots (renderStageCard) —
   // the full per-team list is still here for edits (remove/seed/division)
   // but collapsed behind a <details> toggle instead of always spelled out.
   function rosterPanelHtml(labelBase, teams) {
-    return '<div class="live-panel"><details class="roster-details"><summary><h2>' + esc(labelBase) + ' (' + teams.length + ')</h2></summary>' + categoryGroupsHtml(teams) + '</details></div>';
+    var autoSeedBtn = teams.length
+      ? '<button type="button" class="btn btn-outline btn-sm admin-only-inline" data-autoseed-team-ids="' + esc(JSON.stringify(teams.map(function(t) { return t.id; }))) + '" title="Seed 1 = most ranking points, ties keep their current order">Auto-seed by ranking points</button>'
+      : '';
+    return '<div class="live-panel"><details class="roster-details"><summary><h2>' + esc(labelBase) + ' (' + teams.length + ')</h2></summary>' + autoSeedBtn + categoryGroupsHtml(teams) + '</details></div>';
   }
 
   function renderRosterPanel(bracket) {
@@ -4581,8 +5434,32 @@ var CLUBS = [
     return '<div class="live-panel admin-only"><details class="roster-details"><summary><h2>Points per placement — Tier ' + esc(tier) + '</h2></summary>' +
         '<p class="empty-note">Fill in once per tier — applies to every LoC ' + esc(tier) + ' tournament, Men\'s and Women\'s alike.</p>' +
         '<div class="form-row" style="flex-wrap:wrap;">' + rows + '</div>' +
-        '<button type="button" class="btn btn-outline btn-sm" id="saveRankingPointsBtn" data-tier="' + esc(tier) + '">Save points</button>' +
+        '<button type="button" class="btn btn-outline btn-sm save-ranking-points-btn" data-tier="' + esc(tier) + '">Save points</button>' +
     '</details></div>';
+  }
+
+  // Shared wiring for renderRankingPointsPanel's Save button, scoped to its
+  // own panel — the Admin page renders three of these (one per tier) at
+  // once, so a single unscoped document.querySelectorAll('.ranking-points-input')
+  // would mix every tier's inputs together on save.
+  function wireRankingPointsPanels(root) {
+    (root || document).querySelectorAll('.save-ranking-points-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var tier = btn.dataset.tier;
+        var panel = btn.closest('.live-panel');
+        var table = {};
+        panel.querySelectorAll('.ranking-points-input').forEach(function(input) {
+          table[input.dataset.pointsKey] = parseInt(input.value, 10) || 0;
+        });
+        btn.disabled = true;
+        saveContentField('rankingPoints', tier, table).then(function() {
+          if (root === document.getElementById('adminContent')) renderAdmin();
+        }).finally(function() {
+          btn.disabled = false;
+        });
+      });
+    });
   }
 
   function renderRankingSyncPanel() {
@@ -5239,6 +6116,7 @@ var CLUBS = [
   function wireLiveEvents() {
     loadAvailableRegistrations();
     setupManualTeamClubCombo();
+    wireExportPanel();
 
     document.querySelectorAll('[data-tier-filter]').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -5247,19 +6125,7 @@ var CLUBS = [
       });
     });
 
-    var saveRankingPointsBtn = document.getElementById('saveRankingPointsBtn');
-    if (saveRankingPointsBtn) saveRankingPointsBtn.addEventListener('click', function() {
-      if (!isAdmin) return;
-      var tier = saveRankingPointsBtn.dataset.tier;
-      var table = {};
-      document.querySelectorAll('.ranking-points-input').forEach(function(input) {
-        table[input.dataset.pointsKey] = parseInt(input.value, 10) || 0;
-      });
-      saveRankingPointsBtn.disabled = true;
-      saveContentField('rankingPoints', tier, table).finally(function() {
-        saveRankingPointsBtn.disabled = false;
-      });
-    });
+    wireRankingPointsPanels(document.getElementById('liveContent'));
 
     var syncRankingBtn = document.getElementById('syncRankingBtn');
     if (syncRankingBtn) syncRankingBtn.addEventListener('click', function() {
@@ -5279,6 +6145,18 @@ var CLUBS = [
       }).finally(function() {
         syncRankingBtn.disabled = false;
         syncRankingBtn.textContent = 'Punkte ins Ranking übertragen';
+      });
+    });
+
+    document.querySelectorAll('[data-autoseed-team-ids]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!isAdmin) return;
+        var ids;
+        try { ids = JSON.parse(btn.dataset.autoseedTeamIds); } catch (e) { return; }
+        var teams = ids.map(function(id) { return findBracketTeam(currentBracket, id); }).filter(Boolean);
+        teams.sort(function(a, b) { return computeTeamRankingPoints(b) - computeTeamRankingPoints(a); });
+        teams.forEach(function(team, i) { team.seed = i + 1; });
+        persistBracket();
       });
     });
 
@@ -7569,12 +8447,19 @@ var CLUBS = [
      NAV / GLOBAL LISTENERS
      ================================================================== */
   function renderHeroSub() {
-    document.getElementById('heroSub').textContent = uiFormat('home.subtitle', { n: TOURNAMENTS.length });
+    document.getElementById('heroSub').textContent = uiFormat('home.subtitle', { n: allTournaments().length });
   }
   renderHeroSub();
-  document.getElementById('igLink').href = CONFIG.INSTAGRAM_TOUR_URL;
-  document.getElementById('igTourLink').href = CONFIG.INSTAGRAM_TOUR_URL;
-  document.getElementById('igBolaoLink').href = CONFIG.INSTAGRAM_BOLAO_URL;
+  // Re-run after loadContentOverrides() resolves too — CONFIG's hardcoded
+  // URLs are only the fallback, contentOverrides.settings (admin-edited via
+  // the Site Settings panel) isn't loaded yet on this first synchronous pass.
+  function refreshInstagramLinks() {
+    var igLinks = effectiveInstagramLinks();
+    document.getElementById('igLink').href = igLinks.tour;
+    document.getElementById('igTourLink').href = igLinks.tour;
+    document.getElementById('igBolaoLink').href = igLinks.bolao;
+  }
+  refreshInstagramLinks();
   document.querySelectorAll('img.league-badge').forEach(function(img){ img.src = BADGE_URI; });
   if (DEMO_MODE) document.getElementById('demoBanner').hidden = false;
 
@@ -7608,6 +8493,8 @@ var CLUBS = [
     restoreDemoSession();
     updateNavAuthUI();
     Promise.all([loadContentOverrides(), loadPlayersDirectory()]).then(function() {
+      refreshInstagramLinks();
+      updateNavAuthUI();
       window.addEventListener('hashchange', route);
       route();
     });
@@ -7630,6 +8517,8 @@ var CLUBS = [
       if (firstAuthCheck) {
         firstAuthCheck = false;
         Promise.all([loadContentOverrides(), loadPlayersDirectory()]).then(function() {
+          refreshInstagramLinks();
+          updateNavAuthUI();
           window.addEventListener('hashchange', route);
           route();
         });
