@@ -321,6 +321,7 @@
   .standings-team .club-avatar { width:22px; height:22px; }
   .ranking-clubs { display:flex; flex-direction:column; gap:6px; }
   .ranking-clubs .standings-team { font-weight:500; font-size:13px; color:var(--text); }
+  .ranking-search { max-width:360px; margin:-12px 0 20px; }
   .match-list { display:flex; flex-direction:column; gap:10px; margin:14px 0; }
   .match-row { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
   .match-teams-line { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -3676,6 +3677,7 @@ var CLUBS = [
   var rankingYear = '2026';
   var rankingGender = 'men';
   var rankingType = 'players';
+  var rankingSearch = '';
 
   // Ranking rows only carry a name (from the spreadsheet), not an account uid —
   // resolved against the live players directory so a name matching a real
@@ -3747,9 +3749,44 @@ var CLUBS = [
         '</select>' +
       '</div>';
 
+    var searchPlaceholder = rankingType === 'players' ? 'Search player or club…' : 'Search club…';
+    el.innerHTML = controls +
+      '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '">' +
+      '<div id="rankingTable"></div>';
+    renderRankingTable(rows);
+
+    el.querySelectorAll('[data-ranking-gender]').forEach(function(btn) {
+      btn.addEventListener('click', function() { rankingGender = btn.dataset.rankingGender; renderRanking(); });
+    });
+    el.querySelectorAll('[data-ranking-type]').forEach(function(btn) {
+      btn.addEventListener('click', function() { rankingType = btn.dataset.rankingType; renderRanking(); });
+    });
+    document.getElementById('rankingYearSelect').addEventListener('change', function(e) {
+      rankingYear = e.target.value;
+      renderRanking();
+    });
+    // Only the table re-renders while typing, so the input keeps its focus.
+    document.getElementById('rankingSearchInput').addEventListener('input', function(e) {
+      rankingSearch = e.target.value;
+      renderRankingTable(rows);
+    });
+  }
+
+  // Filters by name, keeping each row's real rank. In the Players tab a club
+  // name also matches, so searching a club lists all of its players. Same
+  // diacritic-insensitive matching as findRankingPointsForPlayer.
+  function renderRankingTable(allRows) {
+    var q = normalizeNameForMatch(rankingSearch);
+    var rows = !q ? allRows : allRows.filter(function(r) {
+      var fields = rankingType === 'players' ? [r.name, r.club1, r.club2] : [r.name];
+      return fields.some(function(f) { return normalizeNameForMatch(f).indexOf(q) !== -1; });
+    });
+
     var table;
-    if (!rows.length) {
+    if (!allRows.length) {
       table = '<p class="empty-note">No ranking data for this selection yet.</p>';
+    } else if (!rows.length) {
+      table = '<p class="empty-note">No results for “' + esc(rankingSearch.trim()) + '”.</p>';
     } else if (rankingType === 'players') {
       table = '<table class="history-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
@@ -3771,18 +3808,7 @@ var CLUBS = [
         '</tbody></table>';
     }
 
-    el.innerHTML = controls + table;
-
-    el.querySelectorAll('[data-ranking-gender]').forEach(function(btn) {
-      btn.addEventListener('click', function() { rankingGender = btn.dataset.rankingGender; renderRanking(); });
-    });
-    el.querySelectorAll('[data-ranking-type]').forEach(function(btn) {
-      btn.addEventListener('click', function() { rankingType = btn.dataset.rankingType; renderRanking(); });
-    });
-    document.getElementById('rankingYearSelect').addEventListener('change', function(e) {
-      rankingYear = e.target.value;
-      renderRanking();
-    });
+    document.getElementById('rankingTable').innerHTML = table;
   }
 
   function showRanking() {
