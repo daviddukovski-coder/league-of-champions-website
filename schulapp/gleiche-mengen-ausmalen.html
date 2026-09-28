@@ -138,7 +138,7 @@
   .msg.good { color: var(--right); }
   .msg.bad { color: #c2410c; }
 
-  .tools { display: flex; justify-content: center; }
+  .tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
   .sound {
     font: inherit; font-size: 15px; cursor: pointer;
     background: rgba(255,255,255,.12); color: #fff;
@@ -218,7 +218,8 @@
   <section class="board" id="board" aria-live="polite"></section>
 
   <div class="tools">
-    <button class="sound" id="sound" type="button" aria-pressed="true">Ton: an</button>
+    <button class="sound" id="music" type="button" aria-pressed="true">Musik: an</button>
+    <button class="sound" id="sound" type="button" aria-pressed="true">Klick-Töne: an</button>
   </div>
 </main>
 
@@ -334,10 +335,15 @@
 
   // ---------- Ton ----------
   let soundOn = true, ctx = null;
+  function getCtx() {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
   function tone(freqs, type = 'sine', dur = 0.14) {
     if (!soundOn) return;
     try {
-      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = getCtx();
       freqs.forEach((f, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain();
         const t = ctx.currentTime + i * dur;
@@ -353,9 +359,157 @@
   const soundBtn = document.getElementById('sound');
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;
-    soundBtn.textContent = 'Ton: ' + (soundOn ? 'an' : 'aus');
+    soundBtn.textContent = 'Klick-Töne: ' + (soundOn ? 'an' : 'aus');
     soundBtn.setAttribute('aria-pressed', String(soundOn));
   });
+
+  // ---------- Dschungelmusik ----------
+  // Ruhige, selbst erzeugte Musik: Kalimba-Melodie, weiche Flächen, leise Trommel,
+  // ab und zu ein Vogel und ein sanftes Affen-"Uh-uh". Startet beim ersten Antippen.
+  const Music = (() => {
+    const BPM = 72, EIGHTH = 60 / BPM / 2;
+    // Akkorde (je 2 Takte): C – Am – F – G, Töne als MIDI-Nummern
+    const CHORDS = [[48, 60, 64, 67], [45, 57, 60, 64], [41, 57, 60, 65], [43, 55, 59, 62]];
+    const SCALE = [72, 74, 76, 79, 81, 84]; // C-Pentatonik für die Melodie
+    const DRUM = [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0];
+    const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    let master, reverb, dry, noise, timer = null, step = 0, nextTime = 0, lastNote = 76, nextBird = 0, nextMonkey = 0, running = false;
+
+    function setup(ctx) {
+      if (master) return;
+      master = ctx.createGain(); master.gain.value = 0;
+      const soft = ctx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 4200;
+      master.connect(soft).connect(ctx.destination);
+      // Hall aus abklingendem Rauschen = „großer Wald“
+      reverb = ctx.createConvolver();
+      const len = ctx.sampleRate * 2.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+      reverb.buffer = ir;
+      const wet = ctx.createGain(); wet.gain.value = 0.45;
+      reverb.connect(wet).connect(master);
+      dry = ctx.createGain(); dry.gain.value = 0.8; dry.connect(master); dry.connect(reverb);
+      noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    }
+    function env(ctx, g, t, peak, attack, decay) {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    }
+    function osc(ctx, type, f, t, dur, out) {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t);
+      o.connect(out); o.start(t); o.stop(t + dur + 0.05); return o;
+    }
+    function pan(ctx, v) { const p = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); if (p.pan) p.pan.value = v; p.connect(dry); return p; }
+
+    function kalimba(ctx, m, t) {
+      const g = ctx.createGain(); g.connect(pan(ctx, Math.random() * 0.8 - 0.4));
+      env(ctx, g, t, 0.07, 0.005, 1.4);
+      osc(ctx, 'sine', hz(m), t, 1.5, g);
+      const g2 = ctx.createGain(); g2.connect(g); env(ctx, g2, t, 0.35, 0.002, 0.12);
+      osc(ctx, 'sine', hz(m) * 5.4, t, 0.2, g2);
+    }
+    function pad(ctx, chord, t, dur) {
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+      const g = ctx.createGain(); f.connect(g); g.connect(dry);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.035, t + 1.2);
+      g.gain.setValueAtTime(0.035, t + dur - 1);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.4);
+      chord.slice(1).forEach(m => { osc(ctx, 'triangle', hz(m) * 0.998, t, dur + 0.5, f); osc(ctx, 'triangle', hz(m) * 1.003, t, dur + 0.5, f); });
+    }
+    function bass(ctx, m, t) {
+      const g = ctx.createGain(); g.connect(dry); env(ctx, g, t, 0.09, 0.02, 1.1);
+      osc(ctx, 'sine', hz(m), t, 1.2, g);
+    }
+    function drum(ctx, t, accent) {
+      const g = ctx.createGain(); g.connect(pan(ctx, -0.2)); env(ctx, g, t, accent ? 0.07 : 0.045, 0.004, 0.22);
+      const o = osc(ctx, 'sine', 190, t, 0.3, g); o.frequency.exponentialRampToValueAtTime(110, t + 0.18);
+    }
+    function shaker(ctx, t) {
+      const s = ctx.createBufferSource(); s.buffer = noise;
+      const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+      const g = ctx.createGain(); env(ctx, g, t, 0.012, 0.01, 0.06);
+      s.connect(f).connect(g).connect(pan(ctx, 0.3)); s.start(t, Math.random() * 0.5, 0.1);
+    }
+    function bird(ctx, t) {
+      const p = pan(ctx, Math.random() * 1.6 - 0.8), base = 2400 + Math.random() * 900;
+      const n = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const tt = t + i * 0.13, g = ctx.createGain(); g.connect(p); env(ctx, g, tt, 0.018, 0.01, 0.08);
+        const o = osc(ctx, 'sine', base, tt, 0.1, g); o.frequency.exponentialRampToValueAtTime(base * 1.45, tt + 0.08);
+      }
+    }
+    function monkey(ctx, t) {
+      // sanftes „uh – uh – ah“ in der Ferne
+      const p = pan(ctx, Math.random() < 0.5 ? -0.6 : 0.6);
+      [[330, 390, 0], [340, 400, 0.32], [420, 560, 0.66]].forEach(([a, b, d], i) => {
+        const tt = t + d, f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = i === 2 ? 1100 : 700; f.Q.value = 3;
+        const g = ctx.createGain(); f.connect(g); g.connect(p); env(ctx, g, tt, 0.05, 0.04, i === 2 ? 0.35 : 0.2);
+        const o = osc(ctx, 'triangle', a, tt, 0.45, f); o.frequency.exponentialRampToValueAtTime(b, tt + 0.2);
+      });
+    }
+
+    function schedule() {
+      const ctx = getCtx();
+      while (nextTime < ctx.currentTime + 0.3) {
+        const t = nextTime, inBar = step % 16, chord = CHORDS[Math.floor(step / 16) % CHORDS.length];
+        if (inBar === 0) { pad(ctx, chord, t, EIGHTH * 16); bass(ctx, chord[0], t); }
+        if (inBar === 8) bass(ctx, chord[0] + 7, t);
+        if (DRUM[inBar]) drum(ctx, t, inBar === 0);
+        if (inBar % 2 === 1) shaker(ctx, t);
+        // Melodie: mal Pause, mal ein Ton nahe am letzten – klingt ruhig und nicht zufällig
+        if (Math.random() < (inBar % 4 === 0 ? 0.7 : 0.3)) {
+          const near = SCALE.filter(m => Math.abs(m - lastNote) <= 5);
+          const fit = near.filter(m => chord.some(c => (m - c) % 12 === 0));
+          lastNote = pick(inBar % 4 === 0 && fit.length ? fit : near);
+          kalimba(ctx, lastNote, t);
+        }
+        if (t >= nextBird) { bird(ctx, t); nextBird = t + 6 + Math.random() * 8; }
+        if (t >= nextMonkey) { monkey(ctx, t); nextMonkey = t + 16 + Math.random() * 14; }
+        nextTime += EIGHTH; step++;
+      }
+    }
+    return {
+      get on() { return running; },
+      start() {
+        try {
+          const ctx = getCtx(); setup(ctx);
+          if (running) return; running = true;
+          step = 0; nextTime = ctx.currentTime + 0.1; nextBird = nextTime + 3; nextMonkey = nextTime + 9;
+          master.gain.cancelScheduledValues(ctx.currentTime);
+          master.gain.setTargetAtTime(0.8, ctx.currentTime, 0.8);
+          schedule(); timer = setInterval(schedule, 100);
+        } catch (e) { running = false; }
+      },
+      stop() {
+        if (!running) return; running = false;
+        clearInterval(timer);
+        try { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(0, ctx.currentTime, 0.3); } catch (e) {}
+      },
+    };
+  })();
+
+  const musicBtn = document.getElementById('music');
+  let musicWanted = true;
+  function showMusic() {
+    musicBtn.textContent = 'Musik: ' + (musicWanted ? 'an' : 'aus');
+    musicBtn.setAttribute('aria-pressed', String(musicWanted));
+  }
+  musicBtn.addEventListener('click', () => {
+    musicWanted = !musicWanted;
+    musicWanted ? Music.start() : Music.stop();
+    showMusic();
+  });
+  // Browser erlauben Ton erst nach dem ersten Antippen
+  document.addEventListener('pointerdown', function first(e) {
+    document.removeEventListener('pointerdown', first);
+    if (musicWanted && e.target !== musicBtn) Music.start();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) Music.stop(); else if (musicWanted && ctx) Music.start();
+  });
+  showMusic();
 
   // ---------- Aufgaben ----------
   // Vorlage: farbige Formen. Auswahl: dieselbe Form, noch weiß, in verschiedenen Anzahlen.
