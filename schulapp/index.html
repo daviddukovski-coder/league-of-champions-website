@@ -123,7 +123,11 @@ button:focus-visible { outline: 3px solid var(--l-ink); outline-offset: 2px; }
 .ex-card .pic { font-size: 30px; grid-row: span 2; }
 .ex-card .t { font-size: 17px; line-height: 1.2; }
 .ex-card .meta { font-size: 13px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 8px; }
-.locked .ex-card { opacity: .45; }
+.locked .ex-card, .ex-card.shut { opacity: .45; }
+.lives { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 20px; font-size: 26px; line-height: 1; }
+.lives-cap { font-size: 14px; color: var(--ink-soft); margin-right: 4px; }
+.heart { color: var(--o-ink); }
+.heart.lost { color: var(--guide); }
 .lock-note {
   background: #fff6dc; border: 2px solid var(--gold); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
   font-size: 16px;
@@ -223,6 +227,7 @@ button:focus-visible { outline: 3px solid var(--l-ink); outline-offset: 2px; }
   background: none; border: 3px solid transparent; border-radius: 50%; padding: 0 3px; min-width: 34px;
   font-family: var(--font-letter); font-size: 34px; line-height: 1.25; color: var(--ink);
 }
+.find-word .ch { min-width: 0; padding: 0; border-width: 2px; border-radius: 40%; margin: 0 -1px; font-size: 30px; }
 .poem .ch { font-size: 28px; min-width: 22px; padding: 0 1px; color: #6f7690; }
 .ch.punct { cursor: default; min-width: 0; padding: 0; }
 .ch.found { border-color: var(--o-ink); color: var(--o-ink); }
@@ -278,69 +283,103 @@ button:focus-visible { outline: 3px solid var(--l-ink); outline-offset: 2px; }
 
 /* ================= Daten ================= */
 const NEED = 3;                 // Nachspuren pro Buchstabe, bevor die Übungen frei sind
+const MAX_ERRS = 3;             // mehr Fehler = Übung muss wiederholt werden
 const LETTERS = ['O', 'o', 'L', 'l'];
 const KEY = 'ool_progress_v1';
 
 const EXERCISES = [
-  { id: 'l1', tab: 'L', page: 6, num: 1, type: 'ring', pic: '🦁', target: 'l',
+  { id: 'l1', tab: 'L', page: 6, num: 1, type: 'ring', pic: '🦁', target: 'l', round: 12,
     short: 'Hörst du L l?',
     instr: 'Sprich das Wort deutlich. Hörst du <span class="b">L l</span>?',
     say: 'Sprich das Wort deutlich. Hörst du ein L?',
-    items: [['Lokomotive','🚂',1],['Löwe','🦁',1],['Sessel','🪑',1],['Salat','🥗',1],['Wurm','🪱',0],
-            ['Ball','⚽',1],['Maus','🐭',0],['Lupe','🔍',1],['Luftballon','🎈',1],['Taschenlampe','🔦',1],
-            ['Brille','👓',1],['Wolke','☁️',1],['Pilz','🍄',1],['Hund','🐕',0],['Sonne','☀️',0]] },
+    items: [['Lokomotive','🚂',1],['Löwe','🦁',1],['Sessel','🪑',1],['Salat','🥗',1],['Ball','⚽',1],['Lupe','🔍',1],
+            ['Luftballon','🎈',1],['Taschenlampe','🔦',1],['Brille','👓',1],['Wolke','☁️',1],['Pilz','🍄',1],
+            ['Lama','🦙',1],['Igel','🦔',1],['Delfin','🐬',1],['Eule','🦉',1],['Blume','🌸',1],['Tulpe','🌷',1],
+            ['Wolf','🐺',1],['Melone','🍉',1],['Glocke','🔔',1],['Muschel','🐚',1],['Helm','⛑️',1],['Leiter','🪜',1],
+            ['Milch','🥛',1],['Wal','🐳',1],['Zwiebel','🧅',1],['Ampel','🚦',1],
+            ['Wurm','🪱',0],['Maus','🐭',0],['Hund','🐕',0],['Sonne','☀️',0],['Kerze','🕯️',0],['Schnecke','🐌',0],
+            ['Hut','🎩',0],['Fisch','🐟',0],['Baum','🌳',0],['Zitrone','🍋',0],['Kuh','🐄',0],['Schaf','🐑',0],
+            ['Nase','👃',0],['Mond','🌙',0],['Rakete','🚀',0],['Tomate','🍅',0],['Birne','🍐',0],['Banane','🍌',0],
+            ['Ente','🦆',0],['Biene','🐝',0]] },
   { id: 'l2', tab: 'L', page: 6, num: 2, type: 'tiles', pic: '🖍️', target: 'l',
     short: 'Male alle Felder mit L l an.',
     instr: 'Tippe alle Felder mit <span class="b">L l</span> an.',
     say: 'Tippe alle Felder mit L an. Großes L und kleines l.',
-    letters: 'F T l U M P F v M J l L L m R L A l R L V L l a U P L T L S m L R l M U'.split(' ') },
-  { id: 'l3', tab: 'L', page: 7, num: 2, type: 'pick', mode: 'L', pic: '🪜', target: 'l',
+    make: () => shuffle([...Array(13)].map(() => pick(['L', 'l']))
+      .concat([...Array(23)].map(() => pick('F T U M P v J m R A V a S E e n h t K k'.split(' '))))) },
+  { id: 'l3', tab: 'L', page: 7, num: 2, type: 'pick', mode: 'L', pic: '🪜', target: 'l', round: 10,
     short: 'Wo klingt L l?',
     instr: 'Wo klingt <span class="b">L l</span>? Am Anfang, am Ende oder beides?',
     say: 'Wo klingt das L? Am Anfang, am Ende, oder am Anfang und am Ende?',
     options: [['A','Anfang'],['E','Ende'],['B','beides']],
-    items: [['Leiter','🪜','A'],['Laterne','🏮','A'],['Kamel','🐫','E'],['Gabel','🍴','E'],['Löwe','🦁','A'],
-            ['Wal','🐳','E'],['Lupe','🔍','A'],['Krokodil','🐊','E'],['Schal','🧣','E'],['Löffel','🥄','B'],
-            ['Apfel','🍎','E'],['Lineal','📏','B']] },
-  { id: 'o1', tab: 'O', page: 8, num: 1, type: 'ring', pic: '🐸', target: 'o',
+    items: [['Leiter','🪜','A'],['Laterne','🏮','A'],['Löwe','🦁','A'],['Lupe','🔍','A'],['Lama','🦙','A'],
+            ['Lippe','👄','A'],['Laub','🍂','A'],['Leopard','🐆','A'],['Laptop','💻','A'],['Lastwagen','🚚','A'],
+            ['Kamel','🐫','E'],['Gabel','🍴','E'],['Wal','🐳','E'],['Krokodil','🐊','E'],['Schal','🧣','E'],
+            ['Apfel','🍎','E'],['Igel','🦔','E'],['Engel','👼','E'],['Vogel','🐦','E'],['Nudel','🍜','E'],
+            ['Pinsel','🖌️','E'],['Ball','⚽','E'],['Stiefel','👢','E'],['Zwiebel','🧅','E'],['Ampel','🚦','E'],['Sessel','🪑','E'],
+            ['Löffel','🥄','B'],['Lineal','📏','B']] },
+  { id: 'l4', tab: 'L', page: 7, num: 3, type: 'find', pic: '📖', target: 'l',
+    short: 'Finde L l in den Sätzen.',
+    instr: 'Finde alle <span class="b">L l</span> in den Sätzen.',
+    say: 'Finde alle großen L und kleinen l in den Sätzen. Tippe sie an.',
+    make: () => shuffle(['Lea und Leo laufen los.', 'Lilli lacht laut.', 'Der Löwe liegt im Laub.', 'Lotte malt eine Lampe.',
+      'Am Abend leuchtet die Laterne.', 'Ole holt den Ball.', 'Das Lama lebt im Stall.', 'Leo legt die Lupe auf den Tisch.',
+      'Die Eule fliegt los.', 'Lukas isst gelbe Melonen.']).slice(0, 3).map(t => ({ kind: 'words', text: t })) },
+  { id: 'o1', tab: 'O', page: 8, num: 1, type: 'ring', pic: '🐸', target: 'o', round: 12,
     short: 'Hörst du O o?',
     instr: 'Sprich die Tiernamen deutlich. Hörst du <span class="r">O o</span>?',
     say: 'Sprich den Tiernamen deutlich. Hörst du ein O?',
-    items: [['Frosch','🐸',1],['Dinosaurier','🦕',1],['Krokodil','🐊',1],['Zebra','🦓',0],['Hase','🐇',0],
-            ['Löwe','🦁',0],['Pony','🐴',1],['Nashorn','🦏',1],['Katze','🐱',0],['Vogel','🐦',1],
-            ['Affe','🐒',0],['Hund','🐕',0]] },
-  { id: 'o2', tab: 'O', page: 9, num: 1, type: 'pick', mode: 'O', pic: '👑', target: 'o',
+    items: [['Frosch','🐸',1],['Dinosaurier','🦕',1],['Krokodil','🐊',1],['Pony','🐴',1],['Nashorn','🦏',1],['Vogel','🐦',1],
+            ['Ochse','🐂',1],['Oktopus','🐙',1],['Koala','🐨',1],['Wolf','🐺',1],['Gorilla','🦍',1],['Robbe','🦭',1],['Goldfisch','🐠',1],
+            ['Zebra','🦓',0],['Hase','🐇',0],['Löwe','🦁',0],['Katze','🐱',0],['Affe','🐒',0],['Hund','🐕',0],['Biene','🐝',0],
+            ['Ente','🦆',0],['Maus','🐭',0],['Schaf','🐑',0],['Schwein','🐷',0],['Kuh','🐄',0],['Pinguin','🐧',0],['Igel','🦔',0],
+            ['Elefant','🐘',0],['Fuchs','🦊',0],['Tiger','🐅',0],['Hahn','🐓',0],['Papagei','🦜',0],['Delfin','🐬',0]] },
+  { id: 'o2', tab: 'O', page: 9, num: 1, type: 'pick', mode: 'O', pic: '👑', target: 'o', round: 10,
     short: 'Wo klingt O o?',
     instr: 'Wo klingt <span class="r">O o</span>? Am Anfang, in der Mitte oder am Ende?',
     say: 'Wo klingt das O? Am Anfang, in der Mitte, oder am Ende?',
     options: [['A','Anfang'],['M','Mitte'],['E','Ende']],
-    items: [['Auto','🚗','E'],['Hose','👖','M'],['Krone','👑','M'],['Ohr','👂','A'],['Ordner','📁','A'],
-            ['Torte','🎂','M'],['Trommel','🥁','M'],['Wolke','☁️','M'],['Opa','👴','A'],['Kino','🎬','E']] },
+    items: [['Ohr','👂','A'],['Ordner','📁','A'],['Opa','👴','A'],['Oma','👵','A'],['Orange','🍊','A'],['Osterhase','🐰','A'],
+            ['Hose','👖','M'],['Krone','👑','M'],['Torte','🎂','M'],['Trommel','🥁','M'],['Wolke','☁️','M'],['Rose','🌹','M'],
+            ['Dose','🥫','M'],['Sonne','☀️','M'],['Mond','🌙','M'],['Rock','👗','M'],['Topf','🍲','M'],['Brot','🍞','M'],
+            ['Frosch','🐸','M'],['Koffer','🧳','M'],['Socke','🧦','M'],
+            ['Auto','🚗','E'],['Kino','🎬','E'],['Radio','📻','E'],['Kakao','☕','E'],['Euro','💶','E']] },
   { id: 'o3', tab: 'O', page: 9, num: 2, type: 'rhyme', pic: '🥫',
     short: 'Verbinde die Reimwörter.',
     instr: 'Verbinde die Reimwörter.',
     say: 'Verbinde die Reimwörter. Tippe oben ein Bild an, dann das Bild unten, das sich reimt.',
-    pairs: [[['Hose','👖'],['Dose','🥫']],[['Sonne','☀️'],['Tonne','🛢️']],[['Ohr','👂'],['Tor','🥅']],[['Zopf','👧'],['Topf','🍲']]] },
+    // pro Reimfamilie höchstens ein Paar pro Runde, sonst wären zwei Lösungen richtig
+    families: [[[['Hose','👖'],['Dose','🥫']], [['Rose','🌹'],['Dose','🥫']], [['Rose','🌹'],['Hose','👖']]],
+               [[['Sonne','☀️'],['Tonne','🛢️']]], [[['Ohr','👂'],['Tor','🥅']]], [[['Zopf','👧'],['Topf','🍲']]],
+               [[['Boot','🛥️'],['Brot','🍞']]], [[['Socke','🧦'],['Glocke','🔔']]]] },
   { id: 'o4', tab: 'O', page: 9, num: 3, type: 'find', pic: '⭕', target: 'o',
     short: 'Kreise O und o ein.',
     instr: 'Kreise <span class="r">O</span> und <span class="r">o</span> ein.',
     say: 'Kreise alle großen O und kleinen o ein. Tippe sie an.',
-    lines: [{ kind: 'letters', text: 'O l o O L E e O O o e e o O e o O L l O O o' },
-            { kind: 'words', text: 'Lea Ole Leo Ole Leo Lea Leo Ole Leo Leo Ele Leo Lea' }] },
-  { id: 'm1', tab: 'M', page: 10, num: 1, type: 'pick', mode: 'letter', pic: '🥚', target: 'first',
+    make: () => [
+      { kind: 'letters', text: shuffle([...Array(9)].map(() => pick(['O', 'o'])).concat([...Array(13)].map(() => pick('l L E e a c u n'.split(' '))))).join(' ') },
+      { kind: 'words', text: [...Array(10)].map(() => pick(['Lea', 'Ole', 'Leo', 'Ele', 'Ola'])).join(' ') },
+      { kind: 'words', text: pick(['Oma kocht Obst.', 'Otto holt rote Rosen.', 'Der Mond ist groß.', 'Ole hat ein Boot.',
+        'Opa sitzt im Auto.', 'Die Sonne scheint oben.', 'Im Topf ist Kakao.']) }] },
+  { id: 'm1', tab: 'M', page: 10, num: 1, type: 'pick', mode: 'letter', pic: '🥚', target: 'first', round: 10,
     short: 'Was klingt am Anfang? L oder O?',
     instr: 'Was klingt am Anfang? <span class="b">L</span> oder <span class="r">O</span>?',
     say: 'Was klingt am Anfang? L oder O?',
     options: [['L','L'],['O','O']],
-    items: [['Osterei','🥚','O'],['Lastwagen','🚚','L'],['Leiter','🪜','L'],['Orange','🍊','O'],
-            ['Lupe','🔍','L'],['Löwe','🦁','L'],['Ohr','👂','O'],['Opa','👴','O']] },
-  { id: 'm2', tab: 'M', page: 10, num: 2, type: 'pick', mode: 'letter', pic: '🧳', target: 'pickLetter',
+    items: [['Osterei','🥚','O'],['Orange','🍊','O'],['Ohr','👂','O'],['Opa','👴','O'],['Oma','👵','O'],['Ordner','📁','O'],
+            ['Osterhase','🐰','O'],['Oktopus','🐙','O'],['Ochse','🐂','O'],
+            ['Lastwagen','🚚','L'],['Leiter','🪜','L'],['Lupe','🔍','L'],['Löwe','🦁','L'],['Lama','🦙','L'],['Löffel','🥄','L'],
+            ['Laterne','🏮','L'],['Lippe','👄','L'],['Leopard','🐆','L'],['Laptop','💻','L']] },
+  { id: 'm2', tab: 'M', page: 10, num: 2, type: 'pick', mode: 'letter', pic: '🧳', target: 'pickLetter', round: 10,
     short: 'Was klingt im Wort? l oder o?',
     instr: 'Was klingt im Wort? <span class="b">l</span> oder <span class="r">o</span>?',
     say: 'Was klingt im Wort? l oder o?',
     options: [['l','l'],['o','o']],
-    items: [['Rock','👗','o'],['Sonne','☀️','o'],['Ball','⚽','l'],['Blume','🌸','l'],
-            ['Koffer','🧳','o'],['Apfel','🍎','l'],['Nadel','🪡','l'],['Dose','🥫','o']] },
+    items: [['Rock','👗','o'],['Sonne','☀️','o'],['Koffer','🧳','o'],['Dose','🥫','o'],['Mond','🌙','o'],['Topf','🍲','o'],
+            ['Brot','🍞','o'],['Rose','🌹','o'],['Socke','🧦','o'],['Boot','🛥️','o'],['Frosch','🐸','o'],
+            ['Ball','⚽','l'],['Blume','🌸','l'],['Apfel','🍎','l'],['Nadel','🪡','l'],['Igel','🦔','l'],['Engel','👼','l'],
+            ['Zwiebel','🧅','l'],['Ampel','🚦','l'],['Pinsel','🖌️','l'],['Stiefel','👢','l'],['Helm','⛑️','l'],['Milch','🥛','l'],
+            ['Wal','🐳','l'],['Schal','🧣','l'],['Tulpe','🌷','l'],['Kamel','🐫','l']] },
   { id: 'm3', tab: 'M', page: 10, num: 3, type: 'find', pic: '🏔️', target: 'o', poem: true,
     short: 'Finde O o im Gedicht.',
     instr: 'Finde alle <span class="r">O o</span> im Gedicht.',
@@ -349,17 +388,21 @@ const EXERCISES = [
             { kind: 'words', text: 'Hat ein Loch im Hosenboden' }, { kind: 'words', text: 'und kocht morgen Karfiol.' }] },
 ];
 const GROUPS = [
-  { tab: 'L', label: 'L l', ids: ['l1', 'l2', 'l3'] },
+  { tab: 'L', label: 'L l', ids: ['l1', 'l2', 'l3', 'l4'] },
   { tab: 'O', label: 'O o', ids: ['o1', 'o2', 'o3', 'o4'] },
   { tab: 'M', label: 'O o und L l', ids: ['m1', 'm2', 'm3'] },
 ];
 
 /* ================= Speicher ================= */
-const fresh = () => ({ trace: { O: 0, o: 0, L: 0, l: 0 }, stars: {}, unlocked: false });
+const fresh = () => ({ trace: { O: 0, o: 0, L: 0, l: 0 }, stars: {}, passed: {}, unlocked: false });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.trace) state = Object.assign(fresh(), s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const traceDone = () => state.unlocked || LETTERS.every(k => state.trace[k] >= NEED);
+const ORDER = () => GROUPS.flatMap(g => g.ids);
+// Übungen gehen der Reihe nach auf: die nächste erst, wenn die vorige bestanden ist
+const exOpen = id => { if (state.unlocked) return true; if (!traceDone()) return false;
+  const i = ORDER().indexOf(id); return i === 0 || !!state.passed[ORDER()[i - 1]]; };
 
 /* ================= Ton & Sprache ================= */
 let voice = null;
@@ -403,6 +446,17 @@ const sWin = () => tone([523, 659, 784, 1047], 0.14);
 /* ================= Helfer ================= */
 const app = document.getElementById('app');
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+// zufällige Runde aus dem Wortpool, jede Antwort kommt ausgewogen vor
+function sampleItems(ex) {
+  const all = shuffle(ex.items.slice());
+  if (!ex.round || all.length <= ex.round) return all;
+  const groups = {}; all.forEach(it => (groups[it[2]] = groups[it[2]] || []).push(it));
+  const keys = Object.keys(groups), each = Math.ceil(ex.round / keys.length), out = [];
+  keys.forEach(k => out.push(...groups[k].slice(0, each)));
+  all.forEach(it => { if (out.length < ex.round + keys.length && !out.includes(it)) out.push(it); });
+  return shuffle(shuffle(out).slice(0, ex.round));
+}
 const shake = el => { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); };
 const starsHtml = (n, max) => Array.from({ length: max }, (_, i) => `<span class="${i < n ? 'on' : ''}">★</span>`).join('');
 const tabLetters = tab => tab === 'L' ? 'L l' : tab === 'O' ? 'O o' : '<span class="t-o">O o</span> <span class="t-l">L l</span>';
@@ -429,9 +483,22 @@ function sheet(ex, opts) {
       <button class="back" data-act="home">‹ Übersicht</button></header>
     <div class="task"><span class="num">${o.num || ex.num}</span><h2>${o.instr || ex.instr}</h2>
       <button class="say-btn" data-act="instr" aria-label="Aufgabe vorlesen">🔊</button></div>
+    ${o.noLives ? '' : '<div class="lives" id="lives" aria-live="polite"></div>'}
     <div class="task-body"></div>
     <footer class="sheet-foot"><span class="pno">${o.page || ex.page}</span><span>${o.foot || 'passt zur Arbeitsheft-Seite ' + ex.page}</span></footer>
   </article>`;
+}
+function setLives(errs) {
+  const el = document.getElementById('lives'); if (!el) return;
+  const left = Math.max(0, MAX_ERRS - errs);
+  el.innerHTML = `<span class="lives-cap">Fehler erlaubt:</span>` +
+    Array.from({ length: MAX_ERRS }, (_, i) => `<span class="heart ${i < left ? '' : 'lost'}">♥</span>`).join('');
+}
+// zählt einen Fehler; true = zu viele, Übung ist abgebrochen
+function oops(ex, errs) {
+  setLives(errs);
+  if (errs <= MAX_ERRS) return false;
+  tooMany(ex); return true;
 }
 function wireSheet(sayText) {
   app.querySelector('[data-act="home"]').onclick = () => go('home');
@@ -469,27 +536,37 @@ function home() {
     </section>
     <section class="step ${open ? '' : 'locked'}">
       <div class="step-title"><span class="num">2</span><h2>Dann: Übungen</h2></div>
-      ${open ? '' : '<div class="lock-note">🔒 Spure zuerst O, o, L und l je 3-mal nach. Dann gehen die Übungen auf.</div>'}
+      <div class="lock-note" id="locknote">${open ? `Die Übungen gehen der Reihe nach auf. Bei mehr als ${MAX_ERRS} Fehlern musst du die Übung wiederholen.`
+        : '🔒 Spure zuerst O, o, L und l je 3-mal nach. Dann gehen die Übungen auf.'}</div>
       ${GROUPS.map(g => `<div class="group"><h3><span class="gt gt-${g.tab}">${g.label}</span></h3><div class="ex-list">
-        ${g.ids.map(id => { const ex = EXERCISES.find(e => e.id === id); return `
-          <button class="ex-card" data-ex="${id}"><span class="pic">${ex.pic}</span><span class="t">${ex.short}</span>
-            <span class="meta"><span>Seite ${ex.page}</span><span class="stars">${starsHtml(state.stars[id] || 0, 3)}</span></span></button>`; }).join('')}
+        ${g.ids.map(id => { const ex = EXERCISES.find(e => e.id === id), on = exOpen(id); return `
+          <button class="ex-card ${on ? '' : 'shut'}" data-ex="${id}"><span class="pic">${on ? ex.pic : '🔒'}</span><span class="t">${ex.short}</span>
+            <span class="meta"><span>Seite ${ex.page}</span><span class="stars">${starsHtml(state.passed[id] ? state.stars[id] || 0 : 0, 3)}</span></span></button>`; }).join('')}
       </div></div>`).join('')}
     </section>
     <div class="teacher" id="teacher">
-      ${open ? '' : '<button class="link-btn" data-t="unlock">Lehrkraft: Übungen sofort freischalten</button>'}
+      ${state.unlocked ? '' : '<button class="link-btn" data-t="unlock">Lehrkraft: alle Übungen freischalten</button>'}
       <button class="link-btn" data-t="reset">Fortschritt löschen</button>
     </div>
   </article>`;
   app.querySelectorAll('[data-letter]').forEach(b => b.onclick = () => go('trace', b.dataset.letter));
   app.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => {
     if (!traceDone()) { shake(app.querySelector('.lock-note')); sBad(); say('Spure zuerst die Buchstaben nach.'); return; }
+    if (!exOpen(b.dataset.ex)) { shake(b); sBad(); say('Schaffe zuerst die Übung davor.'); return; }
     go('ex', b.dataset.ex);
   });
   const t = document.getElementById('teacher');
   t.onclick = e => {
     const a = e.target.dataset.t;
-    if (a === 'unlock') { state.unlocked = true; save(); home(); }
+    if (a === 'unlock') {
+      // kleine Rechenhürde, damit Kinder nicht selbst freischalten
+      t.innerHTML = `<form class="confirm-row" id="tq">Lehrkraft: 7 · 8 =
+        <input id="tqa" inputmode="numeric" size="3" style="font:inherit;width:4em;padding:6px" autocomplete="off">
+        <button class="btn ghost">OK</button><button type="button" class="btn ghost" data-t="no">Abbrechen</button></form>`;
+      t.querySelector('#tq').onsubmit = ev => { ev.preventDefault();
+        if (t.querySelector('#tqa').value.trim() === '56') { state.unlocked = true; save(); home(); } else shake(t.querySelector('#tq')); };
+      t.querySelector('#tqa').focus();
+    }
     if (a === 'reset') {
       t.innerHTML = `<div class="confirm-row">Wirklich alles löschen?
         <button class="btn ghost" data-t="yes">Ja, löschen</button><button class="btn ghost" data-t="no">Nein</button></div>`;
@@ -504,7 +581,7 @@ function trace(letter) {
   const tab = (letter === 'O' || letter === 'o') ? 'O' : 'L';
   const names = { O: 'das große O', o: 'das kleine o', L: 'das große L', l: 'das kleine l' };
   const sayText = `Spure ${names[letter]} nach. Beginne beim grünen Punkt und folge dem Pfeil.`;
-  app.innerHTML = sheet(null, { tab, num: '✎', page: tab === 'O' ? 8 : 7,
+  app.innerHTML = sheet(null, { tab, num: '✎', noLives: true, page: tab === 'O' ? 8 : 7,
     instr: `Spure <b>${letter}</b> nach. Beginne beim <span style="color:var(--good)">grünen Punkt</span> und folge dem Pfeil.`,
     foot: 'Schreibrichtung – erst nachspuren, dann üben' });
   const body = wireSheet(sayText);
@@ -683,8 +760,9 @@ function trace(letter) {
 function runItems(ex) {
   app.innerHTML = sheet(ex);
   const body = wireSheet(ex.say);
-  const items = shuffle(ex.items.slice());
+  const items = sampleItems(ex);
   let idx = 0, errs = 0, stuck = [], trayItems = [], locked = false;
+  setLives(0);
   say(ex.say);
   const wordCls = ex.tab === 'L' ? 'L' : '';
 
@@ -734,7 +812,8 @@ function runItems(ex) {
       if (ex.type === 'ring') { if (sol) stuck.push(emo); else trayItems.push(emo); }
       setTimeout(() => { idx++; locked = false; render(); }, 1100);
     } else {
-      errs++; sBad(); shake(btn); shake(body.querySelector('#card'));
+      errs++; if (oops(ex, errs)) return;
+      sBad(); shake(btn); shake(body.querySelector('#card'));
     }
   }
   render();
@@ -747,18 +826,20 @@ function runFind(ex) {
   const test = ex.target === 'l' ? isL : isO;
   say(ex.say);
   let errs = 0, found = 0, total = 0;
+  setLives(0);
+  const lines = ex.type === 'find' ? (ex.make ? ex.make() : ex.lines) : null;
   if (ex.type === 'tiles') {
-    const letters = shuffle(ex.letters.slice());
+    const letters = ex.make();
     total = letters.filter(test).length;
     body.innerHTML = `<div class="counter" id="cnt"></div><div class="tiles">${letters.map(c => `<button class="tile" data-c="${c}">${c}</button>`).join('')}</div>
       <div class="reveal" id="rev"></div>`;
   } else {
     const chBtn = c => /[A-Za-zÄÖÜäöüß]/.test(c) ? `<button class="ch" data-c="${c}">${c}</button>` : `<span class="ch punct">${c}</span>`;
-    body.innerHTML = `<div class="counter" id="cnt"></div><div class="find-text ${ex.poem ? 'poem' : ''}">${ex.lines.map(l => {
+    body.innerHTML = `<div class="counter" id="cnt"></div><div class="find-text ${ex.poem ? 'poem' : ''}">${lines.map(l => {
       if (l.kind === 'letters') return `<div class="find-line letters">${l.text.split(' ').map(chBtn).join('')}</div>`;
       return `<div class="find-line">${l.text.split(' ').map(w => `<span class="find-word">${[...w].map(chBtn).join('')}</span>`).join('')}</div>`;
     }).join('')}</div>${ex.poem ? '<div class="reveal" style="font-size:54px">🧑‍🌾🏔️</div>' : ''}`;
-    total = ex.lines.reduce((n, l) => n + [...l.text].filter(test).length, 0);
+    total = lines.reduce((n, l) => n + [...l.text].filter(test).length, 0);
   }
   const cnt = body.querySelector('#cnt');
   const upd = () => { cnt.textContent = `Gefunden: ${found} von ${total}`; };
@@ -771,7 +852,7 @@ function runFind(ex) {
         sWin(); const rev = body.querySelector('#rev'); if (rev) rev.textContent = '🦁';
         setTimeout(() => finish(ex, errs), 1300);
       }
-    } else { errs++; sBad(); shake(b); }
+    } else { errs++; if (oops(ex, errs)) return; sBad(); shake(b); }
   };
 }
 
@@ -779,8 +860,9 @@ function runFind(ex) {
 function runRhyme(ex) {
   app.innerHTML = sheet(ex);
   const body = wireSheet(ex.say);
-  const top = ex.pairs.map((p, i) => ({ w: p[0][0], e: p[0][1], k: i }));
-  const bottom = shuffle(ex.pairs.map((p, i) => ({ w: p[1][0], e: p[1][1], k: i })));
+  const pairs = shuffle(ex.families.map(f => pick(f))).slice(0, 4);
+  const top = pairs.map((p, i) => ({ w: p[0][0], e: p[0][1], k: i }));
+  const bottom = shuffle(pairs.map((p, i) => ({ w: p[1][0], e: p[1][1], k: i })));
   const card = (x, side) => `<button class="rcard" data-side="${side}" data-k="${x.k}" aria-label="${x.w}"><span>${x.e}</span></button>`;
   body.innerHTML = `<div class="rhyme" id="rh"><svg id="lines"></svg>
     <div class="rhyme-row">${top.map(x => card(x, 't')).join('')}</div>
@@ -788,6 +870,7 @@ function runRhyme(ex) {
   say(ex.say);
   const rh = body.querySelector('#rh'), svg = body.querySelector('#lines');
   let sel = null, done = [], errs = 0;
+  setLives(0);
   const words = {}; top.concat(bottom).forEach(x => { words[x.w] = x; });
   function drawLines() {
     const r0 = rh.getBoundingClientRect();
@@ -813,10 +896,11 @@ function runRhyme(ex) {
     if (+sel.dataset.k === k) {
       sel.classList.remove('sel'); sel.classList.add('done'); b.classList.add('done');
       done.push(k); sGood(); drawLines(); sel = null;
-      const p = ex.pairs[k]; setTimeout(() => say(p[0][0] + ', ' + p[1][0]), 450);
-      if (done.length === ex.pairs.length) setTimeout(() => finish(ex, errs), 1800);
+      const p = pairs[k]; setTimeout(() => say(p[0][0] + ', ' + p[1][0]), 450);
+      if (done.length === pairs.length) setTimeout(() => finish(ex, errs), 1800);
     } else {
-      errs++; sBad(); shake(b); shake(sel); sel.classList.remove('sel'); sel = null;
+      errs++; if (oops(ex, errs)) return;
+      sBad(); shake(b); shake(sel); sel.classList.remove('sel'); sel = null;
     }
   };
   window.addEventListener('resize', drawLines);
@@ -824,9 +908,22 @@ function runRhyme(ex) {
 }
 
 /* ================= Ergebnis ================= */
+function tooMany(ex) {
+  if (cleanup) { cleanup(); cleanup = null; }
+  const body = app.querySelector('.task-body');
+  body.onclick = null;
+  body.innerHTML = `<div class="result"><div class="big-stars" aria-hidden="true">😕</div>
+    <h3>Zu viele Fehler</h3><p>Mehr als ${MAX_ERRS} Fehler. Hör genau hin und mach die Übung noch einmal.</p>
+    <div class="btn-row"><button class="btn primary" id="again">↻ Übung wiederholen</button>
+      <button class="btn ghost" id="ov">Übersicht</button></div></div>`;
+  sBad(); say('Das waren zu viele Fehler. Mach die Übung noch einmal.');
+  body.querySelector('#again').onclick = () => go('ex', ex.id);
+  body.querySelector('#ov').onclick = () => go('home');
+}
 function finish(ex, errs) {
-  const stars = errs === 0 ? 3 : errs <= 2 ? 2 : 1;
-  state.stars[ex.id] = Math.max(state.stars[ex.id] || 0, stars); save();
+  const stars = errs === 0 ? 3 : errs === 1 ? 2 : 1;
+  state.stars[ex.id] = state.passed[ex.id] ? Math.max(state.stars[ex.id] || 0, stars) : stars;
+  state.passed[ex.id] = true; save();
   const all = GROUPS.flatMap(g => g.ids), nextId = all[all.indexOf(ex.id) + 1];
   const body = app.querySelector('.task-body');
   const praise = stars === 3 ? 'Super gemacht!' : stars === 2 ? 'Gut gemacht!' : 'Geschafft! Übe ruhig noch einmal.';
