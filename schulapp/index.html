@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Üben mit O o und L l</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+/* Layout: eine Arbeitsheft-Seite pro Übung – farbiger Buchstaben-Reiter, grüne Linie, Aufgabennummer, grüne Antwortkästchen. */
+:root {
+  --paper: #ffffff;
+  --desk: #e9eef2;
+  --ink: #26355f;
+  --ink-soft: #5d6886;
+  --l-tab: #b9dcf3;
+  --l-ink: #1d63b4;
+  --o-tab: #f7cdb8;
+  --o-ink: #d8352a;
+  --badge: #5aa83c;
+  --line: #a9c96a;
+  --box: #dde9cd;
+  --good: #3f9a2c;
+  --bad: #d8352a;
+  --gold: #f2b134;
+  --guide: #cdd1d9;
+  --font-letter: "Andika", "Comic Sans MS", system-ui, sans-serif;
+  --font-ui: "Fredoka", "Andika", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font-letter);
+  font-size: 18px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--l-ink); outline-offset: 2px; }
+#app { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 40px; }
+
+/* ---------- Seite ---------- */
+.sheet {
+  background: var(--paper);
+  border-radius: 6px 6px 10px 10px;
+  box-shadow: 0 1px 0 #d5dbe1, 0 10px 30px -18px rgba(38,53,95,.45);
+  overflow: hidden;
+  position: relative;
+}
+.sheet-head { position: relative; display: flex; align-items: flex-start; justify-content: space-between; min-height: 76px; }
+.tab {
+  font-family: var(--font-letter); font-weight: 700; font-size: 40px; line-height: 1;
+  padding: 16px 28px 14px 22px; border-bottom-right-radius: 44px;
+  letter-spacing: .08em;
+}
+.tab-L .tab { background: var(--l-tab); color: var(--l-ink); }
+.tab-O .tab { background: var(--o-tab); color: var(--o-ink); }
+.tab-M .tab { background: linear-gradient(90deg, var(--o-tab) 50%, var(--l-tab) 50%); }
+.tab-M .tab .t-o { color: var(--o-ink); }
+.tab-M .tab .t-l { color: var(--l-ink); }
+.swoosh { position: absolute; left: 0; right: 0; top: 34px; width: 100%; height: 40px; pointer-events: none; }
+.back {
+  position: relative; z-index: 1; margin: 14px 14px 0 0;
+  border: 2px solid var(--box); background: var(--paper); border-radius: 999px;
+  padding: 6px 14px; font-family: var(--font-ui); font-weight: 500; font-size: 16px; color: var(--ink-soft);
+}
+.task { display: flex; align-items: flex-start; gap: 10px; padding: 18px 20px 6px; }
+.num {
+  flex: none; width: 30px; height: 30px; border-radius: 5px; background: var(--badge); color: #fff;
+  font-family: var(--font-ui); font-weight: 600; display: grid; place-items: center; font-size: 18px; margin-top: 3px;
+}
+.task h2 { margin: 0; font-size: 22px; font-weight: 400; text-wrap: balance; flex: 1; min-width: 0; }
+.task h2 .r { color: var(--o-ink); }
+.task h2 .b { color: var(--l-ink); }
+.say-btn {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--box);
+  background: var(--paper); font-size: 22px; display: grid; place-items: center;
+}
+.task-body { padding: 10px 20px 24px; }
+.sheet-foot { display: flex; align-items: baseline; gap: 16px; padding: 10px 22px 16px; color: var(--ink-soft); font-size: 13px; }
+.sheet-foot .pno { font-family: var(--font-ui); font-weight: 600; font-size: 22px; color: var(--ink); }
+
+/* ---------- Übersicht ---------- */
+.cover { padding: 22px 22px 8px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.cover-letters { display: flex; gap: 8px; }
+.cover-letters span {
+  font-weight: 700; font-size: 44px; line-height: 1; padding: 12px 16px; border-radius: 0 0 28px 0;
+}
+.cover-letters .co { background: var(--o-tab); color: var(--o-ink); }
+.cover-letters .cl { background: var(--l-tab); color: var(--l-ink); }
+.cover h1 { font-family: var(--font-ui); font-weight: 600; font-size: 30px; margin: 0; line-height: 1.1; }
+.cover p { margin: 4px 0 0; color: var(--ink-soft); }
+.step { padding: 18px 22px 10px; border-top: 2px dashed var(--box); margin-top: 14px; }
+.step-title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.step-title h2 { margin: 0; font-family: var(--font-ui); font-weight: 600; font-size: 22px; }
+.step-title .num { margin-top: 0; }
+.trace-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.chip {
+  border: 3px solid var(--box); background: var(--paper); border-radius: 14px; padding: 8px 4px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.chip .big { font-size: 46px; font-weight: 700; line-height: 1.1; }
+.chip.c-O .big, .chip.c-o .big { color: var(--o-ink); }
+.chip.c-L .big, .chip.c-l .big { color: var(--l-ink); }
+.chip.done { border-color: var(--good); }
+.stars { font-size: 16px; letter-spacing: 1px; color: var(--guide); white-space: nowrap; }
+.stars .on { color: var(--gold); }
+.group { margin-bottom: 16px; }
+.group h3 { margin: 6px 0 8px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.group h3 .gt { padding: 2px 10px; border-radius: 0 0 12px 0; letter-spacing: .06em; }
+.gt-L { background: var(--l-tab); color: var(--l-ink); }
+.gt-O { background: var(--o-tab); color: var(--o-ink); }
+.gt-M { background: linear-gradient(90deg, var(--o-tab) 50%, var(--l-tab) 50%); }
+.ex-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.ex-card {
+  text-align: left; border: 2px solid var(--box); background: var(--paper); border-radius: 12px;
+  padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center;
+}
+.ex-card .pic { font-size: 30px; grid-row: span 2; }
+.ex-card .t { font-size: 17px; line-height: 1.2; }
+.ex-card .meta { font-size: 13px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 8px; }
+.locked .ex-card { opacity: .45; }
+.lock-note {
+  background: #fff6dc; border: 2px solid var(--gold); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
+  font-size: 16px;
+}
+.teacher { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 18px 16px 4px; }
+.link-btn { background: none; border: none; color: var(--ink-soft); text-decoration: underline; font-size: 14px; padding: 6px; }
+.confirm-row { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-soft); }
+
+/* ---------- Schreibrichtung ---------- */
+.letter-nav { display: flex; gap: 8px; padding: 0 20px; flex-wrap: wrap; }
+.letter-nav button {
+  min-width: 64px; border: 3px solid var(--box); background: var(--paper); border-radius: 12px; padding: 2px 10px;
+  display: flex; flex-direction: column; align-items: center; font-weight: 700; font-size: 26px; line-height: 1.2;
+}
+.letter-nav button.cur { border-color: var(--ink); }
+.letter-nav button.done { border-color: var(--good); }
+.letter-nav .stars { font-size: 11px; }
+.canvas-wrap { position: relative; margin: 12px 0 8px; border: 2px solid #c8d0e0; border-radius: 6px; overflow: hidden; background: #fff; }
+.canvas-wrap canvas { display: block; width: 100%; touch-action: none; }
+.trace-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.trace-stars { font-size: 34px; letter-spacing: 4px; color: var(--guide); }
+.trace-stars .on { color: var(--gold); }
+.msg { min-height: 30px; font-size: 20px; font-weight: 700; text-align: center; margin: 6px 0; }
+.msg.good { color: var(--good); }
+.msg.bad { color: var(--bad); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  border: none; border-radius: 14px; padding: 12px 20px; min-height: 52px;
+  font-family: var(--font-ui); font-weight: 600; font-size: 19px;
+  background: var(--box); color: var(--ink);
+}
+.btn.primary { background: var(--badge); color: #fff; }
+.btn.ghost { background: var(--paper); border: 2px solid var(--box); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+/* ---------- Bild-Aufgaben ---------- */
+.progress { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+.progress i { width: 12px; height: 12px; border-radius: 50%; background: var(--box); }
+.progress i.ok { background: var(--good); }
+.progress i.now { background: var(--ink); }
+.pic-card {
+  margin: 0 auto; width: min(240px, 70vw); aspect-ratio: 1; display: grid; place-items: center;
+  border: 2px solid #c8d0e0; border-radius: 8px; position: relative; background: #fff;
+}
+.pic-card .emo { font-size: min(130px, 36vw); line-height: 1; }
+.pic-card .say-btn { position: absolute; right: 8px; bottom: 8px; }
+.word { text-align: center; font-size: 30px; min-height: 46px; margin: 8px 0 4px; font-weight: 700; letter-spacing: .03em; }
+.word .hl { color: var(--o-ink); }
+.word.L .hl { color: var(--l-ink); }
+.answers { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+.ans {
+  border: 3px solid #c8d0e0; background: var(--paper); border-radius: 12px; padding: 8px; min-width: 104px; min-height: 64px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+}
+.ans .cap { font-size: 15px; color: var(--ink-soft); }
+.ans.yes { border-color: var(--good); }
+.ans.yes .cap, .ans.no .cap { font-size: 20px; color: var(--ink); font-weight: 700; }
+.ans.no { border-color: var(--bad); }
+.ans.letter { min-width: 96px; font-size: 44px; font-weight: 700; line-height: 1; }
+.ans.right { background: #e5f4dc; border-color: var(--good); }
+.slotbox { display: grid; grid-template-columns: 30px 56px 30px; height: 42px; border: 1.5px solid #8794b8; }
+.slotbox span { display: grid; place-items: center; font-size: 26px; font-weight: 700; color: var(--ink); }
+.slotbox span:nth-child(1), .slotbox span:nth-child(3) { background: var(--box); }
+.slotbox .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--o-ink); }
+
+/* Ring zum Einkleben */
+.ring-wrap { display: grid; justify-items: center; gap: 6px; }
+.ring {
+  width: min(340px, 84vw); aspect-ratio: 1; border-radius: 50%; position: relative;
+  border: 7px solid var(--o-ink); box-shadow: inset 0 0 0 2px #f3a571;
+}
+.tab-L .ring { border: 6px dashed var(--l-ink); box-shadow: none; }
+.ring .pic-card { position: absolute; inset: 0; margin: auto; width: 46%; }
+.ring .pic-card .emo { font-size: min(76px, 20vw); }
+.ring .pic-card .say-btn { width: 38px; height: 38px; font-size: 18px; right: -14px; bottom: -14px; }
+.stuck { position: absolute; font-size: min(34px, 9vw); transform: translate(-50%, -50%); animation: pop .35s ease-out; }
+.tray { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 34px; font-size: 26px; opacity: .6; }
+.tray-label { font-size: 13px; color: var(--ink-soft); }
+
+/* Buchstaben finden */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
+.tile {
+  aspect-ratio: 1; border: 2px solid var(--ink); background: var(--paper); font-size: 30px; font-weight: 400;
+  display: grid; place-items: center; transition: background .2s;
+}
+.tile:nth-child(4n+1) { border-radius: 42% 58% 50% 50% / 55% 45% 55% 45%; }
+.tile:nth-child(4n+2) { border-radius: 60% 40% 45% 55% / 40% 60% 40% 60%; }
+.tile:nth-child(4n+3) { border-radius: 50% 50% 62% 38% / 48% 52% 48% 52%; }
+.tile:nth-child(4n)   { border-radius: 38% 62% 55% 45% / 60% 40% 60% 40%; }
+.tile.found { background: var(--gold); border-color: #c4831a; }
+.find-text { display: flex; flex-direction: column; gap: 18px; }
+.find-line { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.find-line.letters { gap: 6px 10px; }
+.find-word { display: inline-flex; }
+.ch {
+  background: none; border: 3px solid transparent; border-radius: 50%; padding: 0 3px; min-width: 34px;
+  font-family: var(--font-letter); font-size: 34px; line-height: 1.25; color: var(--ink);
+}
+.poem .ch { font-size: 28px; min-width: 22px; padding: 0 1px; color: #6f7690; }
+.ch.punct { cursor: default; min-width: 0; padding: 0; }
+.ch.found { border-color: var(--o-ink); color: var(--o-ink); }
+.counter { text-align: center; font-size: 17px; color: var(--ink-soft); margin-bottom: 10px; }
+.reveal { text-align: center; font-size: 70px; line-height: 1; margin-top: 8px; }
+
+/* Reime */
+.rhyme { position: relative; display: grid; gap: 70px; }
+.rhyme-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; position: relative; z-index: 1; }
+.rcard {
+  aspect-ratio: 1.25; border: 2px solid #8794b8; background: #fff; border-radius: 4px; font-size: min(48px, 11vw);
+  display: grid; place-items: center; position: relative;
+}
+.rcard.sel { border-color: var(--l-ink); box-shadow: 0 0 0 4px var(--l-tab); }
+.rcard.done { border-color: var(--good); }
+.rcard .lbl { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
+.rhyme svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+/* Ergebnis */
+.result { text-align: center; padding: 10px 0 6px; }
+.result .big-stars { font-size: 64px; letter-spacing: 6px; color: var(--guide); line-height: 1.1; }
+.result .big-stars .on { color: var(--gold); }
+.result h3 { font-family: var(--font-ui); font-weight: 600; font-size: 28px; margin: 6px 0 4px; }
+.result p { margin: 0 0 16px; color: var(--ink-soft); }
+
+.shake { animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+@keyframes pop { from { transform: translate(-50%, -50%) scale(.2); } to { transform: translate(-50%, -50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .shake, .stuck { animation: none; } }
+
+@media (max-width: 520px) {
+  body { font-size: 17px; }
+  #app { padding-inline: 10px; }
+  .tab { font-size: 32px; padding: 12px 22px 10px 16px; }
+  .task { padding: 14px 14px 4px; }
+  .task h2 { font-size: 20px; }
+  .task-body { padding: 8px 14px 20px; }
+  .trace-chips { gap: 6px; }
+  .chip .big { font-size: 36px; }
+  .rhyme { gap: 54px; }
+  .rhyme-row { gap: 6px; }
+  .ans { min-width: 88px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= Daten ================= */
+const NEED = 3;                 // Nachspuren pro Buchstabe, bevor die Übungen frei sind
+const LETTERS = ['O', 'o', 'L', 'l'];
+const KEY = 'ool_progress_v1';
+
+const EXERCISES = [
+  { id: 'l1', tab: 'L', page: 6, num: 1, type: 'ring', pic: '🦁', target: 'l',
+    short: 'Hörst du L l?',
+    instr: 'Sprich das Wort deutlich. Hörst du <span class="b">L l</span>?',
+    say: 'Sprich das Wort deutlich. Hörst du ein L?',
+    items: [['Lokomotive','🚂',1],['Löwe','🦁',1],['Sessel','🪑',1],['Salat','🥗',1],['Wurm','🪱',0],
+            ['Ball','⚽',1],['Maus','🐭',0],['Lupe','🔍',1],['Luftballon','🎈',1],['Taschenlampe','🔦',1],
+            ['Brille','👓',1],['Wolke','☁️',1],['Pilz','🍄',1],['Hund','🐕',0],['Sonne','☀️',0]] },
+  { id: 'l2', tab: 'L', page: 6, num: 2, type: 'tiles', pic: '🖍️', target: 'l',
+    short: 'Male alle Felder mit L l an.',
+    instr: 'Tippe alle Felder mit <span class="b">L l</span> an.',
+    say: 'Tippe alle Felder mit L an. Großes L und kleines l.',
+    letters: 'F T l U M P F v M J l L L m R L A l R L V L l a U P L T L S m L R l M U'.split(' ') },
+  { id: 'l3', tab: 'L', page: 7, num: 2, type: 'pick', mode: 'L', pic: '🪜', target: 'l',
+    short: 'Wo klingt L l?',
+    instr: 'Wo klingt <span class="b">L l</span>? Am Anfang, am Ende oder beides?',
+    say: 'Wo klingt das L? Am Anfang, am Ende, oder am Anfang und am Ende?',
+    options: [['A','Anfang'],['E','Ende'],['B','beides']],
+    items: [['Leiter','🪜','A'],['Laterne','🏮','A'],['Kamel','🐫','E'],['Gabel','🍴','E'],['Löwe','🦁','A'],
+            ['Wal','🐳','E'],['Lupe','🔍','A'],['Krokodil','🐊','E'],['Schal','🧣','E'],['Löffel','🥄','B'],
+            ['Apfel','🍎','E'],['Lineal','📏','B']] },
+  { id: 'o1', tab: 'O', page: 8, num: 1, type: 'ring', pic: '🐸', target: 'o',
+    short: 'Hörst du O o?',
+    instr: 'Sprich die Tiernamen deutlich. Hörst du <span class="r">O o</span>?',
+    say: 'Sprich den Tiernamen deutlich. Hörst du ein O?',
+    items: [['Frosch','🐸',1],['Dinosaurier','🦕',1],['Krokodil','🐊',1],['Zebra','🦓',0],['Hase','🐇',0],
+            ['Löwe','🦁',0],['Pony','🐴',1],['Nashorn','🦏',1],['Katze','🐱',0],['Vogel','🐦',1],
+            ['Affe','🐒',0],['Hund','🐕',0]] },
+  { id: 'o2', tab: 'O', page: 9, num: 1, type: 'pick', mode: 'O', pic: '👑', target: 'o',
+    short: 'Wo klingt O o?',
+    instr: 'Wo klingt <span class="r">O o</span>? Am Anfang, in der Mitte oder am Ende?',
+    say: 'Wo klingt das O? Am Anfang, in der Mitte, oder am Ende?',
+    options: [['A','Anfang'],['M','Mitte'],['E','Ende']],
+    items: [['Auto','🚗','E'],['Hose','👖','M'],['Krone','👑','M'],['Ohr','👂','A'],['Ordner','📁','A'],
+            ['Torte','🎂','M'],['Trommel','🥁','M'],['Wolke','☁️','M'],['Opa','👴','A'],['Kino','🎬','E']] },
+  { id: 'o3', tab: 'O', page: 9, num: 2, type: 'rhyme', pic: '🥫',
+    short: 'Verbinde die Reimwörter.',
+    instr: 'Verbinde die Reimwörter.',
+    say: 'Verbinde die Reimwörter. Tippe oben ein Bild an, dann das Bild unten, das sich reimt.',
+    pairs: [[['Hose','👖'],['Dose','🥫']],[['Sonne','☀️'],['Tonne','🛢️']],[['Ohr','👂'],['Tor','🥅']],[['Zopf','👧'],['Topf','🍲']]] },
+  { id: 'o4', tab: 'O', page: 9, num: 3, type: 'find', pic: '⭕', target: 'o',
+    short: 'Kreise O und o ein.',
+    instr: 'Kreise <span class="r">O</span> und <span class="r">o</span> ein.',
+    say: 'Kreise alle großen O und kleinen o ein. Tippe sie an.',
+    lines: [{ kind: 'letters', text: 'O l o O L E e O O o e e o O e o O L l O O o' },
+            { kind: 'words', text: 'Lea Ole Leo Ole Leo Lea Leo Ole Leo Leo Ele Leo Lea' }] },
+  { id: 'm1', tab: 'M', page: 10, num: 1, type: 'pick', mode: 'letter', pic: '🥚', target: 'first',
+    short: 'Was klingt am Anfang? L oder O?',
+    instr: 'Was klingt am Anfang? <span class="b">L</span> oder <span class="r">O</span>?',
+    say: 'Was klingt am Anfang? L oder O?',
+    options: [['L','L'],['O','O']],
+    items: [['Osterei','🥚','O'],['Lastwagen','🚚','L'],['Leiter','🪜','L'],['Orange','🍊','O'],
+            ['Lupe','🔍','L'],['Löwe','🦁','L'],['Ohr','👂','O'],['Opa','👴','O']] },
+  { id: 'm2', tab: 'M', page: 10, num: 2, type: 'pick', mode: 'letter', pic: '🧳', target: 'pickLetter',
+    short: 'Was klingt im Wort? l oder o?',
+    instr: 'Was klingt im Wort? <span class="b">l</span> oder <span class="r">o</span>?',
+    say: 'Was klingt im Wort? l oder o?',
+    options: [['l','l'],['o','o']],
+    items: [['Rock','👗','o'],['Sonne','☀️','o'],['Ball','⚽','l'],['Blume','🌸','l'],
+            ['Koffer','🧳','o'],['Apfel','🍎','l'],['Nadel','🪡','l'],['Dose','🥫','o']] },
+  { id: 'm3', tab: 'M', page: 10, num: 3, type: 'find', pic: '🏔️', target: 'o', poem: true,
+    short: 'Finde O o im Gedicht.',
+    instr: 'Finde alle <span class="r">O o</span> im Gedicht.',
+    say: 'Oben jodelt, o wie komisch, Onkel Otto aus Tirol. Hat ein Loch im Hosenboden und kocht morgen Karfiol. Finde alle O im Gedicht.',
+    lines: [{ kind: 'words', text: 'Oben jodelt, o wie komisch,' }, { kind: 'words', text: 'Onkel Otto aus Tirol.' },
+            { kind: 'words', text: 'Hat ein Loch im Hosenboden' }, { kind: 'words', text: 'und kocht morgen Karfiol.' }] },
+];
+const GROUPS = [
+  { tab: 'L', label: 'L l', ids: ['l1', 'l2', 'l3'] },
+  { tab: 'O', label: 'O o', ids: ['o1', 'o2', 'o3', 'o4'] },
+  { tab: 'M', label: 'O o und L l', ids: ['m1', 'm2', 'm3'] },
+];
+
+/* ================= Speicher ================= */
+const fresh = () => ({ trace: { O: 0, o: 0, L: 0, l: 0 }, stars: {}, unlocked: false });
+let state = fresh();
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.trace) state = Object.assign(fresh(), s); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const traceDone = () => state.unlocked || LETTERS.every(k => state.trace[k] >= NEED);
+
+/* ================= Ton & Sprache ================= */
+let voice = null;
+function pickVoice() {
+  try {
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => /de[-_]AT/i.test(v.lang)) || vs.find(v => /^de/i.test(v.lang)) || null;
+  } catch (e) {}
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text, queue) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    if (!queue) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voice ? voice.lang : 'de-DE';
+    if (voice) u.voice = voice;
+    u.rate = 0.82;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+let ac = null;
+function tone(freqs, dur, type) {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = ac.currentTime;
+    freqs.forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = t0 + i * dur;
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.03);
+    });
+  } catch (e) {}
+}
+const sGood = () => tone([660, 880], 0.1);
+const sBad = () => tone([240, 180], 0.15, 'triangle');
+const sWin = () => tone([523, 659, 784, 1047], 0.14);
+
+/* ================= Helfer ================= */
+const app = document.getElementById('app');
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const shake = el => { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); };
+const starsHtml = (n, max) => Array.from({ length: max }, (_, i) => `<span class="${i < n ? 'on' : ''}">★</span>`).join('');
+const tabLetters = tab => tab === 'L' ? 'L l' : tab === 'O' ? 'O o' : '<span class="t-o">O o</span> <span class="t-l">L l</span>';
+const isO = c => c === 'o' || c === 'O';
+const isL = c => c === 'l' || c === 'L';
+const swoosh = `<svg class="swoosh" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0 30 C 80 34, 150 6, 230 12 S 360 28, 400 10" fill="none" stroke="#a9c96a" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+  <path d="M0 33 C 90 36, 160 12, 240 16 S 360 30, 400 16" fill="none" stroke="#f0b48c" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>`;
+
+function highlight(word, ex, answer) {
+  const chars = [...word];
+  let test;
+  if (ex.target === 'l') test = c => isL(c);
+  else if (ex.target === 'o') test = c => isO(c);
+  else if (ex.target === 'first') return `<span class="hl">${chars[0]}</span>${chars.slice(1).join('')}`;
+  else test = c => c.toLowerCase() === answer;
+  return chars.map(c => test(c) ? `<span class="hl">${c}</span>` : c).join('');
+}
+
+function sheet(ex, opts) {
+  const o = opts || {};
+  return `<article class="sheet tab-${o.tab || ex.tab}">
+    <header class="sheet-head">${swoosh}<div class="tab">${tabLetters(o.tab || ex.tab)}</div>
+      <button class="back" data-act="home">‹ Übersicht</button></header>
+    <div class="task"><span class="num">${o.num || ex.num}</span><h2>${o.instr || ex.instr}</h2>
+      <button class="say-btn" data-act="instr" aria-label="Aufgabe vorlesen">🔊</button></div>
+    <div class="task-body"></div>
+    <footer class="sheet-foot"><span class="pno">${o.page || ex.page}</span><span>${o.foot || 'passt zur Arbeitsheft-Seite ' + ex.page}</span></footer>
+  </article>`;
+}
+function wireSheet(sayText) {
+  app.querySelector('[data-act="home"]').onclick = () => go('home');
+  app.querySelector('[data-act="instr"]').onclick = () => say(sayText);
+  return app.querySelector('.task-body');
+}
+
+/* ================= Navigation ================= */
+let cleanup = null;
+function go(view, arg) {
+  if (cleanup) { cleanup(); cleanup = null; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  window.scrollTo(0, 0);
+  if (view === 'home') return home();
+  if (view === 'trace') return trace(arg || nextLetter());
+  const ex = EXERCISES.find(e => e.id === arg);
+  ({ ring: runItems, pick: runItems, tiles: runFind, find: runFind, rhyme: runRhyme })[ex.type](ex);
+}
+const nextLetter = () => LETTERS.find(k => state.trace[k] < NEED) || 'O';
+
+/* ================= Übersicht ================= */
+function home() {
+  const open = traceDone();
+  app.innerHTML = `<article class="sheet">
+    <header class="cover">
+      <div class="cover-letters"><span class="co">O o</span><span class="cl">L l</span></div>
+      <div><h1>Üben mit O o und L l</h1><p>Zum Wiederholen der Arbeitsheft-Seiten 6 bis 10</p></div>
+    </header>
+    <section class="step">
+      <div class="step-title"><span class="num">1</span><h2>Zuerst: Schreibrichtung üben</h2></div>
+      <div class="trace-chips">${LETTERS.map(k => `
+        <button class="chip c-${k} ${state.trace[k] >= NEED ? 'done' : ''}" data-letter="${k}" aria-label="Buchstabe ${k} nachspuren">
+          <span class="big">${k}</span><span class="stars">${starsHtml(state.trace[k], NEED)}</span></button>`).join('')}
+      </div>
+    </section>
+    <section class="step ${open ? '' : 'locked'}">
+      <div class="step-title"><span class="num">2</span><h2>Dann: Übungen</h2></div>
+      ${open ? '' : '<div class="lock-note">🔒 Spure zuerst O, o, L und l je 3-mal nach. Dann gehen die Übungen auf.</div>'}
+      ${GROUPS.map(g => `<div class="group"><h3><span class="gt gt-${g.tab}">${g.label}</span></h3><div class="ex-list">
+        ${g.ids.map(id => { const ex = EXERCISES.find(e => e.id === id); return `
+          <button class="ex-card" data-ex="${id}"><span class="pic">${ex.pic}</span><span class="t">${ex.short}</span>
+            <span class="meta"><span>Seite ${ex.page}</span><span class="stars">${starsHtml(state.stars[id] || 0, 3)}</span></span></button>`; }).join('')}
+      </div></div>`).join('')}
+    </section>
+    <div class="teacher" id="teacher">
+      ${open ? '' : '<button class="link-btn" data-t="unlock">Lehrkraft: Übungen sofort freischalten</button>'}
+      <button class="link-btn" data-t="reset">Fortschritt löschen</button>
+    </div>
+  </article>`;
+  app.querySelectorAll('[data-letter]').forEach(b => b.onclick = () => go('trace', b.dataset.letter));
+  app.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => {
+    if (!traceDone()) { shake(app.querySelector('.lock-note')); sBad(); say('Spure zuerst die Buchstaben nach.'); return; }
+    go('ex', b.dataset.ex);
+  });
+  const t = document.getElementById('teacher');
+  t.onclick = e => {
+    const a = e.target.dataset.t;
+    if (a === 'unlock') { state.unlocked = true; save(); home(); }
+    if (a === 'reset') {
+      t.innerHTML = `<div class="confirm-row">Wirklich alles löschen?
+        <button class="btn ghost" data-t="yes">Ja, löschen</button><button class="btn ghost" data-t="no">Nein</button></div>`;
+    }
+    if (a === 'yes') { state = fresh(); save(); home(); }
+    if (a === 'no') home();
+  };
+}
+
+/* ================= Schreibrichtung ================= */
+function trace(letter) {
+  const tab = (letter === 'O' || letter === 'o') ? 'O' : 'L';
+  const names = { O: 'das große O', o: 'das kleine o', L: 'das große L', l: 'das kleine l' };
+  const sayText = `Spure ${names[letter]} nach. Beginne beim grünen Punkt und folge dem Pfeil.`;
+  app.innerHTML = sheet(null, { tab, num: '✎', page: tab === 'O' ? 8 : 7,
+    instr: `Spure <b>${letter}</b> nach. Beginne beim <span style="color:var(--good)">grünen Punkt</span> und folge dem Pfeil.`,
+    foot: 'Schreibrichtung – erst nachspuren, dann üben' });
+  const body = wireSheet(sayText);
+  const nav = document.createElement('div');
+  nav.className = 'letter-nav';
+  nav.innerHTML = LETTERS.map(k => `<button class="${k === letter ? 'cur' : ''} ${state.trace[k] >= NEED ? 'done' : ''}" data-l="${k}"
+    style="color:var(${(k === 'O' || k === 'o') ? '--o-ink' : '--l-ink'})">${k}<span class="stars">${starsHtml(state.trace[k], NEED)}</span></button>`).join('');
+  app.querySelector('.task').after(nav);
+  nav.onclick = e => { const b = e.target.closest('[data-l]'); if (b) go('trace', b.dataset.l); };
+
+  body.innerHTML = `<div class="canvas-wrap"><canvas aria-label="Schreibfeld für ${letter}"></canvas></div>
+    <div class="msg" id="msg"></div>
+    <div class="trace-bar"><span class="trace-stars" id="tstars"></span>
+      <div class="btn-row"><button class="btn ghost" id="demo">▶ Zeig es mir</button><button class="btn ghost" id="clear">Löschen</button></div></div>
+    <div class="btn-row" id="after" style="margin-top:14px"></div>`;
+  const canvas = body.querySelector('canvas'), ctx = canvas.getContext('2d');
+  const msg = body.querySelector('#msg'), tstars = body.querySelector('#tstars'), after = body.querySelector('#after');
+  let W = 0, H = 0, G = null, ink = [], cur = null, prog = { s: 0, i: 0 }, busy = false, demoRaf = 0, msgTimer = 0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function geometry() {
+    const T = H * 0.12, B = H * 0.86, M = T + (B - T) * 0.47, cx = W / 2;
+    const strokes = [];
+    const ell = (cy, rx, ry) => { const pts = [], n = Math.max(60, Math.round(2 * Math.PI * Math.max(rx, ry) / 5));
+      for (let k = 0; k <= n; k++) { const t = -Math.PI / 2 - (k / n) * Math.PI * 2; pts.push([cx + rx * Math.cos(t), cy + ry * Math.sin(t)]); } return pts; };
+    const line = (a, b) => { const n = Math.max(10, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5)), pts = [];
+      for (let k = 0; k <= n; k++) pts.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); return pts; };
+    const h = B - T;
+    if (letter === 'O') strokes.push(ell((T + B) / 2, h * 0.4, h / 2));
+    if (letter === 'o') strokes.push(ell((M + B) / 2, (B - M) * 0.5, (B - M) / 2));
+    if (letter === 'L') { const x0 = cx - h * 0.24, x1 = cx + h * 0.26; strokes.push(line([x0, T], [x0, B]), line([x0, B], [x1, B])); }
+    if (letter === 'l') strokes.push(line([cx, T], [cx, B]));
+    const gw = Math.max(16, H * 0.075);
+    return { T, M, B, strokes, gw, tol: Math.max(26, gw * 1.15) };
+  }
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    W = r.width; H = Math.min(W * 0.72, 440);
+    canvas.style.height = H + 'px'; canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    G = geometry(); ink = []; prog = { s: 0, i: 0 }; draw();
+  }
+  function poly(pts, from, to) { ctx.beginPath(); ctx.moveTo(pts[from][0], pts[from][1]); for (let k = from + 1; k <= to; k++) ctx.lineTo(pts[k][0], pts[k][1]); ctx.stroke(); }
+  function arrow(pts, at, color, size) {
+    const a = pts[at], b = pts[Math.min(pts.length - 1, at + 3)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    ctx.save(); ctx.translate(a[0], a[1]); ctx.rotate(ang); ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(size, 0); ctx.lineTo(-size * 0.7, -size * 0.75); ctx.lineTo(-size * 0.7, size * 0.75); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function draw(demo) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#e4eed3'; ctx.fillRect(0, G.M, W, G.B - G.M);
+    ctx.strokeStyle = '#8fa0c8'; ctx.lineWidth = 1.5;
+    [G.T, G.M, G.B].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    G.strokes.forEach(pts => { ctx.strokeStyle = '#cdd1d9'; ctx.lineWidth = G.gw; poly(pts, 0, pts.length - 1); });
+    // geschaffte Strecke grün
+    G.strokes.forEach((pts, s) => {
+      const upto = s < prog.s ? pts.length - 1 : s === prog.s ? prog.i : 0;
+      if (upto > 0) { ctx.strokeStyle = '#a7d68a'; ctx.lineWidth = G.gw; poly(pts, 0, upto); }
+    });
+    // Pfeile + Startpunkte
+    G.strokes.forEach((pts, s) => {
+      const n = pts.length; const marks = letter === 'O' || letter === 'o' ? [0.16, 0.42, 0.68] : [0.45];
+      marks.forEach(f => arrow(pts, Math.floor(n * f), '#2f63c5', G.gw * 0.42));
+      const p = pts[0]; ctx.fillStyle = '#3f9a2c'; ctx.beginPath(); ctx.arc(p[0], p[1], G.gw * 0.62, 0, Math.PI * 2); ctx.fill();
+      if (G.strokes.length > 1) { ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(G.gw * 0.8)}px Fredoka, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(s + 1), p[0] + (s === 1 ? 1 : 0), p[1] + 1); }
+    });
+    // Tinte
+    ctx.strokeStyle = demo ? '#2a8fd6' : '#26355f'; ctx.lineWidth = Math.max(7, G.gw * 0.42);
+    ink.forEach(l => { if (l.length > 1) { ctx.beginPath(); ctx.moveTo(l[0][0], l[0][1]); l.forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); }
+      else if (l.length === 1) { ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(l[0][0], l[0][1], ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill(); } });
+  }
+  function say2(text, kind) {
+    msg.textContent = text; msg.className = 'msg ' + (kind || '');
+    clearTimeout(msgTimer); if (kind === 'bad') msgTimer = setTimeout(() => { msg.textContent = ''; }, 2600);
+  }
+  function showStars() {
+    tstars.innerHTML = starsHtml(state.trace[letter], NEED);
+    after.innerHTML = '';
+    if (state.trace[letter] >= NEED) {
+      const nxt = LETTERS.find(k => state.trace[k] < NEED);
+      after.innerHTML = nxt ? `<button class="btn primary" id="nx">Weiter mit ${nxt} →</button>`
+        : `<button class="btn primary" id="nx">Geschafft! Zu den Übungen →</button>`;
+      after.querySelector('#nx').onclick = () => nxt ? go('trace', nxt) : go('home');
+    }
+  }
+  function fail(text) {
+    busy = true; sBad(); say2(text, 'bad'); shake(canvas.parentElement);
+    setTimeout(() => { ink = []; prog = { s: 0, i: 0 }; cur = null; busy = false; draw(); }, 650);
+  }
+  function success() {
+    busy = true; cur = null; prog = { s: G.strokes.length, i: 0 }; draw();
+    state.trace[letter] = Math.min(NEED, state.trace[letter] + 1); save();
+    const doneNow = state.trace[letter] >= NEED;
+    if (doneNow) { sWin(); say2(LETTERS.every(k => state.trace[k] >= NEED) ? 'Super! Alle Buchstaben geschafft! 🎉' : 'Super! Das hast du toll gemacht!', 'good'); say('Super!'); }
+    else { sGood(); say2('Richtig! Nochmal!', 'good'); }
+    showStars();
+    nav.querySelector(`[data-l="${letter}"] .stars`).innerHTML = starsHtml(state.trace[letter], NEED);
+    if (doneNow) nav.querySelector(`[data-l="${letter}"]`).classList.add('done');
+    setTimeout(() => { ink = []; prog = { s: 0, i: 0 }; busy = false; draw(); }, 900);
+  }
+  const d = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  function pos(e) { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  function step(p) {
+    const pts = G.strokes[prog.s], n = pts.length;
+    let best = -1;
+    for (let j = prog.i; j <= Math.min(n - 1, prog.i + 9); j++) if (d(p, pts[j]) < G.tol) best = j;
+    const nearWindow = best >= 0 || pts.slice(Math.max(0, prog.i - 4), prog.i + 1).some(q => d(p, q) < G.tol);
+    if (best > prog.i) prog.i = best;
+    if (!nearWindow) {
+      let minD = Infinity, ahead = false;
+      pts.forEach((q, k) => { const dd = d(p, q); minD = Math.min(minD, dd); if (k > prog.i + 12 && dd < G.tol * 0.8) ahead = true; });
+      if (ahead) return fail('Andere Richtung! Folge dem Pfeil.');
+      if (minD > G.tol * 1.6) return fail('Bleib auf der grauen Spur!');
+    }
+    if (prog.i >= n - 2) {
+      if (prog.s === G.strokes.length - 1) return success();
+      prog.s++; prog.i = 0;
+    }
+  }
+  canvas.onpointerdown = e => {
+    if (busy) return; e.preventDefault();
+    const p = pos(e), pts = G.strokes[prog.s];
+    if (d(p, pts[prog.i]) > G.tol * 1.4 && !(prog.i > 0 && pts.slice(Math.max(0, prog.i - 6), prog.i + 6).some(q => d(p, q) < G.tol))) {
+      sBad();
+      say2(prog.i === 0 ? (prog.s === 0 ? 'Beginne beim grünen Punkt!' : 'Jetzt Strich 2: beim grünen Punkt 2 beginnen!') : 'Mach dort weiter, wo du aufgehört hast!', 'bad');
+      return;
+    }
+    try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+    msg.textContent = ''; cur = [p]; ink.push(cur); step(p); if (!busy) draw();
+  };
+  canvas.onpointermove = e => {
+    if (!cur || busy) return; e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ev of (evs.length ? evs : [e])) { const p = pos(ev); cur.push(p); step(p); if (busy) return; }
+    draw();
+  };
+  canvas.onpointerup = canvas.onpointercancel = () => { cur = null; };
+  body.querySelector('#clear').onclick = () => { if (busy) return; ink = []; prog = { s: 0, i: 0 }; msg.textContent = ''; draw(); };
+  body.querySelector('#demo').onclick = () => demo(false);
+  function demo(auto) {
+    if (busy) return; busy = true; ink = []; prog = { s: 0, i: 0 }; msg.textContent = '';
+    if (!auto) say(names[letter].replace('das ', '').replace(/^./, c => c.toUpperCase()) + '. So geht es.');
+    const all = G.strokes.map(s => s.slice());
+    if (reduce) { ink = all; draw(true); setTimeout(() => { ink = []; busy = false; draw(); }, 1500); return; }
+    let s = 0, k = 0; ink = [[]]; const speed = Math.max(1, Math.round(all[0].length / 70));
+    const tick = () => {
+      for (let r = 0; r < speed; r++) {
+        if (k < all[s].length) ink[ink.length - 1].push(all[s][k++]);
+        else if (s < all.length - 1) { s++; k = 0; ink.push([]); }
+      }
+      draw(true);
+      const last = ink[ink.length - 1]; const head = last[last.length - 1];
+      if (head) { ctx.fillStyle = '#f2b134'; ctx.beginPath(); ctx.arc(head[0], head[1], G.gw * 0.55, 0, Math.PI * 2); ctx.fill(); }
+      if (s === all.length - 1 && k >= all[s].length) { setTimeout(() => { ink = []; busy = false; draw(); }, 700); return; }
+      demoRaf = requestAnimationFrame(tick);
+    };
+    demoRaf = requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize', resize);
+  cleanup = () => { window.removeEventListener('resize', resize); cancelAnimationFrame(demoRaf); };
+  resize(); showStars();
+  say(sayText);
+  if (state.trace[letter] === 0) setTimeout(() => demo(true), 400);
+}
+
+/* ================= Bild-Aufgaben (Ring / Auswahl) ================= */
+function runItems(ex) {
+  app.innerHTML = sheet(ex);
+  const body = wireSheet(ex.say);
+  const items = shuffle(ex.items.slice());
+  let idx = 0, errs = 0, stuck = [], trayItems = [], locked = false;
+  say(ex.say);
+  const wordCls = ex.tab === 'L' ? 'L' : '';
+
+  function optHtml(k, label) {
+    if (ex.mode === 'L') {
+      const box = k === 'A' ? ['L', '', ''] : k === 'E' ? ['', '', 'l'] : ['L', '', 'l'];
+      return `<span class="slotbox">${box.map(c => `<span style="color:var(--l-ink)">${c}</span>`).join('')}</span><span class="cap">${label}</span>`;
+    }
+    if (ex.mode === 'O') {
+      const i = { A: 0, M: 1, E: 2 }[k];
+      return `<span class="slotbox">${[0, 1, 2].map(j => `<span>${j === i ? '<i class="dot"></i>' : ''}</span>`).join('')}</span><span class="cap">${label}</span>`;
+    }
+    return label;
+  }
+  function render() {
+    if (idx >= items.length) return finish(ex, errs);
+    const [word, emo] = items[idx];
+    const prog = `<div class="progress">${items.map((_, i) => `<i class="${i < idx ? 'ok' : i === idx ? 'now' : ''}"></i>`).join('')}</div>`;
+    const card = `<div class="pic-card" id="card"><span class="emo">${emo}</span>
+      <button class="say-btn" id="sayw" aria-label="Wort anhören">🔊</button></div>`;
+    if (ex.type === 'ring') {
+      body.innerHTML = `${prog}<div class="ring-wrap"><div class="ring" id="ring">${card}
+          ${stuck.map((e, i) => { const a = -Math.PI / 2 + i * (Math.PI * 2 / 12), r = 37; return `<span class="stuck" style="left:${50 + r * Math.cos(a)}%;top:${50 + r * Math.sin(a)}%">${e}</span>`; }).join('')}
+        </div></div>
+        <div class="word ${wordCls}" id="word"></div>
+        <div class="answers">
+          <button class="ans yes" data-a="1"><span class="cap">✔ Ja, ich höre ${ex.target === 'l' ? 'L' : 'O'}</span></button>
+          <button class="ans no" data-a="0"><span class="cap">✘ Nein</span></button></div>
+        <div class="tray-label" style="text-align:center;margin-top:12px">${trayItems.length ? 'Ohne ' + (ex.target === 'l' ? 'L' : 'O') + ':' : ''}</div>
+        <div class="tray">${trayItems.join(' ')}</div>`;
+    } else {
+      body.innerHTML = `${prog}${card}<div class="word ${wordCls}" id="word"></div>
+        <div class="answers">${ex.options.map(([k, l]) => `<button class="ans ${ex.mode === 'letter' ? 'letter' : ''}" data-a="${k}"
+          style="${ex.mode === 'letter' ? `color:var(${'Ll'.includes(k) ? '--l-ink' : '--o-ink'})` : ''}">${optHtml(k, l)}</button>`).join('')}</div>`;
+    }
+    body.querySelector('#sayw').onclick = () => say(word);
+    body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => answer(b));
+    say(word, true);
+  }
+  function answer(btn) {
+    if (locked) return;
+    const [word, emo, sol] = items[idx];
+    if (String(btn.dataset.a) === String(sol)) {
+      locked = true; sGood(); btn.classList.add('right');
+      body.querySelector('#word').innerHTML = highlight(word, ex, String(sol));
+      say(word);
+      if (ex.type === 'ring') { if (sol) stuck.push(emo); else trayItems.push(emo); }
+      setTimeout(() => { idx++; locked = false; render(); }, 1100);
+    } else {
+      errs++; sBad(); shake(btn); shake(body.querySelector('#card'));
+    }
+  }
+  render();
+}
+
+/* ================= Buchstaben finden ================= */
+function runFind(ex) {
+  app.innerHTML = sheet(ex);
+  const body = wireSheet(ex.say);
+  const test = ex.target === 'l' ? isL : isO;
+  say(ex.say);
+  let errs = 0, found = 0, total = 0;
+  if (ex.type === 'tiles') {
+    const letters = shuffle(ex.letters.slice());
+    total = letters.filter(test).length;
+    body.innerHTML = `<div class="counter" id="cnt"></div><div class="tiles">${letters.map(c => `<button class="tile" data-c="${c}">${c}</button>`).join('')}</div>
+      <div class="reveal" id="rev"></div>`;
+  } else {
+    const chBtn = c => /[A-Za-zÄÖÜäöüß]/.test(c) ? `<button class="ch" data-c="${c}">${c}</button>` : `<span class="ch punct">${c}</span>`;
+    body.innerHTML = `<div class="counter" id="cnt"></div><div class="find-text ${ex.poem ? 'poem' : ''}">${ex.lines.map(l => {
+      if (l.kind === 'letters') return `<div class="find-line letters">${l.text.split(' ').map(chBtn).join('')}</div>`;
+      return `<div class="find-line">${l.text.split(' ').map(w => `<span class="find-word">${[...w].map(chBtn).join('')}</span>`).join('')}</div>`;
+    }).join('')}</div>${ex.poem ? '<div class="reveal" style="font-size:54px">🧑‍🌾🏔️</div>' : ''}`;
+    total = ex.lines.reduce((n, l) => n + [...l.text].filter(test).length, 0);
+  }
+  const cnt = body.querySelector('#cnt');
+  const upd = () => { cnt.textContent = `Gefunden: ${found} von ${total}`; };
+  upd();
+  body.onclick = e => {
+    const b = e.target.closest('[data-c]'); if (!b || b.classList.contains('found')) return;
+    if (test(b.dataset.c)) {
+      b.classList.add('found'); found++; sGood(); upd();
+      if (found === total) {
+        sWin(); const rev = body.querySelector('#rev'); if (rev) rev.textContent = '🦁';
+        setTimeout(() => finish(ex, errs), 1300);
+      }
+    } else { errs++; sBad(); shake(b); }
+  };
+}
+
+/* ================= Reimwörter ================= */
+function runRhyme(ex) {
+  app.innerHTML = sheet(ex);
+  const body = wireSheet(ex.say);
+  const top = ex.pairs.map((p, i) => ({ w: p[0][0], e: p[0][1], k: i }));
+  const bottom = shuffle(ex.pairs.map((p, i) => ({ w: p[1][0], e: p[1][1], k: i })));
+  const card = (x, side) => `<button class="rcard" data-side="${side}" data-k="${x.k}" aria-label="${x.w}"><span>${x.e}</span></button>`;
+  body.innerHTML = `<div class="rhyme" id="rh"><svg id="lines"></svg>
+    <div class="rhyme-row">${top.map(x => card(x, 't')).join('')}</div>
+    <div class="rhyme-row">${bottom.map(x => card(x, 'b')).join('')}</div></div>`;
+  say(ex.say);
+  const rh = body.querySelector('#rh'), svg = body.querySelector('#lines');
+  let sel = null, done = [], errs = 0;
+  const words = {}; top.concat(bottom).forEach(x => { words[x.w] = x; });
+  function drawLines() {
+    const r0 = rh.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${r0.width} ${r0.height}`);
+    svg.innerHTML = done.map(k => {
+      const a = rh.querySelector(`[data-side="t"][data-k="${k}"]`).getBoundingClientRect();
+      const b = rh.querySelector(`[data-side="b"][data-k="${k}"]`).getBoundingClientRect();
+      const x1 = a.left + a.width / 2 - r0.left, y1 = a.bottom - r0.top, x2 = b.left + b.width / 2 - r0.left, y2 = b.top - r0.top;
+      const my = (y1 + y2) / 2;
+      return `<path d="M${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}" fill="none" stroke="#26355f" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="${x1}" cy="${y1}" r="5" fill="#26355f"/><circle cx="${x2}" cy="${y2}" r="5" fill="#26355f"/>`;
+    }).join('');
+  }
+  rh.onclick = e => {
+    const b = e.target.closest('.rcard'); if (!b || b.classList.contains('done')) return;
+    const k = +b.dataset.k, side = b.dataset.side;
+    const x = (side === 't' ? top : bottom).find(y => y.k === k);
+    say(x.w);
+    if (!sel || sel.dataset.side === side) {
+      if (sel) sel.classList.remove('sel');
+      sel = b; b.classList.add('sel'); return;
+    }
+    if (+sel.dataset.k === k) {
+      sel.classList.remove('sel'); sel.classList.add('done'); b.classList.add('done');
+      done.push(k); sGood(); drawLines(); sel = null;
+      const p = ex.pairs[k]; setTimeout(() => say(p[0][0] + ', ' + p[1][0]), 450);
+      if (done.length === ex.pairs.length) setTimeout(() => finish(ex, errs), 1800);
+    } else {
+      errs++; sBad(); shake(b); shake(sel); sel.classList.remove('sel'); sel = null;
+    }
+  };
+  window.addEventListener('resize', drawLines);
+  cleanup = () => window.removeEventListener('resize', drawLines);
+}
+
+/* ================= Ergebnis ================= */
+function finish(ex, errs) {
+  const stars = errs === 0 ? 3 : errs <= 2 ? 2 : 1;
+  state.stars[ex.id] = Math.max(state.stars[ex.id] || 0, stars); save();
+  const all = GROUPS.flatMap(g => g.ids), nextId = all[all.indexOf(ex.id) + 1];
+  const body = app.querySelector('.task-body');
+  const praise = stars === 3 ? 'Super gemacht!' : stars === 2 ? 'Gut gemacht!' : 'Geschafft! Übe ruhig noch einmal.';
+  body.innerHTML = `<div class="result"><div class="big-stars">${starsHtml(stars, 3)}</div>
+    <h3>${praise}</h3><p>${errs === 0 ? 'Ohne Fehler!' : errs === 1 ? '1 Fehler' : errs + ' Fehler'}</p>
+    <div class="btn-row"><button class="btn ghost" id="again">↻ Nochmal</button>
+      ${nextId ? '<button class="btn primary" id="next">Nächste Übung →</button>' : ''}
+      <button class="btn ghost" id="ov">Übersicht</button></div></div>`;
+  sWin(); say(praise);
+  body.querySelector('#again').onclick = () => go('ex', ex.id);
+  body.querySelector('#ov').onclick = () => go('home');
+  if (nextId) body.querySelector('#next').onclick = () => go('ex', nextId);
+}
+
+home();
+})();
+</script>
+</body>
+</html>
