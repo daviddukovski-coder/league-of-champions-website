@@ -449,7 +449,7 @@ const WORLDS = [
   { name: 'Großer Fluss', levels: ['m1', 'm2', 'm3', 'g3'], friend: { name: 'Momo', fur: '#4a4a52', acc: 'band' } },
 ];
 // Vorschau auf der Karte: diese Welten sind noch nicht gebaut
-const COMING = ['Au au · Ei ei · Eu eu', 'Sp sp · St st', 'Ä ä · Ö ö · Ü ü', 'Noch mehr Buchstaben'];
+const COMING = ['E e', 'Neue Buchstaben', 'Noch mehr Buchstaben'];
 const LEVELS = WORLDS.flatMap((w, wi) => w.levels.map(l => {
   if (typeof l !== 'string') return Object.assign({ tab: isO(l.letter) ? 'O' : 'L', world: wi }, l);
   const ex = EXERCISES.find(e => e.id === l);
