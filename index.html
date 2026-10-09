@@ -6783,6 +6783,16 @@ var CLUBS = [
       bracket.stages.push(stage);
     });
 
+    // Newest first: main knockout, main groups, then qualification knockout
+    // and qualification groups (what was played last sits on top).
+    function stageRank(st) {
+      var quali = st.label.indexOf('Qualification') === 0 ? 2 : 0;
+      return quali + (st.type === 'bracket' ? 0 : 1);
+    }
+    bracket.stages = bracket.stages.map(function(st, i) { return { st: st, i: i }; })
+      .sort(function(a, b) { return stageRank(a.st) - stageRank(b.st) || a.i - b.i; })
+      .map(function(x) { return x.st; });
+
     // Schedule: one day per schedule_plan_<date>, rounds become aligned
     // court items with turnier-app's own slot lengths.
     var courtsBlock = src.blocks.filter(function(b) { return b.key === 'courts_config'; })[0];
