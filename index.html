@@ -1028,6 +1028,29 @@
     .podium-1 .podium-logo .club-avatar { width:76px; height:76px; border-radius:12px; }
     .podium-logo .club-avatar img, .podium-1 .podium-logo .club-avatar img { padding:5px; }
   }
+
+  /* ============ PODIUM: big background logo (like the share graphics) ============ */
+  .podium-col .podium-step { align-items:flex-start; text-align:left; justify-content:flex-end; min-height:290px; padding:20px 20px 22px; }
+  .podium-1 .podium-step { min-height:350px; padding:22px 22px 26px; }
+  .podium-watermark { display:none; }
+  .podium-col .podium-rank { position:absolute; top:18px; left:20px; z-index:2; }
+  .podium-col .podium-logo { position:absolute; z-index:0; top:-14px; right:-34px; width:68%; margin:0; pointer-events:none; }
+  .podium-col .podium-logo .club-avatar, .podium-1 .podium-logo .club-avatar { width:100%; height:auto; aspect-ratio:1; border-radius:22px; transform:skewX(-8deg); box-shadow:0 18px 40px rgba(3,4,40,0.55), inset 0 0 0 1px rgba(255,255,255,0.6); font-size:56px; }
+  .podium-1 .podium-logo { width:72%; }
+  .podium-1 .podium-logo .club-avatar { box-shadow:0 0 0 4px var(--cyan), 0 0 40px rgba(0,242,255,0.35), 0 18px 40px rgba(3,4,40,0.55); }
+  .podium-col .podium-logo .club-avatar img { padding:14%; transform:skewX(8deg); }
+  .podium-col .podium-step::after { content:''; position:absolute; z-index:1; left:0; right:0; bottom:0; height:62%; background:linear-gradient(180deg, rgba(7,8,63,0) 0%, rgba(7,8,63,0.85) 45%, #07083f 100%); pointer-events:none; }
+  .podium-col .podium-name, .podium-col .podium-club, .podium-col .podium-pts { position:relative; z-index:2; }
+  .podium-col .podium-name { margin-top:auto; }
+  @media (max-width:640px) {
+    .podium-col .podium-step { min-height:200px; padding:12px 10px 14px; }
+    .podium-1 .podium-step { min-height:240px; padding:14px 10px 16px; }
+    .podium-col .podium-rank { top:10px; left:10px; font-size:18px; padding:4px 10px 2px; }
+    .podium-1 .podium-rank { font-size:20px; }
+    .podium-col .podium-logo { top:-8px; right:-18px; width:84%; }
+    .podium-1 .podium-logo { width:88%; }
+    .podium-col .podium-logo .club-avatar, .podium-1 .podium-logo .club-avatar { border-radius:14px; font-size:30px; }
+  }
 </style>
 </head>
 <body>
