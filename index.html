@@ -1206,6 +1206,16 @@
   .profile-media-row .info-block .label { flex:0 0 auto; }
   .profile-media-row .info-block .value { font-size:22px; text-align:right; margin-left:auto; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
   .profile-media-row .info-block .value .editable-field { justify-content:flex-end; }
+
+  /* Admin season bar: picker + Add / Rename / Delete side by side */
+  #adminContent .live-panel > .form-row:first-child { display:flex; gap:10px; align-items:flex-end; }
+  #adminContent .live-panel > .form-row:first-child .form-group { flex:1 1 220px; margin-bottom:0; }
+  #adminContent .live-panel > .form-row:first-child > .btn, #adminContent .live-panel > .form-row:first-child > .reg-action-btn { flex:0 0 auto; height:46px; }
+  .btn-outline.reg-action-danger { border-color:var(--lost); color:var(--lost); }
+  .btn-outline.reg-action-danger:hover { background:rgba(214,69,69,0.12); }
+  .season-delete-text { flex:1 1 100%; white-space:normal; font-size:13px; color:var(--lost); margin:4px 0 0; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-outline.reg-action-danger, :root:not([data-theme="light"]) .season-delete-text { color:#ff8a8a; border-color:#ff8a8a; } }
+  :root[data-theme="dark"] .btn-outline.reg-action-danger, :root[data-theme="dark"] .season-delete-text { color:#ff8a8a; border-color:#ff8a8a; }
 </style>
 </head>
 <body>
@@ -2197,6 +2207,34 @@ var CLUBS = [
     var newId = slugifyTournamentName(fields.name);
     var list = (contentOverrides.customTournaments || []).concat([Object.assign({ id: newId, image: null }, fields)]);
     return saveCustomTournaments(list);
+  }
+
+  // A season is just a year (see adminSeasonOptions), so renaming one moves
+  // every tournament in it to the new year (keeping month/day) and swaps the
+  // year in extraSeasons; deleting removes its tournaments and the extra entry.
+  // Sequential on purpose: each save rewrites the same content doc fields.
+  function seasonTournaments(year) {
+    return allTournaments().filter(function(t) { return t.dateSort.slice(0, 4) === String(year); });
+  }
+  function adminRenameSeason(from, to) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var chain = seasonTournaments(from).reduce(function(p, t) {
+      return p.then(function() { return adminSaveTournament(t.id, { dateSort: String(to) + t.dateSort.slice(4) }); });
+    }, Promise.resolve());
+    return chain.then(function() {
+      var extra = (contentOverrides.extraSeasons || []).filter(function(y) { return String(y) !== String(from); });
+      if (extra.map(String).indexOf(String(to)) === -1) extra.push(Number(to));
+      return saveExtraSeasons(extra);
+    });
+  }
+  function adminDeleteSeason(year) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    var chain = seasonTournaments(year).reduce(function(p, t) {
+      return p.then(function() { return adminDeleteTournament(t.id); });
+    }, Promise.resolve());
+    return chain.then(function() {
+      return saveExtraSeasons((contentOverrides.extraSeasons || []).filter(function(y) { return String(y) !== String(year); }));
+    });
   }
 
   function adminDeleteTournament(id) {
@@ -4850,6 +4888,7 @@ var CLUBS = [
   var adminEditingTournamentId = null; // null = form hidden, 'NEW' = adding, else the id being edited
   var adminSeason = null; // null = not chosen yet, picks the latest season on first render
   var adminAddingSeason = false;
+  var adminSeasonMode = null; // null | 'rename' | 'delete' — inline editor next to the season picker
 
   // Every year that already has a tournament, plus any explicitly-added
   // empty season (contentOverrides.extraSeasons — see + Add Season below).
@@ -4936,7 +4975,20 @@ var CLUBS = [
       ? '<div class="form-group"><label>New season year</label><input type="number" id="newSeasonYear" placeholder="' + (Math.max.apply(null, seasonOptions) + 1) + '"></div>' +
         '<button type="button" class="btn btn-outline btn-sm" id="confirmAddSeasonBtn">Add</button>' +
         '<button type="button" class="btn btn-outline btn-sm" id="cancelAddSeasonBtn">Cancel</button>'
-      : '<button type="button" class="btn btn-outline btn-sm" id="addSeasonBtn">+ Add Season</button>';
+      : adminSeasonMode === 'rename'
+      ? '<div class="form-group"><label>Rename ' + esc(adminSeason) + ' to</label><input type="number" id="renameSeasonYear" value="' + esc(adminSeason) + '"></div>' +
+        '<button type="button" class="btn btn-cyan btn-sm" id="confirmRenameSeasonBtn">Save</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="cancelSeasonModeBtn">Cancel</button>'
+      : adminSeasonMode === 'delete'
+      ? (function() {
+          var n = seasonTournaments(adminSeason).length;
+          return '<p class="confirm-delete-text season-delete-text">' + (n ? 'Delete season ' + esc(adminSeason) + ' and its ' + n + ' tournament' + (n === 1 ? '' : 's') + '? This also removes them from the public site.' : 'Delete the empty season ' + esc(adminSeason) + '?') + '</p>' +
+            '<button type="button" class="reg-action-btn reg-action-danger" id="confirmDeleteSeasonBtn">Yes, delete</button>' +
+            '<button type="button" class="reg-action-btn" id="cancelSeasonModeBtn">Cancel</button>';
+        })()
+      : '<button type="button" class="btn btn-outline btn-sm" id="addSeasonBtn">+ Add Season</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" id="renameSeasonBtn">Rename</button>' +
+        (seasonOptions.length > 1 ? '<button type="button" class="btn btn-outline btn-sm reg-action-danger" id="deleteSeasonBtn">Delete</button>' : '');
     var seasonSelectHtml = '<div class="form-row" style="align-items:flex-end;flex-wrap:wrap;">' +
       '<div class="form-group"><label>Season</label><select id="adminSeasonSelect">' +
         seasonOptions.map(function(y) { return '<option value="' + y + '"' + (String(y) === adminSeason ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
@@ -4966,11 +5018,43 @@ var CLUBS = [
       adminSeason = e.target.value;
       adminEditingTournamentId = null;
       adminAddingSeason = false;
+      adminSeasonMode = null;
       renderAdmin();
     });
 
+    var renameSeasonBtn = el.querySelector('#renameSeasonBtn');
+    if (renameSeasonBtn) renameSeasonBtn.addEventListener('click', function() { adminSeasonMode = 'rename'; renderAdmin(); });
+    var deleteSeasonBtn = el.querySelector('#deleteSeasonBtn');
+    if (deleteSeasonBtn) deleteSeasonBtn.addEventListener('click', function() { adminSeasonMode = 'delete'; renderAdmin(); });
+    var cancelSeasonModeBtn = el.querySelector('#cancelSeasonModeBtn');
+    if (cancelSeasonModeBtn) cancelSeasonModeBtn.addEventListener('click', function() { adminSeasonMode = null; renderAdmin(); });
+
+    var confirmRenameSeasonBtn = el.querySelector('#confirmRenameSeasonBtn');
+    if (confirmRenameSeasonBtn) confirmRenameSeasonBtn.addEventListener('click', function() {
+      var to = Number(document.getElementById('renameSeasonYear').value.trim());
+      if (!to || !Number.isInteger(to) || to < 1900 || to > 2200) { window.alert('Enter a valid year.'); return; }
+      if (String(to) === adminSeason) { adminSeasonMode = null; renderAdmin(); return; }
+      if (adminSeasonOptions().indexOf(to) !== -1) { window.alert('Season ' + to + ' already exists.'); return; }
+      confirmRenameSeasonBtn.disabled = true;
+      adminRenameSeason(adminSeason, to).then(function() {
+        adminSeason = String(to);
+        adminSeasonMode = null;
+        renderAdmin();
+      }, function() { window.alert('Renaming failed. Please try again.'); renderAdmin(); });
+    });
+
+    var confirmDeleteSeasonBtn = el.querySelector('#confirmDeleteSeasonBtn');
+    if (confirmDeleteSeasonBtn) confirmDeleteSeasonBtn.addEventListener('click', function() {
+      confirmDeleteSeasonBtn.disabled = true;
+      adminDeleteSeason(adminSeason).then(function() {
+        adminSeason = null;
+        adminSeasonMode = null;
+        renderAdmin();
+      }, function() { window.alert('Deleting failed. Please try again.'); renderAdmin(); });
+    });
+
     var addSeasonBtn = el.querySelector('#addSeasonBtn');
-    if (addSeasonBtn) addSeasonBtn.addEventListener('click', function() { adminAddingSeason = true; renderAdmin(); });
+    if (addSeasonBtn) addSeasonBtn.addEventListener('click', function() { adminAddingSeason = true; adminSeasonMode = null; renderAdmin(); });
 
     var cancelAddSeasonBtn = el.querySelector('#cancelAddSeasonBtn');
     if (cancelAddSeasonBtn) cancelAddSeasonBtn.addEventListener('click', function() { adminAddingSeason = false; renderAdmin(); });
