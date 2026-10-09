@@ -1199,6 +1199,13 @@
     .profile-media-row .detail-info-grid { flex-basis:100%; }
     .profile-media-row .profile-media { flex-basis:100%; }
   }
+
+  /* Profile facts: one column of slim stat rows (label left, value right) */
+  .profile-media-row .detail-info-grid { grid-template-columns:1fr; gap:8px; }
+  .profile-media-row .info-block { flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 16px; padding:10px 18px 10px 22px; min-height:50px; }
+  .profile-media-row .info-block .label { flex:0 0 auto; }
+  .profile-media-row .info-block .value { font-size:22px; text-align:right; margin-left:auto; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+  .profile-media-row .info-block .value .editable-field { justify-content:flex-end; }
 </style>
 </head>
 <body>
