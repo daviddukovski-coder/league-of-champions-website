@@ -1152,20 +1152,17 @@
   :root .ranking-table .rank-2 .rank-num { background:#c3ccd3; color:#232a2e; }
   :root .ranking-table .rank-3 .rank-num { background:#d99456; color:#3a1c00; }
 
-  /* ============ PROFILE MEDIA: cut-out player + fade into the page ============ */
+  /* ============ PROFILE MEDIA: sporty frame, fading out at the bottom ============
+     The photo/video melts into the page from the bottom (mask to transparent);
+     the frame is a cyan gradient ring that fades out the same way, plus a
+     skewed cyan corner accent. */
   .profile-media { min-height:420px; }
-  .profile-media-fade { position:absolute; left:0; right:0; bottom:0; height:35%; background:linear-gradient(0deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 35%, transparent 100%); pointer-events:none; z-index:1; }
-  .profile-media:not(.has-photo):not(.has-video):not(.has-cutout) .profile-media-fade { display:none; }
-  .profile-media.has-photo, .profile-media.has-video { border:none; box-shadow:none; }
-  .profile-media.has-cutout { background:transparent; border:none; box-shadow:none; overflow:visible; align-items:flex-end; }
-  .profile-media.has-cutout::before { content:''; position:absolute; inset:12% 4% 0; background:radial-gradient(60% 55% at 50% 60%, rgba(0,242,255,0.22), transparent 70%); pointer-events:none; }
-  .profile-media.has-cutout::after { content:''; position:absolute; left:10%; right:10%; bottom:4%; height:6px; background:var(--cyan); transform:skewX(-30deg); opacity:0.9; pointer-events:none; }
-  .profile-media .profile-cutout { position:relative; z-index:0; width:auto; height:100%; max-height:520px; max-width:100%; object-fit:contain; object-position:bottom center; margin:0 auto; filter:drop-shadow(0 18px 30px rgba(3,4,40,0.35)); }
-  .profile-media.has-cutout .profile-cutout { align-self:flex-end; }
-  .profile-media.has-cutout::before { z-index:0; }
-  .profile-media.has-cutout::after { z-index:2; }
-  .profile-media .profile-cutout { z-index:1; }
-  .profile-media-fade { z-index:2; }
+  .profile-media.has-media { background:transparent; border:none; box-shadow:none; overflow:visible; border-radius:var(--radius); }
+  .profile-media.has-media img, .profile-media.has-media video { position:absolute; inset:0; border-radius:var(--radius); -webkit-mask-image:linear-gradient(180deg, #000 0%, #000 55%, transparent 100%); mask-image:linear-gradient(180deg, #000 0%, #000 55%, transparent 100%); }
+  .profile-media.has-media::before { content:''; position:absolute; inset:0; z-index:1; border-radius:var(--radius); padding:3px; pointer-events:none;
+    background:linear-gradient(180deg, var(--cyan) 0%, rgba(0,242,255,0.55) 35%, rgba(0,242,255,0) 85%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+  .profile-media.has-media::after { content:''; position:absolute; z-index:2; top:-10px; left:22px; width:96px; height:20px; background:var(--cyan); transform:skewX(-30deg); box-shadow:0 6px 18px rgba(0,242,255,0.45); pointer-events:none; }
   .profile-media-upload { z-index:3; }
 </style>
 </head>
@@ -5523,16 +5520,15 @@ var CLUBS = [
   // Self-edit photo/video — the two are mutually exclusive, uploading one clears
   // the other. Modeled on saveHeroMedia (admin hero upload) but self-gated and
   // targeting the players/{uid} doc instead of the shared content doc.
-  // Self-edit photo/video. A photo with a transparent background is also
-  // stored as photoCutoutUrl, which the profile shows standing on the page.
-  // A video clears both photo fields, a photo clears the video.
+  // Self-edit photo/video — the two are mutually exclusive, uploading one
+  // clears the other (and any photoCutoutUrl left from an earlier version).
   function savePlayerMedia(uid, file, onProgress) {
     if (!currentUser || currentUser.uid !== uid) return Promise.reject(new Error('Not authorized.'));
     var isVideo = file.type.indexOf('video') === 0;
     function applyUpdate(fields) {
       var update = isVideo
         ? { videoUrl: fields.url, photoUrl: null, photoCutoutUrl: null }
-        : { photoUrl: fields.url, photoCutoutUrl: fields.cutoutUrl || null, videoUrl: null };
+        : { photoUrl: fields.url, photoCutoutUrl: null, videoUrl: null };
       if (AUTH_DEMO_MODE) {
         var users = demoUsers();
         var user = users.find(function(u) { return u.uid === uid; });
@@ -5544,41 +5540,18 @@ var CLUBS = [
       if (dirEntry) Object.assign(dirEntry, update);
       return fields.url;
     }
-    return (isVideo ? Promise.resolve(false) : isCutoutImage(file)).then(function(isCutout) {
-      if (AUTH_DEMO_MODE) {
-        return fileToDataUrl(file).then(function(dataUrl) {
-          try {
-            return applyUpdate({ url: dataUrl, cutoutUrl: isCutout ? dataUrl : null });
-          } catch (err) {
-            return Promise.reject(new Error('storage-quota'));
-          }
-        });
-      }
-      return uploadToStorage('players/' + uid + '/' + Date.now() + '-' + file.name, file, onProgress).then(function(url) {
-        return applyUpdate({ url: url, cutoutUrl: isCutout ? url : null });
+    if (AUTH_DEMO_MODE) {
+      return fileToDataUrl(file).then(function(dataUrl) {
+        try {
+          return applyUpdate({ url: dataUrl });
+        } catch (err) {
+          return Promise.reject(new Error('storage-quota'));
+        }
       });
+    }
+    return uploadToStorage('players/' + uid + '/' + Date.now() + '-' + file.name, file, onProgress).then(function(url) {
+      return applyUpdate({ url: url });
     });
-  }
-
-  // A photo that already has a transparent background (e.g. an iPhone/Mac
-  // "Copy Subject" cut-out saved as PNG) is shown standing on the page. More
-  // than 8% fully transparent pixels counts as a cut-out.
-  function isCutoutImage(file) {
-    if (!/png|webp/i.test(file.type)) return Promise.resolve(false);
-    var url = URL.createObjectURL(file);
-    var img = new Image();
-    img.src = url;
-    return img.decode().then(function() {
-      var scale = Math.min(1, 400 / Math.max(img.naturalWidth, img.naturalHeight));
-      var c = document.createElement('canvas');
-      c.width = Math.max(1, Math.round(img.naturalWidth * scale)); c.height = Math.max(1, Math.round(img.naturalHeight * scale));
-      var ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0, c.width, c.height);
-      var px = ctx.getImageData(0, 0, c.width, c.height).data, clear = 0;
-      for (var i = 3; i < px.length; i += 4) if (px[i] < 10) clear++;
-      URL.revokeObjectURL(url);
-      return clear / (c.width * c.height) > 0.08;
-    }, function() { URL.revokeObjectURL(url); return false; });
   }
 
   /* ==================================================================
@@ -5771,14 +5744,13 @@ var CLUBS = [
   function playerMediaHtml(player, canEdit) {
     var inner;
     if (player.videoUrl) inner = '<video src="' + esc(player.videoUrl) + '" autoplay loop muted playsinline></video>';
-    else if (player.photoCutoutUrl) inner = '<img class="profile-cutout" src="' + esc(player.photoCutoutUrl) + '" alt="' + esc(player.name || '') + '">';
     else if (player.photoUrl) inner = '<img src="' + esc(player.photoUrl) + '" alt="' + esc(player.name || '') + '">';
     else inner = '<div class="profile-media-placeholder">No photo or video yet</div>';
     var upload = canEdit
       ? '<div class="profile-media-upload"><label for="playerMediaInput">' + ((player.photoUrl || player.videoUrl) ? 'Replace photo / video' : 'Upload photo or video') + '</label><input type="file" id="playerMediaInput" accept="image/*,video/*"></div>'
       : '';
-    var kind = player.videoUrl ? ' has-video' : player.photoCutoutUrl ? ' has-cutout' : player.photoUrl ? ' has-photo' : '';
-    return '<div class="profile-media' + kind + '">' + inner + '<span class="profile-media-fade"></span>' + upload + '</div>';
+    var kind = (player.videoUrl || player.photoUrl) ? ' has-media' : '';
+    return '<div class="profile-media' + kind + '">' + inner + upload + '</div>';
   }
 
   function renderPlayerProfile(player) {
