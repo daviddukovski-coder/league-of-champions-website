@@ -1118,6 +1118,26 @@
     .podium-card-club .club-avatar { width:30px; height:30px; border-radius:7px; }
     .podium-1 .podium-card-club .club-avatar { width:36px; height:36px; border-radius:8px; }
   }
+
+  /* Podium: club logo grows out of the card's bottom-right corner */
+  .podium { margin-bottom:64px; }
+  .podium-col { position:relative; }
+  .podium-card { padding-right:120px; }
+  .podium-1 .podium-card { padding-right:140px; }
+  .podium-card-logo { position:absolute; z-index:3; right:-14px; bottom:-30px; width:132px; height:132px; pointer-events:none; transition:transform .35s cubic-bezier(.16,1,.3,1); }
+  .podium-1 .podium-card-logo { width:158px; height:158px; right:-16px; bottom:-34px; }
+  .podium-col:hover .podium-card-logo { transform:translateY(-6px) rotate(-4deg) scale(1.04); }
+  .podium-card-logo .club-avatar { width:100% !important; height:100% !important; background:none !important; box-shadow:none !important; border-radius:0 !important; transform:rotate(-6deg); filter:drop-shadow(0 12px 18px rgba(3,4,40,0.55)) drop-shadow(0 2px 3px rgba(3,4,40,0.4)); font-family:'Bebas Neue',sans-serif; font-size:56px; color:rgba(255,255,255,0.85); }
+  .podium-card-logo .club-avatar:not(:has(img)) { border-radius:50% !important; background:var(--ink-deep) !important; box-shadow:inset 0 0 0 3px rgba(255,255,255,0.2) !important; width:76% !important; height:76% !important; margin:12%; }
+  .podium-card-logo .club-avatar img { padding:0; object-fit:contain; }
+  .podium-card-club { margin-top:2px; }
+  @media (max-width:640px) {
+    .podium { margin-bottom:44px; }
+    .podium-card, .podium-1 .podium-card { padding-right:10px; padding-bottom:40px; }
+    .podium-card-logo { width:62px; height:62px; right:-6px; bottom:-18px; }
+    .podium-1 .podium-card-logo { width:74px; height:74px; right:-6px; bottom:-20px; }
+    .podium-card-logo .club-avatar { font-size:26px; }
+  }
 </style>
 </head>
 <body>
@@ -4580,6 +4600,63 @@ var CLUBS = [
     }
 
     document.getElementById('rankingTable').innerHTML = table;
+    document.querySelectorAll('#rankingTable .podium-card-logo img').forEach(knockOutWhiteBg);
+  }
+
+  // Prepares a podium logo: some files carry an opaque white background
+  // (BCN, Graz) that would show as a white square, and some have wide empty
+  // margins. When all four corners are
+  // near-white, flood-fill from the edges and clear the connected near-white
+  // pixels (white shapes enclosed by the logo's outline stay). Cached per
+  // source; any failure leaves the image as it is.
+  var knockedOutLogos = {};
+  function knockOutWhiteBg(img) {
+    var src = img.getAttribute('src');
+    if (!src) return;
+    if (knockedOutLogos[src]) { img.src = knockedOutLogos[src]; return; }
+    var probe = new Image();
+    probe.onload = function() {
+      try {
+        var w = probe.naturalWidth, h = probe.naturalHeight;
+        if (!w || !h || w * h > 1200 * 1200) return;
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        var ctx = c.getContext('2d'); ctx.drawImage(probe, 0, 0);
+        var d = ctx.getImageData(0, 0, w, h), px = d.data;
+        function whiteAt(i) { return px[i + 3] > 200 && px[i] > 232 && px[i + 1] > 232 && px[i + 2] > 232; }
+        var whiteBg = [0, (w - 1) * 4, (h - 1) * w * 4, ((h - 1) * w + w - 1) * 4].every(whiteAt);
+        var seen = new Uint8Array(w * h), stack = [];
+        if (whiteBg) {
+        for (var x = 0; x < w; x++) stack.push(x, (h - 1) * w + x);
+        for (var y = 0; y < h; y++) stack.push(y * w, y * w + w - 1);
+        while (stack.length) {
+          var p = stack.pop();
+          if (seen[p]) continue;
+          seen[p] = 1;
+          if (!whiteAt(p * 4)) continue;
+          px[p * 4 + 3] = 0;
+          if (p % w > 0) stack.push(p - 1);
+          if (p % w < w - 1) stack.push(p + 1);
+          if (p >= w) stack.push(p - w);
+          if (p < w * (h - 1)) stack.push(p + w);
+        }
+        }
+        // Trim empty margins so every logo fills its slot the same way
+        // (BCN's file is mostly empty border).
+        var x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) {
+          if (px[(yy * w + xx) * 4 + 3] > 16) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        }
+        if (x1 < 0) { knockedOutLogos[src] = src; return; }
+        ctx.putImageData(d, 0, 0);
+        var cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+        if (!whiteBg && cw > w * 0.9 && ch > h * 0.9) { knockedOutLogos[src] = src; return; }
+        var out = document.createElement('canvas'); out.width = cw; out.height = ch;
+        out.getContext('2d').drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch);
+        knockedOutLogos[src] = out.toDataURL('image/png');
+        img.src = knockedOutLogos[src];
+      } catch (e) { knockedOutLogos[src] = src; }
+    };
+    probe.src = src;
   }
 
   function rankRowClass(rank) { return rank <= 3 ? 'rank-top rank-' + rank : ''; }
@@ -4601,8 +4678,12 @@ var CLUBS = [
         '<span class="podium-card-chip">Rank ' + r.rank + '</span>' +
         '<span class="podium-card-name">' + (isPlayers ? playerNameLinkHtml(r.name, match ? match.uid : null) : esc(r.name)) + '</span>' +
         '<span class="podium-card-pts">' + r.points + ' PTS</span>' +
-        (clubName ? '<span class="podium-card-club">' + clubAvatarHtml(findClub(clubName)) + (isPlayers ? esc(clubName) : (rankingGender === 'men' ? 'Men’s' : 'Women’s')) + '</span>' : '') +
-      '</div></div>';
+        (clubName ? '<span class="podium-card-club">' + (isPlayers ? esc(clubName) : (rankingGender === 'men' ? 'Men’s' : 'Women’s')) + '</span>' : '') +
+      '</div>' +
+      // Outside the card (which clips its watermark) so it can grow out of
+      // the bottom-right corner.
+      (clubName ? '<span class="podium-card-logo">' + clubAvatarHtml(findClub(clubName)) + '</span>' : '') +
+      '</div>';
     }).join('') + '</div>';
   }
 
