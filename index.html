@@ -4639,6 +4639,30 @@ var CLUBS = [
           if (p >= w) stack.push(p - w);
           if (p < w * (h - 1)) stack.push(p + w);
         }
+        // Defringe: the anti-aliased edge pixels next to the cleared
+        // background are partly white. Within 3px of it, "un-mix" white
+        // (colour-to-alpha) so the edge fades out instead of leaving a halo.
+        var cleared = new Uint8Array(w * h);
+        for (var q = 0; q < w * h; q++) cleared[q] = px[q * 4 + 3] === 0 ? 1 : 0;
+        var band = cleared.slice();
+        for (var pass = 0; pass < 3; pass++) {
+          var next = band.slice();
+          for (var q2 = 0; q2 < w * h; q2++) {
+            if (band[q2]) continue;
+            var qx = q2 % w;
+            if ((qx > 0 && band[q2 - 1]) || (qx < w - 1 && band[q2 + 1]) || (q2 >= w && band[q2 - w]) || (q2 < w * (h - 1) && band[q2 + w])) {
+              next[q2] = 1;
+              var o = q2 * 4, r = px[o], g = px[o + 1], b = px[o + 2];
+              var a = Math.max(255 - r, 255 - g, 255 - b) / 255;
+              if (a < 0.04) { px[o + 3] = 0; continue; }
+              px[o] = Math.round((r - 255 * (1 - a)) / a);
+              px[o + 1] = Math.round((g - 255 * (1 - a)) / a);
+              px[o + 2] = Math.round((b - 255 * (1 - a)) / a);
+              px[o + 3] = Math.round(px[o + 3] * a);
+            }
+          }
+          band = next;
+        }
         }
         // Trim empty margins so every logo fills its slot the same way
         // (BCN's file is mostly empty border).
