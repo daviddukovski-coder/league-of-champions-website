@@ -918,6 +918,95 @@
     .info-block .value { font-size:21px; }
     .event-image { aspect-ratio:16/9; }
   }
+
+  /* ============ RANKING: extra punch ============ */
+  .page-band-meta { position:relative; display:flex; flex-wrap:wrap; gap:10px; margin:-26px 0 0; padding-bottom:44px; }
+  .page-band-meta span { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:6px 14px; clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%); }
+  .page-band-meta span:first-child { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
+  .page-band-meta:empty { display:none; }
+
+  .ranking-controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:34px; }
+  .ranking-controls .tabs { padding:0; gap:0; flex-wrap:nowrap; }
+  .ranking-controls .tab { border:none; border-radius:0; background:var(--surface-2); color:var(--text-muted); padding:11px 22px; margin-right:-4px; clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); font-weight:700; transition:background .2s, color .2s; }
+  .ranking-controls .tab:hover { color:var(--heading); background:color-mix(in srgb, var(--cyan) 18%, var(--surface-2)); }
+  .ranking-controls .tab.active { background:var(--cyan); color:var(--pill-text); }
+  .ranking-controls .year-filter { margin-left:14px; border:none; border-radius:0; background:var(--ink-deep); color:#fff; font-weight:700; letter-spacing:0.06em; padding:11px 30px 11px 22px; clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); }
+  .ranking-controls .ranking-search { margin:0 0 0 auto; max-width:300px; flex:1 1 220px; }
+
+  .podium { gap:18px; margin:8px 0 40px; }
+  .podium-col { display:flex; flex-direction:column; background:none !important; border:none !important; padding:0 !important; box-shadow:none !important; border-radius:0; }
+  .podium-col::before { content:none !important; }
+  .podium-col .podium-step { background:radial-gradient(130% 110% at 100% 0%,#22259a 0%,#0b0d63 55%,#07083f 100%); border:none; color:#fff; border-radius:var(--radius) var(--radius) 0 0; padding:26px 16px 22px; box-shadow:0 16px 40px rgba(11,13,99,0.22); transition:transform .3s cubic-bezier(.16,1,.3,1); }
+  .podium-col:hover .podium-step { transform:translateY(-4px); }
+  .podium-col .podium-step::before { height:5px; }
+  .podium-2 .podium-step::before { background:#c3ccd3; }
+  .podium-3 .podium-step::before { background:#d99456; }
+  .podium-1 .podium-step::before { background:var(--cyan); }
+  .podium-1 .podium-step { padding:34px 18px 28px; box-shadow:0 22px 60px rgba(0,242,255,0.22), 0 16px 40px rgba(11,13,99,0.3); }
+  .podium-watermark { position:absolute; right:-6px; bottom:-34px; font-family:'Bebas Neue',sans-serif; font-size:190px; line-height:1; color:rgba(255,255,255,0.05); pointer-events:none; }
+  .podium-1 .podium-watermark { color:rgba(0,242,255,0.09); font-size:230px; }
+  .podium-col .podium-rank { display:inline-block; font-size:22px; line-height:1; padding:6px 14px 4px; transform:skewX(-12deg); color:var(--pill-text); background:#c3ccd3; }
+  .podium-3 .podium-rank { background:#d99456; }
+  .podium-1 .podium-rank { background:var(--cyan); font-size:26px; color:var(--pill-text); }
+  .podium-col .podium-name, .podium-col .podium-name .player-name-link { color:#fff; font-size:17px; }
+  .podium-1 .podium-name, .podium-1 .podium-name .player-name-link { font-size:20px; }
+  .podium-col .podium-club { color:rgba(255,255,255,0.6); }
+  .podium-col .podium-pts { color:#fff; font-size:40px; }
+  .podium-1 .podium-pts { font-size:52px; color:var(--cyan); }
+  .podium-col .podium-pts small { color:rgba(255,255,255,0.55); }
+  .podium-1 .podium-pts small { color:#fff; }
+  .podium-logo .club-avatar { width:64px; height:64px; background-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,0.15); }
+  .podium-1 .podium-logo .club-avatar { width:84px; height:84px; box-shadow:0 0 0 4px var(--cyan), 0 0 30px rgba(0,242,255,0.45); }
+  .podium-logo .club-avatar img { object-fit:contain; padding:6px; }
+  .podium-base { border-radius:0 0 6px 6px; background:linear-gradient(180deg,#c3ccd3,#9aa6b0); height:34px; }
+  .podium-1 .podium-base { background:linear-gradient(180deg,var(--cyan),#00b8c4); height:58px; }
+  .podium-3 .podium-base { background:linear-gradient(180deg,#d99456,#b8743a); height:18px; }
+
+  .ranking-table { border:none; box-shadow:none; background:transparent; border-collapse:separate; border-spacing:0 8px; margin-top:-8px; }
+  .ranking-table thead th { background:transparent; border:none; padding:6px 18px; color:var(--text-muted); }
+  .ranking-table tbody td { background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:14px 18px; }
+  .ranking-table tbody td:first-child { border-left:1px solid var(--border); border-radius:12px 0 0 12px; width:84px; }
+  .ranking-table tbody td:last-child { border-right:1px solid var(--border); border-radius:0 12px 12px 0; text-align:right; }
+  .ranking-table thead th:last-child { text-align:right; }
+  .ranking-table tbody tr { transition:transform .25s cubic-bezier(.16,1,.3,1); }
+  .ranking-table tbody tr:hover { transform:translateX(4px); background:transparent; }
+  .ranking-table tbody tr:hover td { border-color:color-mix(in srgb, var(--cyan) 55%, var(--border)); }
+  .ranking-table tr.rank-top td:first-child { box-shadow:none; }
+  .ranking-table .rank-num { display:inline-flex; align-items:center; justify-content:center; min-width:46px; height:36px; padding:2px 10px 0; background:var(--ink-deep); color:#fff; font-size:24px; transform:skewX(-12deg); }
+  :root[data-theme="dark"] .ranking-table .rank-num { background:rgba(255,255,255,0.1); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ranking-table .rank-num { background:rgba(255,255,255,0.1); } }
+  .ranking-table .rank-1 .rank-num { background:var(--cyan); color:var(--pill-text); }
+  .ranking-table .rank-2 .rank-num { background:#c3ccd3; color:#232a2e; }
+  .ranking-table .rank-3 .rank-num { background:#d99456; color:#3a1c00; }
+  .ranking-table tr.rank-top td { background:color-mix(in srgb, var(--cyan) 7%, var(--surface)); }
+  .ranking-table .rank-player { font-size:16px; }
+  .ranking-table .rank-pts { font-size:28px; }
+  .ranking-table .rank-pts small { font-size:12px; margin-left:4px; color:var(--text-muted); letter-spacing:1px; }
+  .ranking-table .standings-team .club-avatar { width:28px; height:28px; }
+
+  @media (max-width:640px) {
+    .ranking-controls { gap:10px; }
+    .ranking-controls .year-filter { margin-left:4px; }
+    .ranking-controls .ranking-search { margin:0; max-width:none; flex-basis:100%; }
+    .ranking-controls .tab { padding:10px 16px; }
+    .podium { gap:8px; }
+    .podium-col .podium-step { padding:18px 6px 16px; }
+    .podium-1 .podium-step { padding-top:22px; }
+    .podium-logo .club-avatar { width:44px; height:44px; }
+    .podium-1 .podium-logo .club-avatar { width:56px; height:56px; }
+    .podium-col .podium-name, .podium-col .podium-name .player-name-link { font-size:12.5px; }
+    .podium-1 .podium-name, .podium-1 .podium-name .player-name-link { font-size:13.5px; }
+    .podium-col .podium-pts { font-size:24px; }
+    .podium-1 .podium-pts { font-size:30px; }
+    .podium-watermark { font-size:120px; bottom:-20px; }
+    .podium-1 .podium-watermark { font-size:140px; }
+    .ranking-table { border-spacing:0 6px; }
+    .ranking-table tbody td { padding:10px 8px; }
+    .ranking-table tbody td:first-child { width:56px; }
+    .ranking-table .rank-num { min-width:36px; height:30px; font-size:20px; }
+    .ranking-table .rank-pts { font-size:22px; }
+    .ranking-table .rank-pts small { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -995,6 +1084,7 @@
     <div class="page-band">
       <div class="container">
         <h1>Ranking</h1>
+        <p class="page-band-meta" id="rankingBandMeta"></p>
       </div>
     </div>
     <div class="container">
@@ -4305,7 +4395,7 @@ var CLUBS = [
     var years = Object.keys(Object.assign({}, RANKINGS, contentOverrides.rankings || {})).sort().reverse();
     var rows = rankingRows(rankingYear, rankingGender, rankingType);
     var controls =
-      '<div class="tabs">' +
+      '<div class="ranking-controls"><div class="tabs">' +
         '<button class="tab' + (rankingGender === 'men' ? ' active' : '') + '" data-ranking-gender="men">Men’s</button>' +
         '<button class="tab' + (rankingGender === 'women' ? ' active' : '') + '" data-ranking-gender="women">Women’s</button>' +
       '</div>' +
@@ -4319,8 +4409,10 @@ var CLUBS = [
 
     var searchPlaceholder = rankingType === 'players' ? 'Search player or club…' : 'Search club…';
     el.innerHTML = controls +
-      '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '">' +
+      '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
       '<div id="rankingTable"></div>';
+    var meta = document.getElementById('rankingBandMeta');
+    if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
     renderRankingTable(rows);
 
     el.querySelectorAll('[data-ranking-gender]').forEach(function(btn) {
@@ -4365,13 +4457,13 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '</span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
       table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '</span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     }
@@ -4390,13 +4482,14 @@ var CLUBS = [
       var place = [2, 1, 3][i];
       var club = rankingType === 'players' ? findClub(r.club1 || r.club2 || '') : findClub(r.name);
       var match = rankingType === 'players' ? findPlayerByName(r.name) : null;
-      return '<div class="podium-step podium-' + place + '">' +
+      return '<div class="podium-col podium-' + place + '"><div class="podium-step">' +
+        '<span class="podium-watermark">' + r.rank + '</span>' +
         '<span class="podium-rank">' + r.rank + '</span>' +
         '<span class="podium-logo">' + clubAvatarHtml(club) + '</span>' +
         '<span class="podium-name">' + (rankingType === 'players' ? playerNameLinkHtml(r.name, match ? match.uid : null) : esc(r.name)) + '</span>' +
         (rankingType === 'players' && (r.club1 || r.club2) ? '<span class="podium-club">' + esc(r.club1 || r.club2) + '</span>' : '') +
         '<span class="podium-pts">' + r.points + ' <small>PTS</small></span>' +
-      '</div>';
+      '</div><div class="podium-base"></div></div>';
     }).join('') + '</div>';
   }
 
