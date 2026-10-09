@@ -159,7 +159,7 @@
   .demo-banner { background:var(--tint-pending); color:var(--pending-text); font-size:12.5px; font-weight:600; text-align:center; padding:9px 16px; }
 
   /* ============ LANDING ============ */
-  #view-landing { position:relative; min-height:calc(100vh - 70px); display:flex; align-items:flex-end; overflow:hidden; }
+  .landing-hero { position:relative; min-height:calc(100vh - 70px); display:flex; align-items:flex-end; overflow:hidden; }
   .hero-media { position:absolute; inset:0; z-index:0; background:#0b0d63; }
   .hero-media video, .hero-media img { width:100%; height:100%; object-fit:cover; display:block; }
   .hero-media-placeholder { width:100%; height:100%; background:radial-gradient(140% 120% at 20% 10%,#191c8a 0%,#0b0d63 55%,#07083f 100%); display:flex; align-items:center; justify-content:center; padding:40px; text-align:center; }
@@ -172,7 +172,7 @@
   .hero-actions { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
   .hero-browse { background:none; border:none; color:rgba(255,255,255,0.75); font-size:13px; font-weight:600; letter-spacing:0.3px; text-decoration:underline; text-underline-offset:3px; }
   .hero-browse:hover { color:#fff; }
-  @media (max-width:640px) { #view-landing { align-items:flex-end; min-height:100vh; } }
+  @media (max-width:640px) { .landing-hero { align-items:flex-end; min-height:100svh; } }
 
   /* ============ AUTH ============ */
   .auth-inner { max-width:440px; margin:56px auto 90px; }
@@ -672,6 +672,145 @@
     .home-hero { padding:48px 0 28px; }
     form { padding:22px; }
   }
+
+  /* ============ SPORT LAYER (2026-10) ============
+     Energetic direction on top of the refresh: bigger Bebas display type,
+     cyan as the one loud accent, diagonal "speed" cuts, uppercase action
+     labels. Same palette and content. */
+  .btn { text-transform:uppercase; letter-spacing:0.06em; font-weight:700; font-size:13px; }
+  .btn-sm { font-size:12px; }
+  .btn-cyan { box-shadow:0 0 0 0 rgba(0,242,255,0); }
+  .btn-cyan:hover { box-shadow:0 8px 28px rgba(0,242,255,0.35); }
+  .tab.active, .division-filter-tab.active, .phase-btn.active { background:var(--cyan); color:var(--pill-text); border-color:var(--cyan); }
+  .tab { text-transform:uppercase; letter-spacing:0.05em; font-weight:600; font-size:12px; }
+  .section-title, .landing-section-head h2 { position:relative; padding-left:16px; }
+  .section-title::before, .landing-section-head h2::before { content:''; position:absolute; left:0; top:0.12em; bottom:0.18em; width:5px; background:var(--cyan); transform:skewX(-14deg); border-radius:1px; }
+
+  /* Landing hero */
+  .landing-hero::after { content:''; position:absolute; z-index:0; right:-8%; bottom:0; width:46%; height:9px; background:var(--cyan); transform:skewX(-30deg); opacity:0.9; }
+  .hero-layout { position:relative; z-index:1; width:100%; max-width:1120px; margin:0 auto; padding:0 32px 88px; display:grid; grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr); gap:48px; align-items:end; }
+  .hero-layout .hero-content { padding:0; max-width:none; margin:0; }
+  .hero-eyebrow { display:inline-block; background:var(--cyan); color:var(--pill-text); padding:5px 12px; transform:skewX(-12deg); font-weight:700; letter-spacing:0.12em; margin-bottom:18px; }
+  .hero-content h1 { font-size:clamp(52px,8.6vw,124px); line-height:0.9; letter-spacing:0.5px; margin-bottom:22px; text-shadow:0 4px 40px rgba(7,8,63,0.45); }
+  .hero-next { background:rgba(11,13,99,0.62); backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%); border:1px solid rgba(255,255,255,0.14); box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 24px 60px rgba(3,4,40,0.45); border-radius:var(--radius); padding:24px; color:#fff; display:flex; flex-direction:column; gap:10px; align-items:flex-start; position:relative; overflow:hidden; }
+  .hero-next:empty { display:none; }
+  .hero-next::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cyan); }
+  .hero-next-label { font-size:11px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--cyan); }
+  .hero-next .tier { background:rgba(255,255,255,0.12); color:#fff; }
+  .hero-next h2 { color:#fff; font-size:clamp(30px,3.2vw,40px); line-height:0.95; }
+  .hero-next-meta { color:rgba(255,255,255,0.75); font-size:14px; }
+  .countdown { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; margin:6px 0 8px; }
+  .countdown-cell { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px 4px 8px; display:flex; flex-direction:column; align-items:center; }
+  .countdown-num { font-family:'Bebas Neue',sans-serif; font-size:36px; line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+  .countdown-unit { font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-top:4px; }
+  .hero-next .btn-block { margin-top:4px; }
+
+  /* City ticker (the page's one marquee) */
+  .ticker { background:var(--cyan); color:var(--pill-text); overflow:hidden; white-space:nowrap; border-top:1px solid rgba(11,13,99,0.15); border-bottom:1px solid rgba(11,13,99,0.15); }
+  .ticker-track { display:inline-flex; padding:14px 0; }
+  .ticker-item { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; letter-spacing:1px; padding:0 26px; position:relative; }
+  .ticker-item::after { content:''; position:absolute; right:-4px; top:50%; width:9px; height:9px; background:var(--pill-text); transform:translateY(-50%) skewX(-20deg); }
+  @media (prefers-reduced-motion: no-preference) {
+    .ticker-track { animation:tickerMove 38s linear infinite; }
+    @keyframes tickerMove { to { transform:translateX(-50%); } }
+  }
+
+  /* Landing sections */
+  .landing-section { padding:88px 0 8px; }
+  .landing-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .landing-section-head h2 { font-size:clamp(40px,5.4vw,64px); line-height:0.95; }
+  .tour-rail { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(250px,1fr); gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:8px 4px 24px; margin:0 -4px; scrollbar-width:thin; }
+  .tour-card { scroll-snap-align:start; position:relative; overflow:hidden; min-height:300px; border:none; border-radius:var(--radius); text-align:left; color:#fff; padding:22px; display:flex; flex-direction:column; justify-content:flex-end; gap:6px; background:radial-gradient(130% 110% at 100% 0%,#22259a 0%,#0b0d63 52%,#07083f 100%); background-size:cover; background-position:center; box-shadow:0 10px 30px var(--shadow); transition:transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s; }
+  .tour-card:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(11,13,99,0.32); }
+  .tour-card-tier { position:absolute; top:6px; right:14px; font-family:'Bebas Neue',sans-serif; font-size:96px; line-height:1; color:rgba(0,242,255,0.16); letter-spacing:1px; }
+  .tour-card-date { font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--cyan); }
+  .tour-card-name { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:0.95; }
+  .tour-card-place { font-size:13.5px; color:rgba(255,255,255,0.75); }
+  .tour-card-flag { position:absolute; top:18px; left:18px; background:var(--cyan); color:var(--pill-text); font-size:10.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:4px 10px; transform:skewX(-12deg); }
+  .tour-card::after { content:''; position:absolute; left:-20%; bottom:38%; width:70%; height:3px; background:linear-gradient(90deg, transparent, rgba(0,242,255,0.55)); transform:rotate(-18deg); pointer-events:none; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tour-card { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); } }
+  :root[data-theme="dark"] .tour-card { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); }
+  .tour-card.is-next { outline:2px solid var(--cyan); outline-offset:-2px; }
+  .tour-card.is-done { filter:saturate(0.6); }
+  .tour-card.is-done .tour-card-name, .tour-card.is-done .tour-card-place { opacity:0.75; }
+
+  /* Ranking leaders on the landing page */
+  .landing-leaders { padding-bottom:40px; }
+  .leader-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .leader-col { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:8px 22px 14px; box-shadow:0 1px 2px var(--shadow); }
+  .leader-col h3 { font-size:22px; padding:14px 0 6px; }
+  .leader-row { display:grid; grid-template-columns:44px 32px minmax(0,1fr) auto; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--border); }
+  .leader-row .club-avatar { width:32px; height:32px; }
+  .leader-rank { font-family:'Bebas Neue',sans-serif; font-size:40px; line-height:1; color:var(--text-muted); }
+  .leader-1 .leader-rank { color:var(--cyan-ink); font-size:48px; }
+  .leader-name { font-weight:600; color:var(--heading); line-height:1.3; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .leader-name small { display:block; font-weight:400; font-size:12.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .leader-pts { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--heading); }
+
+  /* Page band (ranking header) */
+  .page-band { background:var(--ink-deep); position:relative; overflow:hidden; margin-bottom:36px; }
+  .page-band::before { content:''; position:absolute; right:-6%; top:-40%; width:38%; height:180%; background:linear-gradient(90deg, rgba(0,242,255,0.0), rgba(0,242,255,0.12)); transform:skewX(-24deg); }
+  .page-band::after { content:''; position:absolute; left:0; right:55%; bottom:0; height:6px; background:var(--cyan); transform:skewX(-30deg); transform-origin:left; }
+  .page-band h1 { position:relative; color:#fff; font-size:clamp(64px,11vw,144px); line-height:0.85; padding:56px 0 44px; }
+  :root[data-theme="dark"] .page-band { border-bottom:1px solid var(--border); }
+
+  /* Ranking podium + table */
+  .podium { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:end; margin:4px 0 28px; }
+  .podium-step { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px 16px 18px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; box-shadow:0 1px 2px var(--shadow); overflow:hidden; }
+  .podium-step::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; }
+  .podium-1 { padding-top:34px; padding-bottom:28px; background:var(--ink-deep); border-color:var(--ink-deep); box-shadow:0 18px 44px rgba(11,13,99,0.28); }
+  .podium-1::before { background:var(--cyan); }
+  .podium-2::before { background:#c3ccd3; }
+  .podium-3::before { background:#d99456; }
+  .podium-rank { font-family:'Bebas Neue',sans-serif; font-size:56px; line-height:0.9; color:var(--text-muted); }
+  .podium-1 .podium-rank { font-size:76px; color:var(--cyan); }
+  .podium-logo .club-avatar { width:52px; height:52px; font-size:15px; }
+  .podium-1 .podium-logo .club-avatar { width:64px; height:64px; box-shadow:0 0 0 3px rgba(0,242,255,0.35); }
+  .podium-name { font-weight:700; color:var(--heading); font-size:15px; line-height:1.25; }
+  .podium-1 .podium-name { color:#fff; font-size:17px; }
+  .podium-club { font-size:12px; color:var(--text-muted); }
+  .podium-1 .podium-club { color:rgba(255,255,255,0.65); }
+  .podium-pts { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; color:var(--cyan-ink); margin-top:4px; }
+  .podium-1 .podium-pts { color:#fff; font-size:38px; }
+  .podium-pts small { font-size:0.5em; letter-spacing:1px; color:var(--text-muted); }
+  .podium-1 .podium-pts small { color:var(--cyan); }
+  .ranking-table .rank-num { font-family:'Bebas Neue',sans-serif; font-size:24px; line-height:1; color:var(--text-muted); }
+  .ranking-table .rank-1 .rank-num { color:var(--cyan-ink); }
+  .ranking-table .rank-2 .rank-num { color:#8d99a3; }
+  .ranking-table .rank-3 .rank-num { color:#c27a3c; }
+  .ranking-table .rank-pts { font-family:'Bebas Neue',sans-serif; font-size:22px; line-height:1; color:var(--heading); letter-spacing:0.5px; }
+  .ranking-table .rank-player { font-weight:600; color:var(--heading); }
+  .ranking-table tr.rank-top td:first-child { box-shadow:inset 4px 0 0 var(--cyan); }
+
+  @media (max-width:860px) {
+    .hero-layout { grid-template-columns:1fr; gap:24px; padding:0 18px 48px; }
+    .landing-hero { align-items:flex-end; }
+    .leader-grid { grid-template-columns:1fr; }
+    .landing-section { padding-top:64px; }
+  }
+  @media (max-width:640px) {
+    .hero-content h1 { font-size:clamp(46px,13vw,64px); }
+    .hero-next { padding:18px; }
+    .countdown-num { font-size:28px; }
+    .tour-rail { grid-auto-columns:78%; }
+    .ticker-item { font-size:24px; padding:0 18px; }
+    .podium { gap:8px; }
+    .podium-step { padding:16px 6px 14px; }
+    .podium-1 { padding-top:24px; }
+    .podium-rank { font-size:40px; }
+    .podium-1 .podium-rank { font-size:54px; }
+    .podium-name { font-size:12.5px; }
+    .podium-1 .podium-name { font-size:13.5px; }
+    .podium-club { display:none; }
+    .podium-pts { font-size:22px; }
+    .podium-1 .podium-pts { font-size:28px; }
+    .page-band h1 { padding:40px 0 32px; }
+    /* Phone: club column shows logos only so points stay visible */
+    .ranking-table th, .ranking-table td { padding:12px 8px; }
+    .ranking-table .ranking-clubs { flex-direction:row; gap:4px; }
+    .ranking-table .ranking-clubs .standings-team { font-size:0; gap:0; }
+    .ranking-table .rank-player { font-size:13.5px; }
+  }
 </style>
 </head>
 <body>
@@ -718,8 +857,14 @@
   <div id="demoBanner" class="demo-banner" hidden><span data-ui-key="demoBanner.text">DEMO MODE – registrations are only stored locally in this browser (no real backend connected)</span></div>
 
   <section id="view-landing" class="view">
-    <div class="hero-media edit-target" id="heroMedia"></div>
-    <div class="hero-content" id="heroContentBlocks"></div>
+    <div class="landing-hero">
+      <div class="hero-media edit-target" id="heroMedia"></div>
+      <div class="hero-layout">
+        <div class="hero-content" id="heroContentBlocks"></div>
+        <aside class="hero-next" id="heroNext"></aside>
+      </div>
+    </div>
+    <div id="landingExtras"></div>
   </section>
 
   <section id="view-home" class="view" hidden>
@@ -738,10 +883,12 @@
   </section>
 
   <section id="view-ranking" class="view" hidden>
-    <div class="container">
-      <div class="home-hero">
+    <div class="page-band">
+      <div class="container">
         <h1>Ranking</h1>
       </div>
+    </div>
+    <div class="container">
       <div id="rankingContent"></div>
     </div>
   </section>
@@ -1157,7 +1304,43 @@ var CLUBS = [
   }
   function findClub(name) {
     var n = (name || '').trim().toLowerCase();
-    return CLUBS.find(function(c){ return c.name.toLowerCase() === n; }) || { name: name || '' };
+    return CLUBS.find(function(c){ return c.name.toLowerCase() === n; }) || findClubFuzzy(name) || { name: name || '' };
+  }
+
+  // The ranking spreadsheet spells clubs freely ("Serfay", "C.D Serfay
+  // Canarias", "Lazio FTV", "Hertha BSC Footvolley"), so an exact match
+  // misses most logos there. Compare the distinctive words only: drop
+  // accents, punctuation and generic words (footvolley/ftv/club/cd/...),
+  // then accept a club whose words contain the name's words or vice versa,
+  // preferring the biggest overlap. Ambiguous ties return null (initials).
+  var CLUB_STOPWORDS = { footvolley:1, fotvolley:1, footvoley:1, ftv:1, futevolei:1, futevoley:1, futvolei:1, futevole:1, club:1, clube:1, cd:1, ss:1, fc:1, team:1, the:1, do:1, da:1, de:1, new:1, association:1, school:1, tv:1 };
+  var CLUB_ALIASES = { bcn:'barcelona', ajjacio:'ajaccio', beack:'beach', esperamcas:'esperancas' };
+  function clubKeyWords(name) {
+    var s = normalizeNameForMatch(name).replace(/\./g, '').replace(/fun\s*4\s*you/g, 'fun4you').replace(/[^a-z0-9]+/g, ' ');
+    return s.split(' ').filter(function(w) { return w.length > 1 && !CLUB_STOPWORDS[w]; })
+      .map(function(w) { return CLUB_ALIASES[w] || w; });
+  }
+  var fuzzyClubCache = {};
+  function findClubFuzzy(name) {
+    if (!name) return null;
+    if (name in fuzzyClubCache) return fuzzyClubCache[name];
+    var q = clubKeyWords(name);
+    var best = null, bestScore = 0, tie = false;
+    if (q.length) {
+      CLUBS.forEach(function(c) {
+        var w = clubKeyWords(c.name);
+        if (!w.length) return;
+        var overlap = q.filter(function(x) { return w.indexOf(x) !== -1; }).length;
+        var subset = overlap === q.length || overlap === w.length;
+        if (!subset) return;
+        // Exact word match wins outright; otherwise more shared words, and on
+        // a tie the club that starts with the same word ("Repeat FTV Stockholm").
+        var score = overlap * 10 + (overlap === q.length && overlap === w.length ? 100 : 0) + (w[0] === q[0] ? 1 : 0);
+        if (score > bestScore) { best = c; bestScore = score; tie = false; }
+        else if (score === bestScore) tie = true;
+      });
+    }
+    return (fuzzyClubCache[name] = tie ? null : best);
   }
 
   /* ==================================================================
@@ -2662,6 +2845,18 @@ var CLUBS = [
     'nav.register': 'Register',
     'nav.logout': 'Log Out',
     'demoBanner.text': 'DEMO MODE – registrations are only stored locally in this browser (no real backend connected)',
+    'landing.nextEvent': 'Next tournament',
+    'landing.lastEvent': 'Latest tournament',
+    'landing.details': 'Tournament details',
+    'landing.results': 'See results',
+    'landing.cdDays': 'Days',
+    'landing.cdHours': 'Hrs',
+    'landing.cdMinutes': 'Min',
+    'landing.cdSeconds': 'Sec',
+    'landing.tourTitle': 'The {year} Tour',
+    'landing.allTournaments': 'All tournaments',
+    'landing.leadersTitle': 'Ranking leaders {year}',
+    'landing.fullRanking': 'Full ranking',
     'landing.eyebrow': 'Season 2026',
     'landing.headline': "Europe's Footvolley Elite. One Tour.",
     'landing.subtitle': '17 stops, three formats, hundreds of teams chasing the League of Champions title. Create your account and claim your spot on the sand.',
@@ -2817,6 +3012,9 @@ var CLUBS = [
   // deliberately omitted so they always fall through to UI_DEFAULTS.
   var TRANSLATIONS = {
     de: {
+      'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
+      'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
+      'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'landing.fullRanking': 'Zum Ranking',
       'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
       'demoBanner.text': 'DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)',
       'landing.eyebrow': 'Saison 2026', 'landing.headline': 'Europas Footvolley-Elite. Eine Tour.',
@@ -3590,7 +3788,108 @@ var CLUBS = [
     document.getElementById('heroContentBlocks').innerHTML = order.filter(function(k) { return blocks[k]; }).map(function(k) { return sortableBlockHtml(k, blocks[k]); }).join('');
     initSortable('heroContentBlocks', function(order) { saveContentField('landingHero', 'blockOrder', JSON.stringify(order)); });
 
+    renderHeroNext();
+    renderLandingExtras();
     setView('landing');
+  }
+
+  // Next tournament for the hero card: the earliest non-past one that hasn't
+  // ended yet (a tournament runs ~3 days from dateSort). If the season is
+  // over, falls back to the latest one so the card never disappears.
+  function nextTournamentForHero() {
+    var now = Date.now();
+    var list = allTournaments().slice().sort(function(a, b) { return a.dateSort.localeCompare(b.dateSort); });
+    var next = list.filter(function(t) { return t.status !== 'past' && new Date(t.dateSort + 'T00:00:00').getTime() + 3 * 864e5 > now; })[0];
+    return next ? { t: next, upcoming: true } : (list.length ? { t: list[list.length - 1], upcoming: false } : null);
+  }
+
+  var heroCountdownTimer = null;
+  function renderHeroNext() {
+    var el = document.getElementById('heroNext');
+    clearInterval(heroCountdownTimer);
+    var pick = nextTournamentForHero();
+    if (!el || !pick) { if (el) el.innerHTML = ''; return; }
+    var t = pick.t;
+    var start = new Date(t.dateSort + 'T09:00:00').getTime();
+    var showCountdown = pick.upcoming && start > Date.now();
+    el.innerHTML =
+      '<span class="hero-next-label">' + esc(uiText(pick.upcoming ? 'landing.nextEvent' : 'landing.lastEvent')) + '</span>' +
+      '<span class="tier mono">LoC ' + esc(t.tier) + '</span>' +
+      '<h2>' + esc(t.name) + '</h2>' +
+      '<p class="hero-next-meta">' + esc(t.dateLabel) + ' &nbsp;' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</p>' +
+      (showCountdown ? '<div class="countdown" id="heroCountdown"></div>' : '') +
+      '<button class="btn btn-cyan btn-block" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '">' + esc(uiText(pick.upcoming ? 'landing.details' : 'landing.results')) + '</button>';
+    if (!showCountdown) return;
+    var units = [['d', 864e5, 'landing.cdDays'], ['h', 36e5, 'landing.cdHours'], ['m', 6e4, 'landing.cdMinutes'], ['s', 1e3, 'landing.cdSeconds']];
+    function tick() {
+      var box = document.getElementById('heroCountdown');
+      if (!box || document.getElementById('view-landing').hidden) { clearInterval(heroCountdownTimer); return; }
+      var left = Math.max(0, start - Date.now());
+      box.innerHTML = units.map(function(u, i) {
+        var v = i === 0 ? Math.floor(left / u[1]) : Math.floor(left % units[i - 1][1] / u[1]);
+        return '<div class="countdown-cell"><span class="countdown-num">' + (i === 0 ? v : ('0' + v).slice(-2)) + '</span><span class="countdown-unit">' + esc(uiText(u[2])) + '</span></div>';
+      }).join('');
+    }
+    tick();
+    heroCountdownTimer = setInterval(tick, 1000);
+  }
+
+  // Everything below the landing hero: a city ticker, the season's tour
+  // cards and the current ranking leaders. Built only from data the site
+  // already has (tournaments + ranking rows).
+  function renderLandingExtras() {
+    var el = document.getElementById('landingExtras');
+    if (!el) return;
+    var pick = nextTournamentForHero();
+    var season = pick ? pick.t.dateSort.slice(0, 4) : String(new Date().getFullYear());
+    var tours = allTournaments().filter(function(t) { return t.dateSort.slice(0, 4) === season; })
+      .sort(function(a, b) { return a.dateSort.localeCompare(b.dateSort); });
+    var nextId = pick && pick.upcoming ? pick.t.id : null;
+
+    var cities = tours.map(function(t) { return '<span class="ticker-item">' + esc(t.city) + '</span>'; }).join('');
+    var ticker = tours.length ? '<div class="ticker" aria-hidden="true"><div class="ticker-track">' + cities + cities + '</div></div>' : '';
+
+    var tourCards = tours.map(function(t) {
+      var done = t.status === 'past';
+      var bg = t.image ? ' style="background-image:linear-gradient(180deg,rgba(7,8,63,0.15),rgba(7,8,63,0.92)),url(\'' + esc(t.image) + '\')"' : '';
+      return '<button class="tour-card' + (t.id === nextId ? ' is-next' : '') + (done ? ' is-done' : '') + '" data-route="event/' + esc(t.id) + '"' + bg + '>' +
+        '<span class="tour-card-tier">' + esc(t.tier) + '</span>' +
+        '<span class="tour-card-date">' + esc(t.dateLabel) + '</span>' +
+        '<span class="tour-card-name">' + esc(t.name) + '</span>' +
+        '<span class="tour-card-place">' + t.flag + ' ' + esc(t.city) + '</span>' +
+        (t.id === nextId ? '<span class="tour-card-flag">' + esc(uiText('landing.nextEvent')) + '</span>' : '') +
+      '</button>';
+    }).join('');
+
+    var rYears = Object.keys(Object.assign({}, RANKINGS, contentOverrides.rankings || {})).sort().reverse();
+    var rYear = rYears.indexOf(season) !== -1 ? season : rYears[0];
+    function leaders(gender) {
+      var rows = rYear ? rankingRows(rYear, gender, 'players').slice(0, 3) : [];
+      if (!rows.length) return '';
+      return '<div class="leader-col"><h3>' + esc(divisionWord(gender === 'men' ? 'Men' : 'Women')) + '</h3>' +
+        rows.map(function(r, i) {
+          return '<div class="leader-row leader-' + (i + 1) + '"><span class="leader-rank">' + r.rank + '</span>' +
+            clubAvatarHtml(findClub(r.club1 || r.club2 || '')) +
+            '<span class="leader-name">' + esc(r.name) + '<small>' + esc(r.club1 || r.club2 || '') + '</small></span>' +
+            '<span class="leader-pts">' + r.points + '</span></div>';
+        }).join('') + '</div>';
+    }
+    var leadersHtml = leaders('men') + leaders('women');
+
+    el.innerHTML = ticker +
+      (tours.length ? '<section class="landing-section"><div class="container">' +
+        '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.tourTitle', { year: season })) + '</h2>' +
+        '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button></div>' +
+        '<div class="tour-rail">' + tourCards + '</div></div></section>' : '') +
+      (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
+        '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
+        '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
+        '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '');
+
+    // Start the rail at the next tournament instead of the season opener.
+    var nextCard = el.querySelector('.tour-card.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-card:last-child') : null);
+    // Measured after setView() has unhidden the landing view.
+    if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
   }
 
   function renderHeroMedia() {
@@ -3949,7 +4248,7 @@ var CLUBS = [
     } else if (!rows.length) {
       table = '<p class="empty-note">No results for “' + esc(rankingSearch.trim()) + '”.</p>';
     } else if (rankingType === 'players') {
-      table = '<table class="history-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
+      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
           var match = findPlayerByName(r.name);
           var clubNames = [r.club1, r.club2].filter(Boolean);
@@ -3958,18 +4257,39 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr><td>' + r.rank + '</td><td>' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td>' + r.points + '</td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '</span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
-      table = '<table class="history-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
+      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr><td>' + r.rank + '</td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td>' + r.points + '</td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '</span></td></tr>';
         }).join('') +
         '</tbody></table>';
     }
 
     document.getElementById('rankingTable').innerHTML = table;
+  }
+
+  function rankRowClass(rank) { return rank <= 3 ? 'rank-top rank-' + rank : ''; }
+
+  // Top three as a podium above the table (2nd, 1st, 3rd from left), only
+  // when the list isn't filtered by a search. Shared ranks keep their order.
+  function rankingPodiumHtml(rows) {
+    if (rows.length < 3) return '';
+    var top = rows.slice(0, 3);
+    return '<div class="podium">' + [top[1], top[0], top[2]].map(function(r, i) {
+      var place = [2, 1, 3][i];
+      var club = rankingType === 'players' ? findClub(r.club1 || r.club2 || '') : findClub(r.name);
+      var match = rankingType === 'players' ? findPlayerByName(r.name) : null;
+      return '<div class="podium-step podium-' + place + '">' +
+        '<span class="podium-rank">' + r.rank + '</span>' +
+        '<span class="podium-logo">' + clubAvatarHtml(club) + '</span>' +
+        '<span class="podium-name">' + (rankingType === 'players' ? playerNameLinkHtml(r.name, match ? match.uid : null) : esc(r.name)) + '</span>' +
+        (rankingType === 'players' && (r.club1 || r.club2) ? '<span class="podium-club">' + esc(r.club1 || r.club2) + '</span>' : '') +
+        '<span class="podium-pts">' + r.points + ' <small>PTS</small></span>' +
+      '</div>';
+    }).join('') + '</div>';
   }
 
   function showRanking() {
