@@ -1051,6 +1051,18 @@
     .podium-1 .podium-logo { width:88%; }
     .podium-col .podium-logo .club-avatar, .podium-1 .podium-logo .club-avatar { border-radius:14px; font-size:30px; }
   }
+
+  /* Podium logo: no tile, just the logo itself, big and see-through */
+  .podium-col .podium-logo { top:-6%; right:-22%; width:82%; }
+  .podium-1 .podium-logo { width:86%; }
+  .podium-col .podium-logo .club-avatar, .podium-1 .podium-logo .club-avatar { background:none !important; box-shadow:none !important; border-radius:0; transform:none; color:rgba(255,255,255,0.14); font-family:'Bebas Neue',sans-serif; font-size:120px; }
+  .podium-col .podium-logo .club-avatar img, .podium-1 .podium-logo .club-avatar img { padding:0; transform:none; opacity:0.32; }
+  .podium-1 .podium-logo .club-avatar img { opacity:0.4; }
+  .podium-col .podium-step::after { height:55%; background:linear-gradient(180deg, rgba(7,8,63,0) 0%, rgba(7,8,63,0.7) 50%, rgba(7,8,63,0.95) 100%); }
+  @media (max-width:640px) {
+    .podium-col .podium-logo { right:-26%; width:100%; }
+    .podium-col .podium-logo .club-avatar { font-size:64px; }
+  }
 </style>
 </head>
 <body>
@@ -4513,6 +4525,50 @@ var CLUBS = [
     }
 
     document.getElementById('rankingTable').innerHTML = table;
+    document.querySelectorAll('#rankingTable .podium-logo img').forEach(knockOutWhiteBg);
+  }
+
+  // Some logo files carry an opaque white background (BCN, Graz), which shows
+  // as a pale square behind the see-through podium logo. When all four
+  // corners are near-white, flood-fill from the edges and clear the
+  // connected near-white pixels (white shapes enclosed by the logo's own
+  // outline stay). Results are cached per source; failures leave the image.
+  var knockedOutLogos = {};
+  function knockOutWhiteBg(img) {
+    var src = img.getAttribute('src');
+    if (!src) return;
+    if (knockedOutLogos[src]) { img.src = knockedOutLogos[src]; return; }
+    var probe = new Image();
+    probe.onload = function() {
+      try {
+        var w = probe.naturalWidth, h = probe.naturalHeight;
+        if (!w || !h || w * h > 1200 * 1200) return;
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        var ctx = c.getContext('2d'); ctx.drawImage(probe, 0, 0);
+        var d = ctx.getImageData(0, 0, w, h), px = d.data;
+        function whiteAt(i) { return px[i + 3] > 200 && px[i] > 232 && px[i + 1] > 232 && px[i + 2] > 232; }
+        var corners = [0, (w - 1) * 4, (h - 1) * w * 4, ((h - 1) * w + w - 1) * 4];
+        if (!corners.every(whiteAt)) { knockedOutLogos[src] = src; return; }
+        var seen = new Uint8Array(w * h), stack = [];
+        for (var x = 0; x < w; x++) { stack.push(x, (h - 1) * w + x); }
+        for (var y = 0; y < h; y++) { stack.push(y * w, y * w + w - 1); }
+        while (stack.length) {
+          var p = stack.pop();
+          if (seen[p]) continue; seen[p] = 1;
+          if (!whiteAt(p * 4)) continue;
+          px[p * 4 + 3] = 0;
+          var px0 = p % w;
+          if (px0 > 0) stack.push(p - 1);
+          if (px0 < w - 1) stack.push(p + 1);
+          if (p >= w) stack.push(p - w);
+          if (p < w * (h - 1)) stack.push(p + w);
+        }
+        ctx.putImageData(d, 0, 0);
+        knockedOutLogos[src] = c.toDataURL('image/png');
+        img.src = knockedOutLogos[src];
+      } catch (e) { knockedOutLogos[src] = src; }
+    };
+    probe.src = src;
   }
 
   function rankRowClass(rank) { return rank <= 3 ? 'rank-top rank-' + rank : ''; }
