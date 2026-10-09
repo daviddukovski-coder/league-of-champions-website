@@ -598,6 +598,68 @@
   footer { padding:56px 32px; margin-top:64px; }
   footer p { line-height:1.7; }
 
+  /* Remaining areas: live bracket, schedule, registration, profile,
+     messages, admin. Same rules as above (pills for controls, 14px
+     panels, 10px inputs, solid hairlines instead of dashed ones). */
+  .reg-action-btn, .edit-btn, .profile-media-upload label { border-radius:999px; }
+  .reg-action-btn { border-width:1px; padding:6px 14px; font-weight:500; transition:background .2s, color .2s; }
+  .auth-demo-note, .export-graphic-wrap img { border-radius:var(--radius-input); }
+  .edit-text-input, .inline-rename-input, .editable-field input { border-radius:8px; border-width:1.5px; }
+  .match-code-badge { border-radius:999px; padding:2px 8px; font-weight:600; }
+  .conversation-bubble { border-radius:16px; padding:9px 15px; }
+  .conversation-bubble.mine { border-bottom-right-radius:6px; }
+  .conversation-bubble:not(.mine) { border-bottom-left-radius:6px; }
+  .match-sets, .slot-editor, .schedule-score-entry { border-top-style:solid; }
+  .schedule-item-break { border-style:solid; background:var(--surface-2); opacity:0.8; }
+
+  /* Section labels inside panels: sentence-weight instead of shouting caps */
+  .live-panel h3, .bracket-round-title, .schedule-court-title { letter-spacing:0.6px; font-weight:500; }
+  .live-panel h3 { font-family:'Geist','Poppins',sans-serif; font-size:12px; }
+  .stage-card-head h3 { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:18px; letter-spacing:0.6px; }
+
+  /* Live bracket + schedule cards */
+  .roster-row, .match-row, .bracket-slot-block, .schedule-item { border-radius:12px; transition:border-color .2s, box-shadow .2s; }
+  .roster-row { padding:12px 16px; margin-bottom:8px; }
+  .match-row { padding:14px 16px; }
+  .bracket-slot-block { padding:12px 14px; }
+  .bracket-slot-block:hover, .schedule-item:hover, .match-row:hover { border-color:color-mix(in srgb, var(--cyan-ink) 30%, var(--border)); }
+  .bracket-scroll, .schedule-scroll { gap:24px; }
+  .match-list { gap:12px; }
+  .standings-table th, .standings-table td { padding:11px 10px; }
+  .standings-table tbody tr:hover { background:var(--surface-2); }
+  .icon-btn { background:var(--surface-2); border:1px solid var(--border); }
+
+  /* Registration, payment, confirmation */
+  .register-head { padding:12px 0 32px; }
+  .register-head h1, .auth-inner h1 { font-size:34px; }
+  .auth-inner { margin:72px auto 100px; }
+  .comp-select-grid { gap:20px; }
+  .comp-card { padding:30px; }
+  .pay-summary { padding:28px 30px; box-shadow:0 1px 2px var(--shadow); }
+  .pay-summary div { padding:10px 0; }
+  .confirm-icon { width:64px; height:64px; }
+  .checkbox-row span { line-height:1.6; }
+  .form-error { font-weight:500; }
+  .resume-banner, .closed-note { border-radius:var(--radius); }
+
+  /* Player profile, messages, exchange */
+  .profile-media { border-radius:var(--radius); box-shadow:0 1px 2px var(--shadow); }
+  .profile-media-row { gap:24px; }
+  .medal-row { gap:16px; }
+  .exchange-card, .inbox-row, .conversation-request { border-radius:12px; padding:16px 18px; transition:border-color .2s, background .2s; }
+  .exchange-card:hover { border-color:color-mix(in srgb, var(--cyan-ink) 30%, var(--border)); }
+  .inbox-row:hover { background:var(--surface-2); }
+  .app-toast { border-radius:12px; box-shadow:0 16px 40px var(--shadow); }
+
+  /* Division / phase toggles behave like the tabs above */
+  a.btn { text-decoration:none; }
+  .division-filter-tab.active, .phase-btn.active { background:var(--heading); color:var(--bg); border-color:var(--heading); }
+  .stage-type-pill { font-family:'Geist','Poppins',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:0.4px; padding:3px 10px; vertical-align:middle; }
+
+  /* Admin + edit controls: same shapes, stay visually secondary */
+  .sortable-placeholder { border-width:1.5px; }
+  .schedule-stage-grid { border-radius:12px; }
+
   /* Gentle fade when switching views (state transition only) */
   @media (prefers-reduced-motion: no-preference) {
     .view:not([hidden]) { animation:viewIn .35s cubic-bezier(.16,1,.3,1); }
