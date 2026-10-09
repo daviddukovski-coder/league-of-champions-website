@@ -811,6 +811,113 @@
     .ranking-table .ranking-clubs .standings-team { font-size:0; gap:0; }
     .ranking-table .rank-player { font-size:13.5px; }
   }
+
+  /* ============ SPORT LAYER: remaining pages ============ */
+  /* Page heads (detail, live, schedule, player, admin) */
+  .detail-head { position:relative; padding:8px 0 26px; margin-bottom:34px; }
+  .detail-head::after { content:''; position:absolute; left:0; bottom:0; width:140px; height:6px; background:var(--cyan); transform:skewX(-30deg); transform-origin:left bottom; }
+  .detail-head h1 { font-size:clamp(46px,7.4vw,100px); line-height:0.9; margin:14px 0 12px; }
+  .detail-head .tier, .tcard .tier { background:var(--cyan); color:var(--pill-text); border-radius:0; transform:skewX(-12deg); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:4px 11px; display:inline-block; }
+  .detail-meta { font-size:13px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
+  .detail-meta a { color:var(--cyan-ink); }
+  .back-btn { text-transform:uppercase; letter-spacing:0.1em; font-size:11.5px; font-weight:700; }
+  .back-btn:hover { color:var(--cyan-ink); }
+
+  /* Tournaments overview band */
+  .page-band p { position:relative; color:rgba(255,255,255,0.75); font-size:16px; max-width:560px; margin-top:-24px; padding-bottom:44px; }
+  #view-home .page-band h1 { font-size:clamp(48px,8vw,112px); padding-bottom:36px; max-width:900px; }
+  .tabs { padding-top:0; }
+
+  /* Tournament cards: navy, energetic, like the landing tour rail */
+  .tcard { position:relative; overflow:hidden; min-height:250px; border:none; color:#fff; padding:22px; justify-content:flex-end; background:radial-gradient(130% 110% at 100% 0%,#22259a 0%,#0b0d63 52%,#07083f 100%); box-shadow:0 10px 30px var(--shadow); }
+  .tcard:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(11,13,99,0.32); border-color:transparent; }
+  .tcard::after { content:''; position:absolute; left:-20%; bottom:46%; width:70%; height:3px; background:linear-gradient(90deg, transparent, rgba(0,242,255,0.55)); transform:rotate(-18deg); pointer-events:none; }
+  .tcard-watermark { position:absolute; top:34px; right:12px; font-family:'Bebas Neue',sans-serif; font-size:92px; line-height:1; color:rgba(0,242,255,0.14); pointer-events:none; }
+  .tcard-top { position:absolute; top:18px; left:18px; right:18px; }
+  .tcard h3 { color:#fff; font-size:30px; line-height:0.95; position:relative; }
+  .tcard-meta { color:rgba(255,255,255,0.72); font-size:13px; position:relative; }
+  .tcard-meta span:first-child { color:var(--cyan); font-weight:700; letter-spacing:0.12em; text-transform:uppercase; font-size:12px; }
+  .tcard-cat { color:rgba(255,255,255,0.6); position:relative; }
+  .tcard-count { color:var(--cyan); position:relative; }
+  .tcard .badge-upcoming { background:rgba(47,158,110,0.25); color:#7ee2b4; }
+  .tcard .badge-past { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.7); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tcard { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); } }
+  :root[data-theme="dark"] .tcard { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); }
+
+  /* Tournament detail */
+  .event-image { aspect-ratio:21/8; margin-bottom:8px; }
+  .event-image::after { content:''; position:absolute; left:0; right:58%; bottom:0; height:6px; background:var(--cyan); transform:skewX(-30deg); transform-origin:left; pointer-events:none; }
+  .event-image .ph-tier { font-size:clamp(64px,13vw,170px); color:rgba(0,242,255,0.22); }
+  .event-image .ph-tag { font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
+  .detail-info-grid { border:none; gap:12px; background:transparent; box-shadow:none; overflow:visible; }
+  .info-block { border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 1px 2px var(--shadow); position:relative; overflow:hidden; }
+  .info-block::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--cyan); }
+  .info-block .label { color:var(--cyan-ink); font-weight:700; letter-spacing:0.12em; }
+  .info-block .value { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:26px; line-height:1.05; letter-spacing:0.4px; }
+  .info-block .value input, .info-block .value select { font-family:'Geist','Poppins',sans-serif; font-size:14px; }
+  .comp-actions .btn, .live-link-row .btn { height:52px; }
+  .player-row { transition:background .2s, box-shadow .2s; }
+  .player-row:hover { background:var(--surface-2); box-shadow:inset 4px 0 0 var(--cyan); }
+  .player-row strong, .player-info > div > span:first-child { font-weight:600; }
+
+  /* Live bracket + schedule */
+  .stage-card, .live-panel { position:relative; overflow:hidden; }
+  .stage-card::before { content:''; position:absolute; left:0; top:0; right:0; height:4px; background:var(--cyan); }
+  .stage-card-head h3 { font-size:26px; }
+  .roster-details summary h2, .live-panel h2 { font-size:22px; }
+  .bracket-round-title, .schedule-court-title { font-family:'Bebas Neue',sans-serif; font-size:20px; font-weight:400; letter-spacing:0.8px; color:var(--heading); }
+  .bracket-round-title::after, .schedule-court-title::after { content:''; display:block; width:28px; height:3px; margin:6px auto 0; background:var(--cyan); transform:skewX(-30deg); }
+  .match-code-badge { background:var(--cyan); color:var(--pill-text); }
+  .bracket-slot-block, .schedule-item, .match-row { border-left:3px solid transparent; }
+  .bracket-slot-block:hover, .schedule-item:hover, .match-row:hover { border-left-color:var(--cyan); }
+  .schedule-item-time { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:22px; line-height:1; color:var(--cyan-ink); width:50px; }
+  .match-score-summary, .schedule-set-score { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:20px; letter-spacing:0.5px; }
+  .standings-table th { letter-spacing:0.1em; font-weight:700; }
+  .pool-placement { background:var(--cyan); color:var(--pill-text); }
+  .btn-live { box-shadow:0 0 0 0 rgba(224,35,60,0.5); }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-live { animation:livePulse 2s ease-out infinite; }
+    @keyframes livePulse { 0% { box-shadow:0 0 0 0 rgba(224,35,60,0.45); } 70%, 100% { box-shadow:0 0 0 14px rgba(224,35,60,0); } }
+  }
+
+  /* Player profile */
+  #view-player .detail-head h1 { font-size:clamp(48px,8vw,108px); }
+  .history-table td .placement-badge { border-radius:0; transform:skewX(-12deg); }
+
+  /* Competition select */
+  .comp-card { position:relative; overflow:hidden; background:radial-gradient(130% 110% at 100% 0%,#22259a 0%,#0b0d63 52%,#07083f 100%); border:none; color:#fff; min-height:160px; justify-content:flex-end; }
+  .comp-card h3 { color:#fff; font-size:34px; }
+  .comp-card span { color:rgba(255,255,255,0.7); }
+  .comp-card:hover { box-shadow:0 18px 44px rgba(11,13,99,0.32); }
+  .comp-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cyan); }
+
+  /* Forms: login, account, registration */
+  .auth-inner h1, .register-head h1 { font-size:clamp(48px,7vw,80px); line-height:0.9; position:relative; padding-bottom:18px; margin-bottom:28px; text-align:left; }
+  .auth-inner h1::after, .register-head h1::after { content:''; position:absolute; left:0; bottom:0; width:110px; height:6px; background:var(--cyan); transform:skewX(-30deg); transform-origin:left bottom; }
+  .auth-switch { text-align:left; }
+  form { position:relative; overflow:hidden; }
+  form::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cyan); }
+  label { text-transform:uppercase; letter-spacing:0.08em; font-size:11px; font-weight:700; }
+  label.checkbox-row, .checkbox-row label, label.checkbox-row span, .profile-media-upload label { text-transform:none; letter-spacing:0; }
+  label.checkbox-row { font-size:12.5px; font-weight:400; }
+  .pay-summary { border-top:4px solid var(--cyan); }
+  .confirmation h2 { font-size:48px; }
+
+  /* Imprint */
+  .prose h1 { font-size:clamp(48px,7vw,84px); line-height:0.9; }
+  .prose h2 { font-size:24px; }
+
+  /* Footer */
+  footer { position:relative; overflow:hidden; }
+  footer::before { content:''; position:absolute; top:0; left:-5%; width:55%; height:6px; background:var(--cyan); transform:skewX(-30deg); }
+
+  @media (max-width:640px) {
+    .tcard { min-height:220px; }
+    .detail-info-grid { grid-template-columns:1fr 1fr; gap:8px; }
+    .info-block { padding:14px 14px 14px 18px; }
+    .info-block .value { font-size:21px; }
+    .event-image { aspect-ratio:16/9; }
+  }
 </style>
 </head>
 <body>
@@ -868,11 +975,13 @@
   </section>
 
   <section id="view-home" class="view" hidden>
-    <div class="container">
-      <div class="home-hero">
+    <div class="page-band">
+      <div class="container">
         <h1 data-ui-key="home.headline">Europe's biggest footvolley tour</h1>
         <p id="heroSub"></p>
       </div>
+    </div>
+    <div class="container">
       <div class="tabs">
         <button class="tab active" data-filter="upcoming" data-ui-key="home.tabUpcoming">Upcoming Tournaments</button>
         <button class="tab" data-filter="past" data-ui-key="home.tabPast">Past Tournaments</button>
@@ -937,9 +1046,7 @@
 
   <section id="view-admin" class="view" hidden>
     <div class="container">
-      <div class="home-hero">
-        <h1>Admin</h1>
-      </div>
+      <div class="detail-head"><h1>Admin</h1></div>
       <div id="adminContent"></div>
     </div>
   </section>
@@ -4053,6 +4160,7 @@ var CLUBS = [
     var countSpan = t.status === 'upcoming' ? '<span class="tcard-count mono" data-count-for="' + t.id + '"></span>' : '';
     return (
       '<button class="tcard" data-id="' + t.id + '">' +
+        '<span class="tcard-watermark">' + esc(t.tier) + '</span>' +
         '<div class="tcard-top"><span class="tier mono">LoC ' + t.tier + '</span>' + statusBadge + '</div>' +
         '<h3>' + esc(t.name) + '</h3>' +
         '<div class="tcard-meta mono"><span>' + t.dateLabel + '</span><span>' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
