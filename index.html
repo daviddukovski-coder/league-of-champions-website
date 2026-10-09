@@ -4595,7 +4595,17 @@ var CLUBS = [
       table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Player</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
           var match = findPlayerByName(r.name);
-          var clubNames = [r.club1, r.club2].filter(Boolean);
+          // The sheet has two club columns and sometimes repeats the same
+          // club in both (possibly spelled differently), so show it once.
+          var seenClubs = {};
+          var clubNames = [r.club1, r.club2].filter(function(name) {
+            if (!name) return false;
+            var club = findClub(name);
+            var key = club.logo ? club.name : normalizeNameForMatch(name);
+            if (seenClubs[key]) return false;
+            seenClubs[key] = true;
+            return true;
+          });
           var clubsHtml = clubNames.length
             ? '<div class="ranking-clubs">' + clubNames.map(function(name) {
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
