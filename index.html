@@ -1216,6 +1216,12 @@
   .season-delete-text { flex:1 1 100%; white-space:normal; font-size:13px; color:var(--lost); margin:4px 0 0; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-outline.reg-action-danger, :root:not([data-theme="light"]) .season-delete-text { color:#ff8a8a; border-color:#ff8a8a; } }
   :root[data-theme="dark"] .btn-outline.reg-action-danger, :root[data-theme="dark"] .season-delete-text { color:#ff8a8a; border-color:#ff8a8a; }
+
+  /* turnier-app.com import panel (admin) */
+  .ta-import-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:10px 0; }
+  .ta-import-row input { flex:1 1 320px; }
+  .ta-import-summary { margin:12px 0; padding-left:18px; font-size:14px; line-height:1.7; }
+  .ta-import-actions { display:flex; gap:10px; flex-wrap:wrap; }
 </style>
 </head>
 <body>
@@ -2379,7 +2385,10 @@ var CLUBS = [
 
   // Generic standings computation — used by group tables now, and by Swiss record
   // buckets / bracket rank-sources later. Sort: match wins desc, set diff desc, point diff desc.
-  function computeStandings(bracket, teamIds, matches) {
+  // tiebreakOrder (optional, a group stage's stage.tiebreakOrder): teams the
+  // organizer ranked by hand after a tie — they keep the positions they
+  // occupy in the computed table but are reordered among themselves.
+  function computeStandings(bracket, teamIds, matches, tiebreakOrder) {
     // Slot-assigned groups can have not-yet-filled (null) slots — no phantom
     // "?" row for those until an actual team lands there.
     teamIds = teamIds.filter(Boolean);
@@ -2406,6 +2415,12 @@ var CLUBS = [
       if (bdiff !== adiff) return bdiff - adiff;
       return (b.pointsWon - b.pointsLost) - (a.pointsWon - a.pointsLost);
     });
+    if (tiebreakOrder && tiebreakOrder.length) {
+      var slots = [], picked = [];
+      list.forEach(function(e, i) { if (tiebreakOrder.indexOf(e.teamId) !== -1) { slots.push(i); picked.push(e); } });
+      picked.sort(function(a, b) { return tiebreakOrder.indexOf(a.teamId) - tiebreakOrder.indexOf(b.teamId); });
+      slots.forEach(function(pos, k) { list[pos] = picked[k]; });
+    }
     return list;
   }
 
@@ -2961,7 +2976,7 @@ var CLUBS = [
     if (src.type === 'rank') {
       var srcStage = findStage(bracket, src.stageId);
       if (!srcStage) return null;
-      var standings = computeStandings(bracket, srcStage.teamIds || [], stageAllMatches(srcStage));
+      var standings = computeStandings(bracket, srcStage.teamIds || [], stageAllMatches(srcStage), srcStage.tiebreakOrder);
       var entry = standings[src.rank - 1];
       return entry ? entry.teamId : null;
     }
@@ -6224,12 +6239,14 @@ var CLUBS = [
       renderRosterPanel(bracket) +
       renderRefereesPanel(bracket) +
       renderRankingSyncPanel() +
+      renderTurnierAppImportPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
       generateAllGroupMatchesHtml(bracket.stages) +
       '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
     wireLiveEvents();
+    wireTurnierAppImport();
     initSortable('stageList', function(order) {
       // Only the visible (filtered) stages were draggable — reorder them among
       // themselves while leaving any hidden-by-filter stages exactly where
@@ -6535,6 +6552,339 @@ var CLUBS = [
   }
 
 
+
+  /* ==================================================================
+     IMPORT FROM TURNIER-APP.COM (admin) — rebuilds a tournament's teams,
+     groups, knockout rounds, results and court schedule from a public
+     turnier-app.com tournament link. Reads only its public JSON API
+     (CORS-enabled); nothing is written until the admin confirms.
+     - Tournaments sharing the link's group become divisions (Male/Female).
+     - Schedule entries that point into another tournament (e.g. Friday's
+       qualification) pull that tournament in too, as qualification stages;
+       its teams are matched to the main draw by player names, so qualifiers
+       keep one team id and are marked main draw, the rest quali.
+     - Finished groups feed the knockout as fixed teams (turnier-app's own
+       manual tie-breaks are respected); unfinished ones as live ranks.
+     ================================================================== */
+  var TURNIER_APP_API = 'https://turnier-app.com/api/apps/6a97de8ac7af1038a2c1277c/entities/';
+  var turnierAppPreview = null;
+
+  function taGet(entity, q) {
+    return fetch(TURNIER_APP_API + entity + '?q=' + encodeURIComponent(JSON.stringify(q))).then(function(r) {
+      if (!r.ok) throw new Error('turnier-app.com answered ' + r.status);
+      return r.json();
+    });
+  }
+
+  function taDivision(t) {
+    var s = ((t.bewerb_name || '') + ' ' + (t.name || '')).toLowerCase();
+    if (/female|women|damen|frauen/.test(s)) return 'Women';
+    if (/male|\bmen\b|herren|männer/.test(s)) return 'Men';
+    return (t.bewerb_name || t.name || 'Main').replace(/\s*-.*$/, '').trim();
+  }
+
+  function taFormat(code, fallback) {
+    var m = /(\d+)gewinnsaetze/.exec(code || '');
+    if (m) return { bestOf: Number(m[1]) * 2 - 1, setPoints: [18, 18, 15, 15, 15].slice(0, Number(m[1]) * 2 - 1) };
+    m = /1satz_(\d+)/.exec(code || '');
+    if (m) return { bestOf: 1, setPoints: [Number(m[1])] };
+    return fallback || { bestOf: 1, setPoints: [18] };
+  }
+
+  function taSets(g) {
+    var sets = [];
+    [1, 2, 3].forEach(function(n) {
+      var a = g['set' + n + '_1'], b = g['set' + n + '_2'];
+      if (a != null && b != null) sets.push([a, b]);
+    });
+    if (!sets.length && g.played && (g.score1 || g.score2)) sets.push([g.score1 || 0, g.score2 || 0]);
+    return g.played ? sets : [];
+  }
+
+  function taDayLabel(iso) {
+    var d = new Date(iso + 'T12:00:00');
+    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+  }
+
+  function loadTurnierApp(url) {
+    var slug = (/\/t\/([^\/?#]+)/.exec(url || '') || [])[1];
+    if (!slug) return Promise.reject(new Error('That is not a turnier-app.com tournament link (…/t/<name>/…).'));
+    var out = { main: [], extra: [] };
+    function fetchData(ids) {
+      var q = { tournament_id: { $in: ids } };
+      return Promise.all([taGet('TournamentTeam', q), taGet('GroupMatch', q), taGet('TournamentRound', q), taGet('TournamentGame', q)])
+        .then(function(r) { return { teams: r[0], groupMatches: r[1], rounds: r[2], games: r[3] }; });
+    }
+    return taGet('Tournament', { slug: slug }).then(function(list) {
+      var t = list[0];
+      if (!t) throw new Error('Tournament not found on turnier-app.com.');
+      return t.group_id ? taGet('Tournament', { group_id: t.group_id }) : [t];
+    }).then(function(tournaments) {
+      out.main = tournaments;
+      var ids = tournaments.map(function(t) { return t.id; });
+      return fetchData(ids).then(function(data) {
+        out.data = data;
+        // Schedule days: every day any round or the setup mentions, ±1 day.
+        var dates = {};
+        data.rounds.forEach(function(r) { if (r.day) dates[r.day] = true; });
+        Object.keys(dates).forEach(function(d) {
+          var t0 = new Date(d + 'T12:00:00').getTime();
+          [-1, 1].forEach(function(k) { dates[new Date(t0 + k * 864e5).toISOString().slice(0, 10)] = true; });
+        });
+        var keys = ['courts_config'].concat(Object.keys(dates).map(function(d) { return 'schedule_plan_' + d; }));
+        return taGet('InfoBlock', { tournament_id: { $in: ids }, key: { $in: keys } });
+      });
+    }).then(function(blocks) {
+      out.blocks = blocks;
+      // Schedule refs into tournaments we don't have yet (e.g. qualification).
+      var known = {};
+      out.data.groupMatches.forEach(function(m) { known['gm:' + m.id] = true; });
+      out.data.games.forEach(function(g) { known[g.id] = true; });
+      var unknown = [];
+      blocks.forEach(function(b) {
+        if (b.key.indexOf('schedule_plan_') !== 0) return;
+        var plan; try { plan = JSON.parse(b.content_de || b.content_en); } catch (e) { return; }
+        (plan.rounds || []).forEach(function(r) {
+          Object.keys(r.courts || {}).forEach(function(c) { var ref = r.courts[c]; if (ref && !known[ref]) unknown.push(ref); });
+        });
+      });
+      if (!unknown.length) return out;
+      var probe = unknown[0];
+      var lookup = probe.indexOf('gm:') === 0 ? taGet('GroupMatch', { id: probe.slice(3) }) : taGet('TournamentGame', { id: probe });
+      return lookup.then(function(found) {
+        var extraId = found[0] && found[0].tournament_id;
+        if (!extraId || out.main.some(function(t) { return t.id === extraId; })) return out;
+        return fetchData([extraId]).then(function(extra) {
+          out.extra.push({ id: extraId, data: extra });
+          return out;
+        });
+      });
+    });
+  }
+
+  function buildBracketFromTurnierApp(src) {
+    var bracket = emptyBracket();
+    var teamByKey = {}, teamByTa = {}, matchByTa = {};
+    function pairKey(p1, p2) { return [normalizeNameForMatch(p1), normalizeNameForMatch(p2)].sort().join('&'); }
+    function sources() {
+      var list = src.main.map(function(t) {
+        return { id: t.id, division: taDivision(t), isExtra: false, data: {
+          teams: src.data.teams.filter(function(x) { return x.tournament_id === t.id; }),
+          groupMatches: src.data.groupMatches.filter(function(x) { return x.tournament_id === t.id; }),
+          rounds: src.data.rounds.filter(function(x) { return x.tournament_id === t.id; }),
+          games: src.data.games.filter(function(x) { return x.tournament_id === t.id; }) } };
+      });
+      src.extra.forEach(function(e) {
+        // Division of an extra tournament = the one whose teams it shares.
+        var keys = e.data.teams.map(function(x) { return pairKey(x.player1, x.player2); });
+        var best = list[0], bestN = -1;
+        list.forEach(function(m) {
+          var n = m.data.teams.filter(function(x) { return keys.indexOf(pairKey(x.player1, x.player2)) !== -1; }).length;
+          if (n > bestN) { best = m; bestN = n; }
+        });
+        list.push({ id: e.id, division: best ? best.division : 'Main', isExtra: true, data: e.data });
+      });
+      return list;
+    }
+    var all = sources();
+
+    // Teams: one per player pair and division; main draw wins over quali.
+    all.forEach(function(s) {
+      s.data.teams.forEach(function(x) {
+        var p1 = (x.player1 || '').trim(), p2 = (x.player2 || '').trim();
+        var key = s.division + '|' + pairKey(p1, p2);
+        var team = teamByKey[key];
+        if (!team) {
+          team = teamByKey[key] = { id: genId('team'), name: p1 + (p2 ? ' & ' + p2 : ''), players: p1 + (p2 ? ' & ' + p2 : ''), club: (x.club || '').trim(), logo: null, seed: null, category: s.isExtra ? 'quali' : 'main', competition: s.division, _points: x.points || 0, _inQuali: s.isExtra };
+          bracket.teams.push(team);
+        }
+        if (!s.isExtra) team.category = 'main'; else team._inQuali = true;
+        team._points = Math.max(team._points, x.points || 0);
+        teamByTa[x.id] = team.id;
+      });
+    });
+    // Seeds per division: direct main draw by points, then qualifiers, then quali-only.
+    var divisions = [];
+    bracket.teams.forEach(function(t) { if (divisions.indexOf(t.competition) === -1) divisions.push(t.competition); });
+    divisions.forEach(function(div) {
+      function rank(t) { return t.category === 'main' ? (t._inQuali ? 1 : 0) : 2; }
+      bracket.teams.filter(function(t) { return t.competition === div; })
+        .sort(function(a, b) { return rank(a) - rank(b) || b._points - a._points; })
+        .forEach(function(t, i) { t.seed = i + 1; });
+    });
+
+    // Groups.
+    var groupStages = {};
+    all.forEach(function(s) {
+      var letters = [];
+      s.data.teams.forEach(function(x) { if (x.group && letters.indexOf(x.group) === -1) letters.push(x.group); });
+      letters.sort().forEach(function(letter) {
+        var members = s.data.teams.filter(function(x) { return x.group === letter; })
+          .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
+        var gms = s.data.groupMatches.filter(function(m) { return m.group === letter; });
+        var fmt = gms.some(function(m) { return m.set1_1 != null; }) ? { bestOf: 3, setPoints: [18, 18, 15] } : { bestOf: 1, setPoints: [18] };
+        var stage = {
+          id: genId('stage'), type: 'group', competition: s.division,
+          label: (s.isExtra ? 'Qualification Group ' : 'Group ') + letter,
+          groupSize: members.length,
+          teamIds: members.map(function(x) { return teamByTa[x.id]; }),
+          defaultFormat: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() },
+          tiebreakOrder: members.filter(function(x) { return x.manual_rank != null; })
+            .sort(function(a, b) { return a.manual_rank - b.manual_rank; }).map(function(x) { return teamByTa[x.id]; }),
+          matches: gms.map(function(m) {
+            var id = genId('match');
+            matchByTa['gm:' + m.id] = id;
+            return { id: id, teamAId: teamByTa[m.team1_id], teamBId: teamByTa[m.team2_id], format: { bestOf: fmt.bestOf, setPoints: fmt.setPoints.slice() }, sets: taSets(m) };
+          })
+        };
+        stage._finished = stage.matches.length > 0 && gms.every(function(m) { return m.played; });
+        bracket.stages.push(stage);
+        groupStages[s.id + '|' + letter] = stage;
+      });
+    });
+
+    // Knockout: one bracket stage per source tournament.
+    all.forEach(function(s) {
+      if (!s.data.rounds.length) return;
+      var byLabel = {};
+      s.data.games.forEach(function(g) { var id = genId('match'); matchByTa[g.id] = id; byLabel[g.game_label] = id; });
+      var counts = {}, common = null;
+      s.data.games.forEach(function(g) { counts[g.format] = (counts[g.format] || 0) + 1; if (!common || counts[g.format] > counts[common]) common = g.format; });
+      var stage = { id: genId('stage'), type: 'bracket', competition: s.division, label: s.isExtra ? 'Qualification Knockout' : 'Knockout', defaultFormat: taFormat(common, bracket.defaultFormat), rounds: [] };
+      function sourceFor(ref) {
+        var m = /^([WL])-(.+)$/.exec(ref || '');
+        if (m && byLabel[m[2]]) return { type: m[1] === 'W' ? 'matchWinner' : 'loser', matchId: byLabel[m[2]] };
+        m = /^([A-Z])(\d+)$/.exec(ref || '');
+        var g = m && groupStages[s.id + '|' + m[1]];
+        if (g) {
+          if (g._finished) {
+            var table = computeStandings(bracket, g.teamIds, g.matches, g.tiebreakOrder);
+            var entry = table[Number(m[2]) - 1];
+            return { type: 'manual', teamId: entry ? entry.teamId : null };
+          }
+          return { type: 'rank', stageId: g.id, rank: Number(m[2]) };
+        }
+        return { type: 'manual', teamId: null };
+      }
+      var rounds = s.data.rounds.slice().sort(function(a, b) { return (a.order || 0) - (b.order || 0); }).map(function(r) {
+        var games = s.data.games.filter(function(g) { return g.round_id === r.id; }).sort(function(a, b) { return (a.game_no || 0) - (b.game_no || 0); });
+        var round = { name: (r.title || r.kuerzel || 'Round').replace(/^(MEN|WOMEN|MALE|FEMALE|HERREN|DAMEN)\s+/i, ''), slots: [], matches: [] };
+        if (/bronze|3rd|third|platz 3/i.test(r.title || '') || /^3/.test(r.kuerzel || '')) round.side = 'thirdPlace';
+        games.forEach(function(g, i) {
+          round.slots.push({ source: sourceFor(g.slot1_ref) }, { source: sourceFor(g.slot2_ref) });
+          var fmt = taFormat(g.format || r.format, stage.defaultFormat);
+          round.matches.push({ id: matchByTa[g.id], slotAIndex: i * 2, slotBIndex: i * 2 + 1, format: fmt, sets: taSets(g) });
+        });
+        return round;
+      });
+      stage.rounds = rounds.filter(function(r) { return r.side !== 'thirdPlace'; }).concat(rounds.filter(function(r) { return r.side === 'thirdPlace'; }));
+      bracket.stages.push(stage);
+    });
+
+    // Schedule: one day per schedule_plan_<date>, rounds become aligned
+    // court items with turnier-app's own slot lengths.
+    var courtsBlock = src.blocks.filter(function(b) { return b.key === 'courts_config'; })[0];
+    var courtNames = [];
+    try { courtNames = JSON.parse(courtsBlock.content_de || courtsBlock.content_en) || []; } catch (e) { courtNames = []; }
+    if (!courtNames.length) courtNames = ['Court 1'];
+    var plans = src.blocks.filter(function(b) { return b.key.indexOf('schedule_plan_') === 0; })
+      .sort(function(a, b) { return a.key < b.key ? -1 : 1; });
+    var seenDates = {};
+    plans.forEach(function(b) {
+      var date = b.key.slice('schedule_plan_'.length);
+      if (seenDates[date]) return;
+      seenDates[date] = true;
+      var plan; try { plan = JSON.parse(b.content_de || b.content_en); } catch (e) { return; }
+      var day = { id: genId('day'), label: taDayLabel(date), startTime: plan.start_time || '09:00', courtCount: courtNames.length, courts: courtNames.map(function() { return []; }) };
+      (plan.rounds || []).forEach(function(r) {
+        var dur = r.duration || plan.default_duration || 20;
+        if (r.type === 'event') {
+          day.courts.forEach(function(items, c) {
+            items.push(c === 0 ? { id: genId('sked'), type: 'custom', label: (r.label || 'Break').trim(), durationMin: dur } : { id: genId('sked'), type: 'break', label: 'Break', durationMin: dur });
+          });
+          return;
+        }
+        courtNames.forEach(function(name, c) {
+          var ref = r.courts && r.courts[name];
+          var matchId = ref && matchByTa[ref];
+          day.courts[c].push(matchId ? { id: genId('sked'), type: 'match', matchId: matchId, durationMin: dur } : { id: genId('sked'), type: 'break', label: 'Break', durationMin: dur });
+        });
+      });
+      bracket.schedule.days.push(day);
+    });
+    bracket.schedule.courtCount = courtNames.length;
+    bracket.schedule.courtNames = courtNames;
+
+    bracket.teams.forEach(function(t) { delete t._points; delete t._inQuali; });
+    bracket.stages.forEach(function(st) { delete st._finished; });
+    return bracket;
+  }
+
+  function turnierAppSummaryHtml(b) {
+    var divs = [];
+    b.teams.forEach(function(t) { if (divs.indexOf(t.competition) === -1) divs.push(t.competition); });
+    var rows = divs.map(function(div) {
+      var teams = b.teams.filter(function(t) { return t.competition === div; });
+      var stages = b.stages.filter(function(s) { return s.competition === div; });
+      var groups = stages.filter(function(s) { return s.type === 'group'; });
+      var ko = stages.filter(function(s) { return s.type === 'bracket'; });
+      var played = 0, total = 0;
+      groups.forEach(function(s) { s.matches.forEach(function(m) { total++; if (m.sets.length) played++; }); });
+      ko.forEach(function(s) { s.rounds.forEach(function(r) { r.matches.forEach(function(m) { total++; if (m.sets.length) played++; }); }); });
+      var quali = teams.filter(function(t) { return t.category === 'quali'; }).length;
+      return '<li><strong>' + esc(divisionWord(div)) + ':</strong> ' + teams.length + ' teams' + (quali ? ' (' + quali + ' quali only)' : '') + ', ' +
+        groups.length + ' groups, ' + ko.map(function(s) { return s.rounds.length + ' knockout rounds' + (s.label.indexOf('Qualification') === 0 ? ' (qualification)' : ''); }).join(' + ') +
+        ', ' + played + '/' + total + ' matches with results</li>';
+    }).join('');
+    var days = b.schedule.days.map(function(d) {
+      var n = d.courts.reduce(function(sum, items) { return sum + items.filter(function(i) { return i.type === 'match'; }).length; }, 0);
+      return esc(d.label) + ' from ' + esc(d.startTime) + ' (' + n + ' matches)';
+    }).join(' · ');
+    return '<ul class="ta-import-summary">' + rows + '<li><strong>Schedule:</strong> ' + (days || 'none') + (b.schedule.courtNames ? ' on ' + b.schedule.courtNames.map(esc).join(' + ') : '') + '</li></ul>';
+  }
+
+  function renderTurnierAppImportPanel() {
+    return '<details class="live-panel admin-only roster-details" id="taImportPanel"' + (turnierAppPreview ? ' open' : '') + '>' +
+      '<summary><h2>Import from turnier-app.com</h2></summary>' +
+      '<p class="empty-note">Paste the public link of a turnier-app.com tournament to copy its teams, groups, knockout rounds, results and court schedule here. You see a summary first; importing replaces this tournament\'s current bracket and schedule.</p>' +
+      '<div class="ta-import-row"><input type="url" id="taImportUrl" placeholder="https://turnier-app.com/t/…" value="' + esc((turnierAppPreview && turnierAppPreview.url) || '') + '">' +
+      '<button type="button" class="btn btn-outline btn-sm" id="taImportLoad">Load</button></div>' +
+      '<div id="taImportResult">' + (turnierAppPreview ? turnierAppSummaryHtml(turnierAppPreview.bracket) +
+        '<div class="ta-import-actions"><button type="button" class="btn btn-cyan btn-sm" id="taImportConfirm">Import &amp; replace</button><button type="button" class="btn btn-outline btn-sm" id="taImportCancel">Cancel</button></div>' : '') + '</div>' +
+    '</details>';
+  }
+
+  function wireTurnierAppImport() {
+    var load = document.getElementById('taImportLoad');
+    if (!load) return;
+    load.addEventListener('click', function() {
+      if (!isAdmin) return;
+      var url = document.getElementById('taImportUrl').value.trim();
+      var result = document.getElementById('taImportResult');
+      load.disabled = true;
+      result.innerHTML = '<p class="empty-note">Loading from turnier-app.com …</p>';
+      loadTurnierApp(url).then(function(src) {
+        turnierAppPreview = { url: url, bracket: buildBracketFromTurnierApp(src) };
+        renderLive();
+      }).catch(function(err) {
+        load.disabled = false;
+        result.innerHTML = '<p class="form-error" style="text-align:left">' + esc(err && err.message ? err.message : String(err)) + '</p>';
+      });
+    });
+    var confirm = document.getElementById('taImportConfirm');
+    if (confirm) confirm.addEventListener('click', function() {
+      if (!isAdmin || !turnierAppPreview) return;
+      confirm.disabled = true;
+      currentBracket = turnierAppPreview.bracket;
+      turnierAppPreview = null;
+      persistBracket();
+    });
+    var cancel = document.getElementById('taImportCancel');
+    if (cancel) cancel.addEventListener('click', function() { turnierAppPreview = null; renderLive(); });
+  }
+
   function renderStageCard(stage) {
     var teamChecklist = '';
     if ((stage.type === 'group' || stage.type === 'modifiedPool') && stage.groupSize) {
@@ -6601,7 +6951,7 @@ var CLUBS = [
   }
 
   function renderStandingsTable(stage) {
-    var standings = computeStandings(currentBracket, stage.teamIds, stage.matches);
+    var standings = computeStandings(currentBracket, stage.teamIds, stage.matches, stage.tiebreakOrder);
     if (!standings.length) return '';
     return '<table class="standings-table"><thead><tr>' +
       '<th>Team</th><th>MP</th><th>W</th><th>L</th><th>Sets</th><th>Points</th>' +
@@ -7891,6 +8241,7 @@ var CLUBS = [
 
   function scheduleItemDuration(item) {
     if (item.type === 'custom' || item.type === 'break' || item.type === 'external') return item.durationMin || 0;
+    if (item.durationMin) return item.durationMin; // fixed slot length (e.g. imported from turnier-app.com)
     var found = findMatchAnywhere(currentBracket, item.matchId);
     if (!found) return 0;
     return matchDurationMinutes(found.match, currentBracket.defaultFormat);
@@ -8556,7 +8907,8 @@ var CLUBS = [
       // markup, so "No matches yet" still shows correctly for them.
       var isEditMode = document.body.classList.contains('admin-edit-mode');
       var hasVisibleItems = isEditMode ? items.length > 0 : items.some(function(it) { return it.type !== 'break'; });
-      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + uiFormat('schedule.court', { n: i + 1 }) + '</div>' +
+      var courtNames = (currentBracket.schedule && currentBracket.schedule.courtNames) || [];
+      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + (courtNames[i] ? esc(courtNames[i]) : uiFormat('schedule.court', { n: i + 1 })) + '</div>' +
         '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
         (hasVisibleItems ? '' : '<p class="empty-note">No matches yet.</p>') +
         '<div class="admin-only-flex schedule-add-block">' +
