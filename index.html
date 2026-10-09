@@ -1107,6 +1107,17 @@
     .podium-card-club { font-size:11px; gap:5px; }
     .podium-card-club .club-avatar { width:16px; height:16px; }
   }
+
+  /* Podium: bigger club logo in the club line */
+  .podium-card-club { gap:12px; margin-top:6px; }
+  .podium-card-club .club-avatar { width:46px; height:46px; border-radius:10px; font-size:14px; }
+  .podium-1 .podium-card-club .club-avatar { width:56px; height:56px; border-radius:12px; font-size:16px; }
+  .podium-card-club .club-avatar img { padding:3px; }
+  @media (max-width:640px) {
+    .podium-card-club { gap:6px; margin-top:4px; flex-direction:column; align-items:flex-start; }
+    .podium-card-club .club-avatar { width:30px; height:30px; border-radius:7px; }
+    .podium-1 .podium-card-club .club-avatar { width:36px; height:36px; border-radius:8px; }
+  }
 </style>
 </head>
 <body>
