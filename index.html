@@ -1388,6 +1388,9 @@
       apiKey: 'AIzaSyDKJ4a2LPDL6PmKrUFr9B8i_6sdIIDl65M',
       authDomain: 'league-of-champions-website.firebaseapp.com',
       projectId: 'league-of-champions-website',
+      // Without this every upload (profile media, admin images, hero, sponsor
+      // logos) failed silently: firebase.storage() had no bucket to write to.
+      storageBucket: 'league-of-champions-website.firebasestorage.app',
       appId: '1:924054417519:web:e60309941122709ea09d9a',
       messagingSenderId: '924054417519'
     },
@@ -1957,13 +1960,35 @@ var CLUBS = [
   // Generalized version of saveContentImage below — same upload path, but any
   // field name instead of always 'image' (used for the optional per-tournament
   // seeding-graphic photo, keyed separately from the tournament's main image).
+  // Every Firebase Storage upload goes through here: never throws
+  // synchronously (a missing bucket used to kill uploads without a trace),
+  // reports progress 0-100, resolves with the download URL.
+  function uploadToStorage(path, file, onProgress) {
+    return new Promise(function(resolve, reject) {
+      var task = firebase.storage().ref(path).put(file);
+      task.on('state_changed', function(snap) {
+        if (onProgress && snap.totalBytes) onProgress(Math.round(snap.bytesTransferred / snap.totalBytes * 100));
+      }, reject, function() {
+        task.snapshot.ref.getDownloadURL().then(resolve, reject);
+      });
+    });
+  }
+
+  function uploadErrorMessage(err) {
+    var code = err && (err.code || err.message);
+    if (code === 'storage-quota') return 'File too large for demo storage.';
+    if (code === 'storage/unauthorized') return 'Upload blocked: Firebase Storage rules don\'t allow this yet.';
+    if (code === 'storage/canceled') return 'Upload cancelled.';
+    if (code === 'storage/retry-limit-exceeded') return 'Upload timed out. Please check your connection and try again.';
+    return 'Upload failed' + (code ? ' (' + code + ')' : '') + '.';
+  }
+
   function saveImageField(key, field, file) {
     if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
     if (AUTH_DEMO_MODE) {
       return fileToDataUrl(file).then(function(dataUrl) { return saveContentField(key, field, dataUrl); });
     }
-    var ref = firebase.storage().ref('content/' + key + '/' + field + '-' + Date.now() + '-' + file.name);
-    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+    return uploadToStorage('content/' + key + '/' + field + '-' + Date.now() + '-' + file.name, file).then(function(url) {
       return saveContentField(key, field, url);
     });
   }
@@ -1983,8 +2008,7 @@ var CLUBS = [
         return saveContentFields('settings', { sponsorLogos: existing.concat([dataUrl]) });
       });
     }
-    var ref = firebase.storage().ref('content/settings/sponsor-' + Date.now() + '-' + file.name);
-    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+    return uploadToStorage('content/settings/sponsor-' + Date.now() + '-' + file.name, file).then(function(url) {
       return saveContentFields('settings', { sponsorLogos: existing.concat([url]) });
     });
   }
@@ -2014,8 +2038,7 @@ var CLUBS = [
         }
       });
     }
-    var ref = firebase.storage().ref('content/hero/' + Date.now() + '-' + file.name);
-    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
+    return uploadToStorage('content/hero/' + Date.now() + '-' + file.name, file).then(function(url) {
       return saveContentField('hero', field, url);
     });
   }
@@ -3997,9 +4020,9 @@ var CLUBS = [
     label.textContent = 'Uploading …';
     saveContentImage(key, input.files[0]).then(function() {
       route();
-    }).catch(function() {
+    }).catch(function(err) {
       label.textContent = prevText;
-      window.alert('Upload failed. Please try again.');
+      window.alert(uploadErrorMessage(err));
     });
   });
 
@@ -4017,7 +4040,7 @@ var CLUBS = [
       if (err && err.message === 'storage-quota') {
         window.alert("This video is too large for demo mode (browser storage is limited to a few MB). Either use a shorter/smaller clip, or set up real Firebase Storage (see setup guide) for unlimited size.");
       } else {
-        window.alert('Upload failed. Please try again.');
+        window.alert(uploadErrorMessage(err));
       }
     });
   });
@@ -5042,7 +5065,7 @@ var CLUBS = [
     el.querySelector('#addSponsorLogoInput').addEventListener('change', function(e) {
       var file = e.target.files[0];
       if (!file) return;
-      addSponsorLogo(file).then(function() { renderAdmin(); }).catch(function() { window.alert('Upload failed.'); });
+      addSponsorLogo(file).then(function() { renderAdmin(); }).catch(function(err) { window.alert(uploadErrorMessage(err)); });
     });
     el.querySelectorAll('[data-remove-sponsor-logo]').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -5484,7 +5507,7 @@ var CLUBS = [
   // Self-edit photo/video — the two are mutually exclusive, uploading one clears
   // the other. Modeled on saveHeroMedia (admin hero upload) but self-gated and
   // targeting the players/{uid} doc instead of the shared content doc.
-  function savePlayerMedia(uid, file) {
+  function savePlayerMedia(uid, file, onProgress) {
     if (!currentUser || currentUser.uid !== uid) return Promise.reject(new Error('Not authorized.'));
     var isVideo = file.type.indexOf('video') === 0;
     var field = isVideo ? 'videoUrl' : 'photoUrl';
@@ -5511,8 +5534,7 @@ var CLUBS = [
         }
       });
     }
-    var ref = firebase.storage().ref('players/' + uid + '/' + Date.now() + '-' + file.name);
-    return ref.put(file).then(function(snap) { return snap.ref.getDownloadURL(); }).then(applyUpdate);
+    return uploadToStorage('players/' + uid + '/' + Date.now() + '-' + file.name, file, onProgress).then(applyUpdate);
   }
 
   /* ==================================================================
@@ -5784,10 +5806,18 @@ var CLUBS = [
       if (mediaInput) mediaInput.addEventListener('change', function() {
         var file = mediaInput.files[0];
         if (!file) return;
-        savePlayerMedia(player.uid, file).then(function() {
+        var label = document.querySelector('label[for="playerMediaInput"]');
+        var labelText = label ? label.textContent : '';
+        function setLabel(text) { if (label) label.textContent = text; }
+        setLabel('Uploading …');
+        mediaInput.disabled = true;
+        savePlayerMedia(player.uid, file, function(pct) { setLabel('Uploading … ' + pct + '%'); }).then(function() {
           showPlayer(player.uid);
         }).catch(function(err) {
-          window.alert(err && err.message === 'storage-quota' ? 'File too large for demo storage.' : 'Upload failed.');
+          setLabel(labelText);
+          mediaInput.disabled = false;
+          mediaInput.value = '';
+          window.alert(uploadErrorMessage(err));
         });
       });
     }
