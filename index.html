@@ -1007,6 +1007,27 @@
     .ranking-table .rank-pts { font-size:22px; }
     .ranking-table .rank-pts small { display:none; }
   }
+
+  /* ============ CLUB LOGO TILES (match the organizer's graphics) ============
+     Logos sit whole (never cropped) on a light silver-gradient tile with
+     rounded corners; big tiles on the podium / landing leaders are slanted
+     like the share graphics, the image counter-skewed so it stays upright. */
+  .club-avatar { border-radius:7px; }
+  .club-avatar:has(img) { background:linear-gradient(135deg,#c7cbe8 0%,#eceef9 48%,#ffffff 100%); box-shadow:inset 0 0 0 1px rgba(11,13,99,0.08); }
+  .club-avatar img { object-fit:contain; padding:2px; }
+  .podium-logo { margin:6px 0 4px; }
+  .podium-logo .club-avatar, .podium-1 .podium-logo .club-avatar { width:96px; height:96px; border-radius:14px; transform:skewX(-8deg); box-shadow:0 10px 24px rgba(3,4,40,0.45), inset 0 0 0 1px rgba(255,255,255,0.6); font-size:26px; }
+  .podium-1 .podium-logo .club-avatar { width:122px; height:122px; border-radius:16px; box-shadow:0 0 0 3px var(--cyan), 0 0 34px rgba(0,242,255,0.4), 0 12px 28px rgba(3,4,40,0.5); }
+  .podium-logo .club-avatar img, .podium-1 .podium-logo .club-avatar img { padding:9px; transform:skewX(8deg); }
+  .leader-row { grid-template-columns:44px 46px minmax(0,1fr) auto; }
+  .leader-row .club-avatar { width:46px; height:46px; border-radius:9px; transform:skewX(-8deg); }
+  .leader-row .club-avatar img { padding:4px; transform:skewX(8deg); }
+  .ranking-table .standings-team .club-avatar { width:34px; height:34px; }
+  @media (max-width:640px) {
+    .podium-logo .club-avatar { width:60px; height:60px; border-radius:10px; }
+    .podium-1 .podium-logo .club-avatar { width:76px; height:76px; border-radius:12px; }
+    .podium-logo .club-avatar img, .podium-1 .podium-logo .club-avatar img { padding:5px; }
+  }
 </style>
 </head>
 <body>
