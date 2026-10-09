@@ -1138,6 +1138,19 @@
     .podium-1 .podium-card-logo { width:74px; height:74px; right:-6px; bottom:-20px; }
     .podium-card-logo .club-avatar { font-size:26px; }
   }
+
+  /* Club logos are cleaned to transparent (see cleanClubLogos), so no tile:
+     they sit free with a soft shadow, readable on light and dark surfaces. */
+  .club-avatar:has(img) { background:none !important; box-shadow:none !important; border-radius:0; overflow:visible; }
+  .club-avatar img { padding:0; filter:drop-shadow(0 1px 2px rgba(3,4,40,0.25)); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .club-avatar img { filter:drop-shadow(0 0 1px rgba(255,255,255,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.4)); } }
+  :root[data-theme="dark"] .club-avatar img { filter:drop-shadow(0 0 1px rgba(255,255,255,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+  .podium-card-logo .club-avatar img { filter:none; }
+
+  /* Top-3 rank badges keep their colours in dark mode too */
+  :root .ranking-table .rank-1 .rank-num { background:var(--cyan); color:var(--pill-text); }
+  :root .ranking-table .rank-2 .rank-num { background:#c3ccd3; color:#232a2e; }
+  :root .ranking-table .rank-3 .rank-num { background:#d99456; color:#3a1c00; }
 </style>
 </head>
 <body>
@@ -4600,7 +4613,6 @@ var CLUBS = [
     }
 
     document.getElementById('rankingTable').innerHTML = table;
-    document.querySelectorAll('#rankingTable .podium-card-logo img').forEach(knockOutWhiteBg);
   }
 
   // Prepares a podium logo: some files carry an opaque white background
@@ -4610,15 +4622,24 @@ var CLUBS = [
   // pixels (white shapes enclosed by the logo's outline stay). Cached per
   // source; any failure leaves the image as it is.
   var knockedOutLogos = {};
+  var pendingLogos = {};
   function knockOutWhiteBg(img) {
     var src = img.getAttribute('src');
-    if (!src) return;
-    if (knockedOutLogos[src]) { img.src = knockedOutLogos[src]; return; }
+    if (!src || img.dataset.logoClean) return;
+    img.dataset.logoClean = '1';
+    if (knockedOutLogos[src]) { if (knockedOutLogos[src] !== src) img.src = knockedOutLogos[src]; return; }
+    if (pendingLogos[src]) { pendingLogos[src].push(img); return; }
+    pendingLogos[src] = [img];
+    function done(result) {
+      knockedOutLogos[src] = result;
+      (pendingLogos[src] || []).forEach(function(el) { if (result !== src) el.src = result; });
+      delete pendingLogos[src];
+    }
     var probe = new Image();
     probe.onload = function() {
       try {
         var w = probe.naturalWidth, h = probe.naturalHeight;
-        if (!w || !h || w * h > 1200 * 1200) return;
+        if (!w || !h || w * h > 1200 * 1200) { done(src); return; }
         var c = document.createElement('canvas'); c.width = w; c.height = h;
         var ctx = c.getContext('2d'); ctx.drawImage(probe, 0, 0);
         var d = ctx.getImageData(0, 0, w, h), px = d.data;
@@ -4650,7 +4671,11 @@ var CLUBS = [
           for (var q2 = 0; q2 < w * h; q2++) {
             if (band[q2]) continue;
             var qx = q2 % w;
-            if ((qx > 0 && band[q2 - 1]) || (qx < w - 1 && band[q2 + 1]) || (q2 >= w && band[q2 - w]) || (q2 < w * (h - 1) && band[q2 + w])) {
+            // Also the outermost 2px of the file: where the logo is clipped
+            // by the image edge (Serfay's ring) the edge pixels are grey
+            // mixes that never touch the cleared background.
+            var qy = (q2 / w) | 0, onEdge = pass === 0 && (qx < 2 || qy < 2 || qx > w - 3 || qy > h - 3);
+            if (onEdge || (qx > 0 && band[q2 - 1]) || (qx < w - 1 && band[q2 + 1]) || (q2 >= w && band[q2 - w]) || (q2 < w * (h - 1) && band[q2 + w])) {
               next[q2] = 1;
               var o = q2 * 4, r = px[o], g = px[o + 1], b = px[o + 2];
               var a = Math.max(255 - r, 255 - g, 255 - b) / 255;
@@ -4670,18 +4695,28 @@ var CLUBS = [
         for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) {
           if (px[(yy * w + xx) * 4 + 3] > 16) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
         }
-        if (x1 < 0) { knockedOutLogos[src] = src; return; }
+        if (x1 < 0) { done(src); return; }
         ctx.putImageData(d, 0, 0);
         var cw = x1 - x0 + 1, ch = y1 - y0 + 1;
-        if (!whiteBg && cw > w * 0.9 && ch > h * 0.9) { knockedOutLogos[src] = src; return; }
+        if (!whiteBg && cw > w * 0.9 && ch > h * 0.9) { done(src); return; }
         var out = document.createElement('canvas'); out.width = cw; out.height = ch;
         out.getContext('2d').drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch);
-        knockedOutLogos[src] = out.toDataURL('image/png');
-        img.src = knockedOutLogos[src];
-      } catch (e) { knockedOutLogos[src] = src; }
+        done(out.toDataURL('image/png'));
+      } catch (e) { done(src); }
     };
+    probe.onerror = function() { done(src); };
     probe.src = src;
   }
+
+  // Clean every club logo the site renders (rankings, registrations,
+  // brackets, schedule, profiles), whenever it appears.
+  function cleanClubLogos(root) {
+    (root.querySelectorAll ? root.querySelectorAll('.club-avatar img') : []).forEach(knockOutWhiteBg);
+  }
+  new MutationObserver(function(muts) {
+    muts.forEach(function(m) { m.addedNodes.forEach(function(n) { if (n.nodeType === 1) cleanClubLogos(n); }); });
+  }).observe(document.body, { childList: true, subtree: true });
+  cleanClubLogos(document);
 
   function rankRowClass(rank) { return rank <= 3 ? 'rank-top rank-' + rank : ''; }
 
