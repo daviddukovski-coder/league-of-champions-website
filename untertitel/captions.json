@@ -1,0 +1,12 @@
+{
+  "orangeColor": "#FF7A00D5",
+  "autoHighlightEveryNthWord": 10,
+  "captions": [
+    { "start": 0.0, "end": 2.4, "text": "Willkommen zur League of *Champions*" },
+    { "start": 2.4, "end": 4.8, "text": "Footvolley auf höchstem Niveau in Europa" },
+    { "start": 4.8, "end": 7.2, "text": "Die besten Teams treten gegeneinander an" },
+    { "start": 7.2, "end": 9.6, "text": "und kämpfen um den großen Titel" },
+    { "start": 9.6, "end": 13.0, "text": "Melde dich jetzt mit deinem Partner an und sichere dir deinen Startplatz" },
+    { "start": 13.0, "end": 15.5, "text": "Wir sehen uns am *Strand*" }
+  ]
+}
