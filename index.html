@@ -1400,6 +1400,42 @@
   @media (max-width:640px) {
     :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex-basis:84vw; width:84vw; }
   }
+
+  /* ig bracket, refined: slimmer tiles, finer rim, softer sheen */
+  :root[data-design="ig"] {
+    --ig-metal:linear-gradient(110deg, rgba(40,43,150,0.95) 0%, rgba(70,72,170,0.95) 38%, rgba(150,150,215,0.9) 50%, rgba(78,80,176,0.95) 62%, rgba(36,39,142,0.95) 100%);
+  }
+  :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex:0 0 290px; width:290px; }
+  :root[data-design="ig"] .bracket-scroll .bracket-slot-block { padding-top:14px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams,
+  :root[data-design="ig"] .bracket-scroll .match-teams-line { gap:4px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row,
+  :root[data-design="ig"] .bracket-scroll .match-teams-line > .match-team,
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams:not(.schedule-match-scored) > .match-team {
+    min-height:40px; padding:5px 50px 5px 12px; border-radius:8px;
+    border:1px solid rgba(255,255,255,0.45);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 12px rgba(3,4,40,0.35);
+  }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-scored .schedule-match-row:not(.schedule-match-winner) { filter:none; opacity:0.55 !important; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row .match-team,
+  :root[data-design="ig"] .bracket-scroll .match-team { font-size:15px; line-height:1.1; letter-spacing:0.5px; text-shadow:none; }
+  :root[data-design="ig"] .bracket-scroll .team-name { flex-direction:row; flex-wrap:wrap; column-gap:0; }
+  :root[data-design="ig"] .bracket-scroll .team-name-amp { display:inline; opacity:0.6; white-space:pre; }
+  :root[data-design="ig"] .bracket-scroll .team-name-p { overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar { width:44px; height:44px; right:-4px; }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar:not(:has(img)) { width:28px; height:28px; right:10px; font-size:11px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-set-score { font-size:17px; min-width:18px; text-shadow:none; }
+  :root[data-design="ig"] .bracket-scroll .match-team.tbd { font-size:13px; }
+  :root[data-design="ig"] .bracket-scroll .bracket-round-title { font-size:18px; letter-spacing:0.8px; text-shadow:none; }
+  :root[data-design="ig"] .bracket-scroll .match-code-badge { font-size:11px; color:rgba(255,255,255,0.45); }
+  :root[data-design="ig"] .bracket-scroll .is-final .schedule-match-row { border-color:rgba(255,210,63,0.7); }
+  :root[data-design="ig"] .bracket-scroll .bracket-champion { padding:16px 14px; border-width:1px; border-color:rgba(255,255,255,0.6); }
+  :root[data-design="ig"] .bracket-champion-trophy { width:40px; height:40px; }
+  :root[data-design="ig"] .bracket-champion-name { font-size:22px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row:hover { transform:translateX(2px); }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex-basis:80vw; width:80vw; }
+  }
 </style>
 </head>
 <body>
