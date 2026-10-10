@@ -1525,8 +1525,6 @@
   .bm-name { flex:1; min-width:0; display:flex; flex-direction:column; font-family:'Bebas Neue',sans-serif; font-size:13.5px; line-height:1.1; letter-spacing:0.5px; text-transform:uppercase; }
   .bm-name > span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bm-name.bm-tbd { font-size:12px; opacity:0.7; text-transform:none; font-family:inherit; }
-  .bm-sum { position:relative; z-index:1; font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; min-width:14px; text-align:center; color:rgba(255,255,255,0.8); font-variant-numeric:tabular-nums; }
-  .bm-tile.is-won .bm-sum { color:var(--cyan); }
   .bm-tile .club-avatar { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:26px; height:26px; }
   .bm-tile:hover { transform:translateY(-1px); }
   .bm-champion .club-avatar { width:44px; height:44px; }
@@ -1547,7 +1545,6 @@
   .bm-tile { padding:4px 30px 4px 8px; gap:4px; }
   .bm-tile .club-avatar { width:22px; height:22px; right:5px; }
   .bm-name { font-size:13px; letter-spacing:0.3px; }
-  .bm-sum { font-size:18px; }
   /* Short line joining the two finalists, like the graphics */
   .bm-tile[data-key$=":0"][style*="--side:0"]::after { content:none; }
 
@@ -1555,6 +1552,25 @@
 
   .sr-only { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   .bm-tile:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; transform:translateY(-1px); }
+
+  /* Tree tiles adapt to their width: full names when there's room, surnames
+     when narrow, logo dropped when very narrow; real set scores always. */
+  .bm-tile { container-type:inline-size; padding:4px 7px 4px 9px; gap:6px; }
+  .bm-tile .club-avatar { position:static; transform:none; flex:0 0 22px; width:22px; height:22px; }
+  .bm-name b { font-weight:400; }
+  .bm-name .bm-short { display:none; }
+  .bm-sets { display:flex; gap:5px; font-family:'Bebas Neue',sans-serif; font-size:17px; line-height:1; color:rgba(255,255,255,0.78); font-variant-numeric:tabular-nums; flex:none; }
+  .bm-sets > span { min-width:12px; text-align:center; }
+  .bm-tile.is-won .bm-sets { color:var(--cyan); }
+  .bm-tile.use-short .bm-name .bm-full { display:none; }
+  .bm-tile.use-short .bm-name .bm-short { display:inline; }
+  @container (max-width:150px) {
+    .club-avatar { display:none !important; }
+    .bm-sets { gap:4px; font-size:16px; }
+  }
+
+  .bm-tile.use-tiny .bm-name { font-size:11.5px; letter-spacing:0.1px; }
+  .bm-tile.use-tiny .bm-sets { font-size:15px; gap:3px; }
 </style>
 </head>
 <body>
@@ -7872,7 +7888,7 @@ var CLUBS = [
       sets.forEach(function(x) { if (x[0] > x[1]) wonA++; else if (x[1] > x[0]) wonB++; });
       var single = sets.length === 1;
       return {
-        m: m, ri: ri, team: [a, b], winner: w,
+        m: m, ri: ri, team: [a, b], winner: w, sets: sets,
         live: !w && !!a && !!b && sets.some(function(x) { return (Number(x[0]) || 0) + (Number(x[1]) || 0) > 0; }),
         sum: sets.length ? [single ? sets[0][0] : wonA, single ? sets[0][1] : wonB] : ['', ''],
         title: sets.map(function(x) { return x[0] + ':' + x[1]; }).join(', ')
@@ -7939,9 +7955,17 @@ var CLUBS = [
       var teamId = t.st.team[t.k], team = teamId && findBracketTeam(bracket, teamId);
       var w = t.st.winner, cls = 'bm-tile' + (w && w === teamId ? ' is-won' : w ? ' is-lost' : '') + (t.st.live ? ' is-live' : '') + (team ? '' : ' is-tbd');
       var parts = team ? (team.name || '').split(' & ') : [];
+      // Full name, and the surname for narrow tiles (CSS container query).
+      function line(full) {
+        var words = (full || '').trim().split(/\s+/), last = words[words.length - 1] || full;
+        // Long double surnames like the graphics: "Hofmann-Wellenhof" -> "H.-Wellenhof".
+        if (last.length > 12 && last.indexOf('-') > 0) last = last.charAt(0) + '.-' + last.split('-').slice(1).join('-');
+        return '<span><b class="bm-full">' + esc(full) + '</b><b class="bm-short">' + esc(last) + '</b></span>';
+      }
       var name = team
-        ? '<span class="bm-name" translate="no"><span>' + esc(parts[0] || '') + '</span>' + (parts[1] ? '<span>' + esc(parts[1]) + '</span>' : '') + '</span>'
+        ? '<span class="bm-name" translate="no">' + line(parts[0] || '') + (parts[1] ? line(parts[1]) : '') + '</span>'
         : '<span class="bm-name bm-tbd">' + esc(t.label || 'TBD') + '</span>';
+      var setsHtml = '<span class="bm-sets" aria-hidden="true">' + (t.st.sets || []).map(function(x) { return '<span>' + esc(x[t.k]) + '</span>'; }).join('') + '</span>';
       var link = '';
       if (t.finalLink) link = ' data-to="' + esc(t.to) + '" data-link="final"';
       else if (t.to) link = ' data-to="' + esc(t.to) + '" data-link="' + (w ? (w === teamId ? 'won' : 'lost') : t.st.live ? 'live' : 'open') + '"';
@@ -7952,7 +7976,7 @@ var CLUBS = [
       return '<div class="' + cls + '" data-key="' + esc(t.key) + '"' + link + (teamId ? ' data-team="' + esc(teamId) + '" tabindex="0"' : '') +
         ' title="' + esc((team ? team.name : '') + (t.st.title ? ' · ' + t.st.title : '')) + '"' +
         ' style="--col:' + col + ';--side:' + (t.side === 'left' ? -1 : t.side === 'right' ? 1 : 0) + ';--d:' + Math.max(0, depthCount - 1 - t.depth) + ';top:' + (TOP + shift + t.y * ROW) + 'px">' +
-        name + '<span class="bm-sum" aria-hidden="true">' + esc(t.st.sum[t.k]) + '</span><span class="sr-only">' + esc(srText) + '</span>' + (team ? clubAvatarHtml(findClub(team.club)) : '') + '</div>';
+        name + setsHtml + '<span class="sr-only">' + esc(srText) + '</span>' + (team ? clubAvatarHtml(findClub(team.club)) : '') + '</div>';
     }
     var titles = '';
     for (var d = 0; d < depthCount; d++) {
@@ -7993,6 +8017,18 @@ var CLUBS = [
   // tile it feeds (both teams of a match meet in a "⊐").
   function drawMirrorLines(root) {
     (root || document).querySelectorAll('.bm-tree').forEach(function(tree) {
+      // Per tile: full names if they fit, otherwise surnames.
+      // If even the surname doesn't fit, a slightly smaller font.
+      function overflows(tile) {
+        var lines = tile.querySelectorAll('.bm-name > span');
+        for (var i = 0; i < lines.length; i++) if (lines[i].scrollWidth > lines[i].clientWidth + 1) return true;
+        return false;
+      }
+      tree.querySelectorAll('.bm-tile').forEach(function(tile) {
+        tile.classList.remove('use-short', 'use-tiny');
+        if (overflows(tile)) tile.classList.add('use-short');
+        if (overflows(tile)) tile.classList.add('use-tiny');
+      });
       var old = tree.querySelector('svg.bm-lines');
       if (old) old.remove();
       if (!tree.offsetParent) return;
