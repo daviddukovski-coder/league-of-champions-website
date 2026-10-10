@@ -1441,7 +1441,7 @@
 
   /* ============ Mirrored bracket (wide screens, outside edit mode) ============ */
   .bracket-mirror { display:none; }
-  @media (min-width:1360px) {
+  @media (min-width:1000px) {
     body:not(.admin-edit-mode) .bracket-scroll.has-mirror { display:none; }
     body:not(.admin-edit-mode) .bracket-mirror {
       display:grid; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(0,1fr)); gap:16px; overflow:visible;
@@ -1482,7 +1482,7 @@
   .bracket-scroll.path-hover .on-path { opacity:1 !important; box-shadow:0 0 0 1.5px var(--cyan), 0 0 18px rgba(0,242,255,0.45) !important; }
 
   /* Compact tiles in the narrower mirrored columns */
-  @media (min-width:1360px) {
+  @media (min-width:1000px) {
     :root[data-design="ig"] .bracket-mirror .schedule-match-row,
     :root[data-design="ig"] .bracket-mirror .match-teams-line > .match-team,
     :root[data-design="ig"] .bracket-mirror .schedule-match-teams:not(.schedule-match-scored) > .match-team { min-height:38px; padding:4px 36px 4px 9px; }
@@ -1502,6 +1502,66 @@
   .rank-pts, .ticker-set, .schedule-set-score, .podium-card-pts, .leader-pts, .podium-pts, .match-score-summary, .schedule-item-time { font-variant-numeric:tabular-nums; }
   input:focus-visible, select:focus-visible { outline:2px solid var(--cyan); outline-offset:1px; box-shadow:0 0 0 4px rgba(0,242,255,0.22); }
   .profile-media.is-adjusting:focus-visible { outline:2px solid var(--cyan); outline-offset:4px; }
+
+  /* Collapsible group matches */
+  .group-matches { margin-top:10px; border-top:1px solid var(--border); }
+  .group-matches > summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 2px 4px; font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--cyan-ink); }
+  .group-matches > summary::-webkit-details-marker { display:none; }
+  .group-matches > summary::after { content:'+'; font-size:18px; line-height:1; color:var(--cyan-ink); transition:transform .2s; }
+  .group-matches[open] > summary::after { transform:rotate(45deg); }
+  .group-matches-count { margin-left:auto; color:var(--text-muted); font-weight:600; letter-spacing:0.06em; }
+  .group-matches > summary:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; border-radius:6px; }
+  /* Compact result rows, two per line on wide screens */
+  .group-matches .match-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:8px; margin:8px 0 4px; }
+  .group-matches .match-row { padding:8px 12px; border-radius:10px; }
+  .group-matches .match-teams-line { gap:6px; }
+  .group-matches .match-format-label, .group-matches .status-paid { display:none; }
+  .group-matches .schedule-match-row { padding:2px 0; }
+  .group-matches .schedule-match-row .match-team { font-size:13px; }
+  .group-matches .match-team .club-avatar { width:20px; height:20px; }
+  .group-matches .schedule-set-score { font-size:17px; }
+
+  /* ig bracket: compact tiles, names stacked like the graphics */
+  :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex:0 0 228px; width:228px; }
+  :root[data-design="ig"] .bracket-scroll .team-name { flex-direction:column !important; }
+  :root[data-design="ig"] .bracket-scroll .team-name-amp { display:none !important; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row,
+  :root[data-design="ig"] .bracket-scroll .match-teams-line > .match-team,
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams:not(.schedule-match-scored) > .match-team { min-height:42px; padding:4px 40px 4px 10px; }
+  :root[data-design="ig"] .bracket-scroll .match-team { font-size:13.5px !important; line-height:1.12; }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar { width:30px; height:30px; right:6px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-set-score { font-size:15px; min-width:14px; }
+
+  /* Mirror from laptop widths on; scrolls sideways if it still doesn't fit */
+  @media (min-width:1000px) {
+    body:not(.admin-edit-mode) .bracket-scroll.has-mirror { display:none; }
+    body:not(.admin-edit-mode) .bracket-mirror {
+      display:grid; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(168px,1fr)); gap:14px; overflow-x:auto; overflow-y:visible;
+      width:min(1500px, calc(100vw - 32px)); position:relative; left:50%; transform:translateX(-50%); padding:8px 4px 24px;
+    }
+    .stage-card:has(.bracket-mirror) { overflow:visible; }
+    .bracket-mirror > .bracket-round-col { width:auto !important; flex:none !important; min-width:0; }
+    .bracket-mirror .mirror-right .bracket-round-title { justify-content:flex-end; text-align:right; }
+    .bracket-mirror .mirror-center { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:10px; }
+    .bracket-mirror .mirror-center > .bracket-round-matches { flex:none; }
+    :root[data-design="ig"] .bracket-mirror .match-code-badge { display:none; }
+    :root[data-design="ig"] .bracket-mirror .bracket-slot-block { padding-top:6px; }
+    :root[data-design="ig"] .bracket-mirror .bracket-round-title { font-size:15px; flex-wrap:wrap; gap:4px; }
+    :root[data-design="ig"] .bracket-mirror .match-team { font-size:13px !important; }
+  }
+
+  .set-summary { display:none; }
+  @media (min-width:1000px) {
+    :root[data-design="ig"] body:not(.admin-edit-mode) .bracket-mirror .schedule-set-score { display:none; }
+    :root[data-design="ig"] body:not(.admin-edit-mode) .bracket-mirror .set-summary { display:inline-block; position:relative; z-index:1; font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; min-width:16px; text-align:center; color:rgba(255,255,255,0.8); font-variant-numeric:tabular-nums; }
+    :root[data-design="ig"] .bracket-mirror .schedule-match-winner .set-summary { color:var(--cyan) !important; }
+    :root[data-design="ig"] .bracket-mirror .schedule-match-row,
+    :root[data-design="ig"] .bracket-mirror .match-teams-line > .match-team,
+    :root[data-design="ig"] .bracket-mirror .schedule-match-teams:not(.schedule-match-scored) > .match-team { padding:4px 34px 4px 9px; gap:6px; }
+    :root[data-design="ig"] .bracket-mirror .match-team .club-avatar { width:26px; height:26px; right:5px; }
+    :root[data-design="ig"] .bracket-mirror .match-team { font-size:12.5px !important; }
+    body:not(.admin-edit-mode) .bracket-mirror { width:min(1500px, calc(100vw - 24px)); gap:12px; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(158px,1fr)); }
+  }
 </style>
 </head>
 <body>
@@ -7425,9 +7485,15 @@ var CLUBS = [
       var aWon = match.teamAId === winner;
       var scoresA = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[0]) + '</span>'; }).join('');
       var scoresB = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[1]) + '</span>'; }).join('');
-      teamsHtml = '<div class="schedule-match-teams schedule-match-scored">' +
-        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamNameHtml(match.teamAId) + scoresA + '</div>' +
-        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '</div>' +
+      // Compact summary for narrow layouts (mirrored bracket): sets won, or
+      // the points of a single-set match. Full set scores stay in the title.
+      var wonA = 0, wonB = 0;
+      sets.forEach(function(s) { if (s[0] > s[1]) wonA++; else if (s[1] > s[0]) wonB++; });
+      var sumA = sets.length === 1 ? sets[0][0] : wonA, sumB = sets.length === 1 ? sets[0][1] : wonB;
+      var setsTitle = esc(sets.map(function(s) { return s[0] + ':' + s[1]; }).join(', '));
+      teamsHtml = '<div class="schedule-match-teams schedule-match-scored" title="' + setsTitle + '">' +
+        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamNameHtml(match.teamAId) + scoresA + '<span class="set-summary">' + esc(sumA) + '</span></div>' +
+        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '<span class="set-summary">' + esc(sumB) + '</span></div>' +
       '</div>';
     } else {
       if (isLive) {
@@ -7599,14 +7665,25 @@ var CLUBS = [
     return '<div class="admin-only"><button type="button" class="btn btn-cyan btn-sm" id="generateAllGroupsBtn" style="margin-bottom:14px;">Generate all matches (Men\'s + Women\'s) — ' + parts.join(' · ') + '</button></div>';
   }
 
+  // Which groups' match lists are expanded (kept across live re-renders).
+  var openGroupMatches = {};
+  document.addEventListener('toggle', function(e) {
+    var d = e.target;
+    if (d && d.dataset && d.dataset.groupMatches) openGroupMatches[d.dataset.groupMatches] = d.open;
+  }, true);
+
   function renderGroupStageBody(stage) {
     var teamOptions = stage.teamIds.map(function(id) {
       var team = findBracketTeam(currentBracket, id);
       return team ? '<option value="' + esc(id) + '">' + esc(team.name) + '</option>' : '';
     }).join('');
     var missing = missingRoundRobinPairs(stage);
+    var played = stage.matches.filter(function(m) { return matchWinner(m, currentBracket.defaultFormat); }).length;
     return renderStandingsTable(stage) +
-      '<div class="match-list">' + stage.matches.map(function(m) { return renderMatchRow(m); }).join('') + '</div>' +
+      (stage.matches.length ? '<details class="group-matches" data-group-matches="' + esc(stage.id) + '"' + (openGroupMatches[stage.id] ? ' open' : '') + '>' +
+        '<summary><span class="group-matches-label">Matches</span><span class="group-matches-count">' + played + '/' + stage.matches.length + ' played</span></summary>' +
+        '<div class="match-list">' + stage.matches.map(function(m) { return renderMatchRow(m); }).join('') + '</div>' +
+      '</details>' : '') +
       (stage.matches.length ? '' : '<p class="empty-note">No matches yet.</p>') +
       '<div class="admin-only">' +
         (missing > 0 ? '<button type="button" class="btn btn-cyan btn-sm" data-generate-roundrobin="' + esc(stage.id) + '" style="margin-bottom:14px;">Generate all matches (round robin) — ' + missing + ' missing</button>' : '') +
