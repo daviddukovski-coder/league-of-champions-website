@@ -7534,12 +7534,42 @@ var CLUBS = [
   function renderBracketRoundsHtml(stage) {
     var finalIndex = -1;
     stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') finalIndex = ri; });
+    var order = bracketDisplayOrder(stage);
     var cols = stage.rounds.map(function(round, ri) {
-      var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
+      var matchesHtml = order[ri].map(function(mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
       var col = '<div class="bracket-round-col" style="--round:' + ri + '">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
       return ri === finalIndex ? col + renderChampionColumn(stage, ri) : col;
     }).join('');
     return stage.rounds.length ? '<div class="bracket-scroll' + bracketEntryClass(stage) + '">' + cols + '</div>' : '';
+  }
+
+  // Display order of each round's matches so connector lines never cross:
+  // walking back from the final, every match is placed next to the match its
+  // winner feeds (slot A's feeder above slot B's). Only the on-screen order
+  // changes; match codes and data stay as they are. Matches that feed
+  // nothing in the next round keep their own order at the end.
+  function bracketDisplayOrder(stage) {
+    var rounds = stage.rounds;
+    var order = rounds.map(function(r) { return r.matches.map(function(m, i) { return i; }); });
+    var main = [];
+    rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') main.push(ri); });
+    for (var k = main.length - 1; k > 0; k--) {
+      var ri = main[k], prev = main[k - 1];
+      var prevIndex = {};
+      rounds[prev].matches.forEach(function(m, i) { prevIndex[m.id] = i; });
+      var placed = [], used = {};
+      order[ri].forEach(function(mi) {
+        var m = rounds[ri].matches[mi];
+        [m.slotAIndex, m.slotBIndex].forEach(function(si) {
+          var src = rounds[ri].slots[si] && rounds[ri].slots[si].source;
+          var pi = src && src.type === 'matchWinner' ? prevIndex[src.matchId] : undefined;
+          if (pi !== undefined && !used[pi]) { used[pi] = true; placed.push(pi); }
+        });
+      });
+      order[prev].forEach(function(i) { if (!used[i]) placed.push(i); });
+      order[prev] = placed;
+    }
+    return order;
   }
 
   // The tournament winner, once the final (last non-3rd-place round with a
