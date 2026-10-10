@@ -1494,6 +1494,14 @@
     :root[data-design="ig"] .bracket-mirror .bracket-slot-block { padding-top:6px; }
     :root[data-design="ig"] .bracket-mirror .mirror-center .match-team { font-size:14px !important; }
   }
+
+  /* Accessibility pass (web interface guidelines) */
+  @media (prefers-reduced-motion: reduce) {
+    .status-live::before, .live-ticker-dot, .btn-live-dot { animation:none !important; }
+  }
+  .rank-pts, .ticker-set, .schedule-set-score, .podium-card-pts, .leader-pts, .podium-pts, .match-score-summary, .schedule-item-time { font-variant-numeric:tabular-nums; }
+  input:focus-visible, select:focus-visible { outline:2px solid var(--cyan); outline-offset:1px; box-shadow:0 0 0 4px rgba(0,242,255,0.22); }
+  .profile-media.is-adjusting:focus-visible { outline:2px solid var(--cyan); outline-offset:4px; }
 </style>
 </head>
 <body>
@@ -4567,7 +4575,7 @@ var CLUBS = [
       '<span class="tier mono">LoC ' + esc(t.tier) + '</span>' +
       '<h2>' + esc(t.name) + '</h2>' +
       '<p class="hero-next-meta">' + esc(t.dateLabel) + ' &nbsp;' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</p>' +
-      (showCountdown ? '<div class="countdown" id="heroCountdown"></div>' : '') +
+      (showCountdown ? '<div class="countdown" id="heroCountdown" role="timer" aria-live="off"></div>' : '') +
       '<button class="btn btn-cyan btn-block" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '">' + esc(uiText(pick.upcoming ? 'landing.details' : 'landing.results')) + '</button>';
     if (!showCountdown) return;
     var units = [['d', 864e5, 'landing.cdDays'], ['h', 36e5, 'landing.cdHours'], ['m', 6e4, 'landing.cdMinutes'], ['s', 1e3, 'landing.cdSeconds']];
@@ -4962,7 +4970,7 @@ var CLUBS = [
 
     var searchPlaceholder = rankingType === 'players' ? 'Search player or club…' : 'Search club…';
     el.innerHTML = controls +
-      '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
+      '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" aria-label="' + searchPlaceholder + '" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
       '<div id="rankingTable"></div>';
     var meta = document.getElementById('rankingBandMeta');
     if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
@@ -5154,7 +5162,7 @@ var CLUBS = [
       return '<div class="podium-col podium-' + place + '"><div class="podium-card">' +
         '<span class="podium-card-mark">' + r.rank + '</span>' +
         '<span class="podium-card-chip">Rank ' + r.rank + '</span>' +
-        '<span class="podium-card-name">' + (isPlayers ? playerNameLinkHtml(r.name, match ? match.uid : null) : esc(r.name)) + '</span>' +
+        '<span class="podium-card-name" translate="no">' + (isPlayers ? playerNameLinkHtml(r.name, match ? match.uid : null) : esc(r.name)) + '</span>' +
         '<span class="podium-card-pts">' + r.points + ' PTS</span>' +
         (clubName ? '<span class="podium-card-club">' + (isPlayers ? esc(clubName) : (rankingGender === 'men' ? 'Men’s' : 'Women’s')) + '</span>' : '') +
       '</div>' +
@@ -6181,7 +6189,7 @@ var CLUBS = [
           '<label for="playerMediaInput">' + (hasMedia ? 'Replace photo / video' : 'Upload photo or video') + '</label><input type="file" id="playerMediaInput" accept="image/*,video/*">' +
         '</div>' +
         (hasMedia ? '<div class="profile-media-adjust" hidden>' +
-          '<span class="profile-media-adjust-hint">Drag to position</span>' +
+          '<span class="profile-media-adjust-hint">Drag or use arrow keys</span>' +
           '<label class="profile-media-zoom">Zoom <input type="range" id="playerMediaZoom" min="1" max="3" step="0.01"></label>' +
           '<label class="profile-media-zoom">Height <input type="range" id="playerMediaHeight" min="260" max="760" step="10"></label>' +
           '<div class="profile-media-adjust-actions"><button type="button" class="btn btn-cyan btn-sm" id="playerMediaAdjustSave">Save</button><button type="button" class="btn btn-outline btn-sm" id="playerMediaAdjustCancel">Cancel</button></div>' +
@@ -6206,12 +6214,27 @@ var CLUBS = [
     function apply() { el.setAttribute('style', framingStyle(f)); }
     function setAdjusting(on) {
       box.classList.toggle('is-adjusting', on);
+      if (on) { box.setAttribute('tabindex', '0'); box.setAttribute('aria-label', 'Photo framing: arrow keys move, plus/minus zoom, Escape cancels'); }
+      else { box.removeAttribute('tabindex'); box.removeAttribute('aria-label'); }
       panel.hidden = !on;
       f = on ? Object.assign({}, saved) : null;
       if (on) { zoomInput.value = f.zoom; heightInput.value = f.h; }
       else { el.setAttribute('style', framingStyle(saved)); box.style.height = saved.h + 'px'; }
     }
-    btn.addEventListener('click', function() { setAdjusting(true); });
+    btn.addEventListener('click', function() { setAdjusting(true); box.focus(); });
+    box.addEventListener('keydown', function(e) {
+      if (!f) return;
+      var step = e.shiftKey ? 10 : 2, handled = true;
+      if (e.key === 'ArrowLeft') f.x = Math.min(100, f.x + step);
+      else if (e.key === 'ArrowRight') f.x = Math.max(0, f.x - step);
+      else if (e.key === 'ArrowUp') f.y = Math.min(100, f.y + step);
+      else if (e.key === 'ArrowDown') f.y = Math.max(0, f.y - step);
+      else if (e.key === '+' || e.key === '=') f.zoom = Math.min(3, f.zoom + 0.1);
+      else if (e.key === '-') f.zoom = Math.max(1, f.zoom - 0.1);
+      else if (e.key === 'Escape') { setAdjusting(false); return; }
+      else handled = false;
+      if (handled) { e.preventDefault(); zoomInput.value = f.zoom; apply(); }
+    });
     document.getElementById('playerMediaAdjustCancel').addEventListener('click', function() { setAdjusting(false); });
     document.getElementById('playerMediaAdjustSave').addEventListener('click', function() {
       var next = { mediaPosX: Math.round(f.x * 10) / 10, mediaPosY: Math.round(f.y * 10) / 10, mediaZoom: Math.round(f.zoom * 100) / 100, mediaHeight: f.h };
@@ -6883,11 +6906,11 @@ var CLUBS = [
   }
 
   function taDayLabel(iso) {
-    var d = new Date(iso + 'T12:00:00');
-    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+    var parts = new Intl.DateTimeFormat('en-US', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' }).formatToParts(new Date(iso + 'T12:00:00Z'));
+    function part(type) { var f = parts.filter(function(x) { return x.type === type; })[0]; return f ? f.value : ''; }
+    return part('weekday') + ', ' + part('day') + ' ' + part('month');
   }
+
 
   function loadTurnierApp(url) {
     var slug = (/\/t\/([^\/?#]+)/.exec(url || '') || [])[1];
@@ -7140,7 +7163,7 @@ var CLUBS = [
     return '<details class="live-panel admin-only roster-details" id="taImportPanel"' + (turnierAppPreview ? ' open' : '') + '>' +
       '<summary><h2>Import from turnier-app.com</h2></summary>' +
       '<p class="empty-note">Paste the public link of a turnier-app.com tournament to copy its teams, groups, knockout rounds, results and court schedule here. You see a summary first; importing replaces this tournament\'s current bracket and schedule.</p>' +
-      '<div class="ta-import-row"><input type="url" id="taImportUrl" placeholder="https://turnier-app.com/t/…" value="' + esc((turnierAppPreview && turnierAppPreview.url) || '') + '">' +
+      '<div class="ta-import-row"><input type="url" id="taImportUrl" aria-label="turnier-app.com tournament link" autocomplete="off" placeholder="https://turnier-app.com/t/…" value="' + esc((turnierAppPreview && turnierAppPreview.url) || '') + '">' +
       '<button type="button" class="btn btn-outline btn-sm" id="taImportLoad">Load</button></div>' +
       '<div id="taImportResult">' + (turnierAppPreview ? turnierAppSummaryHtml(turnierAppPreview.bracket) +
         '<div class="ta-import-actions"><button type="button" class="btn btn-cyan btn-sm" id="taImportConfirm">Import &amp; replace</button><button type="button" class="btn btn-outline btn-sm" id="taImportCancel">Cancel</button></div>' : '') + '</div>' +
@@ -7263,7 +7286,7 @@ var CLUBS = [
       return '<a class="ticker-card' + (info.live ? ' is-live' : '') + '" data-match-id="' + esc(info.id) + '" href="#/event/' + esc(t.id) + '/live">' +
         '<span class="ticker-meta">' + meta + '</span>' + teamLine(info.a, 0, info) + teamLine(info.b, 1, info) + '</a>';
     }).join('');
-    return '<div class="live-ticker is-' + mode + '">' +
+    return '<div class="live-ticker is-' + mode + '" aria-live="polite">' +
       '<span class="live-ticker-label">' + (mode === 'live' ? '<span class="live-ticker-dot"></span>Live' : 'Next up') + '</span>' +
       '<div class="live-ticker-track">' + html + '</div></div>';
   }
@@ -7351,8 +7374,8 @@ var CLUBS = [
     if (!team) return '<span class="match-team">TBD</span>';
     var parts = (team.name || '').split(' & ');
     var nameHtml = parts.length === 2
-      ? '<span class="team-name"><span class="team-name-p">' + esc(parts[0]) + '</span><span class="team-name-amp"> &amp; </span><span class="team-name-p">' + esc(parts[1]) + '</span></span>'
-      : '<span class="team-name">' + esc(team.name) + '</span>';
+      ? '<span class="team-name" translate="no"><span class="team-name-p">' + esc(parts[0]) + '</span><span class="team-name-amp"> &amp; </span><span class="team-name-p">' + esc(parts[1]) + '</span></span>'
+      : '<span class="team-name" translate="no">' + esc(team.name) + '</span>';
     return '<span class="match-team" data-team="' + esc(team.id) + '" title="' + esc(team.name) + '">' + clubAvatarHtml(findClub(team.club)) + nameHtml + '</span>';
   }
 
@@ -7792,8 +7815,8 @@ var CLUBS = [
     return '<div class="bracket-scroll bracket-mirror' + entry + '" style="--sides:' + feeders.length + '">' + left + center + right + '</div>';
   }
 
-  // Hovering a team lights its whole path through the bracket.
-  document.addEventListener('mouseover', function(e) {
+  // Hovering (or keyboard-focusing into) a team lights its whole path.
+  function bracketPathHighlight(e) {
     var team = e.target.closest && e.target.closest('.bracket-scroll [data-team]');
     var sc = e.target.closest && e.target.closest('.bracket-scroll');
     document.querySelectorAll('.bracket-scroll.path-hover').forEach(function(el) { if (el !== sc || !team) { el.classList.remove('path-hover'); el.querySelectorAll('.on-path').forEach(function(x) { x.classList.remove('on-path'); }); } });
@@ -7803,7 +7826,9 @@ var CLUBS = [
       var row = el.closest('.schedule-match-row') || el;
       row.classList.add('on-path');
     });
-  });
+  }
+  document.addEventListener('mouseover', bracketPathHighlight);
+  document.addEventListener('focusin', bracketPathHighlight);
 
   // Display order of each round's matches so connector lines never cross:
   // walking back from the final, every match is placed next to the match its
@@ -9977,7 +10002,7 @@ var CLUBS = [
   function clubAvatarHtml(club) {
     // logoFill:'circle' = the logo file is line art on a transparent
     // background (e.g. Marbella), so it gets a white disc behind it.
-    if (club.logo) return '<span class="club-avatar' + (club.logoFill === 'circle' ? ' club-avatar-fill-circle' : '') + '"><img src="' + esc(club.logo) + '" alt=""></span>';
+    if (club.logo) return '<span class="club-avatar' + (club.logoFill === 'circle' ? ' club-avatar-fill-circle' : '') + '"><img src="' + esc(club.logo) + '" alt="" width="64" height="64" loading="lazy" decoding="async"></span>';
     return '<span class="club-avatar" style="background:' + avatarColor(club.name) + '">' + esc(initials(club.name)) + '</span>';
   }
 
