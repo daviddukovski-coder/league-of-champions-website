@@ -1440,39 +1440,16 @@
   .club-avatar-fill-circle img { background:#fff; border-radius:50%; }
 
   /* ============ Mirrored bracket (wide screens, outside edit mode) ============ */
-  .bracket-mirror { display:none; }
   @media (min-width:1000px) {
     body:not(.admin-edit-mode) .bracket-scroll.has-mirror { display:none; }
-    body:not(.admin-edit-mode) .bracket-mirror {
-      display:grid; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(0,1fr)); gap:16px; overflow:visible;
-      width:min(1500px, calc(100vw - 48px)); position:relative; left:50%; transform:translateX(-50%); padding:8px 0 24px;
-    }
-    .stage-card:has(.bracket-mirror) { overflow:visible; }
-    .bracket-mirror > .bracket-round-col { width:auto !important; flex:none !important; min-width:0; }
-    .bracket-mirror .mirror-right .bracket-round-title { justify-content:flex-end; text-align:right; }
-    .bracket-mirror .mirror-center { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:10px; }
-    .bracket-mirror .mirror-center > .bracket-round-matches { flex:none; }
     .mirror-trophy { align-self:center; width:84px; height:84px; background:var(--cyan); -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; filter:drop-shadow(0 0 14px rgba(0,242,255,0.6)); }
     .mirror-final-title { text-align:center; font-family:'Bebas Neue',sans-serif; font-size:44px; line-height:1; color:var(--cyan); text-shadow:0 0 18px rgba(0,242,255,0.45); display:flex; flex-direction:column; align-items:center; }
     .mirror-final-title .round-time { display:block; font-size:18px; color:rgba(255,255,255,0.75); text-shadow:none; }
     .mirror-final-title .round-time::before { content:none; }
-    .mirror-champion { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:6px; text-align:center; }
-    .mirror-champion .club-avatar { width:44px; height:44px; }
     .mirror-champion-label { font-size:11px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--cyan); }
     .mirror-champion-name { font-family:'Bebas Neue',sans-serif; font-size:22px; line-height:1; color:#fff; }
-    .mirror-third { margin-top:18px; }
-    .mirror-third .bracket-round-title { font-size:16px !important; justify-content:center; text-align:center; }
-    /* Two-line names in the narrower mirrored columns */
-    .bracket-mirror .team-name { flex-direction:column !important; }
-    .bracket-mirror .team-name-amp { display:none !important; }
     /* Fly in from both sides toward the trophy */
     @media (prefers-reduced-motion: no-preference) {
-      .bracket-mirror.bracket-animate > .mirror-left { animation:roundInLeft .6s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms); }
-      .bracket-mirror.bracket-animate > .mirror-right { animation:roundInRight .6s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms); }
-      .bracket-mirror.bracket-animate > .mirror-center { animation:centerIn .8s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms + 150ms); }
-      @keyframes roundInLeft { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:none; } }
-      @keyframes roundInRight { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
-      @keyframes centerIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:none; } }
       .mirror-trophy { animation:trophyGlow 2.6s ease-in-out infinite; }
     }
   }
@@ -1480,20 +1457,6 @@
   .bracket-scroll.path-hover .schedule-match-row:not(.on-path),
   .bracket-scroll.path-hover .match-teams-line > .match-team:not(.on-path) { opacity:0.28 !important; transition:opacity .2s; }
   .bracket-scroll.path-hover .on-path { opacity:1 !important; box-shadow:0 0 0 1.5px var(--cyan), 0 0 18px rgba(0,242,255,0.45) !important; }
-
-  /* Compact tiles in the narrower mirrored columns */
-  @media (min-width:1000px) {
-    :root[data-design="ig"] .bracket-mirror .schedule-match-row,
-    :root[data-design="ig"] .bracket-mirror .match-teams-line > .match-team,
-    :root[data-design="ig"] .bracket-mirror .schedule-match-teams:not(.schedule-match-scored) > .match-team { min-height:38px; padding:4px 36px 4px 9px; }
-    :root[data-design="ig"] .bracket-mirror .match-team { font-size:13px !important; }
-    :root[data-design="ig"] .bracket-mirror .match-team .club-avatar { width:28px; height:28px; right:5px; }
-    :root[data-design="ig"] .bracket-mirror .schedule-set-score { font-size:14px; min-width:13px; }
-    :root[data-design="ig"] .bracket-mirror .bracket-round-title { font-size:15px; flex-wrap:wrap; gap:4px; }
-    :root[data-design="ig"] .bracket-mirror .match-code-badge { display:none; }
-    :root[data-design="ig"] .bracket-mirror .bracket-slot-block { padding-top:6px; }
-    :root[data-design="ig"] .bracket-mirror .mirror-center .match-team { font-size:14px !important; }
-  }
 
   /* Accessibility pass (web interface guidelines) */
   @media (prefers-reduced-motion: reduce) {
@@ -1535,32 +1498,6 @@
   /* Mirror from laptop widths on; scrolls sideways if it still doesn't fit */
   @media (min-width:1000px) {
     body:not(.admin-edit-mode) .bracket-scroll.has-mirror { display:none; }
-    body:not(.admin-edit-mode) .bracket-mirror {
-      display:grid; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(168px,1fr)); gap:14px; overflow-x:auto; overflow-y:visible;
-      width:min(1500px, calc(100vw - 32px)); position:relative; left:50%; transform:translateX(-50%); padding:8px 4px 24px;
-    }
-    .stage-card:has(.bracket-mirror) { overflow:visible; }
-    .bracket-mirror > .bracket-round-col { width:auto !important; flex:none !important; min-width:0; }
-    .bracket-mirror .mirror-right .bracket-round-title { justify-content:flex-end; text-align:right; }
-    .bracket-mirror .mirror-center { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:10px; }
-    .bracket-mirror .mirror-center > .bracket-round-matches { flex:none; }
-    :root[data-design="ig"] .bracket-mirror .match-code-badge { display:none; }
-    :root[data-design="ig"] .bracket-mirror .bracket-slot-block { padding-top:6px; }
-    :root[data-design="ig"] .bracket-mirror .bracket-round-title { font-size:15px; flex-wrap:wrap; gap:4px; }
-    :root[data-design="ig"] .bracket-mirror .match-team { font-size:13px !important; }
-  }
-
-  .set-summary { display:none; }
-  @media (min-width:1000px) {
-    :root[data-design="ig"] body:not(.admin-edit-mode) .bracket-mirror .schedule-set-score { display:none; }
-    :root[data-design="ig"] body:not(.admin-edit-mode) .bracket-mirror .set-summary { display:inline-block; position:relative; z-index:1; font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; min-width:16px; text-align:center; color:rgba(255,255,255,0.8); font-variant-numeric:tabular-nums; }
-    :root[data-design="ig"] .bracket-mirror .schedule-match-winner .set-summary { color:var(--cyan) !important; }
-    :root[data-design="ig"] .bracket-mirror .schedule-match-row,
-    :root[data-design="ig"] .bracket-mirror .match-teams-line > .match-team,
-    :root[data-design="ig"] .bracket-mirror .schedule-match-teams:not(.schedule-match-scored) > .match-team { padding:4px 34px 4px 9px; gap:6px; }
-    :root[data-design="ig"] .bracket-mirror .match-team .club-avatar { width:26px; height:26px; right:5px; }
-    :root[data-design="ig"] .bracket-mirror .match-team { font-size:12.5px !important; }
-    body:not(.admin-edit-mode) .bracket-mirror { width:min(1500px, calc(100vw - 24px)); gap:12px; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(158px,1fr)); }
   }
 
   /* ============ Mirrored tree bracket (bm-*) ============ */
@@ -1615,6 +1552,9 @@
   .bm-tile[data-key$=":0"][style*="--side:0"]::after { content:none; }
 
   .bm-lines path.is-final { stroke:var(--cyan); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(0,242,255,0.55)); }
+
+  .sr-only { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .bm-tile:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; transform:translateY(-1px); }
 </style>
 </head>
 <body>
@@ -7538,15 +7478,10 @@ var CLUBS = [
       var aWon = match.teamAId === winner;
       var scoresA = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[0]) + '</span>'; }).join('');
       var scoresB = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[1]) + '</span>'; }).join('');
-      // Compact summary for narrow layouts (mirrored bracket): sets won, or
-      // the points of a single-set match. Full set scores stay in the title.
-      var wonA = 0, wonB = 0;
-      sets.forEach(function(s) { if (s[0] > s[1]) wonA++; else if (s[1] > s[0]) wonB++; });
-      var sumA = sets.length === 1 ? sets[0][0] : wonA, sumB = sets.length === 1 ? sets[0][1] : wonB;
       var setsTitle = esc(sets.map(function(s) { return s[0] + ':' + s[1]; }).join(', '));
       teamsHtml = '<div class="schedule-match-teams schedule-match-scored" title="' + setsTitle + '">' +
-        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamNameHtml(match.teamAId) + scoresA + '<span class="set-summary">' + esc(sumA) + '</span></div>' +
-        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '<span class="set-summary">' + esc(sumB) + '</span></div>' +
+        '<div class="schedule-match-row' + (aWon ? ' schedule-match-winner' : '') + '">' + teamNameHtml(match.teamAId) + scoresA + '</div>' +
+        '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '</div>' +
       '</div>';
     } else {
       if (isLive) {
@@ -8011,10 +7946,13 @@ var CLUBS = [
       if (t.finalLink) link = ' data-to="' + esc(t.to) + '" data-link="final"';
       else if (t.to) link = ' data-to="' + esc(t.to) + '" data-link="' + (w ? (w === teamId ? 'won' : 'lost') : t.st.live ? 'live' : 'open') + '"';
       var col = colOf(t);
-      return '<div class="' + cls + '" data-key="' + esc(t.key) + '"' + link + (teamId ? ' data-team="' + esc(teamId) + '"' : '') +
+      var roundName = (stage.rounds[t.st.ri] && stage.rounds[t.st.ri].name) || '';
+      var result = w ? (w === teamId ? 'won' : 'lost') : t.st.live ? 'live' : '';
+      var srText = roundName + (t.st.title ? ', sets ' + t.st.title : '') + (result ? ', ' + result : '');
+      return '<div class="' + cls + '" data-key="' + esc(t.key) + '"' + link + (teamId ? ' data-team="' + esc(teamId) + '" tabindex="0"' : '') +
         ' title="' + esc((team ? team.name : '') + (t.st.title ? ' · ' + t.st.title : '')) + '"' +
         ' style="--col:' + col + ';--side:' + (t.side === 'left' ? -1 : t.side === 'right' ? 1 : 0) + ';--d:' + Math.max(0, depthCount - 1 - t.depth) + ';top:' + (TOP + shift + t.y * ROW) + 'px">' +
-        name + '<span class="bm-sum">' + esc(t.st.sum[t.k]) + '</span>' + (team ? clubAvatarHtml(findClub(team.club)) : '') + '</div>';
+        name + '<span class="bm-sum" aria-hidden="true">' + esc(t.st.sum[t.k]) + '</span><span class="sr-only">' + esc(srText) + '</span>' + (team ? clubAvatarHtml(findClub(team.club)) : '') + '</div>';
     }
     var titles = '';
     for (var d = 0; d < depthCount; d++) {
@@ -8048,7 +7986,7 @@ var CLUBS = [
       belowTop += ROW;
     }
     var height = Math.max(TOP + shift + rows * ROW, belowTop) + 16;
-    return '<div class="bm-tree' + entry + '" style="--cols:' + C + ';height:' + height + 'px">' + titles + center + tiles.map(tileHtml).join('') + below + '</div>';
+    return '<div class="bm-tree' + entry + '" role="group" aria-label="Knockout bracket" style="--cols:' + C + ';height:' + height + 'px">' + titles + center + tiles.map(tileHtml).join('') + below + '</div>';
   }
 
   // Bracket lines for the tree layout: from each tile's inner edge to the
@@ -8075,6 +8013,7 @@ var CLUBS = [
       });
       var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'bm-lines');
+      svg.setAttribute('aria-hidden', 'true');
       svg.setAttribute('width', tree.clientWidth);
       svg.setAttribute('height', tree.clientHeight);
       svg.innerHTML = paths.join('');
