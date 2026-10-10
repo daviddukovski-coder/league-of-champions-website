@@ -1222,6 +1222,65 @@
   .ta-import-row input { flex:1 1 320px; }
   .ta-import-summary { margin:12px 0; padding-left:18px; font-size:14px; line-height:1.7; }
   .ta-import-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ============ BRACKET v2: connectors, scoreboard cards, live, champion ============ */
+  .bracket-scroll { position:relative; gap:44px; padding:6px 4px 18px; }
+  .bracket-scroll > .bracket-round-col { position:relative; z-index:1; flex:0 0 280px; width:280px; min-width:0; }
+  .bracket-scroll .schedule-match-row { min-width:0; }
+  .bracket-scroll .schedule-match-row .match-team, .bracket-scroll .match-teams-line > .match-team { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+  .bracket-scroll .schedule-match-row .match-team .club-avatar, .bracket-scroll .match-teams-line > .match-team .club-avatar { display:inline-flex; vertical-align:middle; margin-right:8px; }
+  .bracket-lines { position:absolute; top:0; left:0; z-index:0; pointer-events:none; overflow:visible; }
+  .bracket-lines path { fill:none; stroke:var(--border); stroke-width:2; stroke-linecap:round; transition:stroke .3s; }
+  .bracket-lines path.is-won { stroke:var(--cyan); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(0,242,255,0.55)); }
+  .bracket-lines path.is-live { stroke:#ff4d6a; stroke-dasharray:4 5; }
+  .bracket-scroll .bracket-slot-block { position:relative; background:var(--surface); border:1px solid var(--border); border-left-width:1px; border-radius:12px; padding:10px 12px 10px; box-shadow:0 2px 10px var(--shadow); transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, border-color .25s; }
+  .bracket-scroll .bracket-slot-block:hover { transform:translateY(-2px); box-shadow:0 10px 26px var(--shadow); border-color:color-mix(in srgb, var(--cyan) 45%, var(--border)); border-left-color:color-mix(in srgb, var(--cyan) 45%, var(--border)); }
+  .bracket-scroll .bracket-slot-block[data-state="done"] { border-color:color-mix(in srgb, var(--cyan) 22%, var(--border)); }
+  .bracket-scroll .match-code-badge { position:absolute; top:-9px; left:12px; margin:0; font-size:10px; padding:2px 8px; }
+  .bracket-scroll .match-row { padding:0; }
+  .bracket-scroll .match-format-label, .bracket-scroll .status-paid, .bracket-scroll .status-pending { display:none; }
+  .bracket-scroll .schedule-match-teams { gap:2px; }
+  .bracket-scroll .schedule-match-row { padding:5px 0; }
+  .bracket-scroll .schedule-match-row .match-team { border-right:none; font-size:13px; }
+  .bracket-scroll .schedule-match-scored .schedule-match-row:not(.schedule-match-winner) { opacity:0.5; }
+  .bracket-scroll .schedule-match-winner .match-team { color:var(--heading); font-weight:700; }
+  .bracket-scroll .schedule-match-winner .schedule-set-score { color:var(--cyan-ink); }
+  .bracket-scroll .schedule-set-score { min-width:22px; font-size:19px; }
+  .bracket-scroll .schedule-match-vs { align-self:center; font-size:9.5px; }
+  .bracket-scroll .match-team.tbd { opacity:0.6; font-size:12.5px; }
+
+  /* Live: pulsing badge + glowing card */
+  .status-live { background:#e0233c; color:#fff; display:inline-flex; align-items:center; gap:6px; text-transform:uppercase; letter-spacing:0.08em; font-weight:800; }
+  .status-live::before { content:''; width:7px; height:7px; border-radius:50%; background:#fff; animation:liveDotPulse 1.2s ease-in-out infinite; }
+  .bracket-slot-block[data-state="live"] { border-color:#ff4d6a !important; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bracket-slot-block[data-state="live"] { animation:liveCardPulse 2s ease-in-out infinite; }
+    @keyframes liveCardPulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,77,106,0.0), 0 2px 10px var(--shadow); } 50% { box-shadow:0 0 0 4px rgba(255,77,106,0.18), 0 2px 10px var(--shadow); } }
+  }
+
+  /* Champion column */
+  .bracket-champion-col .bracket-round-title { color:var(--cyan-ink); }
+  .bracket-scroll .bracket-champion { display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:22px 16px 18px; background:radial-gradient(120% 120% at 50% 0%, #22259a 0%, #0b0d63 60%, #07083f 100%); border:1px solid var(--cyan); color:#fff; box-shadow:0 0 0 1px rgba(0,242,255,0.3), 0 14px 40px rgba(0,242,255,0.22); overflow:hidden; }
+  .bracket-champion::before { content:''; position:absolute; inset:-40% -20% auto; height:120%; background:conic-gradient(from 200deg, transparent 0 60%, rgba(0,242,255,0.18) 70%, transparent 80%); pointer-events:none; }
+  .bracket-champion-trophy { width:34px; height:34px; background:var(--cyan); -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 3h10v2h3a1 1 0 0 1 1 1c0 3-2 5-4.5 5.4A5 5 0 0 1 13 14.9V18h3v2H8v-2h3v-3.1A5 5 0 0 1 7.5 11.4C5 11 3 9 3 6a1 1 0 0 1 1-1h3V3zm10 4v2.3c1.2-.4 2-1.2 2.2-2.3H17zM5 7c.2 1.1 1 1.9 2 2.3V7H5z'/></svg>") center/contain no-repeat; mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 3h10v2h3a1 1 0 0 1 1 1c0 3-2 5-4.5 5.4A5 5 0 0 1 13 14.9V18h3v2H8v-2h3v-3.1A5 5 0 0 1 7.5 11.4C5 11 3 9 3 6a1 1 0 0 1 1-1h3V3zm10 4v2.3c1.2-.4 2-1.2 2.2-2.3H17zM5 7c.2 1.1 1 1.9 2 2.3V7H5z'/></svg>") center/contain no-repeat; filter:drop-shadow(0 0 8px rgba(0,242,255,0.7)); }
+  .bracket-champion-logo .club-avatar { width:46px; height:46px; }
+  .bracket-champion-name { font-family:'Bebas Neue',sans-serif; font-size:24px; line-height:1; position:relative; }
+  .bracket-champion-club { font-size:12px; color:rgba(255,255,255,0.7); position:relative; }
+
+  /* First-visit entry: rounds slide in one after another, lines draw in */
+  @media (prefers-reduced-motion: no-preference) {
+    .bracket-animate > .bracket-round-col { animation:roundIn .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round, 0) * 120ms); }
+    @keyframes roundIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }
+    .bracket-animate .bracket-lines path { animation:lineDraw .9s ease-out forwards; animation-delay:.35s; }
+    @keyframes lineDraw { to { stroke-dashoffset:0; } }
+    .bracket-champion-trophy { animation:trophyGlow 2.4s ease-in-out infinite; }
+    @keyframes trophyGlow { 0%,100% { filter:drop-shadow(0 0 6px rgba(0,242,255,0.55)); } 50% { filter:drop-shadow(0 0 14px rgba(0,242,255,0.95)); } }
+  }
+
+  @media (max-width:640px) {
+    .bracket-scroll { scroll-snap-type:x mandatory; gap:36px; }
+    .bracket-scroll > .bracket-round-col { flex-basis:78vw; width:78vw; scroll-snap-align:start; }
+  }
 </style>
 </head>
 <body>
@@ -6247,6 +6306,7 @@ var CLUBS = [
       renderAddStagePanel(bracket);
     wireLiveEvents();
     wireTurnierAppImport();
+    scheduleBracketConnectors();
     initSortable('stageList', function(order) {
       // Only the visible (filtered) stages were draggable — reorder them among
       // themselves while leaving any hidden-by-filter stages exactly where
@@ -6985,9 +7045,10 @@ var CLUBS = [
     opts = opts || {};
     var fmt = match.format || currentBracket.defaultFormat;
     var winner = matchWinner(match, currentBracket.defaultFormat);
-    var status = winner ? 'Finished' : 'Scheduled';
-    var statusClass = winner ? 'status-paid' : 'status-pending';
     var sets = match.sets || [];
+    var isLive = !winner && sets.some(function(s) { return (Number(s[0]) || 0) + (Number(s[1]) || 0) > 0; });
+    var status = winner ? 'Finished' : isLive ? 'Live' : 'Scheduled';
+    var statusClass = winner ? 'status-paid' : isLive ? 'status-live' : 'status-pending';
     var setSlots = [0, 1, 2, 3, 4].map(function(i) {
       var s = sets[i] || ['', ''];
       var hiddenAttr = i >= fmt.bestOf ? ' hidden' : '';
@@ -7010,7 +7071,16 @@ var CLUBS = [
         '<div class="schedule-match-row' + (aWon ? '' : ' schedule-match-winner') + '">' + teamNameHtml(match.teamBId) + scoresB + '</div>' +
       '</div>';
     } else {
-      teamsHtml = '<div class="schedule-match-teams">' + teamNameHtml(match.teamAId) + '<span class="schedule-match-vs">vs</span>' + teamNameHtml(match.teamBId) + '</div>';
+      if (isLive) {
+        var liveA = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[0]) + '</span>'; }).join('');
+        var liveB = sets.map(function(s) { return '<span class="schedule-set-score">' + esc(s[1]) + '</span>'; }).join('');
+        teamsHtml = '<div class="schedule-match-teams schedule-match-scored">' +
+          '<div class="schedule-match-row">' + teamNameHtml(match.teamAId) + liveA + '</div>' +
+          '<div class="schedule-match-row">' + teamNameHtml(match.teamBId) + liveB + '</div>' +
+        '</div>';
+      } else {
+        teamsHtml = '<div class="schedule-match-teams">' + teamNameHtml(match.teamAId) + '<span class="schedule-match-vs">vs</span>' + teamNameHtml(match.teamBId) + '</div>';
+      }
     }
     return '<div class="match-row" data-match-id="' + esc(match.id) + '">' +
       '<div class="match-teams-line">' +
@@ -7250,7 +7320,13 @@ var CLUBS = [
     }
     var editors = opts.readOnly ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
     var codeBadge = '<span class="match-code-badge">' + esc(matchCode(stage, roundIndex, matchIndex)) + '</span>';
-    return '<div class="bracket-slot-block">' + codeBadge + body + editors + '</div>';
+    // Data for drawBracketConnectors: which earlier matches feed this one, and
+    // whether this match is done (a finished match lights its outgoing line).
+    var done = teamA && teamB && matchWinner({ id: m.id, teamAId: teamA, teamBId: teamB, sets: m.sets, format: m.format }, bracket.defaultFormat);
+    var live = !done && teamA && teamB && (m.sets || []).some(function(st) { return (Number(st[0]) || 0) + (Number(st[1]) || 0) > 0; });
+    var srcAttr = function(src, key) { return src && src.type === 'matchWinner' ? ' data-src-' + key + '="' + esc(src.matchId) + '"' : ''; };
+    return '<div class="bracket-slot-block" data-match-id="' + esc(m.id) + '" data-state="' + (done || (byeA || byeB) ? 'done' : live ? 'live' : 'open') + '"' +
+      srcAttr(slotA.source, 'a') + srcAttr(slotB.source, 'b') + '>' + codeBadge + body + editors + '</div>';
   }
 
   function renderAddRoundPanel(stage) {
@@ -7308,12 +7384,102 @@ var CLUBS = [
   // shape (bracket, doubleElim's per-section slices, modifiedPool) — resolves
   // and renders each round as its own column.
   function renderBracketRoundsHtml(stage) {
+    var finalIndex = -1;
+    stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') finalIndex = ri; });
     var cols = stage.rounds.map(function(round, ri) {
       var matchesHtml = round.matches.map(function(m, mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
-      return '<div class="bracket-round-col">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+      var col = '<div class="bracket-round-col" style="--round:' + ri + '">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+      return ri === finalIndex ? col + renderChampionColumn(stage, ri) : col;
     }).join('');
-    return stage.rounds.length ? '<div class="bracket-scroll">' + cols + '</div>' : '';
+    return stage.rounds.length ? '<div class="bracket-scroll' + bracketEntryClass(stage) + '">' + cols + '</div>' : '';
   }
+
+  // The tournament winner, once the final (last non-3rd-place round with a
+  // single match) has one — shown as its own column after the final.
+  function renderChampionColumn(stage, ri) {
+    var round = stage.rounds[ri];
+    if (!round || round.matches.length !== 1) return '';
+    var m = round.matches[0];
+    var a = resolveSlotTeam(currentBracket, stage, ri, m.slotAIndex);
+    var b = resolveSlotTeam(currentBracket, stage, ri, m.slotBIndex);
+    var champ = a && b && matchWinner({ id: m.id, teamAId: a, teamBId: b, sets: m.sets, format: m.format }, currentBracket.defaultFormat);
+    var team = champ && findBracketTeam(currentBracket, champ);
+    if (!team) return '';
+    return '<div class="bracket-round-col bracket-champion-col" style="--round:' + (ri + 1) + '">' +
+      '<div class="bracket-round-title">Champion</div>' +
+      '<div class="bracket-round-matches"><div class="bracket-slot-block bracket-champion" data-match-id="champion-' + esc(stage.id) + '" data-state="done" data-src-a="' + esc(m.id) + '">' +
+        '<span class="bracket-champion-trophy" aria-hidden="true"></span>' +
+        '<span class="bracket-champion-logo">' + clubAvatarHtml(findClub(team.club)) + '</span>' +
+        '<span class="bracket-champion-name">' + esc(team.name) + '</span>' +
+        (team.club ? '<span class="bracket-champion-club">' + esc(team.club) + '</span>' : '') +
+      '</div></div></div>';
+  }
+
+  // Entry animation only the first time a stage's bracket is shown in this
+  // visit, not on every live update re-render.
+  var animatedBrackets = {};
+  function bracketEntryClass(stage) {
+    if (animatedBrackets[stage.id]) return '';
+    animatedBrackets[stage.id] = true;
+    return ' bracket-animate';
+  }
+
+  // SVG elbow lines from each match to the matches its winner feeds, drawn
+  // after render from the cards' real positions (heights vary with team names
+  // and admin controls, so pure CSS connectors would misalign). A line glows
+  // once its source match is finished: the winner's path through the bracket.
+  function drawBracketConnectors(root) {
+    (root || document).querySelectorAll('.bracket-scroll').forEach(function(sc) {
+      var old = sc.querySelector('svg.bracket-lines');
+      if (old) old.remove();
+      var blocks = sc.querySelectorAll('.bracket-slot-block[data-match-id]');
+      if (!blocks.length || !sc.offsetParent) return;
+      var byId = {};
+      blocks.forEach(function(b) { byId[b.dataset.matchId] = b; });
+      var base = sc.getBoundingClientRect(), ox = sc.scrollLeft - base.left, oy = sc.scrollTop - base.top;
+      var paths = [];
+      blocks.forEach(function(b) {
+        var t = b.getBoundingClientRect();
+        [['srcA', 0.3], ['srcB', 0.7]].forEach(function(pair) {
+          var src = byId[b.dataset[pair[0]]];
+          if (!src) return;
+          var r = src.getBoundingClientRect();
+          var x1 = r.right + ox, y1 = r.top + r.height / 2 + oy;
+          var x2 = t.left + ox, y2 = t.top + t.height * (b.dataset.srcB ? pair[1] : 0.5) + oy;
+          var mx = x1 + (x2 - x1) / 2, rad = Math.min(10, Math.abs(y2 - y1) / 2, (x2 - x1) / 4), dir = y2 > y1 ? 1 : -1;
+          var d = Math.abs(y2 - y1) < 1
+            ? 'M' + x1 + ' ' + y1 + 'H' + x2
+            : 'M' + x1 + ' ' + y1 + 'H' + (mx - rad) + 'Q' + mx + ' ' + y1 + ' ' + mx + ' ' + (y1 + dir * rad) +
+              'V' + (y2 - dir * rad) + 'Q' + mx + ' ' + y2 + ' ' + (mx + rad) + ' ' + y2 + 'H' + x2;
+          paths.push('<path class="' + (src.dataset.state === 'done' ? 'is-won' : src.dataset.state === 'live' ? 'is-live' : '') + '" d="' + d + '"/>');
+        });
+      });
+      if (!paths.length) return;
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'bracket-lines');
+      svg.setAttribute('width', sc.scrollWidth);
+      svg.setAttribute('height', sc.scrollHeight);
+      svg.innerHTML = paths.join('');
+      sc.insertBefore(svg, sc.firstChild);
+      if (sc.classList.contains('bracket-animate')) {
+        svg.querySelectorAll('path').forEach(function(p) {
+          var len = p.getTotalLength();
+          p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+        });
+      }
+    });
+  }
+  var bracketRedrawTimer = null;
+  function scheduleBracketConnectors() {
+    clearTimeout(bracketRedrawTimer);
+    var root = document.getElementById('liveContent');
+    requestAnimationFrame(function() { drawBracketConnectors(root); });
+    // Logos and fonts can still shift card heights right after render.
+    bracketRedrawTimer = setTimeout(function() { drawBracketConnectors(root); }, 450);
+  }
+  window.addEventListener('resize', function() {
+    if (!document.getElementById('view-live').hidden) scheduleBracketConnectors();
+  });
 
   function renderBracketStageBody(stage) {
     return (renderBracketRoundsHtml(stage) || '<p class="empty-note">No rounds yet.</p>') +
