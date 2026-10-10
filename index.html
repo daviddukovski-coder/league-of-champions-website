@@ -1562,6 +1562,59 @@
     :root[data-design="ig"] .bracket-mirror .match-team { font-size:12.5px !important; }
     body:not(.admin-edit-mode) .bracket-mirror { width:min(1500px, calc(100vw - 24px)); gap:12px; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(158px,1fr)); }
   }
+
+  /* ============ Mirrored tree bracket (bm-*) ============ */
+  .bm-tree { display:none; }
+  @media (min-width:1000px) {
+    body:not(.admin-edit-mode) .bm-tree { display:block; position:relative; width:100%; margin:4px 0 8px; }
+    body:not(.admin-edit-mode) .stage-card:has(.bm-tree) { width:min(1500px, calc(100vw - 32px)); margin-left:calc(50% - min(750px, 50vw - 16px)); }
+  }
+  .bm-lines { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+  .bm-lines path { fill:none; stroke:rgba(255,255,255,0.22); stroke-width:2; stroke-linecap:round; transition:stroke .2s, opacity .2s; }
+  .bm-lines path.is-won { stroke:var(--cyan); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(0,242,255,0.55)); }
+  .bm-lines path.is-live { stroke:#ff4d6a; stroke-dasharray:4 5; }
+  .bm-tile, .bm-round-title, .bm-center { position:absolute; left:calc(var(--col) * (100% / var(--cols)) + 7px); width:calc(100% / var(--cols) - 14px); }
+  .bm-center { width:calc(200% / var(--cols) - 14px); display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; }
+  .bm-round-title { top:0; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.6px; color:var(--cyan); line-height:1.1; display:flex; flex-direction:column; }
+  .bm-round-title.is-right { text-align:right; align-items:flex-end; }
+  .bm-round-title .round-time { display:block; color:rgba(255,255,255,0.6); font-size:14px; }
+  .bm-round-title .round-time::before { content:none; }
+  .bm-tile { height:44px; z-index:1; display:flex; align-items:center; gap:6px; padding:4px 36px 4px 10px; border-radius:8px; overflow:hidden; color:#fff;
+    background:var(--ig-metal, linear-gradient(110deg,#282b96,#4648aa 38%,#9696d7 50%,#4e50b0 62%,#24278e)); border:1px solid rgba(255,255,255,0.45);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 12px rgba(3,4,40,0.35); transition:opacity .2s, box-shadow .2s, transform .25s cubic-bezier(.16,1,.3,1); }
+  .bm-tile.is-lost { opacity:0.5; }
+  .bm-tile.is-live { border-color:#ff4d6a; }
+  .bm-tile.is-tbd { background:linear-gradient(110deg, rgba(40,43,150,0.5), rgba(70,72,170,0.5)); border-style:dashed; }
+  .bm-name { flex:1; min-width:0; display:flex; flex-direction:column; font-family:'Bebas Neue',sans-serif; font-size:13.5px; line-height:1.1; letter-spacing:0.5px; text-transform:uppercase; }
+  .bm-name > span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bm-name.bm-tbd { font-size:12px; opacity:0.7; text-transform:none; font-family:inherit; }
+  .bm-sum { position:relative; z-index:1; font-family:'Bebas Neue',sans-serif; font-size:20px; line-height:1; min-width:14px; text-align:center; color:rgba(255,255,255,0.8); font-variant-numeric:tabular-nums; }
+  .bm-tile.is-won .bm-sum { color:var(--cyan); }
+  .bm-tile .club-avatar { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:26px; height:26px; }
+  .bm-tile:hover { transform:translateY(-1px); }
+  .bm-champion .club-avatar { width:44px; height:44px; }
+  .bm-third-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.6px; color:var(--ig-bronze, #f0a04b); flex-direction:row !important; justify-content:center; gap:8px !important; }
+  .bm-third-title .round-time::before { content:'– '; }
+  .bm-center .mirror-trophy { width:76px; height:76px; }
+  .bm-tree.path-hover .bm-tile:not(.on-path) { opacity:0.25; }
+  .bm-tree.path-hover .bm-tile.on-path { box-shadow:0 0 0 1.5px var(--cyan), 0 0 18px rgba(0,242,255,0.45); opacity:1; }
+  .bm-tree.path-hover .bm-lines path:not(.on-path) { opacity:0.2; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bm-tree.bracket-animate .bm-tile { animation:bmIn .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--d) * 110ms); }
+    @keyframes bmIn { from { opacity:0; transform:translateX(calc(var(--side) * 20px)); } }
+    .bm-tree.bracket-animate .bm-lines path { animation:bmLine .6s ease-out both; animation-delay:.5s; }
+    @keyframes bmLine { from { opacity:0; } }
+  }
+
+  .bm-tile, .bm-round-title { left:calc(var(--col) * (100% / var(--cols)) + 4px); width:calc(100% / var(--cols) - 8px); }
+  .bm-tile { padding:4px 30px 4px 8px; gap:4px; }
+  .bm-tile .club-avatar { width:22px; height:22px; right:5px; }
+  .bm-name { font-size:13px; letter-spacing:0.3px; }
+  .bm-sum { font-size:18px; }
+  /* Short line joining the two finalists, like the graphics */
+  .bm-tile[data-key$=":0"][style*="--side:0"]::after { content:none; }
+
+  .bm-lines path.is-final { stroke:var(--cyan); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(0,242,255,0.55)); }
 </style>
 </head>
 <body>
@@ -7855,54 +7908,192 @@ var CLUBS = [
   // bracket stays in the DOM for phones and for editing.
   function bracketMirrorEligible(stage, finalIndex) {
     if (finalIndex < 1) return false;
-    var main = stage.rounds.filter(function(r) { return r.side !== 'thirdPlace'; });
-    if (main[main.length - 1].matches.length !== 1) return false;
-    return main.slice(0, -1).every(function(r) { return r.matches.length >= 2 && r.matches.length % 2 === 0; });
+    var fr = stage.rounds[finalIndex];
+    if (!fr || fr.matches.length !== 1) return false;
+    var fm = fr.matches[0];
+    return [fm.slotAIndex, fm.slotBIndex].every(function(si) {
+      var src = fr.slots[si] && fr.slots[si].source;
+      return src && src.type === 'matchWinner';
+    });
   }
 
+  // Two-sided bracket as a real tree, like the Instagram graphics: one tile
+  // per team; the team that moves on sits exactly between the two it came
+  // from, both joined by a bracket line (winner's line cyan, loser's faint).
+  // Top half comes in from the left, bottom half from the right, the two
+  // finalists meet side by side under the trophy. Positions are computed
+  // from the bracket structure; lines are drawn after render (drawMirrorLines).
   function renderMirroredBracket(stage, finalIndex, order, entry) {
     if (!bracketMirrorEligible(stage, finalIndex)) return '';
-    var mainIdx = [];
-    stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') mainIdx.push(ri); });
-    var feeders = mainIdx.slice(0, -1);
-    function col(ri, list, side, depth) {
-      var matchesHtml = list.map(function(mi) { return renderBracketMatchCard(stage, ri, mi, { noEditors: true }); }).join('');
-      return '<div class="bracket-round-col mirror-' + side + '" style="--round:' + depth + '">' + roundTitleHtml(stage, ri, { readOnly: true }) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+    var bracket = currentBracket;
+    var main = [];
+    stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') main.push(ri); });
+    function matchState(ri, mi) {
+      var m = stage.rounds[ri].matches[mi];
+      var a = resolveSlotTeam(bracket, stage, ri, m.slotAIndex), b = resolveSlotTeam(bracket, stage, ri, m.slotBIndex);
+      var sets = m.sets || [];
+      var w = a && b ? matchWinner({ id: m.id, teamAId: a, teamBId: b, sets: sets, format: m.format }, bracket.defaultFormat) : null;
+      var wonA = 0, wonB = 0;
+      sets.forEach(function(x) { if (x[0] > x[1]) wonA++; else if (x[1] > x[0]) wonB++; });
+      var single = sets.length === 1;
+      return {
+        m: m, ri: ri, team: [a, b], winner: w,
+        live: !w && !!a && !!b && sets.some(function(x) { return (Number(x[0]) || 0) + (Number(x[1]) || 0) > 0; }),
+        sum: sets.length ? [single ? sets[0][0] : wonA, single ? sets[0][1] : wonB] : ['', ''],
+        title: sets.map(function(x) { return x[0] + ':' + x[1]; }).join(', ')
+      };
     }
-    var left = feeders.map(function(ri, k) {
-      var list = order[ri]; return col(ri, list.slice(0, list.length / 2), 'left', k);
-    }).join('');
-    var right = feeders.slice().reverse().map(function(ri, k) {
-      var list = order[ri]; return col(ri, list.slice(list.length / 2), 'right', feeders.length - 1 - k);
-    }).join('');
-    var third = stage.rounds.map(function(r, ri) { return r.side === 'thirdPlace' ? ri : -1; }).filter(function(ri) { return ri >= 0; })[0];
-    var fr = stage.rounds[finalIndex];
-    var fm = fr.matches[0];
-    var a = resolveSlotTeam(currentBracket, stage, finalIndex, fm.slotAIndex), b = resolveSlotTeam(currentBracket, stage, finalIndex, fm.slotBIndex);
-    var champ = a && b && matchWinner({ id: fm.id, teamAId: a, teamBId: b, sets: fm.sets, format: fm.format }, currentBracket.defaultFormat);
-    var champTeam = champ && findBracketTeam(currentBracket, champ);
-    var center = '<div class="bracket-round-col mirror-center is-final" style="--round:' + feeders.length + '">' +
+    function feeder(ri, si) {
+      var src = stage.rounds[ri].slots[si] && stage.rounds[ri].slots[si].source;
+      var k = main.indexOf(ri);
+      if (!src || src.type !== 'matchWinner' || k < 1) return null;
+      var pri = main[k - 1], pmi = -1;
+      stage.rounds[pri].matches.forEach(function(x, i) { if (x.id === src.matchId) pmi = i; });
+      return pmi < 0 ? null : { ri: pri, mi: pmi };
+    }
+    var tiles = [], row = 0;
+    function addTile(t) { tiles.push(t); return t; }
+    // Lay out the subtree feeding one side of the final; depth 0 = innermost.
+    function place(ri, mi, depth, side) {
+      var st = matchState(ri, mi), ys = [], keys = [];
+      [st.m.slotAIndex, st.m.slotBIndex].forEach(function(si, k) {
+        var f = feeder(ri, si), y;
+        var key = st.m.id + ':' + k;
+        if (f) {
+          var child = place(f.ri, f.mi, depth + 1, side);
+          y = (child.ys[0] + child.ys[1]) / 2;
+          child.tiles.forEach(function(t) { t.to = key; });
+        } else {
+          y = row++;
+        }
+        ys.push(y); keys.push(key);
+      });
+      var made = [0, 1].map(function(k) {
+        return addTile({ key: keys[k], side: side, depth: depth, y: ys[k], st: st, k: k,
+          label: st.team[k] ? '' : slotSourceLabel(bracket, stage, ri, k ? st.m.slotBIndex : st.m.slotAIndex) });
+      });
+      return { ys: ys, tiles: made };
+    }
+    var fr = stage.rounds[finalIndex], fm = fr.matches[0];
+    var fa = feeder(finalIndex, fm.slotAIndex), fb = feeder(finalIndex, fm.slotBIndex);
+    if (!fa || !fb) return '';
+    row = 0; var L = place(fa.ri, fa.mi, 0, 'left'); var leftRows = row;
+    row = 0; var R = place(fb.ri, fb.mi, 0, 'right'); var rightRows = row;
+    var rows = Math.max(leftRows, rightRows);
+    // Center the shorter side vertically.
+    tiles.forEach(function(t) { t.y += ((rows - (t.side === 'left' ? leftRows : rightRows)) / 2); });
+    var depthCount = 0;
+    tiles.forEach(function(t) { depthCount = Math.max(depthCount, t.depth + 1); });
+    var fst = matchState(finalIndex, 0);
+    var yMidL = (L.ys[0] + L.ys[1]) / 2 + (rows - leftRows) / 2, yMidR = (R.ys[0] + R.ys[1]) / 2 + (rows - rightRows) / 2;
+    var yF = (yMidL + yMidR) / 2;
+    L.tiles.forEach(function(t) { t.to = fm.id + ':0'; });
+    R.tiles.forEach(function(t) { t.to = fm.id + ':1'; });
+    addTile({ key: fm.id + ':0', side: 'center', depth: -1, y: yF, st: fst, k: 0, label: fst.team[0] ? '' : 'TBD', to: fm.id + ':1', finalLink: true });
+    addTile({ key: fm.id + ':1', side: 'center', depth: -2, y: yF, st: fst, k: 1, label: fst.team[1] ? '' : 'TBD' });
+
+    // Geometry: columns = depth per side + two center columns.
+    var C = depthCount * 2 + 2, ROW = 58, TOP = 54, TROPHY = 190;
+    var shift = Math.max(0, TOP + TROPHY - (TOP + yF * ROW));
+    function colOf(t) {
+      if (t.side === 'left') return depthCount - 1 - t.depth;
+      if (t.side === 'right') return depthCount + 2 + t.depth;
+      return t.depth === -1 ? depthCount : depthCount + 1;
+    }
+    function tileHtml(t) {
+      var teamId = t.st.team[t.k], team = teamId && findBracketTeam(bracket, teamId);
+      var w = t.st.winner, cls = 'bm-tile' + (w && w === teamId ? ' is-won' : w ? ' is-lost' : '') + (t.st.live ? ' is-live' : '') + (team ? '' : ' is-tbd');
+      var parts = team ? (team.name || '').split(' & ') : [];
+      var name = team
+        ? '<span class="bm-name" translate="no"><span>' + esc(parts[0] || '') + '</span>' + (parts[1] ? '<span>' + esc(parts[1]) + '</span>' : '') + '</span>'
+        : '<span class="bm-name bm-tbd">' + esc(t.label || 'TBD') + '</span>';
+      var link = '';
+      if (t.finalLink) link = ' data-to="' + esc(t.to) + '" data-link="final"';
+      else if (t.to) link = ' data-to="' + esc(t.to) + '" data-link="' + (w ? (w === teamId ? 'won' : 'lost') : t.st.live ? 'live' : 'open') + '"';
+      var col = colOf(t);
+      return '<div class="' + cls + '" data-key="' + esc(t.key) + '"' + link + (teamId ? ' data-team="' + esc(teamId) + '"' : '') +
+        ' title="' + esc((team ? team.name : '') + (t.st.title ? ' · ' + t.st.title : '')) + '"' +
+        ' style="--col:' + col + ';--side:' + (t.side === 'left' ? -1 : t.side === 'right' ? 1 : 0) + ';--d:' + Math.max(0, depthCount - 1 - t.depth) + ';top:' + (TOP + shift + t.y * ROW) + 'px">' +
+        name + '<span class="bm-sum">' + esc(t.st.sum[t.k]) + '</span>' + (team ? clubAvatarHtml(findClub(team.club)) : '') + '</div>';
+    }
+    var titles = '';
+    for (var d = 0; d < depthCount; d++) {
+      var r = stage.rounds[main[main.length - 2 - d]];
+      if (!r) continue;
+      var t = '<span>' + esc(r.name) + '</span>' + roundStartTimeHtml(r);
+      titles += '<div class="bm-round-title" style="--col:' + (depthCount - 1 - d) + '">' + t + '</div>' +
+        '<div class="bm-round-title is-right" style="--col:' + (depthCount + 2 + d) + '">' + t + '</div>';
+    }
+    var finalTop = TOP + shift + yF * ROW;
+    var champ = fst.winner && findBracketTeam(bracket, fst.winner);
+    var center = '<div class="bm-center" style="--col:' + depthCount + ';top:' + (finalTop - TROPHY + 10) + 'px">' +
       '<div class="mirror-trophy" aria-hidden="true"></div>' +
-      '<div class="mirror-final-title">' + esc(fr.name || 'Final') + roundStartTimeHtml(fr) + '</div>' +
-      '<div class="bracket-round-matches">' + renderBracketMatchCard(stage, finalIndex, 0, { noEditors: true }) + '</div>' +
-      (champTeam ? '<div class="mirror-champion"><span class="mirror-champion-label">Champion</span>' + clubAvatarHtml(findClub(champTeam.club)) + '<span class="mirror-champion-name">' + esc(champTeam.name) + '</span></div>' : '') +
-      (third !== undefined ? '<div class="mirror-third is-third"><div class="bracket-round-title">' + esc(stage.rounds[third].name) + roundStartTimeHtml(stage.rounds[third]) + '</div>' +
-        stage.rounds[third].matches.map(function(m, mi) { return renderBracketMatchCard(stage, third, mi, { noEditors: true }); }).join('') + '</div>' : '') +
-    '</div>';
-    return '<div class="bracket-scroll bracket-mirror' + entry + '" style="--sides:' + feeders.length + '">' + left + center + right + '</div>';
+      '<div class="mirror-final-title">' + esc(fr.name || 'Final') + roundStartTimeHtml(fr) + '</div></div>';
+    var below = '';
+    var belowTop = finalTop + ROW + 6;
+    if (champ) {
+      below += '<div class="bm-center bm-champion" style="--col:' + depthCount + ';top:' + belowTop + 'px">' +
+        '<span class="mirror-champion-label">Champion</span>' + clubAvatarHtml(findClub(champ.club)) +
+        '<span class="mirror-champion-name" translate="no">' + esc(champ.name) + '</span></div>';
+      belowTop += 104;
+    }
+    var thirdIdx = -1;
+    stage.rounds.forEach(function(r, ri) { if (r.side === 'thirdPlace') thirdIdx = ri; });
+    if (thirdIdx >= 0 && stage.rounds[thirdIdx].matches.length === 1) {
+      var tst = matchState(thirdIdx, 0);
+      below += '<div class="bm-center bm-third-title" style="--col:' + depthCount + ';top:' + belowTop + 'px">' + esc(stage.rounds[thirdIdx].name) + roundStartTimeHtml(stage.rounds[thirdIdx]) + '</div>';
+      belowTop += 34;
+      below += tileHtml({ key: 'third:0', side: 'center', depth: -1, y: (belowTop - TOP - shift) / ROW, st: tst, k: 0, label: tst.team[0] ? '' : 'TBD' }) +
+        tileHtml({ key: 'third:1', side: 'center', depth: -2, y: (belowTop - TOP - shift) / ROW, st: tst, k: 1, label: tst.team[1] ? '' : 'TBD' });
+      belowTop += ROW;
+    }
+    var height = Math.max(TOP + shift + rows * ROW, belowTop) + 16;
+    return '<div class="bm-tree' + entry + '" style="--cols:' + C + ';height:' + height + 'px">' + titles + center + tiles.map(tileHtml).join('') + below + '</div>';
+  }
+
+  // Bracket lines for the tree layout: from each tile's inner edge to the
+  // tile it feeds (both teams of a match meet in a "⊐").
+  function drawMirrorLines(root) {
+    (root || document).querySelectorAll('.bm-tree').forEach(function(tree) {
+      var old = tree.querySelector('svg.bm-lines');
+      if (old) old.remove();
+      if (!tree.offsetParent) return;
+      var base = tree.getBoundingClientRect(), paths = [];
+      tree.querySelectorAll('.bm-tile[data-to]').forEach(function(tile) {
+        var target = tree.querySelector('.bm-tile[data-key="' + tile.dataset.to + '"]');
+        if (!target) return;
+        var a = tile.getBoundingClientRect(), b = target.getBoundingClientRect();
+        var rtl = a.left > b.left;
+        var x1 = (rtl ? a.left : a.right) - base.left, y1 = a.top + a.height / 2 - base.top;
+        var x2 = (rtl ? b.right : b.left) - base.left, y2 = b.top + b.height / 2 - base.top;
+        var mx = x1 + (x2 - x1) / 2, hx = x2 > x1 ? 1 : -1, dir = y2 > y1 ? 1 : -1;
+        var rad = Math.min(12, Math.abs(y2 - y1) / 2, Math.abs(x2 - x1) / 4);
+        var d = Math.abs(y2 - y1) < 1 ? 'M' + x1 + ' ' + y1 + 'H' + x2
+          : 'M' + x1 + ' ' + y1 + 'H' + (mx - hx * rad) + 'Q' + mx + ' ' + y1 + ' ' + mx + ' ' + (y1 + dir * rad) +
+            'V' + (y2 - dir * rad) + 'Q' + mx + ' ' + y2 + ' ' + (mx + hx * rad) + ' ' + y2 + 'H' + x2;
+        paths.push('<path class="is-' + tile.dataset.link + '" data-from-team="' + (tile.dataset.team || '') + '" d="' + d + '"/>');
+      });
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'bm-lines');
+      svg.setAttribute('width', tree.clientWidth);
+      svg.setAttribute('height', tree.clientHeight);
+      svg.innerHTML = paths.join('');
+      tree.insertBefore(svg, tree.firstChild);
+    });
   }
 
   // Hovering (or keyboard-focusing into) a team lights its whole path.
   function bracketPathHighlight(e) {
-    var team = e.target.closest && e.target.closest('.bracket-scroll [data-team]');
-    var sc = e.target.closest && e.target.closest('.bracket-scroll');
-    document.querySelectorAll('.bracket-scroll.path-hover').forEach(function(el) { if (el !== sc || !team) { el.classList.remove('path-hover'); el.querySelectorAll('.on-path').forEach(function(x) { x.classList.remove('on-path'); }); } });
+    var team = e.target.closest && e.target.closest('.bracket-scroll [data-team], .bm-tree [data-team]');
+    var sc = e.target.closest && e.target.closest('.bracket-scroll, .bm-tree');
+    document.querySelectorAll('.bracket-scroll.path-hover, .bm-tree.path-hover').forEach(function(el) { if (el !== sc || !team) { el.classList.remove('path-hover'); el.querySelectorAll('.on-path').forEach(function(x) { x.classList.remove('on-path'); }); } });
     if (!team || !sc) return;
     sc.classList.add('path-hover');
     sc.querySelectorAll('[data-team="' + team.dataset.team + '"]').forEach(function(el) {
       var row = el.closest('.schedule-match-row') || el;
       row.classList.add('on-path');
     });
+    sc.querySelectorAll('.bm-lines path[data-from-team="' + team.dataset.team + '"]').forEach(function(p) { p.classList.add('on-path'); });
   }
   document.addEventListener('mouseover', bracketPathHighlight);
   document.addEventListener('focusin', bracketPathHighlight);
@@ -8029,9 +8220,9 @@ var CLUBS = [
   function scheduleBracketConnectors() {
     clearTimeout(bracketRedrawTimer);
     var root = document.getElementById('liveContent');
-    requestAnimationFrame(function() { drawBracketConnectors(root); });
+    requestAnimationFrame(function() { drawBracketConnectors(root); drawMirrorLines(root); });
     // Logos and fonts can still shift card heights right after render.
-    bracketRedrawTimer = setTimeout(function() { drawBracketConnectors(root); }, 450);
+    bracketRedrawTimer = setTimeout(function() { drawBracketConnectors(root); drawMirrorLines(root); }, 450);
   }
   window.addEventListener('resize', function() {
     if (!document.getElementById('view-live').hidden) scheduleBracketConnectors();
