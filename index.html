@@ -1438,6 +1438,62 @@
   }
 
   .club-avatar-fill-circle img { background:#fff; border-radius:50%; }
+
+  /* ============ Mirrored bracket (wide screens, outside edit mode) ============ */
+  .bracket-mirror { display:none; }
+  @media (min-width:1360px) {
+    body:not(.admin-edit-mode) .bracket-scroll.has-mirror { display:none; }
+    body:not(.admin-edit-mode) .bracket-mirror {
+      display:grid; grid-template-columns:repeat(calc(var(--sides) * 2 + 1), minmax(0,1fr)); gap:16px; overflow:visible;
+      width:min(1500px, calc(100vw - 48px)); position:relative; left:50%; transform:translateX(-50%); padding:8px 0 24px;
+    }
+    .stage-card:has(.bracket-mirror) { overflow:visible; }
+    .bracket-mirror > .bracket-round-col { width:auto !important; flex:none !important; min-width:0; }
+    .bracket-mirror .mirror-right .bracket-round-title { justify-content:flex-end; text-align:right; }
+    .bracket-mirror .mirror-center { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:10px; }
+    .bracket-mirror .mirror-center > .bracket-round-matches { flex:none; }
+    .mirror-trophy { align-self:center; width:84px; height:84px; background:var(--cyan); -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; filter:drop-shadow(0 0 14px rgba(0,242,255,0.6)); }
+    .mirror-final-title { text-align:center; font-family:'Bebas Neue',sans-serif; font-size:44px; line-height:1; color:var(--cyan); text-shadow:0 0 18px rgba(0,242,255,0.45); display:flex; flex-direction:column; align-items:center; }
+    .mirror-final-title .round-time { display:block; font-size:18px; color:rgba(255,255,255,0.75); text-shadow:none; }
+    .mirror-final-title .round-time::before { content:none; }
+    .mirror-champion { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:6px; text-align:center; }
+    .mirror-champion .club-avatar { width:44px; height:44px; }
+    .mirror-champion-label { font-size:11px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--cyan); }
+    .mirror-champion-name { font-family:'Bebas Neue',sans-serif; font-size:22px; line-height:1; color:#fff; }
+    .mirror-third { margin-top:18px; }
+    .mirror-third .bracket-round-title { font-size:16px !important; justify-content:center; text-align:center; }
+    /* Two-line names in the narrower mirrored columns */
+    .bracket-mirror .team-name { flex-direction:column !important; }
+    .bracket-mirror .team-name-amp { display:none !important; }
+    /* Fly in from both sides toward the trophy */
+    @media (prefers-reduced-motion: no-preference) {
+      .bracket-mirror.bracket-animate > .mirror-left { animation:roundInLeft .6s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms); }
+      .bracket-mirror.bracket-animate > .mirror-right { animation:roundInRight .6s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms); }
+      .bracket-mirror.bracket-animate > .mirror-center { animation:centerIn .8s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--round) * 110ms + 150ms); }
+      @keyframes roundInLeft { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:none; } }
+      @keyframes roundInRight { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
+      @keyframes centerIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:none; } }
+      .mirror-trophy { animation:trophyGlow 2.6s ease-in-out infinite; }
+    }
+  }
+  /* Team path highlight on hover */
+  .bracket-scroll.path-hover .schedule-match-row:not(.on-path),
+  .bracket-scroll.path-hover .match-teams-line > .match-team:not(.on-path) { opacity:0.28 !important; transition:opacity .2s; }
+  .bracket-scroll.path-hover .on-path { opacity:1 !important; box-shadow:0 0 0 1.5px var(--cyan), 0 0 18px rgba(0,242,255,0.45) !important; }
+
+  /* Compact tiles in the narrower mirrored columns */
+  @media (min-width:1360px) {
+    :root[data-design="ig"] .bracket-mirror .schedule-match-row,
+    :root[data-design="ig"] .bracket-mirror .match-teams-line > .match-team,
+    :root[data-design="ig"] .bracket-mirror .schedule-match-teams:not(.schedule-match-scored) > .match-team { min-height:38px; padding:4px 36px 4px 9px; }
+    :root[data-design="ig"] .bracket-mirror .match-team { font-size:13px !important; }
+    :root[data-design="ig"] .bracket-mirror .match-team .club-avatar { width:28px; height:28px; right:5px; }
+    :root[data-design="ig"] .bracket-mirror .schedule-set-score { font-size:14px; min-width:13px; }
+    :root[data-design="ig"] .bracket-mirror .bracket-round-title { font-size:15px; flex-wrap:wrap; gap:4px; }
+    :root[data-design="ig"] .bracket-mirror .match-code-badge { display:none; }
+    :root[data-design="ig"] .bracket-mirror .bracket-slot-block { padding-top:6px; }
+    :root[data-design="ig"] .bracket-mirror .mirror-center .match-team { font-size:14px !important; }
+  }
 </style>
 </head>
 <body>
@@ -7297,7 +7353,7 @@ var CLUBS = [
     var nameHtml = parts.length === 2
       ? '<span class="team-name"><span class="team-name-p">' + esc(parts[0]) + '</span><span class="team-name-amp"> &amp; </span><span class="team-name-p">' + esc(parts[1]) + '</span></span>'
       : '<span class="team-name">' + esc(team.name) + '</span>';
-    return '<span class="match-team">' + clubAvatarHtml(findClub(team.club)) + nameHtml + '</span>';
+    return '<span class="match-team" data-team="' + esc(team.id) + '" title="' + esc(team.name) + '">' + clubAvatarHtml(findClub(team.club)) + nameHtml + '</span>';
   }
 
   function renderStandingsTable(stage) {
@@ -7598,7 +7654,7 @@ var CLUBS = [
       '</div>' +
       (opts.readOnly ? '' : renderMatchFormatEditor(m));
     }
-    var editors = opts.readOnly ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
+    var editors = opts.readOnly || opts.noEditors ? '' : '<div class="admin-only">' + renderSlotEditor(stage, roundIndex, m.slotAIndex) + renderSlotEditor(stage, roundIndex, m.slotBIndex) + '</div>';
     var codeBadge = '<span class="match-code-badge">' + esc(matchCode(stage, roundIndex, matchIndex)) + '</span>';
     // Data for drawBracketConnectors: which earlier matches feed this one, and
     // whether this match is done (a finished match lights its outgoing line).
@@ -7686,8 +7742,68 @@ var CLUBS = [
       var col = '<div class="bracket-round-col' + kind + '" style="--round:' + ri + '">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
       return ri === finalIndex ? col + renderChampionColumn(stage, ri) : col;
     }).join('');
-    return stage.rounds.length ? '<div class="bracket-scroll' + bracketEntryClass(stage) + '">' + cols + '</div>' : '';
+    if (!stage.rounds.length) return '';
+    var entry = bracketEntryClass(stage);
+    return '<div class="bracket-scroll' + entry + (bracketMirrorEligible(stage, finalIndex) ? ' has-mirror' : '') + '">' + cols + '</div>' +
+      renderMirroredBracket(stage, finalIndex, order, entry);
   }
+
+  // Two-sided bracket like the Instagram graphics: top half of every round
+  // comes in from the left, bottom half from the right, final + trophy in the
+  // middle. Only for a real single final fed by an even number of matches;
+  // shown on wide screens outside edit mode (CSS), the classic left-to-right
+  // bracket stays in the DOM for phones and for editing.
+  function bracketMirrorEligible(stage, finalIndex) {
+    if (finalIndex < 1) return false;
+    var main = stage.rounds.filter(function(r) { return r.side !== 'thirdPlace'; });
+    if (main[main.length - 1].matches.length !== 1) return false;
+    return main.slice(0, -1).every(function(r) { return r.matches.length >= 2 && r.matches.length % 2 === 0; });
+  }
+
+  function renderMirroredBracket(stage, finalIndex, order, entry) {
+    if (!bracketMirrorEligible(stage, finalIndex)) return '';
+    var mainIdx = [];
+    stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') mainIdx.push(ri); });
+    var feeders = mainIdx.slice(0, -1);
+    function col(ri, list, side, depth) {
+      var matchesHtml = list.map(function(mi) { return renderBracketMatchCard(stage, ri, mi, { noEditors: true }); }).join('');
+      return '<div class="bracket-round-col mirror-' + side + '" style="--round:' + depth + '">' + roundTitleHtml(stage, ri, { readOnly: true }) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+    }
+    var left = feeders.map(function(ri, k) {
+      var list = order[ri]; return col(ri, list.slice(0, list.length / 2), 'left', k);
+    }).join('');
+    var right = feeders.slice().reverse().map(function(ri, k) {
+      var list = order[ri]; return col(ri, list.slice(list.length / 2), 'right', feeders.length - 1 - k);
+    }).join('');
+    var third = stage.rounds.map(function(r, ri) { return r.side === 'thirdPlace' ? ri : -1; }).filter(function(ri) { return ri >= 0; })[0];
+    var fr = stage.rounds[finalIndex];
+    var fm = fr.matches[0];
+    var a = resolveSlotTeam(currentBracket, stage, finalIndex, fm.slotAIndex), b = resolveSlotTeam(currentBracket, stage, finalIndex, fm.slotBIndex);
+    var champ = a && b && matchWinner({ id: fm.id, teamAId: a, teamBId: b, sets: fm.sets, format: fm.format }, currentBracket.defaultFormat);
+    var champTeam = champ && findBracketTeam(currentBracket, champ);
+    var center = '<div class="bracket-round-col mirror-center is-final" style="--round:' + feeders.length + '">' +
+      '<div class="mirror-trophy" aria-hidden="true"></div>' +
+      '<div class="mirror-final-title">' + esc(fr.name || 'Final') + roundStartTimeHtml(fr) + '</div>' +
+      '<div class="bracket-round-matches">' + renderBracketMatchCard(stage, finalIndex, 0, { noEditors: true }) + '</div>' +
+      (champTeam ? '<div class="mirror-champion"><span class="mirror-champion-label">Champion</span>' + clubAvatarHtml(findClub(champTeam.club)) + '<span class="mirror-champion-name">' + esc(champTeam.name) + '</span></div>' : '') +
+      (third !== undefined ? '<div class="mirror-third is-third"><div class="bracket-round-title">' + esc(stage.rounds[third].name) + roundStartTimeHtml(stage.rounds[third]) + '</div>' +
+        stage.rounds[third].matches.map(function(m, mi) { return renderBracketMatchCard(stage, third, mi, { noEditors: true }); }).join('') + '</div>' : '') +
+    '</div>';
+    return '<div class="bracket-scroll bracket-mirror' + entry + '" style="--sides:' + feeders.length + '">' + left + center + right + '</div>';
+  }
+
+  // Hovering a team lights its whole path through the bracket.
+  document.addEventListener('mouseover', function(e) {
+    var team = e.target.closest && e.target.closest('.bracket-scroll [data-team]');
+    var sc = e.target.closest && e.target.closest('.bracket-scroll');
+    document.querySelectorAll('.bracket-scroll.path-hover').forEach(function(el) { if (el !== sc || !team) { el.classList.remove('path-hover'); el.querySelectorAll('.on-path').forEach(function(x) { x.classList.remove('on-path'); }); } });
+    if (!team || !sc) return;
+    sc.classList.add('path-hover');
+    sc.querySelectorAll('[data-team="' + team.dataset.team + '"]').forEach(function(el) {
+      var row = el.closest('.schedule-match-row') || el;
+      row.classList.add('on-path');
+    });
+  });
 
   // Display order of each round's matches so connector lines never cross:
   // walking back from the final, every match is placed next to the match its
@@ -7780,13 +7896,15 @@ var CLUBS = [
           var y1 = win ? midY(win) : srcRows.length >= 2 ? (midY(srcRows[0]) + midY(srcRows[1])) / 2 : r.top + r.height / 2;
           // End at the row of the team arriving (slot A row / slot B row).
           var y2 = rows.length >= 2 ? midY(rows[pair[1]]) : rows.length === 1 ? midY(rows[0]) : t.top + t.height * (b.dataset.srcB ? (pair[1] ? 0.7 : 0.3) : 0.5);
-          var x1 = r.right + ox, x2 = t.left + ox;
+          var rtl = r.left > t.left; // source right of target (mirrored right half)
+          var x1 = (rtl ? r.left : r.right) + ox, x2 = (rtl ? t.right : t.left) + ox;
           y1 += oy; y2 += oy;
-          var mx = x1 + (x2 - x1) / 2, rad = Math.min(10, Math.abs(y2 - y1) / 2, (x2 - x1) / 4), dir = y2 > y1 ? 1 : -1;
+          var hx = x2 > x1 ? 1 : -1;
+          var mx = x1 + (x2 - x1) / 2, rad = Math.min(10, Math.abs(y2 - y1) / 2, Math.abs(x2 - x1) / 4), dir = y2 > y1 ? 1 : -1;
           var d = Math.abs(y2 - y1) < 1
             ? 'M' + x1 + ' ' + y1 + 'H' + x2
-            : 'M' + x1 + ' ' + y1 + 'H' + (mx - rad) + 'Q' + mx + ' ' + y1 + ' ' + mx + ' ' + (y1 + dir * rad) +
-              'V' + (y2 - dir * rad) + 'Q' + mx + ' ' + y2 + ' ' + (mx + rad) + ' ' + y2 + 'H' + x2;
+            : 'M' + x1 + ' ' + y1 + 'H' + (mx - hx * rad) + 'Q' + mx + ' ' + y1 + ' ' + mx + ' ' + (y1 + dir * rad) +
+              'V' + (y2 - dir * rad) + 'Q' + mx + ' ' + y2 + ' ' + (mx + hx * rad) + ' ' + y2 + 'H' + x2;
           paths.push('<path class="' + (src.dataset.state === 'done' ? 'is-won' : src.dataset.state === 'live' ? 'is-live' : '') + '" d="' + d + '"/>');
         });
       });
