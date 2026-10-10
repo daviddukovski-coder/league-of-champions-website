@@ -1571,6 +1571,21 @@
 
   .bm-tile.use-tiny .bm-name { font-size:11.5px; letter-spacing:0.1px; }
   .bm-tile.use-tiny .bm-sets { font-size:15px; gap:3px; }
+
+  /* Big club logo again: on the right edge, larger than the tile, cut off */
+  .bm-tile { padding-right:46px; }
+  .bm-tile .club-avatar { position:absolute; right:-12px; top:50%; transform:translateY(-50%); width:60px; height:60px; flex:none; z-index:0; opacity:0.95; }
+  .bm-tile .club-avatar img { filter:drop-shadow(0 2px 6px rgba(3,4,40,0.5)); }
+  .bm-tile .bm-name, .bm-tile .bm-sets { position:relative; z-index:1; }
+  @container (max-width:150px) {
+    .club-avatar { display:block !important; width:48px !important; height:48px !important; right:-14px !important; }
+  }
+
+  .bm-tile { padding-right:40px; padding-left:8px; gap:5px; }
+  .bm-tile .club-avatar { right:-15px; }
+  .bm-sets { font-size:16px; gap:4px; }
+  .bm-tile.use-tiny .bm-name { font-size:11px; letter-spacing:0; }
+  .bm-tile.use-tiny .bm-sets { font-size:14px; gap:3px; }
 </style>
 </head>
 <body>
@@ -7956,14 +7971,20 @@ var CLUBS = [
       var w = t.st.winner, cls = 'bm-tile' + (w && w === teamId ? ' is-won' : w ? ' is-lost' : '') + (t.st.live ? ' is-live' : '') + (team ? '' : ' is-tbd');
       var parts = team ? (team.name || '').split(' & ') : [];
       // Full name, and the surname for narrow tiles (CSS container query).
-      function line(full) {
+      function shortName(full) {
         var words = (full || '').trim().split(/\s+/), last = words[words.length - 1] || full;
         // Long double surnames like the graphics: "Hofmann-Wellenhof" -> "H.-Wellenhof".
         if (last.length > 12 && last.indexOf('-') > 0) last = last.charAt(0) + '.-' + last.split('-').slice(1).join('-');
-        return '<span><b class="bm-full">' + esc(full) + '</b><b class="bm-short">' + esc(last) + '</b></span>';
+        return last;
+      }
+      var shorts = parts.map(shortName);
+      // Brothers / same surname: first names tell them apart.
+      if (shorts.length === 2 && shorts[0] === shorts[1]) shorts = parts.map(function(n) { return (n || '').trim().split(/\s+/)[0]; });
+      function line(full, short) {
+        return '<span><b class="bm-full">' + esc(full) + '</b><b class="bm-short">' + esc(short) + '</b></span>';
       }
       var name = team
-        ? '<span class="bm-name" translate="no">' + line(parts[0] || '') + (parts[1] ? line(parts[1]) : '') + '</span>'
+        ? '<span class="bm-name" translate="no">' + line(parts[0] || '', shorts[0] || '') + (parts[1] ? line(parts[1], shorts[1]) : '') + '</span>'
         : '<span class="bm-name bm-tbd">' + esc(t.label || 'TBD') + '</span>';
       var setsHtml = '<span class="bm-sets" aria-hidden="true">' + (t.st.sets || []).map(function(x) { return '<span>' + esc(x[t.k]) + '</span>'; }).join('') + '</span>';
       var link = '';
