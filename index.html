@@ -6628,7 +6628,7 @@ var CLUBS = [
       renderTurnierAppImportPanel() +
       '<h2 class="section-title">Stages' + (liveDivisionFilter ? ' · ' + esc(divisionWord(liveDivisionFilter)) : '') + (liveTierFilter ? ' · LoC ' + liveTierFilter : '') + '</h2>' +
       generateAllGroupMatchesHtml(bracket.stages) +
-      '<div class="stage-list" id="stageList">' + visibleStages.map(renderStageCard).join('') + '</div>' +
+      '<div class="stage-list" id="stageList">' + (editMode ? visibleStages : stagesLatestFirst(visibleStages)).map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
     wireLiveEvents();
@@ -7392,6 +7392,20 @@ var CLUBS = [
       }
     });
     Object.keys(seen).forEach(function(id) { if (seen[id] !== null) lastSeenScores[id] = seen[id]; });
+  }
+
+  // Public view: what happens later in the tournament on top — knockout,
+  // then placement pools, swiss, groups; qualification stages last. Ties
+  // keep the stored order. Edit mode shows the stored (drag-sortable) order.
+  function stagesLatestFirst(stages) {
+    var typeRank = { bracket: 0, doubleElim: 0, modifiedPool: 1, swiss: 2, group: 3 };
+    function rank(st) {
+      var quali = /quali/i.test(st.label || '') ? 10 : 0;
+      return quali + (typeRank[st.type] != null ? typeRank[st.type] : 4);
+    }
+    return stages.map(function(st, i) { return { st: st, i: i }; })
+      .sort(function(a, b) { return rank(a.st) - rank(b.st) || a.i - b.i; })
+      .map(function(x) { return x.st; });
   }
 
   function renderStageCard(stage) {
