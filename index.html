@@ -1316,6 +1316,90 @@
     .live-ticker-label { align-self:flex-start; }
     .ticker-card { flex-basis:78%; }
   }
+
+  /* ==================================================================
+     DESIGN "ig" — the look of the LoC Instagram graphics. Everything below
+     is scoped to :root[data-design="ig"]; CONFIG.DESIGN = null turns it off.
+     ================================================================== */
+  .round-time { display:none; }
+  .team-name-p { white-space:nowrap; }
+
+  /* Always dark: navy at the top fading into a lavender haze. */
+  :root[data-design="ig"] {
+    --bg:#0b0d63; --surface:#14167a; --surface-2:#191c8a; --heading:#ffffff; --text:#f2f2fb; --text-muted:#b7b8e2;
+    --border:rgba(255,255,255,0.14); --shadow:rgba(3,4,40,0.45); --tint-ink:rgba(255,255,255,0.08); --tint-paid:rgba(47,158,110,0.22);
+    --tint-pending:rgba(228,167,48,0.22); --tint-muted:rgba(255,255,255,0.10); --pending-text:#f0c775; --cyan-ink:#00f2ff;
+    --ig-metal:linear-gradient(112deg, #1d2086 0%, #3b3e9f 26%, #8f8ec9 47%, #b9b8e2 52%, #5a5cb4 66%, #23268c 100%);
+    --ig-metal-soft:linear-gradient(112deg, #1d2086 0%, #34379a 30%, #6f6fbb 50%, #3c3fa2 70%, #1d2086 100%);
+    --ig-gold:#ffd23f; --ig-bronze:#f0a04b;
+    color-scheme:dark;
+  }
+  :root[data-design="ig"] body { background:linear-gradient(180deg, #0b0d63 0%, #10137a 38%, #3f418f 78%, #6b6aa6 100%) fixed; }
+  :root[data-design="ig"] .nav { background:rgba(11,13,99,0.88); }
+  :root[data-design="ig"] footer { background:#07083f; }
+
+  /* Bracket: one metallic glass tile per team, stacked per match. */
+  :root[data-design="ig"] .bracket-scroll .bracket-slot-block { background:none; border:none; box-shadow:none; padding:16px 0 0; }
+  :root[data-design="ig"] .bracket-scroll .bracket-slot-block:hover { transform:none; box-shadow:none; }
+  :root[data-design="ig"] .bracket-scroll .match-code-badge { top:0; left:2px; background:transparent; color:rgba(255,255,255,0.55); font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:13px; letter-spacing:1px; padding:0; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams { gap:8px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row,
+  :root[data-design="ig"] .bracket-scroll .match-teams-line > .match-team,
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams:not(.schedule-match-scored) > .match-team {
+    position:relative; display:flex; align-items:center; min-height:64px; padding:8px 92px 8px 16px; border-radius:10px; overflow:hidden;
+    background:var(--ig-metal); border:1.5px solid rgba(255,255,255,0.85);
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,0.55), inset -1px -1px 0 rgba(11,13,99,0.4), 0 8px 18px rgba(3,4,40,0.45);
+    opacity:1 !important; transition:transform .25s cubic-bezier(.16,1,.3,1), filter .25s;
+  }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row:hover { transform:translateX(3px); }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-scored .schedule-match-row:not(.schedule-match-winner) { filter:saturate(0.45) brightness(0.72); }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row .match-team,
+  :root[data-design="ig"] .bracket-scroll .match-team { position:static; flex:1; min-width:0; display:block; font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:19px; line-height:1.08; letter-spacing:0.4px; color:#fff !important; text-transform:uppercase; text-shadow:0 1px 6px rgba(11,13,99,0.6); overflow:visible; white-space:normal; }
+  :root[data-design="ig"] .bracket-scroll .team-name { display:flex; flex-direction:column; min-width:0; }
+  :root[data-design="ig"] .bracket-scroll .team-name-p { overflow:hidden; text-overflow:ellipsis; }
+  :root[data-design="ig"] .bracket-scroll .team-name-amp { display:none; }
+  /* Club logo large on the right, cut by the tile edge. */
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar { position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:96px; height:96px; margin:0; border-radius:0; background:none !important; box-shadow:none !important; }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar img { filter:drop-shadow(0 2px 6px rgba(3,4,40,0.5)); }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar:not(:has(img)) { border-radius:50%; width:56px; height:56px; right:10px; font-size:18px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-set-score { position:relative; z-index:1; min-width:24px; font-size:24px; color:rgba(255,255,255,0.75) !important; text-shadow:0 1px 6px rgba(11,13,99,0.6); }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-winner .schedule-set-score { color:var(--cyan) !important; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-vs { display:none; }
+  :root[data-design="ig"] .bracket-scroll .match-team.tbd { justify-content:flex-start; font-size:15px; color:rgba(255,255,255,0.75) !important; font-style:normal; background:var(--ig-metal-soft); }
+  :root[data-design="ig"] .bracket-scroll .match-score-summary { display:none; }
+  :root[data-design="ig"] .bracket-scroll .match-teams-line { flex-direction:column; align-items:stretch; gap:8px; }
+
+  /* Round labels: cyan Bebas with start time; final gold, bronze orange. */
+  :root[data-design="ig"] .bracket-scroll .bracket-round-title { text-align:left; font-size:24px; color:var(--cyan); text-shadow:0 0 14px rgba(0,242,255,0.35); display:flex; gap:10px; align-items:baseline; }
+  :root[data-design="ig"] .bracket-scroll .bracket-round-title::after { display:none; }
+  :root[data-design="ig"] .round-time { display:inline; }
+  :root[data-design="ig"] .round-time::before { content:'– '; }
+  :root[data-design="ig"] .bracket-scroll .is-final .bracket-round-title { color:var(--ig-gold); text-shadow:0 0 14px rgba(255,210,63,0.35); }
+  :root[data-design="ig"] .bracket-scroll .is-third .bracket-round-title { color:var(--ig-bronze); text-shadow:0 0 14px rgba(240,160,75,0.3); }
+  :root[data-design="ig"] .bracket-scroll .is-final .schedule-match-row { border-color:rgba(255,210,63,0.9); }
+
+  /* Live: red rim on the tiles. */
+  :root[data-design="ig"] .bracket-slot-block[data-state="live"] { animation:none; }
+  :root[data-design="ig"] .bracket-slot-block[data-state="live"] .schedule-match-row { border-color:#ff4d6a; animation:liveCardPulse 2s ease-in-out infinite; }
+  :root[data-design="ig"] .bracket-scroll .status-live { position:absolute; top:-2px; right:0; font-size:10px; padding:3px 8px; }
+
+  /* Champion: metallic tile with the cyan outline trophy. */
+  :root[data-design="ig"] .bracket-scroll .bracket-champion { background:var(--ig-metal); border:1.5px solid rgba(255,255,255,0.9); box-shadow:inset 1px 1px 0 rgba(255,255,255,0.55), 0 0 30px rgba(0,242,255,0.3), 0 10px 24px rgba(3,4,40,0.5); padding:22px 16px; }
+  :root[data-design="ig"] .bracket-champion::before { display:none; }
+  :root[data-design="ig"] .bracket-champion-trophy { width:54px; height:54px; background:none; -webkit-mask:none; mask:none; border:none; position:relative; }
+  :root[data-design="ig"] .bracket-champion-trophy::after { content:''; position:absolute; inset:0; background:var(--cyan); -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'><path d='M7 3h10v6a5 5 0 0 1-10 0V3z'/><path d='M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10'/><path d='M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z'/></svg>") center/contain no-repeat; filter:drop-shadow(0 0 8px rgba(0,242,255,0.7)); }
+  :root[data-design="ig"] .bracket-champion-name { font-size:28px; text-shadow:0 1px 8px rgba(11,13,99,0.7); }
+  :root[data-design="ig"] .bracket-champion-club { color:rgba(255,255,255,0.85); }
+  :root[data-design="ig"] .bracket-champion-col .bracket-round-title { color:var(--cyan); }
+
+  :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex:0 0 330px; width:330px; }
+  :root[data-design="ig"] .bracket-scroll .schedule-match-row,
+  :root[data-design="ig"] .bracket-scroll .match-teams-line > .match-team,
+  :root[data-design="ig"] .bracket-scroll .schedule-match-teams:not(.schedule-match-scored) > .match-team { padding-right:84px; }
+  :root[data-design="ig"] .bracket-scroll .match-team .club-avatar { width:84px; height:84px; right:-8px; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .bracket-scroll > .bracket-round-col { flex-basis:84vw; width:84vw; }
+  }
 </style>
 </head>
 <body>
@@ -1569,8 +1653,14 @@
     HERO_IMAGE_URL: null,
     // Logged-in users whose email is in this list get the on-page editor
     // (click photos/text to swap them) — everyone else just sees the site.
-    ADMIN_EMAILS: ['daviddukovski@gmail.com']
+    ADMIN_EMAILS: ['daviddukovski@gmail.com'],
+    // Visual design. 'ig' = the look of the League of Champions Instagram
+    // graphics (metallic glass tiles, navy→lavender, always dark). Set to null
+    // to switch back to the previous design — everything 'ig' lives in CSS
+    // scoped to :root[data-design="ig"].
+    DESIGN: 'ig'
   };
+  if (CONFIG.DESIGN) document.documentElement.setAttribute('data-design', CONFIG.DESIGN);
   var DEMO_MODE = !CONFIG.API_URL || CONFIG.API_URL.indexOf('PASTE_') !== -1;
   var AUTH_DEMO_MODE = !CONFIG.FIREBASE.apiKey || CONFIG.FIREBASE.apiKey.indexOf('PASTE_') !== -1;
   if (!AUTH_DEMO_MODE && window.firebase) { firebase.initializeApp(CONFIG.FIREBASE); }
@@ -7165,7 +7255,11 @@ var CLUBS = [
   function teamNameHtml(teamId) {
     var team = findBracketTeam(currentBracket, teamId);
     if (!team) return '<span class="match-team">TBD</span>';
-    return '<span class="match-team">' + clubAvatarHtml(findClub(team.club)) + esc(team.name) + '</span>';
+    var parts = (team.name || '').split(' & ');
+    var nameHtml = parts.length === 2
+      ? '<span class="team-name"><span class="team-name-p">' + esc(parts[0]) + '</span><span class="team-name-amp"> &amp; </span><span class="team-name-p">' + esc(parts[1]) + '</span></span>'
+      : '<span class="team-name">' + esc(team.name) + '</span>';
+    return '<span class="match-team">' + clubAvatarHtml(findClub(team.club)) + nameHtml + '</span>';
   }
 
   function renderStandingsTable(stage) {
@@ -7520,12 +7614,25 @@ var CLUBS = [
   // renderDoubleElimPreview) since there's nothing persisted to rename yet.
   function roundTitleHtml(stage, roundIndex, opts) {
     var round = stage.rounds[roundIndex];
-    if (opts && opts.readOnly) return '<div class="bracket-round-title">' + esc(round.name) + '</div>';
+    var timeHtml = roundStartTimeHtml(round);
+    if (opts && opts.readOnly) return '<div class="bracket-round-title">' + esc(round.name) + timeHtml + '</div>';
     var key = stage.id + ':' + roundIndex;
     return '<div class="bracket-round-title"><span class="round-name-wrap" data-round-name-wrap="' + esc(key) + '" data-raw-name="' + esc(round.name) + '">' +
         '<span class="round-name-value">' + esc(round.name) + '</span>' +
         '<button type="button" class="inline-rename-pencil" data-rename-round="' + esc(key) + '" title="Rename round">✎</button>' +
-      '</span></div>';
+      '</span>' + timeHtml + '</div>';
+  }
+
+  // Earliest scheduled start of a round's matches ("11.40"), like the round
+  // labels on the Instagram bracket graphics. Empty when unscheduled.
+  function roundStartTimeHtml(round) {
+    if (!currentBracket || !currentBracket.schedule || !(currentBracket.schedule.days || []).length) return '';
+    var idx = scheduleIndex(currentBracket), best = null;
+    (round.matches || []).forEach(function(m) {
+      var w = idx[m.id];
+      if (w && (!best || w.dayIndex < best.dayIndex || (w.dayIndex === best.dayIndex && w.time < best.time))) best = w;
+    });
+    return best ? '<span class="round-time">' + esc(best.time.replace(':', '.')) + '</span>' : '';
   }
 
   // Shared by any stage type whose rounds are the {slots,matches} bracket
@@ -7537,7 +7644,8 @@ var CLUBS = [
     var order = bracketDisplayOrder(stage);
     var cols = stage.rounds.map(function(round, ri) {
       var matchesHtml = order[ri].map(function(mi) { return renderBracketMatchCard(stage, ri, mi); }).join('');
-      var col = '<div class="bracket-round-col" style="--round:' + ri + '">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
+      var kind = ri === finalIndex ? ' is-final' : round.side === 'thirdPlace' ? ' is-third' : '';
+      var col = '<div class="bracket-round-col' + kind + '" style="--round:' + ri + '">' + roundTitleHtml(stage, ri) + '<div class="bracket-round-matches">' + matchesHtml + '</div></div>';
       return ri === finalIndex ? col + renderChampionColumn(stage, ri) : col;
     }).join('');
     return stage.rounds.length ? '<div class="bracket-scroll' + bracketEntryClass(stage) + '">' + cols + '</div>' : '';
