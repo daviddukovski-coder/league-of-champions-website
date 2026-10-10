@@ -7762,14 +7762,26 @@ var CLUBS = [
       blocks.forEach(function(b) { byId[b.dataset.matchId] = b; });
       var base = sc.getBoundingClientRect(), ox = sc.scrollLeft - base.left, oy = sc.scrollTop - base.top;
       var paths = [];
+      // Team rows inside a card (one per team, slot A first).
+      function teamRows(card) {
+        return card.querySelectorAll('.schedule-match-row, .schedule-match-teams:not(.schedule-match-scored) > .match-team, .match-teams-line > .match-team');
+      }
+      function midY(el) { var r = el.getBoundingClientRect(); return r.top + r.height / 2; }
       blocks.forEach(function(b) {
         var t = b.getBoundingClientRect();
-        [['srcA', 0.3], ['srcB', 0.7]].forEach(function(pair) {
+        var rows = teamRows(b);
+        [['srcA', 0], ['srcB', 1]].forEach(function(pair) {
           var src = byId[b.dataset[pair[0]]];
           if (!src) return;
           var r = src.getBoundingClientRect();
-          var x1 = r.right + ox, y1 = r.top + r.height / 2 + oy;
-          var x2 = t.left + ox, y2 = t.top + t.height * (b.dataset.srcB ? pair[1] : 0.5) + oy;
+          // Start at the winner's row (the team that moves on); otherwise
+          // between the source's two rows.
+          var srcRows = teamRows(src), win = src.querySelector('.schedule-match-winner');
+          var y1 = win ? midY(win) : srcRows.length >= 2 ? (midY(srcRows[0]) + midY(srcRows[1])) / 2 : r.top + r.height / 2;
+          // End at the row of the team arriving (slot A row / slot B row).
+          var y2 = rows.length >= 2 ? midY(rows[pair[1]]) : rows.length === 1 ? midY(rows[0]) : t.top + t.height * (b.dataset.srcB ? (pair[1] ? 0.7 : 0.3) : 0.5);
+          var x1 = r.right + ox, x2 = t.left + ox;
+          y1 += oy; y2 += oy;
           var mx = x1 + (x2 - x1) / 2, rad = Math.min(10, Math.abs(y2 - y1) / 2, (x2 - x1) / 4), dir = y2 > y1 ? 1 : -1;
           var d = Math.abs(y2 - y1) < 1
             ? 'M' + x1 + ' ' + y1 + 'H' + x2
