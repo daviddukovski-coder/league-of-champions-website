@@ -1281,6 +1281,41 @@
     .bracket-scroll { scroll-snap-type:x mandatory; gap:36px; }
     .bracket-scroll > .bracket-round-col { flex-basis:78vw; width:78vw; scroll-snap-align:start; }
   }
+
+  /* ============ LIVE TICKER ============ */
+  .live-ticker { display:flex; align-items:stretch; gap:14px; margin:0 0 28px; padding:12px; border-radius:var(--radius); background:var(--ink-deep); color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px var(--shadow); }
+  .live-ticker::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--cyan); }
+  .live-ticker.is-live::before { background:#ff4d6a; }
+  .live-ticker-label { flex:0 0 auto; align-self:center; display:inline-flex; align-items:center; gap:8px; padding:8px 14px; font-weight:800; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; background:var(--cyan); color:var(--pill-text); transform:skewX(-12deg); margin-left:6px; }
+  .live-ticker.is-live .live-ticker-label { background:#e0233c; color:#fff; }
+  .live-ticker-dot { width:8px; height:8px; border-radius:50%; background:#fff; animation:liveDotPulse 1.2s ease-in-out infinite; }
+  .live-ticker-track { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; flex:1; min-width:0; }
+  .live-ticker-track::-webkit-scrollbar { display:none; }
+  .ticker-card { flex:0 0 250px; scroll-snap-align:start; display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; text-decoration:none; transition:background .2s, border-color .2s, transform .2s; }
+  .ticker-card:hover { background:rgba(255,255,255,0.1); border-color:var(--cyan); transform:translateY(-1px); }
+  .ticker-card.is-live { border-color:rgba(255,77,106,0.6); }
+  .ticker-meta { font-size:10.5px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--cyan); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ticker-card.is-live .ticker-meta { color:#ff8a9c; }
+  .ticker-team { display:flex; align-items:center; gap:8px; min-width:0; font-size:13px; font-weight:600; }
+  .ticker-team .club-avatar { width:20px; height:20px; }
+  .ticker-team-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ticker-team-name.tbd { opacity:0.55; font-weight:500; font-style:italic; }
+  .ticker-sets { display:flex; gap:6px; font-family:'Bebas Neue',sans-serif; font-size:18px; line-height:1; }
+  .ticker-set { min-width:18px; text-align:right; opacity:0.6; }
+  .ticker-set.is-current { opacity:1; color:#fff; text-shadow:0 0 10px rgba(255,77,106,0.8); }
+
+  /* Score changed since the last update: pop + flash */
+  @media (prefers-reduced-motion: no-preference) {
+    .score-bump { animation:scoreBump 1.4s cubic-bezier(.16,1,.3,1); }
+    .score-bump .schedule-set-score, .score-bump .ticker-set { animation:scorePop .6s cubic-bezier(.16,1,.3,1); display:inline-block; }
+    @keyframes scoreBump { 0% { box-shadow:0 0 0 0 rgba(0,242,255,0.7); } 40% { box-shadow:0 0 0 6px rgba(0,242,255,0.25); } 100% { box-shadow:0 0 0 0 rgba(0,242,255,0); } }
+    @keyframes scorePop { 0% { transform:scale(1); } 35% { transform:scale(1.35); color:var(--cyan); } 100% { transform:scale(1); } }
+  }
+  @media (max-width:640px) {
+    .live-ticker { flex-direction:column; gap:10px; }
+    .live-ticker-label { align-self:flex-start; }
+    .ticker-card { flex-basis:78%; }
+  }
 </style>
 </head>
 <body>
@@ -6293,6 +6328,7 @@ var CLUBS = [
     }
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + liveBracketLabel(t) + (scheduleLinkVisible(t) ? ' · <a href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.viewLink') + ' →</a>' : '') + '</div></div>' +
+      renderLiveTicker(bracket) +
       renderDivisionFilterTabs(bracket) +
       renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
@@ -6307,6 +6343,7 @@ var CLUBS = [
     wireLiveEvents();
     wireTurnierAppImport();
     scheduleBracketConnectors();
+    highlightChangedScores(el);
     initSortable('stageList', function(order) {
       // Only the visible (filtered) stages were draggable — reorder them among
       // themselves while leaving any hidden-by-filter stages exactly where
@@ -6953,6 +6990,117 @@ var CLUBS = [
     });
     var cancel = document.getElementById('taImportCancel');
     if (cancel) cancel.addEventListener('click', function() { turnierAppPreview = null; renderLive(); });
+  }
+
+
+  /* ==================================================================
+     LIVE TICKER — strip on top of the live bracket and schedule pages:
+     every match being played right now (scores in, no winner yet), or,
+     when nothing is live, the next match per court from the schedule.
+     Plus a short "score bump" highlight on any match whose score changed
+     since the previous render (live updates arrive via onSnapshot).
+     ================================================================== */
+  function tickerMatchInfo(bracket, matchId) {
+    var f = findMatchAnywhere(bracket, matchId);
+    if (!f) return null;
+    var a, b;
+    if (!f.round) { a = f.match.teamAId; b = f.match.teamBId; }
+    else {
+      var ri = f.stage.rounds.indexOf(f.round);
+      a = resolveSlotTeam(bracket, f.stage, ri, f.match.slotAIndex);
+      b = resolveSlotTeam(bracket, f.stage, ri, f.match.slotBIndex);
+    }
+    var sets = f.match.sets || [];
+    var winner = a && b ? matchWinner({ id: f.match.id, teamAId: a, teamBId: b, sets: sets, format: f.match.format }, bracket.defaultFormat) : null;
+    var live = !winner && !!a && !!b && sets.some(function(st) { return (Number(st[0]) || 0) + (Number(st[1]) || 0) > 0; });
+    return { id: f.match.id, a: a, b: b, sets: sets, winner: winner, live: live, competition: f.stage.competition,
+      label: (f.round ? f.round.name : f.stage.label) || '' };
+  }
+
+  // matchId -> where/when it is scheduled (first occurrence).
+  function scheduleIndex(bracket) {
+    var out = {}, names = (bracket.schedule && bracket.schedule.courtNames) || [];
+    ((bracket.schedule && bracket.schedule.days) || []).forEach(function(day, di) {
+      (day.courts || []).forEach(function(items, ci) {
+        var cum = 0;
+        items.forEach(function(item) {
+          if (item.type === 'match' && !out[item.matchId]) {
+            out[item.matchId] = { dayIndex: di, dayLabel: day.label, court: names[ci] || uiFormat('schedule.court', { n: ci + 1 }), courtIndex: ci, time: addMinutesToTime(day.startTime, cum) };
+          }
+          cum += scheduleItemDuration(item);
+        });
+      });
+    });
+    return out;
+  }
+
+  function allBracketMatchIds(bracket) {
+    var ids = [];
+    bracket.stages.forEach(function(st) {
+      (st.matches || []).forEach(function(m) { ids.push(m.id); });
+      (st.rounds || []).forEach(function(r) { (r.matches || []).forEach(function(m) { ids.push(m.id); }); });
+    });
+    return ids;
+  }
+
+  function renderLiveTicker(bracket) {
+    if (!bracket || !bracket.stages || !bracket.stages.length) return '';
+    var sched = scheduleIndex(bracket);
+    var infos = allBracketMatchIds(bracket).map(function(id) { return tickerMatchInfo(bracket, id); }).filter(Boolean);
+    var live = infos.filter(function(i) { return i.live; });
+    var cards, mode;
+    if (live.length) {
+      mode = 'live';
+      cards = live.sort(function(x, y) { var a = sched[x.id], b = sched[y.id]; return (a ? a.courtIndex : 99) - (b ? b.courtIndex : 99); });
+    } else {
+      // Next unfinished match per court, on the first day that still has one.
+      var open = infos.filter(function(i) { return !i.winner && sched[i.id]; });
+      if (!open.length) return '';
+      var firstDay = Math.min.apply(null, open.map(function(i) { return sched[i.id].dayIndex; }));
+      var perCourt = {};
+      open.filter(function(i) { return sched[i.id].dayIndex === firstDay; })
+        .sort(function(x, y) { return sched[x.id].time < sched[y.id].time ? -1 : 1; })
+        .forEach(function(i) { var c = sched[i.id].courtIndex; if (!perCourt[c]) perCourt[c] = i; });
+      cards = Object.keys(perCourt).sort().map(function(k) { return perCourt[k]; });
+      mode = 'next';
+    }
+    function teamLine(teamId, idx, info) {
+      var team = teamId && findBracketTeam(bracket, teamId);
+      var scores = info.sets.map(function(st, si) {
+        var cur = info.live && si === info.sets.length - 1;
+        return '<span class="ticker-set' + (cur ? ' is-current' : '') + '">' + esc(st[idx]) + '</span>';
+      }).join('');
+      return '<div class="ticker-team">' + (team ? clubAvatarHtml(findClub(team.club)) + '<span class="ticker-team-name">' + esc(team.name) + '</span>' : '<span class="ticker-team-name tbd">TBD</span>') + '<span class="ticker-sets">' + scores + '</span></div>';
+    }
+    var t = currentBracketTournament;
+    var html = cards.map(function(info) {
+      var where = sched[info.id];
+      var meta = [where ? where.court : '', where && mode === 'next' ? where.time : '', divisionWord(info.competition || ''), info.label].filter(Boolean).map(esc).join(' · ');
+      return '<a class="ticker-card' + (info.live ? ' is-live' : '') + '" data-match-id="' + esc(info.id) + '" href="#/event/' + esc(t.id) + '/live">' +
+        '<span class="ticker-meta">' + meta + '</span>' + teamLine(info.a, 0, info) + teamLine(info.b, 1, info) + '</a>';
+    }).join('');
+    return '<div class="live-ticker is-' + mode + '">' +
+      '<span class="live-ticker-label">' + (mode === 'live' ? '<span class="live-ticker-dot"></span>Live' : 'Next up') + '</span>' +
+      '<div class="live-ticker-track">' + html + '</div></div>';
+  }
+
+  // Score bump: compare each rendered match's sets with the last render.
+  var lastSeenScores = {};
+  function highlightChangedScores(root) {
+    if (!currentBracket || !root) return;
+    var seen = {};
+    root.querySelectorAll('[data-match-id]').forEach(function(el) {
+      var id = el.dataset.matchId;
+      if (seen[id] === undefined) {
+        var f = findMatchAnywhere(currentBracket, id);
+        seen[id] = f ? JSON.stringify(f.match.sets || []) : null;
+      }
+      if (seen[id] === null) return;
+      if (lastSeenScores[id] !== undefined && lastSeenScores[id] !== seen[id]) {
+        el.classList.remove('score-bump'); void el.offsetWidth; el.classList.add('score-bump');
+      }
+    });
+    Object.keys(seen).forEach(function(id) { if (seen[id] !== null) lastSeenScores[id] = seen[id]; });
   }
 
   function renderStageCard(stage) {
@@ -9293,6 +9441,7 @@ var CLUBS = [
     var visibleDays = bracket.schedule.days.length ? [bracket.schedule.days[scheduleSelectedDayIndex]] : [];
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + uiText('schedule.label') + ' · ' + liveLinkHtml + '</div></div>' +
+      renderLiveTicker(bracket) +
       renderScheduleSetupPanel(bracket) +
       renderStageScheduleControls(bracket) +
       renderScheduleDayTabs(bracket) +
@@ -9301,6 +9450,7 @@ var CLUBS = [
       (visibleDays.length ? renderScheduleGraphicPanel(visibleDays[0]) : '');
     wireScheduleEvents();
     initScheduleSortable();
+    highlightChangedScores(el);
   }
 
   function wireScheduleEvents() {
