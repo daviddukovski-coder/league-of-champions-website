@@ -1586,6 +1586,59 @@
   .bm-sets { font-size:16px; gap:4px; }
   .bm-tile.use-tiny .bm-name { font-size:11px; letter-spacing:0; }
   .bm-tile.use-tiny .bm-sets { font-size:14px; gap:3px; }
+
+  /* Ticket parts are only used by the 'ig' design */
+  .tcard-stub, .tcard-glare, .tcard-soon, .tcard-year { display:none; }
+
+  /* ============ ig: tournament cards as LoC tickets ============ */
+  :root[data-design="ig"] .tournament-grid { perspective:1200px; gap:22px; }
+  :root[data-design="ig"] .tcard {
+    --rx:0deg; --ry:0deg; --gx:30%; --gy:20%;
+    min-height:230px; padding:22px 118px 22px 22px; border-radius:14px; overflow:hidden;
+    background:linear-gradient(112deg, #1a1d84 0%, #2c2f98 40%, #4a4cb0 58%, #23268c 100%);
+    border:1px solid rgba(255,255,255,0.4);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 14px 34px rgba(3,4,40,0.45);
+    transform:rotateX(var(--rx)) rotateY(var(--ry)); transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+    /* Punched half-circles where the stub tears off */
+    -webkit-mask:radial-gradient(circle 11px at calc(100% - 100px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat,
+                 radial-gradient(circle 11px at calc(100% - 100px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+            mask:radial-gradient(circle 11px at calc(100% - 100px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat,
+                 radial-gradient(circle 11px at calc(100% - 100px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+  }
+  :root[data-design="ig"] .tcard.is-tilting { transition:transform .08s linear, box-shadow .3s; box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 22px 46px rgba(3,4,40,0.55); }
+  :root[data-design="ig"] .tcard:hover { border-color:rgba(255,255,255,0.65); }
+  :root[data-design="ig"] .tcard::after { display:none; }
+  :root[data-design="ig"] .tcard-watermark { display:none; }
+  :root[data-design="ig"] .tcard-glare { display:block; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .3s; background:radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,0.28), rgba(255,255,255,0.06) 30%, transparent 60%); mix-blend-mode:screen; }
+  :root[data-design="ig"] .tcard.is-tilting .tcard-glare { opacity:1; }
+  /* Perforation + stub */
+  :root[data-design="ig"] .tcard-stub { display:flex; position:absolute; top:0; bottom:0; right:0; width:100px; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    border-left:2px dashed rgba(255,255,255,0.35); background:linear-gradient(180deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02)); }
+  :root[data-design="ig"] .tcard-stub-loc { font-size:11px; font-weight:800; letter-spacing:0.2em; color:var(--cyan); }
+  :root[data-design="ig"] .tcard-stub-tier { font-family:'Bebas Neue',sans-serif; font-size:40px; line-height:0.9; color:#fff; writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:1px; max-height:130px; overflow:hidden; }
+  :root[data-design="ig"] .tcard-stub-arrow { margin-top:8px; width:26px; height:26px; border-radius:50%; border:1.5px solid var(--cyan); position:relative; transition:transform .3s cubic-bezier(.16,1,.3,1), background .2s; }
+  :root[data-design="ig"] .tcard-stub-arrow::after { content:''; position:absolute; left:8px; top:8px; width:7px; height:7px; border-top:2px solid var(--cyan); border-right:2px solid var(--cyan); transform:rotate(45deg); }
+  :root[data-design="ig"] .tcard:hover .tcard-stub-arrow { transform:translateX(3px); background:rgba(0,242,255,0.15); }
+  /* Main part, poster typography */
+  :root[data-design="ig"] .tcard-top { position:static; display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:auto; }
+  :root[data-design="ig"] .tcard h3 { font-size:36px; line-height:0.92; margin-top:26px; text-shadow:0 2px 14px rgba(3,4,40,0.5); }
+  :root[data-design="ig"] .tcard-meta span:first-child { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:19px; letter-spacing:0.28em; color:#fff; }
+  :root[data-design="ig"] .tcard-year { display:inline; color:var(--cyan); }
+  :root[data-design="ig"] .tcard-soon { display:inline-flex; align-self:flex-start; margin-top:6px; padding:4px 10px; border-radius:999px; background:rgba(0,242,255,0.14); border:1px solid rgba(0,242,255,0.5); color:var(--cyan); font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; position:relative; }
+  :root[data-design="ig"] .tcard:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .tcard { padding-right:86px; min-height:200px;
+      -webkit-mask:radial-gradient(circle 10px at calc(100% - 72px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 72px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+              mask:radial-gradient(circle 10px at calc(100% - 72px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 72px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
+    :root[data-design="ig"] .tcard-stub { width:72px; }
+    :root[data-design="ig"] .tcard-stub-tier { font-size:30px; }
+    :root[data-design="ig"] .tcard h3 { font-size:28px; }
+  }
+
+  :root[data-design="ig"] .tcard .tier { display:none; }
+  :root[data-design="ig"] .tcard .badge { white-space:nowrap; font-size:10px; letter-spacing:0.08em; padding:4px 10px; }
+  :root[data-design="ig"] .tcard-top { justify-content:flex-start; }
 </style>
 </head>
 <body>
@@ -3687,6 +3740,8 @@ var CLUBS = [
     'nav.register': 'Register',
     'nav.logout': 'Log Out',
     'demoBanner.text': 'DEMO MODE – registrations are only stored locally in this browser (no real backend connected)',
+    'home.inDays': 'In {n} days',
+    'home.inOneDay': 'Tomorrow',
     'landing.nextEvent': 'Next tournament',
     'landing.lastEvent': 'Latest tournament',
     'landing.details': 'Tournament details',
@@ -3854,6 +3909,7 @@ var CLUBS = [
   // deliberately omitted so they always fall through to UI_DEFAULTS.
   var TRANSLATIONS = {
     de: {
+      'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen',
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
       'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'landing.fullRanking': 'Zum Ranking',
@@ -4888,19 +4944,50 @@ var CLUBS = [
      ================================================================== */
   var grid = document.getElementById('tournamentGrid');
 
+  // Ticket tilt: the card leans toward the pointer and the metallic glare
+  // follows it. Only for mouse/trackpad and when motion is allowed.
+  (function() {
+    if (!window.matchMedia || !matchMedia('(pointer: fine)').matches) return;
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    var raf = null;
+    document.addEventListener('pointermove', function(e) {
+      if (reduce.matches || document.documentElement.getAttribute('data-design') !== 'ig') return;
+      var card = e.target.closest && e.target.closest('.tcard');
+      document.querySelectorAll('.tcard.is-tilting').forEach(function(c) { if (c !== card) { c.classList.remove('is-tilting'); c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); } });
+      if (!card) return;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function() {
+        var r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        card.classList.add('is-tilting');
+        card.style.setProperty('--ry', ((x - 0.5) * 10).toFixed(2) + 'deg');
+        card.style.setProperty('--rx', ((0.5 - y) * 8).toFixed(2) + 'deg');
+        card.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
+        card.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
+      });
+    });
+  })();
+
   function renderCard(t) {
     var statusBadge = t.status === 'upcoming'
       ? '<span class="badge badge-upcoming">' + esc(uiText('home.badgeOpen')) + '</span>'
       : '<span class="badge badge-past">' + esc(uiText('home.badgeCompleted')) + '</span>';
     var countSpan = t.status === 'upcoming' ? '<span class="tcard-count mono" data-count-for="' + t.id + '"></span>' : '';
+    // Days until the start, for tournaments still ahead.
+    var daysLeft = Math.ceil((new Date(t.dateSort + 'T00:00:00').getTime() - Date.now()) / 864e5);
+    var soon = t.status === 'upcoming' && daysLeft > 0 ? '<span class="tcard-soon">' + esc(uiFormat(daysLeft === 1 ? 'home.inOneDay' : 'home.inDays', { n: daysLeft })) + '</span>' : '';
+    var year = (t.dateSort || '').slice(0, 4);
+    // Ticket layout: main part + perforated stub (the stub/glare only show in
+    // the 'ig' design; the classic card ignores them).
     return (
       '<button class="tcard" data-id="' + t.id + '">' +
         '<span class="tcard-watermark">' + esc(t.tier) + '</span>' +
         '<div class="tcard-top"><span class="tier mono">LoC ' + t.tier + '</span>' + statusBadge + '</div>' +
         '<h3>' + esc(t.name) + '</h3>' +
-        '<div class="tcard-meta mono"><span>' + t.dateLabel + '</span><span>' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
+        '<div class="tcard-meta mono"><span>' + t.dateLabel + '<span class="tcard-year"> ' + esc(year) + '</span></span><span>' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
         '<div class="tcard-cat">' + esc(divisionsText(t)) + '</div>' +
-        countSpan +
+        countSpan + soon +
+        '<span class="tcard-stub" aria-hidden="true"><span class="tcard-stub-loc">LoC</span><span class="tcard-stub-tier">' + esc(t.tier) + '</span><span class="tcard-stub-arrow"></span></span>' +
+        '<span class="tcard-glare" aria-hidden="true"></span>' +
       '</button>'
     );
   }
