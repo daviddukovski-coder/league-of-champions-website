@@ -1648,6 +1648,13 @@
     .profile-media.has-media img, .profile-media.has-media video { -webkit-mask-image:linear-gradient(180deg, #000 0%, #000 78%, rgba(0,0,0,0.35) 100%); mask-image:linear-gradient(180deg, #000 0%, #000 78%, rgba(0,0,0,0.35) 100%); }
     .profile-media-zoom:has(#playerMediaHeight) { display:none; }
   }
+  /* Name + stats share the left column, so the photo starts at the name. */
+  .profile-media-row .profile-main { flex:1 1 380px; min-width:0; display:flex; flex-direction:column; }
+  .profile-media-row .profile-main .detail-info-grid { flex:0 0 auto; }
+  .profile-media-row .profile-main .detail-head { margin-bottom:24px; padding-top:0; }
+  .profile-media-row .profile-main .detail-head h1 { margin-top:0; }
+  #view-player .profile-main .detail-head h1 { font-size:clamp(44px,5.6vw,96px); overflow-wrap:anywhere; }
+  @media (max-width:640px) { .profile-media-row .profile-main { flex-basis:100%; } }
 </style>
 </head>
 <body>
@@ -6457,13 +6464,14 @@ var CLUBS = [
       ? '<div class="editable-field" style="margin-top:8px;"><input type="text" id="playerField_name" value="' + esc(player.name || '') + '" placeholder="Your name" style="width:220px;"> <button type="button" class="btn btn-outline btn-sm" data-save-player-field="name">Save</button></div>'
       : '';
     el.innerHTML =
+      '<div class="profile-media-row">' +
+      '<div class="profile-main">' +
       '<div class="detail-head">' +
         '<h1>' + (player.name ? esc(player.name) : 'Unnamed player') + '</h1>' +
         nameEditHtml +
         editToggleHtml +
         '<div class="medal-row" id="playerMedalRow"></div>' +
       '</div>' +
-      '<div class="profile-media-row">' +
         '<div class="detail-info-grid">' +
           playerAgeFieldHtml(canEdit, player.birthDate) +
           playerHeightFieldHtml(canEdit, player.height) +
@@ -6474,6 +6482,7 @@ var CLUBS = [
           '<div class="info-block"><span class="label">Won Games</span><span class="value" id="playerStatWins">–</span></div>' +
           '<div class="info-block"><span class="label">Lost Games</span><span class="value" id="playerStatLosses">–</span></div>' +
         '</div>' +
+      '</div>' +
         playerMediaHtml(player, canEdit) +
       '</div>' +
       '<h2 class="section-title">Clubs Represented</h2>' +
