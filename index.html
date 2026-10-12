@@ -1724,7 +1724,6 @@
   .ball-ad.is-hover .ball-ad-label, .ball-ad:focus-visible .ball-ad-label { opacity:1; transform:translate(0,-50%); }
   .ball-ad { cursor:pointer; border-radius:50%; }
   .ball-ad:focus-visible { outline:2px solid var(--cyan); outline-offset:4px; }
-  .ball-ad-label .ball-ad-cta { margin-top:4px; font-size:11px; font-weight:800; letter-spacing:0.14em; color:#07083f; background:var(--cyan); padding:3px 8px; border-radius:999px; }
   @keyframes ballFloat { 0%,100% { translate:0 0; } 50% { translate:0 -7px; } }
   @keyframes ballShadow { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(0.82); opacity:0.7; } }
   @media (max-width:640px) { .ball-ad { width:64px; height:64px; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(14px + env(safe-area-inset-bottom, 0px)); } }
@@ -1983,7 +1982,9 @@
     font-size:12px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; box-shadow:0 10px 26px rgba(0,242,255,0.35), 0 6px 16px rgba(3,4,40,0.35);
     opacity:0; transform:translateY(8px) scale(0.6); transform-origin:85% 120%; pointer-events:none; transition:opacity .3s, transform .45s cubic-bezier(.34,1.56,.64,1); }
   .ball-ad-pop::after { content:''; position:absolute; right:30px; bottom:-6px; width:12px; height:12px; background:var(--cyan); transform:rotate(45deg); border-radius:2px; }
-  .ball-ad.is-popping .ball-ad-pop { opacity:1; transform:none; }
+  .ball-ad.is-popping .ball-ad-pop { opacity:1; transform:none; pointer-events:auto; cursor:pointer; }
+  .ball-ad.is-popping .ball-ad-pop:hover { background:#fff; }
+  .ball-ad.is-popping .ball-ad-pop:hover::after { background:#fff; }
   @media (max-width:640px) { .ball-ad-pop { font-size:10px; padding:6px 11px; } .ball-ad-pop::after { right:20px; } }
   @media (prefers-reduced-motion: reduce) { .ball-ad-pop { transition:opacity .3s; transform:none; } }
 </style>
@@ -2202,7 +2203,7 @@
   </section>
 </main>
 <a class="ball-ad" id="ballAd" href="https://bolao.shop/products/mikasa-footvolley-ball-ft-5" target="_blank" rel="noopener sponsored">
-  <span class="ball-ad-label"><b translate="no">MIKASA FT-5</b><span class="ball-ad-caption"></span><span class="ball-ad-cta"></span></span>
+  <span class="ball-ad-label"><b translate="no">MIKASA FT-5</b><span class="ball-ad-caption"></span></span>
   <span class="ball-ad-pop" aria-hidden="true"></span>
   <span class="ball-ad-shadow" aria-hidden="true"></span>
   <canvas class="ball-ad-canvas" aria-hidden="true"></canvas>
@@ -5620,7 +5621,6 @@ var CLUBS = [
     // Labels follow the page language (refreshed whenever the route re-renders).
     var labelBall = function() {
       box.querySelector('.ball-ad-caption').textContent = uiText('ad.ballCaption');
-      box.querySelector('.ball-ad-cta').textContent = uiText('ad.ballCta');
       box.querySelector('.ball-ad-pop').textContent = uiText('ad.ballCta');
       box.setAttribute('aria-label', uiText('ad.ballAria'));
     };
@@ -5628,13 +5628,22 @@ var CLUBS = [
     // Call-to-action bubble: pops up after 5s, then every 40s, at most 3 times
     // per page load, ~4.5s each; never while the full label is showing.
     var pops = 0;
+    // The bubble is part of the link (clickable) and stays while the pointer
+    // is on the ball or the bubble; hovering the ball also brings it up.
+    var hideTimer = null, over = false;
+    var hidePop = function(delay) {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function() { if (!over) box.classList.remove('is-popping'); }, delay);
+    };
     var popOnce = function() {
-      if (pops >= 3 || document.hidden || box.classList.contains('is-hover')) return;
-      pops++; box.classList.add('is-popping');
-      setTimeout(function() { box.classList.remove('is-popping'); }, 4500);
+      if (pops >= 3 || document.hidden || over) return;
+      pops++; box.classList.add('is-popping'); hidePop(4500);
     };
     setTimeout(function() { popOnce(); var iv = setInterval(function() { if (pops >= 3) clearInterval(iv); else popOnce(); }, 40000); }, 5000);
-    box.addEventListener('pointerenter', function() { box.classList.remove('is-popping'); });
+    box.addEventListener('pointerenter', function() { over = true; clearTimeout(hideTimer); box.classList.add('is-popping'); });
+    box.addEventListener('pointerleave', function() { over = false; hidePop(1200); });
+    box.addEventListener('focus', function() { box.classList.add('is-popping'); });
+    box.addEventListener('blur', function() { hidePop(0); });
     window.addEventListener('hashchange', labelBall);
     document.getElementById('langSelect').addEventListener('change', function() { setTimeout(labelBall, 0); });
     var cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
