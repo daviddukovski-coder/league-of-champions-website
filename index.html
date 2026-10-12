@@ -1944,15 +1944,18 @@
 
   /* ============ ig: the hero's "next / latest tournament" box as a ticket ============ */
   .hero-next-stub { display:none; }
-  :root[data-design="ig"] .hero-next { position:relative; background:var(--tk-bg); border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow), 0 24px 60px rgba(3,4,40,0.45);
-    padding-right:116px; -webkit-backdrop-filter:none; backdrop-filter:none;
+  :root[data-design="ig"] .hero-next { position:relative; border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow), 0 24px 60px rgba(3,4,40,0.35);
+    /* Frosted, see-through version of the ticket surface: the hero shows through */
+    background:linear-gradient(112deg, rgba(26,29,132,0.52) 0%, rgba(44,47,152,0.46) 40%, rgba(74,76,176,0.40) 58%, rgba(35,38,140,0.52) 100%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%); backdrop-filter:blur(14px) saturate(140%);
+    padding-right:116px;
     -webkit-mask:radial-gradient(circle 11px at calc(100% - 96px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 11px at calc(100% - 96px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
             mask:radial-gradient(circle 11px at calc(100% - 96px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 11px at calc(100% - 96px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
   :root[data-design="ig"] .hero-next::before { display:none; }
   :root[data-design="ig"] .hero-next .tier { display:none; }
   :root[data-design="ig"] .hero-next-stub { display:flex; position:absolute; top:0; bottom:0; right:0; width:96px; flex-direction:column; align-items:center; justify-content:center; gap:4px;
     border-left:2px dashed rgba(255,255,255,0.35); background:linear-gradient(180deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02)); }
-  :root[data-design="ig"] .hero-next-stub .tcard-stub-tier { font-size:44px; max-height:170px; }
+  :root[data-design="ig"] .hero-next-stub .tcard-stub-tier { font-size:clamp(30px, 3.2vw, 40px); max-height:none; overflow:visible; flex-shrink:0; white-space:nowrap; }
   :root[data-design="ig"] .hero-next .countdown-cell { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.18); }
   @media (max-width:640px) {
     :root[data-design="ig"] .hero-next { padding-right:84px;
