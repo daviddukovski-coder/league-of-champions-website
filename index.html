@@ -119,6 +119,10 @@
   .lang-select:hover { border-color:var(--cyan); color:var(--cyan); }
   .lang-select option { background:var(--nav-bg, #0b0d63); color:#fff; }
   .season-tag { font-size:11px; color:rgba(255,255,255,0.55); letter-spacing:0.5px; }
+  @media (min-width:641px) and (max-width:1279px) { .season-tag { display:none; } }
+  /* Tablet widths: the groups (links / account / language) may drop to a
+     second line instead of pushing the bar past the window edge. */
+  @media (min-width:641px) { .nav-right { flex-wrap:wrap; justify-content:flex-end; row-gap:10px; } }
   .auth-nav { display:flex; align-items:center; gap:14px; }
   .nav-user-menu { position:relative; }
   .nav-user { font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); cursor:pointer; background:none; border:none; padding:0; font-family:inherit; }
@@ -1924,8 +1928,8 @@
     </div>
   </section>
 </main>
-<div class="ball-ad" id="ballAd" role="img" aria-label="Mikasa FT-5 – official footvolley ball">
-  <span class="ball-ad-label" aria-hidden="true"><b>MIKASA FT-5</b><span>Official ball</span></span>
+<div class="ball-ad" id="ballAd">
+  <span class="ball-ad-label"><b translate="no">MIKASA FT-5</b><span data-ui-key="ad.ballCaption">Official ball</span></span>
   <span class="ball-ad-shadow" aria-hidden="true"></span>
   <canvas class="ball-ad-canvas" aria-hidden="true"></canvas>
 </div>
@@ -3828,6 +3832,7 @@ var CLUBS = [
     'nav.logout': 'Log Out',
     'demoBanner.text': 'DEMO MODE – registrations are only stored locally in this browser (no real backend connected)',
     'home.inDays': 'In {n} days',
+    'ad.ballCaption': 'Official ball',
     'home.inOneDay': 'Tomorrow',
     'landing.nextEvent': 'Next tournament',
     'landing.lastEvent': 'Latest tournament',
@@ -3996,7 +4001,7 @@ var CLUBS = [
   // deliberately omitted so they always fall through to UI_DEFAULTS.
   var TRANSLATIONS = {
     de: {
-      'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen',
+      'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen', 'ad.ballCaption': 'Offizieller Ball',
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
       'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'landing.fullRanking': 'Zum Ranking',
