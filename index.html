@@ -1941,6 +1941,26 @@
     filter:brightness(var(--cf-b, 1)); transition:transform .12s linear, box-shadow .3s, filter .12s linear; }
   :root[data-design="ig"] .tour-rail.is-tickets .tcard.is-done { filter:brightness(calc(var(--cf-b, 1) * 0.88)) saturate(0.7); }
   @media (max-width:640px) { :root[data-design="ig"] .tour-rail.is-tickets { padding-inline:16px; } }
+
+  /* ============ ig: the hero's "next / latest tournament" box as a ticket ============ */
+  .hero-next-stub { display:none; }
+  :root[data-design="ig"] .hero-next { position:relative; background:var(--tk-bg); border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow), 0 24px 60px rgba(3,4,40,0.45);
+    padding-right:116px; -webkit-backdrop-filter:none; backdrop-filter:none;
+    -webkit-mask:radial-gradient(circle 11px at calc(100% - 96px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 11px at calc(100% - 96px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+            mask:radial-gradient(circle 11px at calc(100% - 96px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 11px at calc(100% - 96px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
+  :root[data-design="ig"] .hero-next::before { display:none; }
+  :root[data-design="ig"] .hero-next .tier { display:none; }
+  :root[data-design="ig"] .hero-next-stub { display:flex; position:absolute; top:0; bottom:0; right:0; width:96px; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    border-left:2px dashed rgba(255,255,255,0.35); background:linear-gradient(180deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02)); }
+  :root[data-design="ig"] .hero-next-stub .tcard-stub-tier { font-size:44px; max-height:170px; }
+  :root[data-design="ig"] .hero-next .countdown-cell { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.18); }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .hero-next { padding-right:84px;
+      -webkit-mask:radial-gradient(circle 9px at calc(100% - 68px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 9px at calc(100% - 68px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+              mask:radial-gradient(circle 9px at calc(100% - 68px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 9px at calc(100% - 68px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
+    :root[data-design="ig"] .hero-next-stub { width:68px; }
+    :root[data-design="ig"] .hero-next-stub .tcard-stub-tier { font-size:32px; }
+  }
 </style>
 </head>
 <body>
@@ -5093,7 +5113,9 @@ var CLUBS = [
       '<h2>' + esc(t.name) + '</h2>' +
       '<p class="hero-next-meta">' + esc(t.dateLabel) + ' &nbsp;' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</p>' +
       (showCountdown ? '<div class="countdown" id="heroCountdown" role="timer" aria-live="off"></div>' : '') +
-      '<button class="btn btn-cyan btn-block" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '">' + esc(uiText(pick.upcoming ? 'landing.details' : 'landing.results')) + '</button>';
+      '<button class="btn btn-cyan btn-block" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '">' + esc(uiText(pick.upcoming ? 'landing.details' : 'landing.results')) + '</button>' +
+      // Tear-off stub of the ticket look ('ig' design only).
+      '<span class="hero-next-stub" aria-hidden="true"><span class="tcard-stub-loc">LoC</span><span class="tcard-stub-tier">' + esc(t.tier) + '</span></span>';
     if (!showCountdown) return;
     var units = [['d', 864e5, 'landing.cdDays'], ['h', 36e5, 'landing.cdHours'], ['m', 6e4, 'landing.cdMinutes'], ['s', 1e3, 'landing.cdSeconds']];
     function tick() {
