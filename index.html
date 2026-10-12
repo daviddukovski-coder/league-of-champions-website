@@ -1812,10 +1812,10 @@
   :root[data-design="ig"] .nav-right { position:relative; }
   :root[data-design="ig"] .nav-right .nav-link { border-bottom-color:transparent !important; position:relative; transition:color .25s, transform .25s cubic-bezier(.16,1,.3,1); }
   :root[data-design="ig"] .nav-right .nav-link:hover { transform:translateY(-1px); }
-  .nav-ind { position:absolute; left:0; top:0; height:2px; width:0; border-radius:2px; background:var(--cyan); box-shadow:0 0 10px rgba(0,242,255,0.9), 0 0 22px rgba(0,242,255,0.45); pointer-events:none; opacity:0;
-    transition:transform .45s cubic-bezier(.16,1,.3,1), width .45s cubic-bezier(.16,1,.3,1), opacity .25s; }
+  .nav-ind { position:absolute; left:0; top:0; height:2px; width:100px; transform-origin:0 50%; border-radius:2px; background:var(--cyan); box-shadow:0 0 10px rgba(0,242,255,0.9), 0 0 22px rgba(0,242,255,0.45); pointer-events:none; opacity:0;
+    transition:transform .45s cubic-bezier(.16,1,.3,1), opacity .25s; }
   .nav-ind.is-on { opacity:1; }
-  .nav-ind::after { content:''; position:absolute; left:50%; top:-7px; width:26px; height:12px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(closest-side, rgba(0,242,255,0.35), transparent); }
+  .nav-ind::after { content:''; position:absolute; left:20%; right:20%; top:-7px; height:12px; border-radius:50%; background:radial-gradient(closest-side, rgba(0,242,255,0.35), transparent); }
   @media (prefers-reduced-motion: reduce) { .nav-ind { transition:opacity .2s; } }
 
   /* ============ Imprint ============ */
@@ -1927,8 +1927,8 @@
         <select id="pastYearFilter" class="year-filter" hidden></select>
         <div class="layout-toggle" id="tournamentLayoutToggle" role="group" aria-label="Tournament layout">
           <span class="layout-toggle-thumb" aria-hidden="true"></span>
-          <button type="button" data-layout="rail" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span data-ui-key="home.layoutSwipe">Swipe</span></button>
-          <button type="button" data-layout="grid" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-ui-key="home.layoutOverview">Overview</span></button>
+          <button type="button" data-layout="rail" aria-pressed="true" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span data-ui-key="home.layoutSwipe">Swipe</span></button>
+          <button type="button" data-layout="grid" aria-pressed="false" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-ui-key="home.layoutOverview">Overview</span></button>
         </div>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
@@ -4862,8 +4862,7 @@ var CLUBS = [
     if (!navInd) { navInd = document.createElement('span'); navInd.className = 'nav-ind'; navInd.setAttribute('aria-hidden', 'true'); wrap.appendChild(navInd); }
     if (!el || !el.offsetWidth) { navInd.classList.remove('is-on'); return; }
     var w = wrap.getBoundingClientRect(), r = el.getBoundingClientRect();
-    navInd.style.width = r.width + 'px';
-    navInd.style.transform = 'translate(' + (r.left - w.left) + 'px,' + (r.bottom - w.top + 3) + 'px)';
+    navInd.style.transform = 'translate(' + (r.left - w.left) + 'px,' + (r.bottom - w.top + 3) + 'px) scaleX(' + (r.width / 100).toFixed(3) + ')';
     navInd.classList.add('is-on');
   }
   function navIndicatorRest() { navIndicatorTo(document.querySelector('.nav-right .nav-link.active')); }
@@ -5332,7 +5331,10 @@ var CLUBS = [
   function syncLayoutToggle() {
     if (!layoutToggle) return;
     var btns = layoutToggle.querySelectorAll('button[data-layout]'), on = null;
-    btns.forEach(function(b) { var p = b.dataset.layout === tournamentLayout; b.setAttribute('aria-pressed', String(p)); if (p) on = b; });
+    btns.forEach(function(b) {
+      var p = b.dataset.layout === tournamentLayout; b.setAttribute('aria-pressed', String(p)); if (p) on = b;
+      b.setAttribute('aria-label', uiText(b.dataset.layout === 'grid' ? 'home.layoutOverview' : 'home.layoutSwipe'));
+    });
     var thumb = layoutToggle.querySelector('.layout-toggle-thumb');
     if (on && on.offsetWidth) { thumb.style.width = on.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (on.offsetLeft - 4) + 'px)'; }
   }
@@ -11820,7 +11822,7 @@ var CLUBS = [
         '<div class="imp-actions"><a class="imp-btn" href="https://www.google.com/maps/search/?api=1&query=Glacisstrasse+65+8010+Graz" target="_blank" rel="noopener">' + IMP_ICONS.map + '<span>Glacisstrasse 65, 8010 Graz, Austria</span></a></div>' +
         '<span class="imp-mark" aria-hidden="true">LoC</span></div>',
       '<div class="imp-card">' + kick('mail', 'Contact') +
-        '<h2 class="imp-title">Get in touch</h2>' +
+        '<h2 class="imp-title">Get in Touch</h2>' +
         '<p>Questions about tournaments, registrations or partnerships.</p>' +
         '<div class="imp-actions">' +
           '<a class="imp-btn" href="mailto:office@bolao-sports.com">' + IMP_ICONS.mail + '<span>office@bolao-sports.com</span></a>' +
@@ -11840,10 +11842,24 @@ var CLUBS = [
     ];
     var box = document.getElementById('impressumContent');
     box.innerHTML = '<h2 class="sr-only">Imprint details</h2><div class="imp-grid">' + cards.map(function(c, i) { return c.replace('class="imp-card', 'style="--i:' + i + '" class="imp-card'); }).join('') + '</div>';
+    var live = document.createElement('span');
+    live.className = 'sr-only'; live.setAttribute('aria-live', 'polite');
+    box.appendChild(live);
     box.querySelectorAll('[data-copy]').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var done = function() { btn.textContent = 'Copied ✓'; setTimeout(function() { btn.textContent = 'Copy'; }, 1600); };
-        if (navigator.clipboard) navigator.clipboard.writeText(btn.dataset.copy).then(done, function() {});
+        var say = function(msg) { btn.textContent = msg; live.textContent = msg === 'Copy' ? '' : msg; setTimeout(function() { btn.textContent = 'Copy'; }, 1800); };
+        var fail = function() {
+          // Older browsers / no clipboard permission: the classic hidden-textarea copy.
+          var ta = document.createElement('textarea');
+          ta.value = btn.dataset.copy; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+          document.body.appendChild(ta); ta.select();
+          var ok = false;
+          try { ok = document.execCommand('copy'); } catch (e) {}
+          ta.remove(); btn.focus();
+          say(ok ? 'Copied ✓' : 'Select & copy manually');
+        };
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(btn.dataset.copy).then(function() { say('Copied ✓'); }, fail);
+        else fail();
       });
     });
     setView('impressum');
