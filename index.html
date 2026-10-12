@@ -7387,11 +7387,20 @@ var CLUBS = [
     var spot = g.createRadialGradient(720, boxY + boxH * 0.42, 20, 720, boxY + boxH * 0.42, 480);
     spot.addColorStop(0, 'rgba(0,242,255,0.30)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.08)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
     g.fillStyle = spot; g.fillRect(0, 0, W, H);
+    // Club crest, big and see-through behind everything
+    if (imgs.clubBg) {
+      var cb = imgs.clubBg, cs = 980 / Math.max(cb.width, cb.height), cbw = cb.width * cs, cbh = cb.height * cs;
+      g.save(); g.globalAlpha = 0.14; g.translate(W * 0.56, boxY + boxH * 0.46); g.rotate(-0.12);
+      g.drawImage(cb, -cbw / 2, -cbh / 2, cbw, cbh); g.restore();
+    }
     // Giant outlined surname behind the player
     var parts = (player.name || '').trim().split(/\s+/), last = parts.length > 1 ? parts.pop() : (parts[0] || ''), first = parts.join(' ');
-    g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
-    g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
-    g.strokeText(last.toUpperCase(), W / 2 + 60, boxY + boxH * 0.66); g.restore();
+    // (only without a club crest; both together get too busy)
+    if (!imgs.clubBg) {
+      g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
+      g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
+      g.strokeText(last.toUpperCase(), W / 2 + 60, boxY + boxH * 0.66); g.restore();
+    }
     // Player cut-out, bottom fading out
     if (imgs.photo) {
       var p = imgs.photo, boxX = 300, boxW = 780;
@@ -7481,8 +7490,10 @@ var CLUBS = [
     var fonts = document.fonts ? Promise.all([
       document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
     ]).catch(function() {}) : Promise.resolve();
-    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(club && club.logo), loadImageAsync(player.videoUrl ? null : player.photoUrl)]).then(function(r) {
-      var facts = playerCardFacts(), imgs = { badge: r[1], club: r[2], photo: r[3] };
+    // The background crest uses the white-background-free logo when the page already made one.
+    var cleanLogo = club && club.logo ? (knockedOutLogos[club.logo] || club.logo) : null;
+    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(club && club.logo), loadImageAsync(player.videoUrl ? null : player.photoUrl), loadImageAsync(cleanLogo)]).then(function(r) {
+      var facts = playerCardFacts(), imgs = { badge: r[1], club: r[2], photo: r[3], clubBg: r[4] };
       return Promise.all(['post', 'story'].map(function(k) {
         var canvas = drawPlayerCard(player, facts, imgs, k);
         return new Promise(function(res) { canvas.toBlob(function(b) { res({ key: k, blob: b, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
