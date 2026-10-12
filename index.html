@@ -7403,7 +7403,8 @@ var CLUBS = [
     }
     // Player cut-out, bottom fading out
     if (imgs.photo) {
-      var p = imgs.photo, boxX = 300, boxW = 780;
+      // Big: the player may reach down behind the name and ticket, fading out there.
+      var p = imgs.photo, boxX = 170, boxW = 910, pY = T + 150, pH = ty + 70 - pY;
       // Crop to the visible person so empty transparent margins never shrink them.
       var src = { x: 0, y: 0, w: p.width, h: p.height };
       try {
@@ -7413,12 +7414,12 @@ var CLUBS = [
         for (var yy = 0; yy < th0; yy++) for (var xx = 0; xx < tw0; xx++) if (dd[(yy * tw0 + xx) * 4 + 3] > 20) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
         if (x1 > 0) { var k = p.width / tw0; src = { x: x0 * k, y: y0 * k, w: (x1 - x0 + 1) * k, h: (y1 - y0 + 1) * k }; }
       } catch (e) {}
-      var sc = Math.min(boxW / src.w, boxH / src.h), pw = src.w * sc, ph = src.h * sc;
+      var sc = Math.min(boxW / src.w, pH / src.h), pw = src.w * sc, ph = src.h * sc;
       var off = document.createElement('canvas'); off.width = W; off.height = H;
       var o = off.getContext('2d');
-      o.drawImage(p, src.x, src.y, src.w, src.h, boxX + (boxW - pw) / 2, boxY + boxH - ph, pw, ph);
+      o.drawImage(p, src.x, src.y, src.w, src.h, boxX + (boxW - pw) / 2 + 60, pY + pH - ph, pw, ph);
       o.globalCompositeOperation = 'destination-in';
-      var fade = o.createLinearGradient(0, boxY + boxH * 0.55, 0, boxY + boxH);
+      var fade = o.createLinearGradient(0, pY + pH * 0.6, 0, pY + pH * 0.94);
       fade.addColorStop(0, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
       o.fillStyle = fade; o.fillRect(0, 0, W, H);
       g.save(); g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18; g.drawImage(off, 0, 0); g.restore();
