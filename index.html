@@ -1857,25 +1857,25 @@
   /* Overview: every ticket at a glance, dealt in one after another */
   :root[data-design="ig"] .tournament-grid.is-overview { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 228px), 1fr)); gap:14px; padding:30px 0 80px; }
   /* Compact tickets: an overview, so as many as possible at a glance */
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
     -webkit-mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
             mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-stub { width:58px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-stub-loc { font-size:9px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-stub-tier { font-size:26px; max-height:96px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard h3 { font-size:24px; margin-top:12px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-cat { font-size:11px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard .badge { font-size:9px; padding:3px 8px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard-count { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub { width:58px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-loc { font-size:9px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-tier { font-size:26px; max-height:96px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard h3 { font-size:24px; margin-top:12px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-cat { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard .badge { font-size:9px; padding:3px 8px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-count { font-size:11px; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot, :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { display:block; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { height:100%; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 45ms); }
-  :root[data-design="ig"] .tournament-grid.is-overview .tcard { width:100%; height:100%; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard { width:100%; height:100%; }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:none; } }
 
   /* ============ Cut-out player photos ============ */
@@ -1899,6 +1899,61 @@
     :root[data-design="ig"] .pod.has-cutout .pod-body { max-width:100%; }
     :root[data-design="ig"] .pod.has-cutout { margin-top:26px; }
   }
+
+  /* ============ ig: one surface for every card (the ticket look) ============ */
+  :root[data-design="ig"] {
+    --tk-bg:linear-gradient(112deg, #1a1d84 0%, #2c2f98 40%, #4a4cb0 58%, #23268c 100%);
+    --tk-border:rgba(255,255,255,0.4);
+    --tk-shadow:inset 0 1px 0 rgba(255,255,255,0.3), 0 14px 34px rgba(3,4,40,0.45);
+    --tk-radius:14px;
+  }
+  /* Landing "The 2026 Tour": the same compact tickets as the overview */
+  :root[data-design="ig"] .tour-rail.is-tickets { grid-auto-columns:minmax(260px, 300px); gap:14px; padding:10px 4px 26px; perspective:1200px; }
+  :root[data-design="ig"] .tour-rail.is-tickets .tcard { scroll-snap-align:start; width:100%; }
+  :root[data-design="ig"] .tour-rail.is-tickets .tcard.is-next { border-color:var(--cyan); box-shadow:inset 0 0 0 1px var(--cyan), inset 0 0 26px rgba(0,242,255,0.22); }
+  :root[data-design="ig"] .tour-rail.is-tickets .tcard.is-done { filter:saturate(0.7) brightness(0.88); }
+  @media (max-width:640px) { :root[data-design="ig"] .tour-rail.is-tickets { grid-auto-columns:80%; } }
+  /* Ranking leaders */
+  :root[data-design="ig"] .leader-col { background:var(--tk-bg); border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow); }
+  :root[data-design="ig"] .leader-row { border-top-color:rgba(255,255,255,0.16); }
+  :root[data-design="ig"] .leader-rank { color:rgba(255,255,255,0.55); }
+  :root[data-design="ig"] .leader-1 .leader-rank { color:var(--cyan); }
+  :root[data-design="ig"] .leader-2 .leader-rank { color:#c9d3dc; }
+  :root[data-design="ig"] .leader-3 .leader-rank { color:#e0a067; }
+  /* Profile facts + imprint cards */
+  :root[data-design="ig"] .profile-media-row .info-block, :root[data-design="ig"] .imp-card { background:var(--tk-bg); border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow); }
+  :root[data-design="ig"] .imp-card .imp-mark { display:none; }
+  /* Podium as tickets: the place sits on the tear-off stub instead of a big faint numeral */
+  :root[data-design="ig"] .pod-card { background:var(--tk-bg); border:1px solid var(--tk-border); border-radius:var(--tk-radius); box-shadow:var(--tk-shadow); padding-right:96px;
+    -webkit-mask:radial-gradient(circle 10px at calc(100% - 80px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 80px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+            mask:radial-gradient(circle 10px at calc(100% - 80px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 80px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
+  :root[data-design="ig"] .pod-1 .pod-card { border-color:var(--cyan); box-shadow:inset 0 0 0 1px var(--cyan), inset 0 0 40px rgba(0,242,255,0.18), 0 22px 50px rgba(3,4,40,0.5); }
+  :root[data-design="ig"] .pod-1 .pod-card::before { display:none; }
+  :root[data-design="ig"] .pod-num { top:0; bottom:0; right:0; left:auto; width:80px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; z-index:3;
+    font-size:64px; line-height:0.85; color:var(--medal); -webkit-text-stroke:0; border-left:2px dashed rgba(255,255,255,0.35); background:linear-gradient(180deg, color-mix(in srgb, var(--medal) 16%, transparent), color-mix(in srgb, var(--medal) 3%, transparent)); }
+  :root[data-design="ig"] .pod-1 .pod-num { font-size:80px; -webkit-text-stroke:0; }
+  :root[data-design="ig"] .pod-num small { position:static; margin:0; font-size:13px; letter-spacing:0.2em; top:auto; }
+  :root[data-design="ig"] .pod-photo { right:80px; width:56%; }
+  :root[data-design="ig"] .pod-crest { right:98px; }
+  :root[data-design="ig"] .pod-cutout { right:80px; width:46%; }
+  :root[data-design="ig"] .pod.has-cutout .pod-body { max-width:70%; }
+  @media (max-width:760px) {
+    :root[data-design="ig"] .pod-card { padding-right:44px;
+      -webkit-mask:radial-gradient(circle 7px at calc(100% - 36px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - 36px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
+              mask:radial-gradient(circle 7px at calc(100% - 36px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - 36px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
+    :root[data-design="ig"] .pod-num { width:36px; font-size:30px; }
+    :root[data-design="ig"] .pod-1 .pod-num { font-size:36px; }
+    :root[data-design="ig"] .pod-num small { font-size:8px; letter-spacing:0.1em; }
+    :root[data-design="ig"] .pod-photo, :root[data-design="ig"] .pod-cutout { right:36px; width:calc(100% - 36px); }
+    :root[data-design="ig"] .pod-crest { right:44px; }
+  }
+
+  /* Medal colour follows the real rank (ties share it); the club logo lives in the club line */
+  :root[data-design="ig"] .pod.pod-rank-1 { --medal:#00f2ff; --medal-2:#7a7cff; }
+  :root[data-design="ig"] .pod.pod-rank-2 { --medal:#c9d3dc; --medal-2:#8d9aa6; }
+  :root[data-design="ig"] .pod.pod-rank-3 { --medal:#e0a067; --medal-2:#9a5b2c; }
+  :root[data-design="ig"] .pod.pod-rank-4 { --medal:rgba(255,255,255,0.7); --medal-2:rgba(255,255,255,0.3); }
+  :root[data-design="ig"] .pod-crest { display:none; }
 </style>
 </head>
 <body>
@@ -5082,7 +5137,11 @@ var CLUBS = [
     var cities = tours.map(function(t) { return '<span class="ticker-item">' + esc(t.city) + '</span>'; }).join('');
     var ticker = tours.length ? '<div class="ticker" aria-hidden="true"><div class="ticker-track">' + cities + cities + '</div></div>' : '';
 
-    var tourCards = tours.map(function(t) {
+    var igDesign = document.documentElement.getAttribute('data-design') === 'ig';
+    var tourCards = igDesign ? tours.map(function(t) {
+      // Same ticket as the tournaments page, so a tournament looks the same everywhere.
+      return renderCard(effectiveTournament(t)).replace('<button class="tcard"', '<button class="tcard' + (t.id === nextId ? ' is-next' : '') + (t.status === 'past' ? ' is-done' : '') + '" data-route="event/' + esc(t.id) + '"');
+    }).join('') : tours.map(function(t) {
       var done = t.status === 'past';
       var bg = t.image ? ' style="background-image:linear-gradient(180deg,rgba(7,8,63,0.15),rgba(7,8,63,0.92)),url(\'' + esc(t.image) + '\')"' : '';
       return '<button class="tour-card' + (t.id === nextId ? ' is-next' : '') + (done ? ' is-done' : '') + '" data-route="event/' + esc(t.id) + '"' + bg + '>' +
@@ -5101,7 +5160,7 @@ var CLUBS = [
       if (!rows.length) return '';
       return '<div class="leader-col"><h3>' + esc(divisionWord(gender === 'men' ? 'Men' : 'Women')) + '</h3>' +
         rows.map(function(r, i) {
-          return '<div class="leader-row leader-' + (i + 1) + '"><span class="leader-rank">' + r.rank + '</span>' +
+          return '<div class="leader-row leader-' + Math.min(Number(r.rank) || (i + 1), 4) + '"><span class="leader-rank">' + r.rank + '</span>' +
             clubAvatarHtml(findClub(r.club1 || r.club2 || '')) +
             '<span class="leader-name">' + esc(r.name) + '<small>' + esc(r.club1 || r.club2 || '') + '</small></span>' +
             '<span class="leader-pts">' + r.points + '</span></div>';
@@ -5113,14 +5172,14 @@ var CLUBS = [
       (tours.length ? '<section class="landing-section"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.tourTitle', { year: season })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button></div>' +
-        '<div class="tour-rail">' + tourCards + '</div></div></section>' : '') +
+        '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div></div></section>' : '') +
       (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
         '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '');
 
     // Start the rail at the next tournament instead of the season opener.
-    var nextCard = el.querySelector('.tour-card.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-card:last-child') : null);
+    var nextCard = el.querySelector('.tour-card.is-next, .tcard.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-rail > :last-child') : null);
     // Measured after setView() has unhidden the landing view.
     if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
   }
@@ -5998,7 +6057,7 @@ var CLUBS = [
       var clubLine = isPlayers
         ? (clubName ? '<span class="pod-club">' + clubAvatarHtml(findClub(clubName)) + '<span>' + esc(clubName) + '</span></span>' : '')
         : '<span class="pod-club"><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span></span>';
-      return '<div class="pod pod-' + place + (photo ? ' has-photo' : '') + (cut ? ' has-cutout' : '') + '" style="--i:' + [1, 2, 0][i] + '">' +
+      return '<div class="pod pod-' + place + ' pod-rank-' + Math.min(Number(r.rank) || place, 4) + (photo ? ' has-photo' : '') + (cut ? ' has-cutout' : '') + '" style="--i:' + [1, 2, 0][i] + '">' +
         '<div class="pod-card">' +
           '<span class="pod-num" aria-hidden="true">' + placeLabel(r.rank) + '</span>' +
           visual +
