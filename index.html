@@ -7010,6 +7010,16 @@ var CLUBS = [
   // Self-edit for name/age/height/birthplace — one field at a time, same
   // demo-vs-real branching and directory patch-back for all four.
   function savePlayerField(uid, field, value) {
+    // Birth date: the full date is private; the public profile only keeps
+    // month + year, which is all the age display needs.
+    if (field === 'birthDate' && !AUTH_DEMO_MODE) {
+      var pub = { birthMonth: value ? value.slice(0, 7) : null, birthDate: firebase.firestore.FieldValue.delete() };
+      firebase.firestore().collection('players').doc(uid).set(pub, { merge:true });
+      firebase.firestore().collection('players').doc(uid).collection('private').doc('details').set({ birthDate: value }, { merge:true }).catch(function() {});
+      var entry = findPlayer(uid);
+      if (entry) { entry.birthMonth = pub.birthMonth; delete entry.birthDate; }
+      return;
+    }
     if (AUTH_DEMO_MODE) {
       var users = demoUsers();
       var user = users.find(function(u) { return u.uid === uid; });
@@ -7203,14 +7213,17 @@ var CLUBS = [
   // for visitors, an input + Save button for the profile's own account.
   // Age is derived from birthDate on every render rather than stored — it
   // never goes stale after a birthday, no update job needed.
+  // Accepts the full date ("1995-03-14", private) or just month + year
+  // ("1995-03", what the public profile stores). Without the day the age
+  // counts from the 1st of the month — at most a few days early.
   function calculateAge(birthDate) {
-    if (!birthDate) return null;
-    var birth = new Date(birthDate);
-    if (isNaN(birth.getTime())) return null;
+    var m0 = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(birthDate || '');
+    if (!m0) return null;
+    var by = +m0[1], bm = +m0[2] - 1, bd = m0[3] ? +m0[3] : 1;
     var today = new Date();
-    var age = today.getFullYear() - birth.getFullYear();
-    var m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    var age = today.getFullYear() - by;
+    var m = today.getMonth() - bm;
+    if (m < 0 || (m === 0 && today.getDate() < bd)) age--;
     return age;
   }
 
@@ -7669,7 +7682,7 @@ var CLUBS = [
         '<div class="medal-row" id="playerMedalRow"></div>' +
       '</div>' +
         '<div class="detail-info-grid">' +
-          playerAgeFieldHtml(canEdit, player.birthDate) +
+          playerAgeFieldHtml(canEdit, player.birthMonth || player.birthDate) +
           playerHeightFieldHtml(canEdit, player.height) +
           playerFieldBlockHtml(canEdit, 'Birthplace', 'birthplace', player.birthplace, 'type="text"', 'City, Country') +
           playerClubFieldHtml(canEdit, player.homeClub) +
@@ -7695,6 +7708,13 @@ var CLUBS = [
 
     if (canEdit) {
       setupPlayerHomeClubCombo();
+      // The full birth date is private: fill the editor from the private doc.
+      if (!AUTH_DEMO_MODE) {
+        firebase.firestore().collection('players').doc(player.uid).collection('private').doc('details').get().then(function(d) {
+          var inp = document.getElementById('playerField_birthDate');
+          if (inp && d.exists && d.data().birthDate) inp.value = d.data().birthDate;
+        }).catch(function() {});
+      }
       document.querySelectorAll('[data-save-player-field]').forEach(function(btn) {
         btn.addEventListener('click', function() {
           var field = btn.dataset.savePlayerField;
