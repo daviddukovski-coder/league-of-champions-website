@@ -5188,83 +5188,46 @@ var CLUBS = [
     if (s && !s.classList.contains('is-active')) { e.stopImmediatePropagation(); e.preventDefault(); railGo(railSlots().indexOf(s)); }
   }, true);
 
-  // Mikasa FT-5 ball (bottom right): a real shaded sphere drawn per pixel,
-  // idly turning; with the pointer on it, it spins toward the pointer and
-  // leans after it (hover only, no click needed).
+  // Mikasa FT-5 ball (bottom right): the real product photo wrapped onto a
+  // sphere and redrawn per pixel, so it can genuinely turn in 3D. Idle it
+  // slowly rolls; with the pointer on it (hover, no click) it turns toward
+  // the pointer and leans after it.
   // Decoration only: a failure here must never stop the rest of the site.
   try { (function() {
     var box = document.getElementById('ballAd');
     if (!box) return;
     var cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
     var reduce = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-    var R = [1,0,0, 0,1,0, 0,0,1];           // object -> view rotation
-    var w = [0.12, 0.5, 0.05], target = [0.12, 0.5, 0.05], hover = null, img = null, N = 0, last = 0, raf = null;
-    var YEL = [246, 226, 18], BLK = [20, 20, 24], INK = [14, 14, 18];
-    // FT-5 layout: six big yellow panels on the faces of a cube; black
-    // diamonds run along its 12 edges, tips touching where three meet.
-    var FACES = [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]];
-    // "MIKASA / FT-5" printed on one yellow panel (gnomonic projection of a
-    // small text bitmap around that panel's centre).
-    var LC = [0, 0, 1], LU = [1, 0, 0], LW = [LC[1] * LU[2] - LC[2] * LU[1], LC[2] * LU[0] - LC[0] * LU[2], LC[0] * LU[1] - LC[1] * LU[0]];
-    var TW = 256, TH = 160, tex = (function() {
-      var c = document.createElement('canvas'); c.width = TW; c.height = TH;
-      var g = c.getContext('2d');
-      g.fillStyle = '#000'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = '900 62px Arial, Helvetica, sans-serif'; g.fillText('MIKASA', TW / 2, 52);
-      g.font = '700 44px Arial, Helvetica, sans-serif'; g.fillText('FT-5', TW / 2, 118);
-      return g.getImageData(0, 0, TW, TH).data;
-    })();
+    // Ball outline inside assets/mikasa-ft5.jpg (420x420): centre + radius.
+    var PW = 420, PC = 209, PR = 195, photo = null;
+    var spin = 0, tx = 0, ty = 0, gx = 0, gy = 0, spinSpeed = 0.35, hover = false, img = null, N = 0, last = 0, raf = null;
     function size() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2), n = Math.round(box.clientWidth * dpr);
       if (n !== N) { N = n; cv.width = cv.height = n; img = ctx.createImageData(n, n); }
     }
-    function rotate(ax, ay, az, dt) {
-      var a = Math.hypot(ax, ay, az) * dt;
-      if (a < 1e-6) return;
-      var k = Math.hypot(ax, ay, az), x = ax / k, y = ay / k, z = az / k, c = Math.cos(a), s = Math.sin(a), t = 1 - c;
-      var M = [t*x*x+c, t*x*y-s*z, t*x*z+s*y, t*x*y+s*z, t*y*y+c, t*y*z-s*x, t*x*z-s*y, t*y*z+s*x, t*z*z+c];
-      var o = new Array(9);
-      for (var r = 0; r < 3; r++) for (var col = 0; col < 3; col++) o[r*3+col] = M[r*3]*R[col] + M[r*3+1]*R[3+col] + M[r*3+2]*R[6+col];
-      // Re-orthonormalise now and then so float drift never skews the ball.
-      var n0 = Math.hypot(o[0], o[3], o[6]); o[0] /= n0; o[3] /= n0; o[6] /= n0;
-      R = o;
-    }
-    function panel(px, py, pz) {
-      var d0 = -2, d1 = -2, d2 = -2;
-      for (var i = 0; i < 6; i++) {
-        var f = FACES[i], d = px * f[0] + py * f[1] + pz * f[2];
-        if (d > d0) { d2 = d1; d1 = d0; d0 = d; } else if (d > d1) { d2 = d1; d1 = d; } else if (d > d2) d2 = d;
-      }
-      if (d0 - d1 < d1 - d2) return BLK;
-      var dc = px * LC[0] + py * LC[1] + pz * LC[2];
-      if (dc > 0.8) {
-        var u = (px * LU[0] + py * LU[1] + pz * LU[2]) / dc, w = (px * LW[0] + py * LW[1] + pz * LW[2]) / dc;
-        var tx = Math.floor((u / 0.8 + 0.5) * TW), ty = Math.floor((w / 0.8 + 0.5) * TW - (TW - TH) / 2 - 0.05 * TW);
-        if (tx >= 0 && tx < TW && ty >= 0 && ty < TH) {
-          var al = tex[(ty * TW + tx) * 4 + 3] / 255;
-          if (al > 0) return [YEL[0] + (INK[0] - YEL[0]) * al, YEL[1] + (INK[1] - YEL[1]) * al, YEL[2] + (INK[2] - YEL[2]) * al];
-        }
-      }
-      return YEL;
-    }
     function draw() {
+      if (!photo) return;
       size();
-      var d = img.data, n = N, Lx = -0.45, Ly = -0.6, Lz = 0.66, Hx = Lx, Hy = Ly, Hz = Lz + 1, hl = Math.hypot(Hx, Hy, Hz);
-      Hx /= hl; Hy /= hl; Hz /= hl;
+      // R = Rx(tx) * Ry(ty) * Rz(spin); object point = R^T * view normal.
+      var cx = Math.cos(tx), sx = Math.sin(tx), cy = Math.cos(ty), sy = Math.sin(ty), cz = Math.cos(spin), sz = Math.sin(spin);
+      var r00 = cy * cz, r01 = -cy * sz, r02 = sy;
+      var r10 = sx * sy * cz + cx * sz, r11 = -sx * sy * sz + cx * cz, r12 = -sx * cy;
+      var r20 = -cx * sy * cz + sx * sz, r21 = cx * sy * sz + sx * cz, r22 = cx * cy;
+      var d = img.data, n = N, Hx = -0.25, Hy = -0.42, Hz = 0.87;
       for (var py = 0; py < n; py++) {
         var ny = (py + 0.5) / n * 2 - 1;
         for (var px = 0; px < n; px++) {
           var nx = (px + 0.5) / n * 2 - 1, r2 = nx * nx + ny * ny, o = (py * n + px) * 4;
           if (r2 >= 1) { d[o+3] = 0; continue; }
           var nz = Math.sqrt(1 - r2);
-          // view -> object: transpose of R
-          var ox = R[0]*nx + R[3]*ny + R[6]*nz, oy = R[1]*nx + R[4]*ny + R[7]*nz, oz = R[2]*nx + R[5]*ny + R[8]*nz;
-          var c = panel(ox, oy, oz);
-          var diff = Math.max(0, nx*Lx + ny*Ly + nz*Lz), spec = Math.pow(Math.max(0, nx*Hx + ny*Hy + nz*Hz), 36) * 0.55;
-          var lit = 0.32 + diff * 0.78, rim = 1 - Math.pow(1 - nz, 3) * 0.35;
-          d[o]   = Math.min(255, c[0] * lit * rim + spec * 255);
-          d[o+1] = Math.min(255, c[1] * lit * rim + spec * 255);
-          d[o+2] = Math.min(255, c[2] * lit * rim + spec * 255);
+          var ox = r00 * nx + r10 * ny + r20 * nz, oy = r01 * nx + r11 * ny + r21 * nz;
+          // The photo shows the front half; the hidden half reuses it mirrored
+          // (only ever glimpsed at the rim while the ball leans).
+          var u = Math.round(PC + ox * PR), v = Math.round(PC + oy * PR), q = (v * PW + u) * 4;
+          var spec = Math.pow(Math.max(0, nx * Hx + ny * Hy + nz * Hz), 30) * 60, shade = 0.78 + 0.22 * nz;
+          d[o]   = Math.min(255, photo[q] * shade + spec);
+          d[o+1] = Math.min(255, photo[q+1] * shade + spec);
+          d[o+2] = Math.min(255, photo[q+2] * shade + spec);
           d[o+3] = Math.max(0, Math.min(1, (1 - Math.sqrt(r2)) * n * 0.5)) * 255;
         }
       }
@@ -5272,32 +5235,39 @@ var CLUBS = [
     }
     function tick(t) {
       raf = null;
-      var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016;
+      var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016, k = Math.min(1, dt * 6);
       last = t;
-      for (var i = 0; i < 3; i++) w[i] += (target[i] - w[i]) * Math.min(1, dt * 4);
-      rotate(w[0], w[1], w[2], dt);
+      tx += (gx - tx) * k; ty += (gy - ty) * k;
+      spin += spinSpeed * dt;
       draw();
-      if (!document.hidden && (!reduce.matches || hover)) raf = requestAnimationFrame(tick);
+      var settling = Math.abs(gx - tx) + Math.abs(gy - ty) > 0.002;
+      if (!document.hidden && (!reduce.matches || hover || settling)) raf = requestAnimationFrame(tick);
     }
     function start() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
     function aim(e) {
       var r = box.getBoundingClientRect(), dx = Math.max(-1, Math.min(1, (e.clientX - r.left) / r.width * 2 - 1)), dy = Math.max(-1, Math.min(1, (e.clientY - r.top) / r.height * 2 - 1));
-      // Surface turns toward the pointer: spin about y for x, about x for y.
-      target = [-dy * 7, dx * 7, 0];
+      // Turn the face toward the pointer (up to ~40 degrees each way).
+      gy = dx * 0.7; gx = -dy * 0.7;
       box.style.setProperty('--bx', (dx * 6).toFixed(1) + 'px');
       box.style.setProperty('--by', (dy * 6).toFixed(1) + 'px');
     }
-    box.addEventListener('pointerenter', function(e) { hover = true; box.classList.add('is-hover'); aim(e); start(); });
+    box.addEventListener('pointerenter', function(e) { hover = true; spinSpeed = reduce.matches ? 0 : 1.1; box.classList.add('is-hover'); aim(e); start(); });
     box.addEventListener('pointermove', function(e) { if (hover) aim(e); });
     box.addEventListener('pointerleave', function() {
-      hover = null; box.classList.remove('is-hover'); target = [0.12, 0.5, 0.05];
-      box.style.removeProperty('--bx'); box.style.removeProperty('--by');
+      hover = false; spinSpeed = reduce.matches ? 0 : 0.35; gx = gy = 0; box.classList.remove('is-hover');
+      box.style.removeProperty('--bx'); box.style.removeProperty('--by'); start();
     });
     document.addEventListener('visibilitychange', function() { if (!document.hidden) start(); });
     window.addEventListener('resize', function() { size(); draw(); });
-    R = [LU[0], LU[1], LU[2], LW[0], LW[1], LW[2], LC[0], LC[1], LC[2]];
-    draw();
-    start();
+    if (reduce.matches) spinSpeed = 0;
+    var src = new Image();
+    src.onload = function() {
+      var c = document.createElement('canvas'); c.width = c.height = PW;
+      var g = c.getContext('2d'); g.drawImage(src, 0, 0, PW, PW);
+      photo = g.getImageData(0, 0, PW, PW).data;
+      draw(); start();
+    };
+    src.src = 'assets/mikasa-ft5.jpg';
   })(); } catch (err) { if (window.console) console.warn('Ball animation disabled:', err); }
 
   function renderCard(t) {
