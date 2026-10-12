@@ -1655,6 +1655,68 @@
   .profile-media-row .profile-main .detail-head h1 { margin-top:0; }
   #view-player .profile-main .detail-head h1 { font-size:clamp(44px,5.6vw,96px); overflow-wrap:anywhere; }
   @media (max-width:640px) { .profile-media-row .profile-main { flex-basis:100%; } }
+
+  /* ============ ig: tournaments as a 3D coverflow rail ============ */
+  .tslot, .tslot-in { display:contents; }
+  .trail-nav[hidden] { display:none; }
+  :root[data-design="ig"] .tournament-grid.is-rail {
+    --slot-w:min(440px, 80vw);
+    display:flex; gap:0; position:relative; overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain;
+    width:100vw; margin-left:calc(50% - 50vw);
+    padding:46px calc(50vw - var(--slot-w) / 2) 40px; perspective:1400px;
+    cursor:grab; -webkit-user-select:none; user-select:none;
+  }
+  :root[data-design="ig"] .tournament-grid.is-rail::-webkit-scrollbar { display:none; }
+  :root[data-design="ig"] .tournament-grid.is-rail.is-dragging { cursor:grabbing; scroll-snap-type:none; }
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot {
+    display:block; flex:0 0 var(--slot-w); scroll-snap-align:center; position:relative;
+  }
+  /* Transforms live on an inner box: scroll-snap would otherwise snap to the
+     moved (transformed) position instead of the slot itself. */
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot-in {
+    display:block; transform:perspective(1400px) translateX(var(--sx, 0px)) rotateY(var(--sr, 0deg)) scale(var(--ss, 1));
+    opacity:var(--so, 1); transform-style:preserve-3d; will-change:transform;
+  }
+  :root[data-design="ig"] .tournament-grid.is-rail .tcard { width:100%; filter:brightness(var(--sb, 1)) saturate(var(--sb, 1)); transition:transform .5s cubic-bezier(.16,1,.3,1), box-shadow .3s, filter .3s; }
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot.is-active .tcard { box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 0 0 1px rgba(0,242,255,0.55), 0 26px 60px rgba(3,4,40,0.6), 0 0 60px rgba(0,242,255,0.18); }
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot:not(.is-active) .tcard { cursor:pointer; }
+  /* Floor reflection under the centred ticket */
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot::after { content:''; position:absolute; left:8%; right:8%; bottom:-26px; height:26px; border-radius:50%; background:radial-gradient(closest-side, rgba(0,242,255,0.35), transparent); opacity:0; transition:opacity .4s; pointer-events:none; }
+  :root[data-design="ig"] .tournament-grid.is-rail .tslot.is-active::after { opacity:1; }
+  :root[data-design="ig"] .trail-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin:-6px 0 0; padding-bottom:80px; }
+  .trail-btn { width:46px; height:46px; border-radius:50%; border:1.5px solid rgba(0,242,255,0.6); background:rgba(0,242,255,0.06); color:var(--cyan); display:grid; place-items:center; cursor:pointer; transition:background .2s, transform .2s, opacity .2s; }
+  .trail-btn:hover:not(:disabled) { background:rgba(0,242,255,0.18); transform:scale(1.06); }
+  .trail-btn:disabled { opacity:0.3; cursor:default; }
+  .trail-btn:focus-visible, .trail-dot:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+  .trail-btn svg { width:18px; height:18px; }
+  .trail-dots { display:flex; align-items:center; gap:8px; }
+  .trail-dot { width:8px; height:8px; padding:0; border-radius:999px; border:none; background:rgba(255,255,255,0.35); cursor:pointer; transition:width .35s cubic-bezier(.16,1,.3,1), background .3s; }
+  .trail-dot.is-active { width:30px; background:var(--cyan); box-shadow:0 0 12px rgba(0,242,255,0.6); }
+  .trail-count { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.12em; color:#fff; min-width:62px; text-align:center; font-variant-numeric:tabular-nums; }
+  .trail-count b { color:var(--cyan); font-weight:400; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .tournament-grid.is-rail { --slot-w:82vw; padding-top:30px; padding-bottom:30px; }
+    .trail-dots { display:none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-design="ig"] .tournament-grid.is-rail .tslot-in { transform:none; }
+  }
+
+  /* ============ Mikasa FT-5 ball, bottom right ============ */
+  .ball-ad { position:fixed; right:22px; bottom:22px; width:104px; height:104px; z-index:40; touch-action:none; }
+  .ball-ad-canvas { position:absolute; inset:0; width:100%; height:100%; transform:translate(var(--bx,0px), var(--by,0px)) scale(var(--bs,1)); transition:transform .35s cubic-bezier(.16,1,.3,1); animation:ballFloat 3.6s ease-in-out infinite; filter:drop-shadow(0 6px 14px rgba(3,4,40,0.45)); }
+  .ball-ad-shadow { position:absolute; left:16%; right:16%; bottom:-10px; height:12px; border-radius:50%; background:radial-gradient(closest-side, rgba(3,4,40,0.55), transparent); animation:ballShadow 3.6s ease-in-out infinite; }
+  .ball-ad.is-hover .ball-ad-canvas { --bs:1.12; animation-play-state:paused; }
+  .ball-ad-label { position:absolute; right:calc(100% + 10px); top:50%; display:flex; flex-direction:column; align-items:flex-end; gap:1px; padding:8px 14px; border-radius:12px; background:rgba(11,13,99,0.82); border:1px solid rgba(0,242,255,0.5); box-shadow:0 10px 30px rgba(3,4,40,0.45); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); white-space:nowrap; pointer-events:none; opacity:0; transform:translate(12px,-50%); transition:opacity .3s, transform .4s cubic-bezier(.16,1,.3,1); }
+  .ball-ad-label b { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:22px; letter-spacing:0.08em; color:#fff; line-height:1; }
+  .ball-ad-label span { font-size:10px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--cyan); }
+  .ball-ad.is-hover .ball-ad-label { opacity:1; transform:translate(0,-50%); }
+  @keyframes ballFloat { 0%,100% { translate:0 0; } 50% { translate:0 -7px; } }
+  @keyframes ballShadow { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(0.82); opacity:0.7; } }
+  @media (max-width:640px) { .ball-ad { width:64px; height:64px; right:14px; bottom:14px; } }
+  @media (prefers-reduced-motion: reduce) { .ball-ad-canvas, .ball-ad-shadow { animation:none; } }
+  @media print { .ball-ad { display:none; } }
 </style>
 </head>
 <body>
@@ -1725,6 +1787,7 @@
         <select id="pastYearFilter" class="year-filter" hidden></select>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
+      <div class="trail-nav" id="tournamentRailNav" hidden></div>
     </div>
   </section>
 
@@ -1858,6 +1921,11 @@
     </div>
   </section>
 </main>
+<div class="ball-ad" id="ballAd" role="img" aria-label="Mikasa FT-5 – official footvolley ball">
+  <span class="ball-ad-label" aria-hidden="true"><b>MIKASA FT-5</b><span>Official ball</span></span>
+  <span class="ball-ad-shadow" aria-hidden="true"></span>
+  <canvas class="ball-ad-canvas" aria-hidden="true"></canvas>
+</div>
 
 <footer>
   <img class="league-badge" alt="Footvolley League of Champions">
@@ -4983,6 +5051,214 @@ var CLUBS = [
     });
   })();
 
+  // Coverflow rail ('ig' design): tickets sit on a horizontal scroll-snap
+  // track; every scroll frame bends, shrinks and dims each ticket by its
+  // distance from the centre. Swipe, drag with the mouse, arrow keys, the
+  // prev/next buttons or the dots all move it; clicking a side ticket
+  // brings it to the centre, clicking the centred one opens it.
+  var railNav = document.getElementById('tournamentRailNav');
+  var railIndex = 0, railStart = 0, railRaf = null, railDrag = null, railSuppressClick = false;
+  var railReduce = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  function railOn() { return document.documentElement.getAttribute('data-design') === 'ig' && grid.classList.contains('is-rail'); }
+  function railSlots() { return Array.prototype.slice.call(grid.querySelectorAll('.tslot')); }
+  function railGo(i, instant) {
+    var slots = railSlots();
+    if (!slots.length) return;
+    i = Math.max(0, Math.min(slots.length - 1, i));
+    var s = slots[i];
+    grid.scrollTo({ left: s.offsetLeft - (grid.clientWidth - s.offsetWidth) / 2, behavior: instant || railReduce.matches ? 'auto' : 'smooth' });
+  }
+  function railUpdate() {
+    railRaf = null;
+    if (!railOn() || !grid.clientWidth) return;
+    var slots = railSlots(), mid = grid.scrollLeft + grid.clientWidth / 2, best = 0, bestD = Infinity;
+    var narrow = grid.clientWidth < 700;
+    slots.forEach(function(s, i) {
+      var d = (s.offsetLeft + s.offsetWidth / 2 - mid) / s.offsetWidth, ad = Math.min(Math.abs(d), 3);
+      if (Math.abs(d) < bestD) { bestD = Math.abs(d); best = i; }
+      var c = Math.max(-1.6, Math.min(1.6, d));
+      s.style.setProperty('--sr', (-c * (narrow ? 24 : 34)).toFixed(2) + 'deg');
+      s.style.setProperty('--sx', (-c * s.offsetWidth * (narrow ? 0.08 : 0.2)).toFixed(1) + 'px');
+      s.style.setProperty('--ss', (1 - Math.min(ad, 2) * 0.13).toFixed(3));
+      s.style.setProperty('--so', Math.max(0, 1 - Math.max(0, ad - 0.4) * 0.38).toFixed(3));
+      s.style.setProperty('--sb', (1 - Math.min(ad, 1.5) * 0.3).toFixed(3));
+      s.style.zIndex = String(100 - Math.round(ad * 10));
+    });
+    if (best !== railIndex || !grid.querySelector('.tslot.is-active')) {
+      railIndex = best;
+      slots.forEach(function(s, i) { s.classList.toggle('is-active', i === best); });
+      railRenderNav();
+    }
+  }
+  function railQueue() { if (!railRaf) railRaf = requestAnimationFrame(railUpdate); }
+  function railRenderNav() {
+    var slots = railSlots(), n = slots.length;
+    if (!railOn() || n < 2) { railNav.hidden = true; return; }
+    railNav.hidden = false;
+    var pad = function(x) { return (x < 10 ? '0' : '') + x; };
+    var arrow = function(d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '"/></svg>'; };
+    railNav.innerHTML =
+      '<button type="button" class="trail-btn" data-rail-step="-1" aria-label="Previous tournament"' + (railIndex === 0 ? ' disabled' : '') + '>' + arrow(-1) + '</button>' +
+      '<div class="trail-dots">' + slots.map(function(s, i) {
+        var name = (s.querySelector('h3') || {}).textContent || '';
+        return '<button type="button" class="trail-dot' + (i === railIndex ? ' is-active' : '') + '" data-rail-go="' + i + '" aria-label="' + esc(name) + '"' + (i === railIndex ? ' aria-current="true"' : '') + '></button>';
+      }).join('') + '</div>' +
+      '<span class="trail-count" aria-live="polite"><b>' + pad(railIndex + 1) + '</b> / ' + pad(n) + '</span>' +
+      '<button type="button" class="trail-btn" data-rail-step="1" aria-label="Next tournament"' + (railIndex === n - 1 ? ' disabled' : '') + '>' + arrow(1) + '</button>';
+  }
+  function setupTournamentRail(list, start) {
+    var on = document.documentElement.getAttribute('data-design') === 'ig' && list.length > 0;
+    grid.classList.toggle('is-rail', on);
+    railIndex = -1; railStart = start;
+    if (!on) { railNav.hidden = true; return; }
+    // Now (layout is ready right after innerHTML) and again next frame, in
+    // case the view only just became visible.
+    railGo(start, true); railUpdate();
+    requestAnimationFrame(function() { railGo(start, true); railUpdate(); });
+  }
+  grid.addEventListener('scroll', railQueue, { passive: true });
+  // Also covers the view going from hidden to shown (width 0 -> real width).
+  var railWidth = 0;
+  new ResizeObserver(function() {
+    var w = grid.clientWidth;
+    if (!railOn() || !w || w === railWidth) return;
+    railWidth = w;
+    railGo(railIndex < 0 ? railStart : railIndex, true); railUpdate();
+  }).observe(grid);
+  railNav.addEventListener('click', function(e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.railStep) railGo(railIndex + Number(b.dataset.railStep));
+    else if (b.dataset.railGo) railGo(Number(b.dataset.railGo));
+  });
+  grid.addEventListener('keydown', function(e) {
+    if (!railOn() || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    var i = railIndex + (e.key === 'ArrowLeft' ? -1 : 1), s = railSlots()[i];
+    railGo(i);
+    if (s) s.querySelector('.tcard').focus({ preventScroll: true });
+  });
+  grid.addEventListener('focusin', function(e) {
+    var s = railOn() && e.target.closest('.tslot');
+    if (s) railGo(railSlots().indexOf(s));
+  });
+  // Mouse drag (touch already swipes natively); a drag never counts as a click.
+  grid.addEventListener('pointerdown', function(e) {
+    if (!railOn() || e.pointerType !== 'mouse' || e.button !== 0) return;
+    railDrag = { x: e.clientX, left: grid.scrollLeft, moved: false };
+  });
+  window.addEventListener('pointermove', function(e) {
+    if (!railDrag) return;
+    var dx = e.clientX - railDrag.x;
+    if (!railDrag.moved && Math.abs(dx) > 6) { railDrag.moved = true; grid.classList.add('is-dragging'); }
+    if (railDrag.moved) grid.scrollLeft = railDrag.left - dx;
+  });
+  window.addEventListener('pointerup', function(e) {
+    if (!railDrag) return;
+    var d = railDrag; railDrag = null;
+    if (!d.moved) return;
+    railSuppressClick = true;
+    grid.classList.remove('is-dragging');
+    var dx = e.clientX - d.x, w = (railSlots()[0] || {}).offsetWidth || 1;
+    // Fling: a short, decisive drag still moves one ticket.
+    railGo(Math.abs(dx) < w / 2 ? railIndex + (dx < -40 ? 1 : dx > 40 ? -1 : 0) : railIndex);
+  });
+  grid.addEventListener('click', function(e) {
+    if (!railOn()) return;
+    if (railSuppressClick) { railSuppressClick = false; e.stopImmediatePropagation(); e.preventDefault(); return; }
+    var s = e.target.closest('.tslot');
+    if (s && !s.classList.contains('is-active')) { e.stopImmediatePropagation(); e.preventDefault(); railGo(railSlots().indexOf(s)); }
+  }, true);
+
+  // Mikasa FT-5 ball (bottom right): a real shaded sphere drawn per pixel,
+  // idly turning; with the pointer on it, it spins toward the pointer and
+  // leans after it (hover only, no click needed).
+  (function() {
+    var box = document.getElementById('ballAd');
+    if (!box) return;
+    var cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
+    var reduce = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+    var R = [1,0,0, 0,1,0, 0,0,1];           // object -> view rotation
+    var w = [0.12, 0.5, 0.05], target = [0.12, 0.5, 0.05], hover = null, img = null, N = 0, last = 0, raf = null;
+    var YEL = [255, 205, 0], BLU = [24, 58, 190], GRN = [0, 150, 72], SEAM = [30, 30, 40];
+    function size() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2), n = Math.round(box.clientWidth * dpr);
+      if (n !== N) { N = n; cv.width = cv.height = n; img = ctx.createImageData(n, n); }
+    }
+    function rotate(ax, ay, az, dt) {
+      var a = Math.hypot(ax, ay, az) * dt;
+      if (a < 1e-6) return;
+      var k = Math.hypot(ax, ay, az), x = ax / k, y = ay / k, z = az / k, c = Math.cos(a), s = Math.sin(a), t = 1 - c;
+      var M = [t*x*x+c, t*x*y-s*z, t*x*z+s*y, t*x*y+s*z, t*y*y+c, t*y*z-s*x, t*x*z-s*y, t*y*z+s*x, t*z*z+c];
+      var o = new Array(9);
+      for (var r = 0; r < 3; r++) for (var col = 0; col < 3; col++) o[r*3+col] = M[r*3]*R[col] + M[r*3+1]*R[3+col] + M[r*3+2]*R[6+col];
+      // Re-orthonormalise now and then so float drift never skews the ball.
+      var n0 = Math.hypot(o[0], o[3], o[6]); o[0] /= n0; o[3] /= n0; o[6] /= n0;
+      R = o;
+    }
+    // Ball surface: six twisted panels in yellow / blue / green, swirling
+    // round the poles like the FT-5, with dark stitched seams between them.
+    function panel(px, py, pz) {
+      var a = Math.atan2(py, px) + 2.3 * pz, f = (a / (2 * Math.PI)) * 6;
+      f = f - Math.floor(f / 6) * 6;
+      var i = Math.floor(f), frac = f - i;
+      var seamW = 0.05 / Math.max(0.25, Math.sqrt(1 - pz * pz));
+      if (frac < seamW || frac > 1 - seamW || Math.abs(pz) > 0.985) return SEAM;
+      return i % 3 === 0 ? YEL : i % 3 === 1 ? BLU : GRN;
+    }
+    function draw() {
+      size();
+      var d = img.data, n = N, Lx = -0.45, Ly = -0.6, Lz = 0.66, Hx = Lx, Hy = Ly, Hz = Lz + 1, hl = Math.hypot(Hx, Hy, Hz);
+      Hx /= hl; Hy /= hl; Hz /= hl;
+      for (var py = 0; py < n; py++) {
+        var ny = (py + 0.5) / n * 2 - 1;
+        for (var px = 0; px < n; px++) {
+          var nx = (px + 0.5) / n * 2 - 1, r2 = nx * nx + ny * ny, o = (py * n + px) * 4;
+          if (r2 >= 1) { d[o+3] = 0; continue; }
+          var nz = Math.sqrt(1 - r2);
+          // view -> object: transpose of R
+          var ox = R[0]*nx + R[3]*ny + R[6]*nz, oy = R[1]*nx + R[4]*ny + R[7]*nz, oz = R[2]*nx + R[5]*ny + R[8]*nz;
+          var c = panel(ox, oy, oz);
+          var diff = Math.max(0, nx*Lx + ny*Ly + nz*Lz), spec = Math.pow(Math.max(0, nx*Hx + ny*Hy + nz*Hz), 36) * 0.55;
+          var lit = 0.32 + diff * 0.78, rim = 1 - Math.pow(1 - nz, 3) * 0.35;
+          d[o]   = Math.min(255, c[0] * lit * rim + spec * 255);
+          d[o+1] = Math.min(255, c[1] * lit * rim + spec * 255);
+          d[o+2] = Math.min(255, c[2] * lit * rim + spec * 255);
+          d[o+3] = Math.max(0, Math.min(1, (1 - Math.sqrt(r2)) * n * 0.5)) * 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+    function tick(t) {
+      raf = null;
+      var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016;
+      last = t;
+      for (var i = 0; i < 3; i++) w[i] += (target[i] - w[i]) * Math.min(1, dt * 4);
+      rotate(w[0], w[1], w[2], dt);
+      draw();
+      if (!document.hidden && (!reduce.matches || hover)) raf = requestAnimationFrame(tick);
+    }
+    function start() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
+    function aim(e) {
+      var r = box.getBoundingClientRect(), dx = Math.max(-1, Math.min(1, (e.clientX - r.left) / r.width * 2 - 1)), dy = Math.max(-1, Math.min(1, (e.clientY - r.top) / r.height * 2 - 1));
+      // Surface turns toward the pointer: spin about y for x, about x for y.
+      target = [-dy * 7, dx * 7, 0];
+      box.style.setProperty('--bx', (dx * 6).toFixed(1) + 'px');
+      box.style.setProperty('--by', (dy * 6).toFixed(1) + 'px');
+    }
+    box.addEventListener('pointerenter', function(e) { hover = true; box.classList.add('is-hover'); aim(e); start(); });
+    box.addEventListener('pointermove', function(e) { if (hover) aim(e); });
+    box.addEventListener('pointerleave', function() {
+      hover = null; box.classList.remove('is-hover'); target = [0.12, 0.5, 0.05];
+      box.style.removeProperty('--bx'); box.style.removeProperty('--by');
+    });
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) start(); });
+    window.addEventListener('resize', function() { size(); draw(); });
+    rotate(1, 0.4, 0, 0.6);
+    draw();
+    start();
+  })();
+
   function renderCard(t) {
     var statusBadge = t.status === 'upcoming'
       ? '<span class="badge badge-upcoming">' + esc(uiText('home.badgeOpen')) + '</span>'
@@ -5048,7 +5324,8 @@ var CLUBS = [
       list = allTournaments().filter(function(t) { return t.status === filter; });
     }
     list = list.sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); }).map(effectiveTournament);
-    grid.innerHTML = list.map(renderCard).join('');
+    grid.innerHTML = list.map(function(t) { return '<div class="tslot"><div class="tslot-in">' + renderCard(t) + '</div></div>'; }).join('');
+    setupTournamentRail(list, filter === 'past' ? list.length - 1 : 0);
     updateSeasonTag(filter);
     if (filter === 'upcoming') loadCounts();
   }
