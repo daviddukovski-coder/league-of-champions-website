@@ -1,0 +1,12 @@
+[
+  {
+    "origin": [
+      "https://daviddukovski-coder.github.io",
+      "https://footvolleyleagueofchampions.com",
+      "https://www.footvolleyleagueofchampions.com",
+      "http://localhost:8765"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

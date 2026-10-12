@@ -1964,6 +1964,15 @@
     :root[data-design="ig"] .hero-next-stub { width:68px; }
     :root[data-design="ig"] .hero-next-stub .tcard-stub-tier { font-size:32px; }
   }
+
+  /* Player card preview */
+  .pcard-modal { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:20px; background:rgba(3,4,40,0.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); overscroll-behavior:contain; animation:podRise .35s cubic-bezier(.16,1,.3,1); }
+  .pcard-sheet { display:flex; flex-direction:column; align-items:center; gap:14px; max-height:100%; }
+  .pcard-img { width:auto; height:auto; max-width:min(420px, 100%); max-height:calc(100vh - 150px); border-radius:14px; box-shadow:0 30px 80px rgba(0,0,0,0.5); }
+  .pcard-note { color:#fff; font-size:13px; max-width:420px; text-align:center; opacity:0.85; }
+  .pcard-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+  .share-row { display:flex; flex-wrap:wrap; gap:10px; }
+  @media (prefers-reduced-motion: reduce) { .pcard-modal { animation:none; } }
 </style>
 </head>
 <body>
@@ -7322,6 +7331,175 @@ var CLUBS = [
     ['pointerup', 'pointercancel'].forEach(function(t) { box.addEventListener(t, function() { drag = null; }); });
   }
 
+
+  /* ==================================================================
+     PLAYER CARD — a share-ready 1080x1350 PNG (Instagram portrait) in the
+     League of Champions look: badge + wordmark, the player's cut-out photo
+     on a spotlight, big name, club, and the stats on a ticket. Drawn on a
+     canvas so it can be downloaded or handed to the phone's share sheet.
+     The photo is only included when Storage allows cross-origin reads
+     (CORS); without that the card is still made, just without the photo.
+     ================================================================== */
+  function playerCardFacts() {
+    var facts = {};
+    document.querySelectorAll('#playerContent .profile-media-row .info-block').forEach(function(b) {
+      var l = b.querySelector('.label'), v = b.querySelector('.value');
+      if (l && v) facts[l.textContent.replace('✎', '').trim().toLowerCase()] = (v.querySelector('.edit-text-value') || v).textContent.replace('✎', '').trim();
+    });
+    return facts;
+  }
+  function pcRoundRect(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function pcFitText(g, text, maxW, size, weightFamily) {
+    var s = size;
+    do { g.font = weightFamily.replace('{s}', s); s -= 2; } while (g.measureText(text).width > maxW && s > 20);
+    return s + 2;
+  }
+  function drawPlayerCard(player, facts, imgs) {
+    var W = 1080, H = 1350, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    var CYAN = '#00f2ff', BEBAS = '"Bebas Neue", sans-serif', GEIST = '"Geist", "Poppins", sans-serif';
+    // Background: navy to lavender like the site, a cyan light band, a spotlight
+    var bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#080a55'); bg.addColorStop(0.55, '#1b1e86'); bg.addColorStop(1, '#5a55a8');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.save(); g.translate(W * 0.62, 0); g.transform(1, 0, -0.42, 1, 0, 0);
+    var band = g.createLinearGradient(0, 0, 360, 0);
+    band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(1, 'rgba(0,242,255,0.13)');
+    g.fillStyle = band; g.fillRect(0, 0, 360, H * 0.8); g.restore();
+    var spot = g.createRadialGradient(720, 560, 20, 720, 560, 460);
+    spot.addColorStop(0, 'rgba(0,242,255,0.30)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.08)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
+    g.fillStyle = spot; g.fillRect(0, 0, W, H);
+    // Giant outlined surname behind the player
+    var parts = (player.name || '').trim().split(/\s+/), last = parts.length > 1 ? parts.pop() : (parts[0] || ''), first = parts.join(' ');
+    g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
+    g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
+    g.strokeText(last.toUpperCase(), W / 2 + 60, 760); g.restore();
+    // Player cut-out, bottom fading out
+    if (imgs.photo) {
+      var p = imgs.photo, boxX = 300, boxY = 170, boxW = 780, boxH = 930;
+      // Crop to the visible person so empty transparent margins never shrink them.
+      var src = { x: 0, y: 0, w: p.width, h: p.height };
+      try {
+        var t = document.createElement('canvas'), tw0 = 200, th0 = Math.round(200 * p.height / p.width);
+        t.width = tw0; t.height = th0; var tg = t.getContext('2d'); tg.drawImage(p, 0, 0, tw0, th0);
+        var dd = tg.getImageData(0, 0, tw0, th0).data, x0 = tw0, x1 = -1, y0 = th0, y1 = -1;
+        for (var yy = 0; yy < th0; yy++) for (var xx = 0; xx < tw0; xx++) if (dd[(yy * tw0 + xx) * 4 + 3] > 20) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        if (x1 > 0) { var k = p.width / tw0; src = { x: x0 * k, y: y0 * k, w: (x1 - x0 + 1) * k, h: (y1 - y0 + 1) * k }; }
+      } catch (e) {}
+      var sc = Math.min(boxW / src.w, boxH / src.h), pw = src.w * sc, ph = src.h * sc;
+      var off = document.createElement('canvas'); off.width = W; off.height = H;
+      var o = off.getContext('2d');
+      o.drawImage(p, src.x, src.y, src.w, src.h, boxX + (boxW - pw) / 2, boxY + boxH - ph, pw, ph);
+      o.globalCompositeOperation = 'destination-in';
+      var fade = o.createLinearGradient(0, boxY + boxH * 0.55, 0, boxY + boxH);
+      fade.addColorStop(0, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+      o.fillStyle = fade; o.fillRect(0, 0, W, H);
+      g.save(); g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18; g.drawImage(off, 0, 0); g.restore();
+    }
+    // Header: badge + wordmark, season chip
+    if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
+    spacing(6); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('FOOTVOLLEY', 182, 142);
+    var season = String(new Date().getFullYear());
+    g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(4); g.font = '800 22px ' + GEIST; var chip = 'PLAYER CARD ' + season, cw = g.measureText(chip).width + 40;
+    g.fillStyle = CYAN; g.fillRect(-cw, 0, cw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(chip, -20, 31); g.restore();
+    // Name + club
+    g.textAlign = 'left'; g.shadowColor = 'rgba(3,4,40,0.6)'; g.shadowBlur = 24;
+    spacing(2); g.fillStyle = 'rgba(255,255,255,0.88)'; g.font = '400 78px ' + BEBAS;
+    if (first) g.fillText(first.toUpperCase(), 60, 838);
+    g.fillStyle = '#fff'; spacing(1);
+    pcFitText(g, last.toUpperCase(), 620, 160, '400 {s}px ' + BEBAS);
+    g.fillText(last.toUpperCase(), 56, 968);
+    g.shadowBlur = 0;
+    var clubName = facts['home club'] && facts['home club'] !== '–' ? facts['home club'] : '';
+    if (clubName) {
+      var cx = 60;
+      if (imgs.club) { g.drawImage(imgs.club, cx, 994, 52, 52); cx += 70; }
+      spacing(1); g.font = '600 30px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillText(clubName, cx, 1030);
+    }
+    // Stats ticket
+    var tx = 40, ty = 1078, tw = W - 80, th = 210, stub = 170;
+    var tk = g.createLinearGradient(tx, ty, tx + tw, ty + th);
+    tk.addColorStop(0, '#1a1d84'); tk.addColorStop(0.4, '#2c2f98'); tk.addColorStop(0.58, '#4a4cb0'); tk.addColorStop(1, '#23268c');
+    g.save(); pcRoundRect(g, tx, ty, tw, th, 22); g.fillStyle = tk; g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 2; g.stroke(); g.restore();
+    // punched holes + dashed tear line before the stub
+    var sx = tx + tw - stub;
+    // Holes in the page colour (not real transparency, which shows up black/white in apps)
+    g.save(); g.fillStyle = bg;
+    [ty, ty + th].forEach(function(y) { g.beginPath(); g.arc(sx, y, 15, 0, Math.PI * 2); g.fill(); }); g.restore();
+    g.save(); g.setLineDash([10, 9]); g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(sx, ty + 20); g.lineTo(sx, ty + th - 20); g.stroke(); g.restore();
+    g.textAlign = 'center'; spacing(6); g.font = '800 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('LoC', sx + stub / 2, ty + 74);
+    spacing(2); g.font = '400 84px ' + BEBAS; g.fillStyle = '#fff'; g.fillText(season, sx + stub / 2, ty + 160);
+    var num = function(v) { return v && v !== '–' ? v : '–'; };
+    var stats = [
+      ['AGE', num(facts.age)],
+      ['HEIGHT', num(facts.height)],
+      ['POINTS', num(facts['ranking points'])],
+      ['WON / LOST', num(facts['won games']) + ' / ' + num(facts['lost games'])]
+    ];
+    var colW = (tw - stub) / stats.length;
+    stats.forEach(function(st, i) {
+      var cx2 = tx + colW * i + colW / 2;
+      spacing(3); g.font = '700 19px ' + GEIST; g.fillStyle = CYAN; g.fillText(st[0], cx2, ty + 64);
+      spacing(1); g.fillStyle = '#fff'; pcFitText(g, st[1], colW - 24, 76, '400 {s}px ' + BEBAS); g.fillText(st[1], cx2, ty + 138);
+    });
+    var sub = [facts.birthplace && facts.birthplace !== '–' ? facts.birthplace : '', facts['tournaments played'] && facts['tournaments played'] !== '–' ? facts['tournaments played'] + ' TOURNAMENTS' : ''].filter(Boolean).join('   ·   ');
+    if (sub) { spacing(3); g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.7)'; g.fillText(sub.toUpperCase(), tx + (tw - stub) / 2, ty + 184); }
+    // Footer
+    spacing(4); g.textAlign = 'center'; g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - 22);
+    return c;
+  }
+  function openPlayerCard(player, triggerBtn) {
+    var label = triggerBtn.textContent;
+    triggerBtn.disabled = true; triggerBtn.textContent = 'Creating card…';
+    var club = findClub(playerCardFacts()['home club'] || player.homeClub || '');
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
+    ]).catch(function() {}) : Promise.resolve();
+    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(club && club.logo), loadImageAsync(player.videoUrl ? null : player.photoUrl)]).then(function(r) {
+      var canvas = drawPlayerCard(player, playerCardFacts(), { badge: r[1], club: r[2], photo: r[3] });
+      return new Promise(function(res) { canvas.toBlob(function(b) { res({ blob: b, url: canvas.toDataURL('image/png'), photoMissing: !!player.photoUrl && !r[3] }); }, 'image/png'); });
+    }).then(function(out) {
+      triggerBtn.disabled = false; triggerBtn.textContent = label;
+      showPlayerCardModal(player, out, triggerBtn);
+    }).catch(function() { triggerBtn.disabled = false; triggerBtn.textContent = label; window.alert('Could not create the card. Please try again.'); });
+  }
+  function showPlayerCardModal(player, out, returnFocus) {
+    var fileName = 'loc-player-card-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+    var file = out.blob ? new File([out.blob], fileName, { type: 'image/png' }) : null;
+    var canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+    var wrap = document.createElement('div');
+    wrap.className = 'pcard-modal';
+    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', 'Player card');
+    wrap.innerHTML = '<div class="pcard-sheet">' +
+      '<img class="pcard-img" src="' + out.url + '" alt="Player card of ' + esc(player.name || '') + '" width="1080" height="1350">' +
+      (out.photoMissing ? '<p class="pcard-note">The photo could not be added (storage access). The card was created without it.</p>' : '') +
+      '<div class="pcard-actions">' +
+        (canShare ? '<button type="button" class="btn btn-cyan" data-pcard="share">Share</button>' : '') +
+        '<a class="btn ' + (canShare ? 'btn-outline' : 'btn-cyan') + '" href="' + out.url + '" download="' + esc(fileName) + '">Download PNG</a>' +
+        '<button type="button" class="btn btn-outline" data-pcard="close">Close</button>' +
+      '</div></div>';
+    document.body.appendChild(wrap);
+    var close = function() { wrap.remove(); document.removeEventListener('keydown', onKey); if (returnFocus) returnFocus.focus(); };
+    var onKey = function(e) { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    wrap.addEventListener('click', function(e) {
+      if (e.target === wrap || e.target.closest('[data-pcard="close"]')) close();
+      else if (e.target.closest('[data-pcard="share"]')) navigator.share({ files: [file], title: (player.name || '') + ' · League of Champions' }).catch(function() {});
+    });
+    (wrap.querySelector('[data-pcard="share"]') || wrap.querySelector('a')).focus();
+  }
+
   function renderPlayerProfile(player) {
     var el = document.getElementById('playerContent');
     var isOwn = !!currentUser && currentUser.uid === player.uid;
@@ -7363,7 +7541,7 @@ var CLUBS = [
       '<p class="empty-note" id="playerClubsList">–</p>' +
       '<h2 class="section-title">Tournament History</h2>' +
       '<div id="playerHistoryBox"><p class="empty-note">Loading …</p></div>' +
-      '<div class="share-row"><button type="button" class="btn btn-outline btn-sm" id="shareProfileBtn">Copy profile link</button></div>';
+      '<div class="share-row"><button type="button" class="btn btn-cyan btn-sm" id="playerCardBtn">Create player card</button><button type="button" class="btn btn-outline btn-sm" id="shareProfileBtn">Copy profile link</button></div>';
 
     var toggleBtn = document.getElementById('toggleProfileEditBtn');
     if (toggleBtn) toggleBtn.addEventListener('click', function() {
@@ -7411,6 +7589,9 @@ var CLUBS = [
         });
       });
     }
+
+    var cardBtn = document.getElementById('playerCardBtn');
+    if (cardBtn) cardBtn.addEventListener('click', function() { openPlayerCard(player, cardBtn); });
 
     var shareBtn = document.getElementById('shareProfileBtn');
     if (shareBtn) shareBtn.addEventListener('click', function() {
