@@ -5679,6 +5679,7 @@ var CLUBS = [
     var meta = document.getElementById('rankingBandMeta');
     if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
     renderRankingTable(rows);
+    syncRankingUrl();
 
     el.querySelectorAll('[data-ranking-gender]').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -5990,9 +5991,22 @@ var CLUBS = [
     }).join('') + '</div>';
   }
 
+  // The selection lives in the URL (#/ranking?g=women&t=clubs&y=2026), so a
+  // shared link opens exactly that list. Without a query the current
+  // selection simply stays.
   function showRanking() {
+    var q = parseHash().query;
+    if (q.g === 'men' || q.g === 'women') rankingGender = q.g;
+    if (q.t === 'players' || q.t === 'clubs') rankingType = q.t;
+    if (q.y && Object.prototype.hasOwnProperty.call(Object.assign({}, RANKINGS, contentOverrides.rankings || {}), q.y)) rankingYear = q.y;
     renderRanking();
     setView('ranking');
+  }
+  function syncRankingUrl() {
+    if (!/^#\/?ranking(\?|$)/.test(location.hash)) return;
+    var h = '#/ranking?g=' + rankingGender + '&t=' + rankingType + '&y=' + encodeURIComponent(rankingYear);
+    // replaceState: no new history entry per click, and no hashchange re-route.
+    if (location.hash !== h) history.replaceState(null, '', h);
   }
 
   /* ==================================================================
@@ -11812,42 +11826,58 @@ var CLUBS = [
   // Imprint as a set of cards: company, contact (tap to mail/call), the
   // legal register data with copy buttons, and the dispute-resolution note.
   var IMP_ICONS = {"building": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 21h18M5 21V5l7-3 7 3v16M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4\"/></svg>", "mail": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>", "phone": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z\"/></svg>", "user": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21a8 8 0 0 1 16 0\"/></svg>", "doc": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>", "scale": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v18M7 21h10M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z\"/></svg>", "pen": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z\"/></svg>", "map": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/></svg>"};
+  var IMP_TEXT = {
+    en: { operator:'Website operator', owner:'Owner', contact:'Contact', touch:'Get in Touch', touchSub:'Questions about tournaments, registrations or partnerships.',
+          md:'Managing Director', court:'Court of Registration &amp; No.', vat:'VAT Identification Number', resp:'Responsible for Content', respText:'Benedikt Hofmann-Wellenhof, address as above.',
+          odr:'EU Online Dispute Resolution', odrText:'The European Commission provides a platform for Online Dispute Resolution (ODR): {link}. We are neither willing nor obliged to participate in dispute resolution proceedings in front of a consumer arbitration board.',
+          copy:'Copy', copied:'Copied ✓', manual:'Select & copy manually', copyReg:'Copy registration number', copyVat:'Copy VAT number', details:'Imprint details', country:'Austria' },
+    de: { operator:'Betreiber der Website', owner:'Inhaber', contact:'Kontakt', touch:'Schreib uns', touchSub:'Fragen zu Turnieren, Anmeldungen oder Partnerschaften.',
+          md:'Geschäftsführer', court:'Firmenbuchgericht &amp; -nummer', vat:'UID-Nummer', resp:'Verantwortlich für den Inhalt', respText:'Benedikt Hofmann-Wellenhof, Anschrift wie oben.',
+          odr:'EU-Online-Streitbeilegung', odrText:'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: {link}. Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.',
+          copy:'Kopieren', copied:'Kopiert ✓', manual:'Bitte manuell kopieren', copyReg:'Firmenbuchnummer kopieren', copyVat:'UID-Nummer kopieren', details:'Angaben zum Impressum', country:'Österreich' }
+  };
   function showImpressum() {
+    var T = IMP_TEXT[currentLang] || IMP_TEXT.en;
+    var band = document.querySelector('#view-impressum .page-band h1');
+    if (band) band.textContent = uiText('nav.imprint');
+    var bandMeta = document.querySelector('#view-impressum .page-band-meta');
+    if (bandMeta) bandMeta.innerHTML = '<span>Bolao GmbH</span><span>Graz · ' + T.country + '</span>';
     var kick = function(icon, label) { return '<div class="imp-kicker">' + IMP_ICONS[icon] + '<span>' + label + '</span></div>'; };
-    var copyBtn = function(value, label) { return '<button type="button" class="imp-btn imp-copy" data-copy="' + esc(value) + '" aria-label="Copy ' + esc(label) + '">Copy</button>'; };
+    var copyBtn = function(value, label) { return '<button type="button" class="imp-btn imp-copy" data-copy="' + esc(value) + '" aria-label="' + esc(label) + '">' + T.copy + '</button>'; };
+    var odrLink = '<a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>';
     var cards = [
-      '<div class="imp-card">' + kick('building', 'Website operator') +
-        '<h2 class="imp-title">Bolao GmbH</h2>' +
-        '<p>Owner: Benedikt Hofmann-Wellenhof</p>' +
-        '<div class="imp-actions"><a class="imp-btn" href="https://www.google.com/maps/search/?api=1&query=Glacisstrasse+65+8010+Graz" target="_blank" rel="noopener">' + IMP_ICONS.map + '<span>Glacisstrasse 65, 8010 Graz, Austria</span></a></div>' +
+      '<div class="imp-card">' + kick('building', T.operator) +
+        '<h2 class="imp-title" translate="no">Bolao GmbH</h2>' +
+        '<p>' + T.owner + ': Benedikt Hofmann-Wellenhof</p>' +
+        '<div class="imp-actions"><a class="imp-btn" href="https://www.google.com/maps/search/?api=1&query=Glacisstrasse+65+8010+Graz" target="_blank" rel="noopener">' + IMP_ICONS.map + '<span>Glacisstrasse 65, 8010 Graz, ' + T.country + '</span></a></div>' +
         '<span class="imp-mark" aria-hidden="true">LoC</span></div>',
-      '<div class="imp-card">' + kick('mail', 'Contact') +
-        '<h2 class="imp-title">Get in Touch</h2>' +
-        '<p>Questions about tournaments, registrations or partnerships.</p>' +
+      '<div class="imp-card">' + kick('mail', T.contact) +
+        '<h2 class="imp-title">' + T.touch + '</h2>' +
+        '<p>' + T.touchSub + '</p>' +
         '<div class="imp-actions">' +
           '<a class="imp-btn" href="mailto:office@bolao-sports.com">' + IMP_ICONS.mail + '<span>office@bolao-sports.com</span></a>' +
           '<a class="imp-btn" href="tel:+436606577498">' + IMP_ICONS.phone + '<span>+43 660 6577498</span></a>' +
         '</div></div>',
-      '<div class="imp-card imp-third">' + kick('user', 'Managing Director') +
+      '<div class="imp-card imp-third">' + kick('user', T.md) +
         '<div class="imp-value" translate="no">Benedikt Hofmann-Wellenhof</div></div>',
-      '<div class="imp-card imp-third">' + kick('doc', 'Court of Registration &amp; No.') +
-        '<div class="imp-row"><div class="imp-value">FN 467717 w</div>' + copyBtn('FN 467717 w', 'registration number') + '</div>' +
+      '<div class="imp-card imp-third">' + kick('doc', T.court) +
+        '<div class="imp-row"><div class="imp-value">FN 467717 w</div>' + copyBtn('FN 467717 w', T.copyReg) + '</div>' +
         '<p style="margin-top:6px;">Graz</p></div>',
-      '<div class="imp-card imp-third">' + kick('doc', 'VAT Identification Number') +
-        '<div class="imp-row"><div class="imp-value">ATU72092512</div>' + copyBtn('ATU72092512', 'VAT number') + '</div></div>',
-      '<div class="imp-card imp-wide">' + kick('pen', 'Responsible for Content') +
-        '<p>Benedikt Hofmann-Wellenhof, address as above.</p></div>',
-      '<div class="imp-card imp-wide">' + kick('scale', 'EU Online Dispute Resolution') +
-        '<p>The European Commission provides a platform for Online Dispute Resolution (ODR): <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>. We are neither willing nor obliged to participate in dispute resolution proceedings in front of a consumer arbitration board.</p></div>'
+      '<div class="imp-card imp-third">' + kick('doc', T.vat) +
+        '<div class="imp-row"><div class="imp-value">ATU72092512</div>' + copyBtn('ATU72092512', T.copyVat) + '</div></div>',
+      '<div class="imp-card imp-wide">' + kick('pen', T.resp) +
+        '<p>' + T.respText + '</p></div>',
+      '<div class="imp-card imp-wide">' + kick('scale', T.odr) +
+        '<p>' + T.odrText.replace('{link}', odrLink) + '</p></div>'
     ];
     var box = document.getElementById('impressumContent');
-    box.innerHTML = '<h2 class="sr-only">Imprint details</h2><div class="imp-grid">' + cards.map(function(c, i) { return c.replace('class="imp-card', 'style="--i:' + i + '" class="imp-card'); }).join('') + '</div>';
+    box.innerHTML = '<h2 class="sr-only">' + T.details + '</h2><div class="imp-grid">' + cards.map(function(c, i) { return c.replace('class="imp-card', 'style="--i:' + i + '" class="imp-card'); }).join('') + '</div>';
     var live = document.createElement('span');
     live.className = 'sr-only'; live.setAttribute('aria-live', 'polite');
     box.appendChild(live);
     box.querySelectorAll('[data-copy]').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var say = function(msg) { btn.textContent = msg; live.textContent = msg === 'Copy' ? '' : msg; setTimeout(function() { btn.textContent = 'Copy'; }, 1800); };
+        var say = function(msg) { btn.textContent = msg; live.textContent = msg; setTimeout(function() { btn.textContent = T.copy; live.textContent = ''; }, 1800); };
         var fail = function() {
           // Older browsers / no clipboard permission: the classic hidden-textarea copy.
           var ta = document.createElement('textarea');
@@ -11856,9 +11886,9 @@ var CLUBS = [
           var ok = false;
           try { ok = document.execCommand('copy'); } catch (e) {}
           ta.remove(); btn.focus();
-          say(ok ? 'Copied ✓' : 'Select & copy manually');
+          say(ok ? T.copied : T.manual);
         };
-        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(btn.dataset.copy).then(function() { say('Copied ✓'); }, fail);
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(btn.dataset.copy).then(function() { say(T.copied); }, fail);
         else fail();
       });
     });
