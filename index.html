@@ -1954,6 +1954,18 @@
   :root[data-design="ig"] .pod.pod-rank-3 { --medal:#e0a067; --medal-2:#9a5b2c; }
   :root[data-design="ig"] .pod.pod-rank-4 { --medal:rgba(255,255,255,0.7); --medal-2:rgba(255,255,255,0.3); }
   :root[data-design="ig"] .pod-crest { display:none; }
+
+  /* Landing tour rail: gentle coverflow, several tickets visible */
+  :root[data-design="ig"] .tour-rail.is-tickets { position:relative; scroll-snap-type:x mandatory; scrollbar-width:none; cursor:grab;
+    padding:18px 28px 30px; margin:0 -4px;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); }
+  :root[data-design="ig"] .tour-rail.is-tickets::-webkit-scrollbar { display:none; }
+  :root[data-design="ig"] .tour-rail.is-tickets.is-dragging { cursor:grabbing; scroll-snap-type:none; -webkit-user-select:none; user-select:none; }
+  :root[data-design="ig"] .tour-rail.is-tickets .tcard { scroll-snap-align:center;
+    transform:perspective(1200px) rotateY(var(--cf-r, 0deg)) scale(var(--cf-s, 1)) rotateX(var(--rx)) rotateY(var(--ry));
+    filter:brightness(var(--cf-b, 1)); transition:transform .12s linear, box-shadow .3s, filter .12s linear; }
+  :root[data-design="ig"] .tour-rail.is-tickets .tcard.is-done { filter:brightness(calc(var(--cf-b, 1) * 0.88)) saturate(0.7); }
+  @media (max-width:640px) { :root[data-design="ig"] .tour-rail.is-tickets { padding-inline:16px; } }
 </style>
 </head>
 <body>
@@ -5181,7 +5193,57 @@ var CLUBS = [
     // Start the rail at the next tournament instead of the season opener.
     var nextCard = el.querySelector('.tour-card.is-next, .tcard.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-rail > :last-child') : null);
     // Measured after setView() has unhidden the landing view.
-    if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
+    var railEl = el.querySelector('.tour-rail.is-tickets');
+    if (railEl) wireTicketRail(railEl, nextCard);
+    else if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
+  }
+
+  // Landing tour rail ('ig'): several tickets at once with the same 3D feel
+  // as the tournaments carousel, just gentler. Each ticket turns away, shrinks
+  // and dims with its distance from the centre; mouse drag scrolls it.
+  var ticketRailCleanup = null;
+  function wireTicketRail(rail, startCard) {
+    if (ticketRailCleanup) ticketRailCleanup();
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, raf = null;
+    function update() {
+      raf = null;
+      var mid = rail.scrollLeft + rail.clientWidth / 2;
+      Array.prototype.forEach.call(rail.children, function(c) {
+        if (!c.offsetWidth) return;
+        var d = (c.offsetLeft + c.offsetWidth / 2 - mid) / c.offsetWidth, ad = Math.min(Math.abs(d), 3);
+        if (reduce) { c.style.setProperty('--cf-b', (1 - Math.min(ad, 2) * 0.12).toFixed(3)); return; }
+        c.style.setProperty('--cf-r', (-Math.max(-2, Math.min(2, d)) * 9).toFixed(2) + 'deg');
+        c.style.setProperty('--cf-s', (1 - Math.min(ad, 2) * 0.06).toFixed(3));
+        c.style.setProperty('--cf-b', (1 - Math.min(ad, 2) * 0.14).toFixed(3));
+      });
+    }
+    var queue = function() { if (!raf) raf = requestAnimationFrame(update); };
+    rail.addEventListener('scroll', queue, { passive: true });
+    new ResizeObserver(function() { update(); }).observe(rail);
+    var drag = null, moved = false;
+    rail.addEventListener('pointerdown', function(e) { if (e.pointerType === 'mouse' && e.button === 0) { drag = { x: e.clientX, left: rail.scrollLeft }; moved = false; } });
+    var onMove = function(e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x;
+      if (!moved && Math.abs(dx) > 6) { moved = true; rail.classList.add('is-dragging'); }
+      if (moved) rail.scrollLeft = drag.left - dx;
+    };
+    var onUp = function() {
+      if (!drag) return;
+      drag = null;
+      if (moved) { rail.classList.remove('is-dragging'); setTimeout(function() { moved = false; }, 0); }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    ticketRailCleanup = function() { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    // A drag never opens a tournament.
+    rail.addEventListener('click', function(e) { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+    var centre = function() {
+      if (startCard) rail.scrollLeft = startCard.offsetLeft - (rail.clientWidth - startCard.offsetWidth) / 2;
+      update();
+    };
+    centre();
+    requestAnimationFrame(centre);
   }
 
   function renderHeroMedia() {
