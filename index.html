@@ -2692,7 +2692,35 @@ var CLUBS = [
   // Every Firebase Storage upload goes through here: never throws
   // synchronously (a missing bucket used to kill uploads without a trace),
   // reports progress 0-100, resolves with the download URL.
+  // Photos straight off a camera are often 6000-8000px and many MB; the site
+  // never shows them larger than ~1800px. Scale big images down in the
+  // browser before uploading (JPEG stays JPEG at q 0.86, PNG stays PNG so
+  // transparent logos keep their transparency). Videos, GIFs, SVGs and
+  // anything already small pass through untouched; any failure uploads the
+  // original instead.
+  var UPLOAD_MAX_SIDE = 1800;
+  function shrinkImage(file) {
+    if (!file || !/^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) || !window.createImageBitmap) return Promise.resolve(file);
+    return createImageBitmap(file, { imageOrientation: 'from-image' }).then(function(bmp) {
+      var scale = Math.min(1, UPLOAD_MAX_SIDE / Math.max(bmp.width, bmp.height));
+      if (scale === 1 && file.size < 1.5e6) { bmp.close && bmp.close(); return file; }
+      var w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, w, h);
+      bmp.close && bmp.close();
+      var png = /png/i.test(file.type), type = png ? 'image/png' : 'image/jpeg';
+      return new Promise(function(res) { c.toBlob(res, type, 0.86); }).then(function(blob) {
+        if (!blob || blob.size >= file.size) return file;
+        var name = file.name.replace(/\.[^.]+$/, '') + (png ? '.png' : '.jpg');
+        return new File([blob], name, { type: type, lastModified: Date.now() });
+      });
+    }).catch(function() { return file; });
+  }
+
   function uploadToStorage(path, file, onProgress) {
+    return shrinkImage(file).then(function(f) { return uploadFileToStorage(f.name !== file.name ? path.replace(/[^/]+$/, function(n) { return n.replace(/\.[^.]+$/, '') + f.name.slice(f.name.lastIndexOf('.')); }) : path, f, onProgress); });
+  }
+  function uploadFileToStorage(path, file, onProgress) {
     return new Promise(function(resolve, reject) {
       var task = firebase.storage().ref(path).put(file);
       task.on('state_changed', function(snap) {
@@ -4856,7 +4884,7 @@ var CLUBS = [
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.querySelectorAll('.nav-link').forEach(function(l) {
-      l.classList.toggle('active', l.dataset.route === VIEW_TO_ROUTE[view]);
+      l.classList.toggle('active', !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
     });
     navIndicatorRest();
     instrumentUIText(document);
