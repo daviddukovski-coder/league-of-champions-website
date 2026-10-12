@@ -1861,7 +1861,8 @@
 
   /* ============ Cut-out player photos ============ */
   /* Profile: the player stands on a soft spotlight, fading out fully at the bottom */
-  .profile-media.is-cutout { background:radial-gradient(70% 60% at 50% 62%, rgba(0,242,255,0.22), rgba(0,242,255,0.04) 60%, transparent 75%); }
+  /* closest-side keeps the whole glow inside the box, so it never ends in a hard edge */
+  .profile-media.is-cutout { background:radial-gradient(closest-side at 50% 52%, rgba(0,242,255,0.22), rgba(0,242,255,0.06) 55%, transparent 100%) !important; }
   .profile-media.is-cutout::before, .profile-media.is-cutout::after { display:none; }
   .profile-media.has-media.is-cutout img { object-fit:contain !important; object-position:50% 100% !important; transform:none !important; border-radius:0;
     filter:drop-shadow(0 18px 30px rgba(3,4,40,0.45));
