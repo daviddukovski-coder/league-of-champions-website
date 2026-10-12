@@ -1848,12 +1848,12 @@
   /* ============ Tournaments: swipe <-> overview toggle ============ */
   .layout-toggle { display:none; }
   :root[data-design="ig"] .layout-toggle { display:inline-flex; margin-left:auto; padding:4px; gap:4px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); position:relative; }
-  .layout-toggle button { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:none; border-radius:999px; background:none; color:rgba(255,255,255,0.7); font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; position:relative; z-index:1; transition:color .3s; }
-  .layout-toggle button svg { width:16px; height:16px; }
-  .layout-toggle button[aria-pressed="true"] { color:var(--pill-text); }
-  .layout-toggle button:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
+  .layout-toggle > button { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:none; border-radius:999px; background:none; color:rgba(255,255,255,0.7); font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; position:relative; z-index:1; transition:color .3s; }
+  .layout-toggle > button svg { width:16px; height:16px; }
+  .layout-toggle > button[aria-pressed="true"] { color:var(--pill-text); }
+  .layout-toggle > button:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
   .layout-toggle-thumb { position:absolute; top:4px; bottom:4px; left:4px; border-radius:999px; background:var(--cyan); box-shadow:0 0 18px rgba(0,242,255,0.45); transition:transform .45s cubic-bezier(.16,1,.3,1), width .45s cubic-bezier(.16,1,.3,1); z-index:0; }
-  @media (max-width:640px) { .layout-toggle button span { display:none; } }
+  @media (max-width:640px) { .layout-toggle-label { display:none; } }
   /* Overview: every ticket at a glance, dealt in one after another */
   :root[data-design="ig"] .tournament-grid.is-overview { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 228px), 1fr)); gap:14px; padding:30px 0 80px; }
   /* Compact tickets: an overview, so as many as possible at a glance */
@@ -1969,8 +1969,8 @@
         <select id="pastYearFilter" class="year-filter" hidden></select>
         <div class="layout-toggle" id="tournamentLayoutToggle" role="group" aria-label="Tournament layout">
           <span class="layout-toggle-thumb" aria-hidden="true"></span>
-          <button type="button" data-layout="rail" aria-pressed="true" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span data-ui-key="home.layoutSwipe">Swipe</span></button>
-          <button type="button" data-layout="grid" aria-pressed="false" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-ui-key="home.layoutOverview">Overview</span></button>
+          <button type="button" data-layout="rail" aria-pressed="true" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span class="layout-toggle-label">Swipe</span></button>
+          <button type="button" data-layout="grid" aria-pressed="false" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="layout-toggle-label">Overview</span></button>
         </div>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
@@ -5376,7 +5376,10 @@ var CLUBS = [
     var btns = layoutToggle.querySelectorAll('button[data-layout]'), on = null;
     btns.forEach(function(b) {
       var p = b.dataset.layout === tournamentLayout; b.setAttribute('aria-pressed', String(p)); if (p) on = b;
-      b.setAttribute('aria-label', uiText(b.dataset.layout === 'grid' ? 'home.layoutOverview' : 'home.layoutSwipe'));
+      // Plain translated text (no inline-edit pencil: a button inside a button).
+      var txt = uiText(b.dataset.layout === 'grid' ? 'home.layoutOverview' : 'home.layoutSwipe');
+      b.setAttribute('aria-label', txt);
+      var lab = b.querySelector('.layout-toggle-label'); if (lab) lab.textContent = txt;
     });
     var thumb = layoutToggle.querySelector('.layout-toggle-thumb');
     if (on && on.offsetWidth) { thumb.style.width = on.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (on.offsetLeft - 4) + 'px)'; }
