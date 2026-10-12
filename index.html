@@ -1968,7 +1968,8 @@
   /* Player card preview */
   .pcard-modal { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:20px; background:rgba(3,4,40,0.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); overscroll-behavior:contain; animation:podRise .35s cubic-bezier(.16,1,.3,1); }
   .pcard-sheet { display:flex; flex-direction:column; align-items:center; gap:14px; max-height:100%; }
-  .pcard-img { width:auto; height:auto; max-width:min(420px, 100%); max-height:calc(100vh - 150px); border-radius:14px; box-shadow:0 30px 80px rgba(0,0,0,0.5); }
+  .pcard-format { margin:0 !important; }
+  .pcard-img { width:auto; height:auto; max-width:min(420px, 100%); max-height:calc(100vh - 210px); border-radius:14px; box-shadow:0 30px 80px rgba(0,0,0,0.5); }
   .pcard-note { color:#fff; font-size:13px; max-width:420px; text-align:center; opacity:0.85; }
   .pcard-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
   .share-row { display:flex; flex-wrap:wrap; gap:10px; }
@@ -7357,8 +7358,16 @@ var CLUBS = [
     do { g.font = weightFamily.replace('{s}', s); s -= 2; } while (g.measureText(text).width > maxW && s > 20);
     return s + 2;
   }
-  function drawPlayerCard(player, facts, imgs) {
-    var W = 1080, H = 1350, c = document.createElement('canvas');
+  // Instagram sizes: feed post 1080x1440 (3:4) and story/reel 1080x1920
+  // (9:16). The story keeps clear of Instagram's own overlays at the top
+  // (profile row) and bottom (reply bar) via its safe-zone insets.
+  var PLAYER_CARD_FORMATS = {
+    post: { H: 1440, top: 0, bottom: 0 },
+    story: { H: 1920, top: 200, bottom: 230 }
+  };
+  function drawPlayerCard(player, facts, imgs, formatKey) {
+    var fmt = PLAYER_CARD_FORMATS[formatKey] || PLAYER_CARD_FORMATS.post;
+    var W = 1080, H = fmt.H, T = fmt.top, B = fmt.bottom, c = document.createElement('canvas');
     c.width = W; c.height = H;
     var g = c.getContext('2d');
     var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
@@ -7371,17 +7380,21 @@ var CLUBS = [
     var band = g.createLinearGradient(0, 0, 360, 0);
     band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(1, 'rgba(0,242,255,0.13)');
     g.fillStyle = band; g.fillRect(0, 0, 360, H * 0.8); g.restore();
-    var spot = g.createRadialGradient(720, 560, 20, 720, 560, 460);
+    // Vertical layout: header at the top, stats ticket at the bottom, the
+    // name just above the ticket and the photo filling the space between.
+    var th = 210, ty = H - B - 62 - th, lastY = ty - 104, firstY = lastY - 132, clubY = ty - 46;
+    var boxY = T + 170, boxH = ty - 40 - boxY;
+    var spot = g.createRadialGradient(720, boxY + boxH * 0.42, 20, 720, boxY + boxH * 0.42, 480);
     spot.addColorStop(0, 'rgba(0,242,255,0.30)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.08)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
     g.fillStyle = spot; g.fillRect(0, 0, W, H);
     // Giant outlined surname behind the player
     var parts = (player.name || '').trim().split(/\s+/), last = parts.length > 1 ? parts.pop() : (parts[0] || ''), first = parts.join(' ');
     g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
     g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
-    g.strokeText(last.toUpperCase(), W / 2 + 60, 760); g.restore();
+    g.strokeText(last.toUpperCase(), W / 2 + 60, boxY + boxH * 0.66); g.restore();
     // Player cut-out, bottom fading out
     if (imgs.photo) {
-      var p = imgs.photo, boxX = 300, boxY = 170, boxW = 780, boxH = 930;
+      var p = imgs.photo, boxX = 300, boxW = 780;
       // Crop to the visible person so empty transparent margins never shrink them.
       var src = { x: 0, y: 0, w: p.width, h: p.height };
       try {
@@ -7402,6 +7415,7 @@ var CLUBS = [
       g.save(); g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18; g.drawImage(off, 0, 0); g.restore();
     }
     // Header: badge + wordmark, season chip
+    g.save(); g.translate(0, T);
     if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
     g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
@@ -7410,22 +7424,23 @@ var CLUBS = [
     g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
     spacing(4); g.font = '800 22px ' + GEIST; var chip = 'PLAYER CARD ' + season, cw = g.measureText(chip).width + 40;
     g.fillStyle = CYAN; g.fillRect(-cw, 0, cw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(chip, -20, 31); g.restore();
+    g.restore();
     // Name + club
     g.textAlign = 'left'; g.shadowColor = 'rgba(3,4,40,0.6)'; g.shadowBlur = 24;
     spacing(2); g.fillStyle = 'rgba(255,255,255,0.88)'; g.font = '400 78px ' + BEBAS;
-    if (first) g.fillText(first.toUpperCase(), 60, 838);
+    if (first) g.fillText(first.toUpperCase(), 60, firstY);
     g.fillStyle = '#fff'; spacing(1);
     pcFitText(g, last.toUpperCase(), 620, 160, '400 {s}px ' + BEBAS);
-    g.fillText(last.toUpperCase(), 56, 968);
+    g.fillText(last.toUpperCase(), 56, lastY);
     g.shadowBlur = 0;
     var clubName = facts['home club'] && facts['home club'] !== '–' ? facts['home club'] : '';
     if (clubName) {
       var cx = 60;
-      if (imgs.club) { g.drawImage(imgs.club, cx, 994, 52, 52); cx += 70; }
-      spacing(1); g.font = '600 30px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillText(clubName, cx, 1030);
+      if (imgs.club) { g.drawImage(imgs.club, cx, clubY - 36, 52, 52); cx += 70; }
+      spacing(1); g.font = '600 30px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillText(clubName, cx, clubY);
     }
     // Stats ticket
-    var tx = 40, ty = 1078, tw = W - 80, th = 210, stub = 170;
+    var tx = 40, tw = W - 80, stub = 170;
     var tk = g.createLinearGradient(tx, ty, tx + tw, ty + th);
     tk.addColorStop(0, '#1a1d84'); tk.addColorStop(0.4, '#2c2f98'); tk.addColorStop(0.58, '#4a4cb0'); tk.addColorStop(1, '#23268c');
     g.save(); pcRoundRect(g, tx, ty, tw, th, 22); g.fillStyle = tk; g.fill();
@@ -7456,7 +7471,7 @@ var CLUBS = [
     if (sub) { spacing(3); g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.7)'; g.fillText(sub.toUpperCase(), tx + (tw - stub) / 2, ty + 184); }
     // Footer
     spacing(4); g.textAlign = 'center'; g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
-    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - 22);
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - B - 22);
     return c;
   }
   function openPlayerCard(player, triggerBtn) {
@@ -7467,38 +7482,64 @@ var CLUBS = [
       document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
     ]).catch(function() {}) : Promise.resolve();
     Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(club && club.logo), loadImageAsync(player.videoUrl ? null : player.photoUrl)]).then(function(r) {
-      var canvas = drawPlayerCard(player, playerCardFacts(), { badge: r[1], club: r[2], photo: r[3] });
-      return new Promise(function(res) { canvas.toBlob(function(b) { res({ blob: b, url: canvas.toDataURL('image/png'), photoMissing: !!player.photoUrl && !r[3] }); }, 'image/png'); });
+      var facts = playerCardFacts(), imgs = { badge: r[1], club: r[2], photo: r[3] };
+      return Promise.all(['post', 'story'].map(function(k) {
+        var canvas = drawPlayerCard(player, facts, imgs, k);
+        return new Promise(function(res) { canvas.toBlob(function(b) { res({ key: k, blob: b, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
+      })).then(function(list) { return { formats: list, photoMissing: !!player.photoUrl && !r[3] }; });
     }).then(function(out) {
       triggerBtn.disabled = false; triggerBtn.textContent = label;
       showPlayerCardModal(player, out, triggerBtn);
     }).catch(function() { triggerBtn.disabled = false; triggerBtn.textContent = label; window.alert('Could not create the card. Please try again.'); });
   }
   function showPlayerCardModal(player, out, returnFocus) {
-    var fileName = 'loc-player-card-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
-    var file = out.blob ? new File([out.blob], fileName, { type: 'image/png' }) : null;
-    var canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+    var base = 'loc-player-card-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    var files = {};
+    out.formats.forEach(function(f) { if (f.blob) files[f.key] = new File([f.blob], base + '-' + f.key + '.png', { type: 'image/png' }); });
+    var canShare = !!(files.post && navigator.canShare && navigator.canShare({ files: [files.post] }));
+    var current = 'post';
     var wrap = document.createElement('div');
     wrap.className = 'pcard-modal';
     wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', 'Player card');
     wrap.innerHTML = '<div class="pcard-sheet">' +
-      '<img class="pcard-img" src="' + out.url + '" alt="Player card of ' + esc(player.name || '') + '" width="1080" height="1350">' +
+      '<div class="layout-toggle pcard-format" role="group" aria-label="Format">' +
+        '<span class="layout-toggle-thumb" aria-hidden="true"></span>' +
+        '<button type="button" data-pcard-format="post" aria-pressed="true">Post 3:4</button>' +
+        '<button type="button" data-pcard-format="story" aria-pressed="false">Story 9:16</button>' +
+      '</div>' +
+      '<img class="pcard-img" alt="Player card of ' + esc(player.name || '') + '">' +
       (out.photoMissing ? '<p class="pcard-note">The photo could not be added (storage access). The card was created without it.</p>' : '') +
       '<div class="pcard-actions">' +
         (canShare ? '<button type="button" class="btn btn-cyan" data-pcard="share">Share</button>' : '') +
-        '<a class="btn ' + (canShare ? 'btn-outline' : 'btn-cyan') + '" href="' + out.url + '" download="' + esc(fileName) + '">Download PNG</a>' +
+        '<a class="btn ' + (canShare ? 'btn-outline' : 'btn-cyan') + '" data-pcard="download">Download PNG</a>' +
         '<button type="button" class="btn btn-outline" data-pcard="close">Close</button>' +
       '</div></div>';
     document.body.appendChild(wrap);
+    var img = wrap.querySelector('.pcard-img'), dl = wrap.querySelector('[data-pcard="download"]');
+    var thumb = wrap.querySelector('.layout-toggle-thumb');
+    function show(key) {
+      current = key;
+      var f = out.formats.filter(function(x) { return x.key === key; })[0];
+      img.src = f.url; img.width = f.w; img.height = f.h;
+      dl.href = f.url; dl.setAttribute('download', base + '-' + key + '.png');
+      wrap.querySelectorAll('[data-pcard-format]').forEach(function(b) {
+        var on = b.dataset.pcardFormat === key; b.setAttribute('aria-pressed', String(on));
+        if (on) { thumb.style.width = b.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)'; }
+      });
+    }
+    show('post');
     var close = function() { wrap.remove(); document.removeEventListener('keydown', onKey); if (returnFocus) returnFocus.focus(); };
     var onKey = function(e) { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
     wrap.addEventListener('click', function(e) {
+      var fb = e.target.closest('[data-pcard-format]');
+      if (fb) { show(fb.dataset.pcardFormat); return; }
       if (e.target === wrap || e.target.closest('[data-pcard="close"]')) close();
-      else if (e.target.closest('[data-pcard="share"]')) navigator.share({ files: [file], title: (player.name || '') + ' · League of Champions' }).catch(function() {});
+      else if (e.target.closest('[data-pcard="share"]')) navigator.share({ files: [files[current]], title: (player.name || '') + ' · League of Champions' }).catch(function() {});
     });
-    (wrap.querySelector('[data-pcard="share"]') || wrap.querySelector('a')).focus();
+    (wrap.querySelector('[data-pcard="share"]') || dl).focus();
   }
+
 
   function renderPlayerProfile(player) {
     var el = document.getElementById('playerContent');
