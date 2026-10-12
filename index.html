@@ -2682,11 +2682,28 @@ var CLUBS = [
         // directory doc is what makes accounts searchable/viewable (player search,
         // profile pages) — demo mode doesn't need this, demoUsers() already serves
         // that role directly.
-        return firebase.firestore().collection('players').doc(cred.user.uid).set({ uid:cred.user.uid, name:data.name, email:data.email, phone:data.phone }).then(function() {
+        return firebase.firestore().collection('players').doc(cred.user.uid).set({ uid:cred.user.uid, name:data.name }).then(function() {
+          return savePrivateContact(cred.user.uid, data.email, data.phone);
+        }).then(function() {
           return currentUser;
         });
       });
     });
+  }
+
+  // Contact details are private: players/{uid} is publicly readable (search,
+  // profiles), so email + phone live in players/{uid}/private/contact, which
+  // the Firestore rules only open to the account itself and the admins.
+  // Best effort: if the rules don't allow it yet, nothing else breaks.
+  function contactRef(uid) { return firebase.firestore().collection('players').doc(uid).collection('private').doc('contact'); }
+  function savePrivateContact(uid, email, phone) {
+    var data = {};
+    if (email) data.email = email;
+    if (phone != null) data.phone = phone;
+    return contactRef(uid).set(data, { merge: true }).catch(function() {});
+  }
+  function loadPrivateContact(uid) {
+    return contactRef(uid).get().then(function(d) { return d.exists ? d.data() : {}; }).catch(function() { return {}; });
   }
 
   function authLogin(data) {
@@ -2705,10 +2722,15 @@ var CLUBS = [
       // is blank for accounts not created through this app's signup form (e.g. one
       // set up directly in the Firebase Console), and blindly trusting it here
       // would merge-write that blank name back over a real one already on file.
-      return firebase.firestore().collection('players').doc(uid).get().then(function(doc) {
-        var existing = doc.exists ? doc.data() : {};
-        currentUser = { uid:uid, name:existing.name || cred.user.displayName || '', email:email, phone:existing.phone || '' };
-        return firebase.firestore().collection('players').doc(uid).set(currentUser, { merge:true }).then(function() {
+      return Promise.all([firebase.firestore().collection('players').doc(uid).get(), loadPrivateContact(uid)]).then(function(r) {
+        var existing = r[0].exists ? r[0].data() : {}, contact = r[1];
+        // Phone: private copy first, the old public field only as a fallback for accounts not migrated yet.
+        var phone = contact.phone || existing.phone || '';
+        currentUser = { uid:uid, name:existing.name || cred.user.displayName || '', email:email, phone:phone };
+        // Only public fields go on the public doc; contact goes to the private one.
+        return firebase.firestore().collection('players').doc(uid).set({ uid:uid, name:currentUser.name }, { merge:true }).then(function() {
+          return savePrivateContact(uid, email, phone);
+        }).then(function() {
           return currentUser;
         });
       });
@@ -5696,8 +5718,9 @@ var CLUBS = [
     function start() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
     function aim(e) {
       var r = box.getBoundingClientRect(), dx = Math.max(-1, Math.min(1, (e.clientX - r.left) / r.width * 2 - 1)), dy = Math.max(-1, Math.min(1, (e.clientY - r.top) / r.height * 2 - 1));
-      // Turn the face toward the pointer (up to ~40 degrees each way).
-      gy = dx * 0.7; gx = -dy * 0.7;
+      // Lean toward the pointer, but only ~16 degrees: the photo only shows the
+      // front, so a bigger tilt would reveal stretched/mirrored panels at the rim.
+      gy = dx * 0.28; gx = -dy * 0.28;
       box.style.setProperty('--bx', (dx * 6).toFixed(1) + 'px');
       box.style.setProperty('--by', (dy * 6).toFixed(1) + 'px');
     }
@@ -10392,7 +10415,7 @@ var CLUBS = [
       }).slice(0, 8);
       if (!matches.length) { dropdown.hidden = true; return; }
       dropdown.innerHTML = matches.map(function(p) {
-        return '<div class="combo-item" data-uid="' + esc(p.uid) + '"><span>' + esc(p.name) + '</span><span class="player-club">' + esc(p.email) + '</span></div>';
+        return '<div class="combo-item" data-uid="' + esc(p.uid) + '"><span>' + esc(p.name) + '</span><span class="player-club">' + esc(p.homeClub || '') + '</span></div>';
       }).join('');
       dropdown.hidden = false;
     });
@@ -11686,7 +11709,7 @@ var CLUBS = [
       }).slice(0, 8);
       if (!matches.length) { dropdown.hidden = true; return; }
       dropdown.innerHTML = matches.map(function(p) {
-        return '<div class="combo-item" data-uid="' + esc(p.uid) + '" data-name="' + esc(p.name) + '"><span>' + esc(p.name) + '</span><span class="player-club">' + esc(p.email) + '</span></div>';
+        return '<div class="combo-item" data-uid="' + esc(p.uid) + '" data-name="' + esc(p.name) + '"><span>' + esc(p.name) + '</span><span class="player-club">' + esc(p.homeClub || '') + '</span></div>';
       }).join('');
       dropdown.hidden = false;
     });
@@ -12503,9 +12526,9 @@ var CLUBS = [
         // Same Firestore-first name resolution as authLogin — targets the doc
         // directly rather than waiting on playersDirectory, since that load and
         // this auth-state resolve race against each other on a cold page load.
-        firebase.firestore().collection('players').doc(user.uid).get().then(function(doc) {
-          var existing = doc.exists ? doc.data() : {};
-          currentUser = { uid:user.uid, name:existing.name || user.displayName || '', email:user.email, phone:existing.phone || '' };
+        Promise.all([firebase.firestore().collection('players').doc(user.uid).get(), loadPrivateContact(user.uid)]).then(function(r) {
+          var existing = r[0].exists ? r[0].data() : {};
+          currentUser = { uid:user.uid, name:existing.name || user.displayName || '', email:user.email, phone:r[1].phone || existing.phone || '' };
           updateNavAuthUI();
           initPushForCurrentUser();
         });
