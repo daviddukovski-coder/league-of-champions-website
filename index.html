@@ -7388,7 +7388,7 @@ var CLUBS = [
     spot.addColorStop(0, 'rgba(0,242,255,0.30)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.08)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
     g.fillStyle = spot; g.fillRect(0, 0, W, H);
     // Club crest, big and see-through behind everything
-    if (imgs.clubBg) {
+    if (imgs.clubBg && imgs.photo) {
       var cb = imgs.clubBg, cs = 980 / Math.max(cb.width, cb.height), cbw = cb.width * cs, cbh = cb.height * cs;
       g.save(); g.globalAlpha = 0.14; g.translate(W * 0.56, boxY + boxH * 0.46); g.rotate(-0.12);
       g.drawImage(cb, -cbw / 2, -cbh / 2, cbw, cbh); g.restore();
@@ -7396,7 +7396,7 @@ var CLUBS = [
     // Giant outlined surname behind the player
     var parts = (player.name || '').trim().split(/\s+/), last = parts.length > 1 ? parts.pop() : (parts[0] || ''), first = parts.join(' ');
     // (only without a club crest; both together get too busy)
-    if (!imgs.clubBg) {
+    if (!(imgs.clubBg && imgs.photo)) {
       g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
       g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
       g.strokeText(last.toUpperCase(), W / 2 + 60, boxY + boxH * 0.66); g.restore();
@@ -7423,6 +7423,25 @@ var CLUBS = [
       fade.addColorStop(0, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
       o.fillStyle = fade; o.fillRect(0, 0, W, H);
       g.save(); g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18; g.drawImage(off, 0, 0); g.restore();
+    }
+    // No photo: the club crest (or the LoC badge) as a glowing medallion instead
+    if (!imgs.photo) {
+      var mx = W * 0.6, my = boxY + boxH * 0.42, mr = Math.min(290, boxH * 0.36);
+      var crest = imgs.clubBg || imgs.club || imgs.badge;
+      g.save();
+      g.shadowColor = 'rgba(0,242,255,0.45)'; g.shadowBlur = 80;
+      var disc = g.createLinearGradient(mx - mr, my - mr, mx + mr, my + mr);
+      disc.addColorStop(0, '#2c2f98'); disc.addColorStop(0.55, '#4a4cb0'); disc.addColorStop(1, '#1a1d84');
+      g.beginPath(); g.arc(mx, my, mr, 0, Math.PI * 2); g.fillStyle = disc; g.fill();
+      g.shadowBlur = 0; g.lineWidth = 6; g.strokeStyle = CYAN; g.stroke();
+      g.beginPath(); g.arc(mx, my, mr + 22, 0, Math.PI * 2); g.lineWidth = 2; g.strokeStyle = 'rgba(0,242,255,0.35)'; g.stroke();
+      g.restore();
+      if (crest) {
+        var cs2 = (mr * 1.25) / Math.max(crest.width, crest.height), w2 = crest.width * cs2, h2 = crest.height * cs2;
+        g.save(); g.beginPath(); g.arc(mx, my, mr - 8, 0, Math.PI * 2); g.clip();
+        g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 30; g.shadowOffsetY = 12;
+        g.drawImage(crest, mx - w2 / 2, my - h2 / 2, w2, h2); g.restore();
+      }
     }
     // Header: badge + wordmark, season chip
     g.save(); g.translate(0, T);
