@@ -7529,8 +7529,9 @@ var CLUBS = [
     [ty, ty + th].forEach(function(y) { g.beginPath(); g.arc(sx, y, 15, 0, Math.PI * 2); g.fill(); }); g.restore();
     g.save(); g.setLineDash([10, 9]); g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 3;
     g.beginPath(); g.moveTo(sx, ty + 20); g.lineTo(sx, ty + th - 20); g.stroke(); g.restore();
-    g.textAlign = 'center'; spacing(6); g.font = '800 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('LoC', sx + stub / 2, ty + 74);
-    spacing(2); g.font = '400 84px ' + BEBAS; g.fillStyle = '#fff'; g.fillText(season, sx + stub / 2, ty + 160);
+    // Same baselines and sizes as the stat labels/values beside it.
+    g.textAlign = 'center'; spacing(4); g.font = '700 19px ' + GEIST; g.fillStyle = CYAN; g.fillText('LoC', sx + stub / 2, ty + 64);
+    spacing(1); g.font = '400 76px ' + BEBAS; g.fillStyle = '#fff'; g.fillText(season, sx + stub / 2, ty + 138);
     var num = function(v) { return v && v !== '–' ? v : '–'; };
     var stats = [
       ['AGE', num(facts.age)],
