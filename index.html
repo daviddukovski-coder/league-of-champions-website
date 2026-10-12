@@ -5887,10 +5887,13 @@ var CLUBS = [
     }, 0);
   }
 
+  // Several profiles can share a name (e.g. a leftover profile from a deleted
+  // login): prefer the one with a photo/video, then any — never just the first.
   function findPlayerByName(name) {
     if (!name) return null;
     var n = name.trim().toLowerCase();
-    return playersDirectory.find(function(p) { return (p.name || '').trim().toLowerCase() === n; }) || null;
+    var hits = playersDirectory.filter(function(p) { return (p.name || '').trim().toLowerCase() === n; });
+    return hits.filter(function(p) { return p.photoUrl || p.videoUrl; })[0] || hits[0] || null;
   }
 
   function rankingRows(year, gender, type) {
