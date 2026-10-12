@@ -1724,6 +1724,15 @@
   @media (max-width:640px) { .ball-ad { width:64px; height:64px; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(14px + env(safe-area-inset-bottom, 0px)); } }
   @media (prefers-reduced-motion: reduce) { .ball-ad-canvas, .ball-ad-shadow { animation:none; } }
   @media print { .ball-ad { display:none; } }
+
+  /* Ranking: swipe between Men's/Women's and Players/Clubs */
+  #rankingContent { position:relative; overflow-x:clip; }
+  #rankingTable { touch-action:pan-y; }
+  .ranking-ghost { position:absolute; left:0; right:0; pointer-events:none; z-index:0; }
+  .ranking-controls .tab.rk-fill-from-left, .ranking-controls .tab.rk-fill-from-right { background-size:200% 100%; animation:rkFill .45s cubic-bezier(.16,1,.3,1) both; }
+  .ranking-controls .tab.rk-fill-from-left { background-image:linear-gradient(90deg, var(--cyan) 50%, var(--surface-2) 50%); --rk-from:100%; --rk-to:0%; }
+  .ranking-controls .tab.rk-fill-from-right { background-image:linear-gradient(90deg, var(--surface-2) 50%, var(--cyan) 50%); --rk-from:0%; --rk-to:100%; }
+  @keyframes rkFill { from { background-position:var(--rk-from) 0; } to { background-position:var(--rk-to) 0; } }
 </style>
 </head>
 <body>
@@ -5452,19 +5461,92 @@ var CLUBS = [
     renderRankingTable(rows);
 
     el.querySelectorAll('[data-ranking-gender]').forEach(function(btn) {
-      btn.addEventListener('click', function() { rankingGender = btn.dataset.rankingGender; renderRanking(); });
+      btn.addEventListener('click', function() {
+        var to = btn.dataset.rankingGender;
+        if (to === rankingGender) return;
+        var dir = to === 'women' ? 1 : -1;
+        swipeRanking(dir, function() { rankingGender = to; renderRanking(); }, '[data-ranking-gender="' + to + '"]');
+      });
     });
     el.querySelectorAll('[data-ranking-type]').forEach(function(btn) {
-      btn.addEventListener('click', function() { rankingType = btn.dataset.rankingType; renderRanking(); });
+      btn.addEventListener('click', function() {
+        var to = btn.dataset.rankingType;
+        if (to === rankingType) return;
+        var dir = to === 'clubs' ? 1 : -1;
+        swipeRanking(dir, function() { rankingType = to; renderRanking(); }, '[data-ranking-type="' + to + '"]');
+      });
     });
     document.getElementById('rankingYearSelect').addEventListener('change', function(e) {
       rankingYear = e.target.value;
       renderRanking();
     });
+    wireRankingSwipe(document.getElementById('rankingTable'));
     // Only the table re-renders while typing, so the input keeps its focus.
     document.getElementById('rankingSearchInput').addEventListener('input', function(e) {
       rankingSearch = e.target.value;
       renderRankingTable(rows);
+    });
+  }
+
+  // Swiping the list sideways (finger, or two-finger trackpad swipe) flips
+  // Men's <-> Women's, same as clicking the tabs.
+  var rankingWheelLock = 0;
+  function rankingSwipeTo(dir) {
+    var to = dir > 0 ? 'women' : 'men';
+    if (to === rankingGender) return;
+    swipeRanking(dir, function() { rankingGender = to; renderRanking(); }, '[data-ranking-gender="' + to + '"]');
+  }
+  function wireRankingSwipe(box) {
+    if (!box) return;
+    var start = null;
+    box.addEventListener('touchstart', function(e) { var t = e.touches[0]; start = e.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+    box.addEventListener('touchend', function(e) {
+      if (!start) return;
+      var t = e.changedTouches[0], dx = t.clientX - start.x, dy = t.clientY - start.y;
+      start = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6) rankingSwipeTo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    box.addEventListener('wheel', function(e) {
+      if (Math.abs(e.deltaX) < 24 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.6) return;
+      var now = Date.now();
+      if (now < rankingWheelLock) return;
+      rankingWheelLock = now + 900;
+      rankingSwipeTo(e.deltaX > 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
+  // Switching Men's/Women's or Players/Clubs: the old list swipes out to one
+  // side while the new one slides in from the other (dir 1 = forward/right
+  // tab, -1 = back), and the cyan fill of the new tab sweeps in from the side
+  // of the tab it came from.
+  function swipeRanking(dir, apply, tabSel) {
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var oldTable = document.getElementById('rankingTable');
+    var ghost = !reduce && oldTable && oldTable.animate ? oldTable.cloneNode(true) : null;
+    apply();
+    var tab = tabSel && document.querySelector('#rankingContent ' + tabSel);
+    if (tab && !reduce) tab.classList.add(dir > 0 ? 'rk-fill-from-left' : 'rk-fill-from-right');
+    var table = document.getElementById('rankingTable');
+    if (!ghost || !table) return;
+    var ease = 'cubic-bezier(.16,1,.3,1)';
+    ghost.removeAttribute('id');
+    ghost.className = 'ranking-ghost';
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.inert = true;
+    ghost.style.top = table.offsetTop + 'px';
+    ghost.style.transformOrigin = (dir > 0 ? '0%' : '100%') + ' 50%';
+    table.style.transformOrigin = (dir > 0 ? '100%' : '0%') + ' 50%';
+    table.parentNode.insertBefore(ghost, table);
+    ghost.animate([{ transform: 'perspective(1600px) translateX(0) rotateY(0) scale(1)', opacity: 1 },
+                   { transform: 'perspective(1600px) translateX(' + (-dir * 45) + '%) rotateY(' + (dir * 34) + 'deg) scale(0.86)', opacity: 0 }],
+      { duration: 460, easing: ease, fill: 'forwards' }).onfinish = function() { ghost.remove(); };
+    table.animate([{ transform: 'perspective(1600px) translateX(' + (dir * 45) + '%) rotateY(' + (-dir * 34) + 'deg) scale(0.86)', opacity: 0 },
+                   { transform: 'perspective(1600px) translateX(0) rotateY(0) scale(1)', opacity: 1 }],
+      { duration: 620, easing: ease });
+    // The list rows follow one by one, like cards being dealt.
+    Array.prototype.slice.call(table.querySelectorAll('.ranking-table tbody tr, .podium > *'), 0, 14).forEach(function(r, i) {
+      r.animate([{ transform: 'translateX(' + (dir * 60) + 'px)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }],
+        { duration: 460, delay: 60 + i * 28, easing: ease, fill: 'backwards' });
     });
   }
 
