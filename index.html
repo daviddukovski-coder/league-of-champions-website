@@ -1653,11 +1653,12 @@
   .profile-media-row .profile-main .detail-info-grid { flex:0 0 auto; }
   .profile-media-row .profile-main .detail-head { margin-bottom:24px; padding-top:0; }
   .profile-media-row .profile-main .detail-head h1 { margin-top:0; }
-  #view-player .profile-main .detail-head h1 { font-size:clamp(44px,5.6vw,96px); overflow-wrap:anywhere; }
+  #view-player .profile-main .detail-head h1 { font-size:clamp(44px,5.6vw,96px); overflow-wrap:break-word; text-wrap:balance; }
   @media (max-width:640px) { .profile-media-row .profile-main { flex-basis:100%; } }
 
   /* ============ ig: tournaments as a 3D coverflow rail ============ */
   .tslot, .tslot-in { display:contents; }
+  #view-home { overflow-x:clip; }
   .trail-nav[hidden] { display:none; }
   :root[data-design="ig"] .tournament-grid.is-rail {
     --slot-w:min(440px, 80vw);
@@ -1691,6 +1692,8 @@
   .trail-btn:focus-visible, .trail-dot:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
   .trail-btn svg { width:18px; height:18px; }
   .trail-dots { display:flex; align-items:center; gap:8px; }
+  .trail-dot { position:relative; }
+  .trail-dot::before { content:''; position:absolute; inset:-14px -5px; }
   .trail-dot { width:8px; height:8px; padding:0; border-radius:999px; border:none; background:rgba(255,255,255,0.35); cursor:pointer; transition:width .35s cubic-bezier(.16,1,.3,1), background .3s; }
   .trail-dot.is-active { width:30px; background:var(--cyan); box-shadow:0 0 12px rgba(0,242,255,0.6); }
   .trail-count { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.12em; color:#fff; min-width:62px; text-align:center; font-variant-numeric:tabular-nums; }
@@ -1704,7 +1707,7 @@
   }
 
   /* ============ Mikasa FT-5 ball, bottom right ============ */
-  .ball-ad { position:fixed; right:22px; bottom:22px; width:104px; height:104px; z-index:40; touch-action:none; }
+  .ball-ad { position:fixed; right:calc(22px + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px)); width:104px; height:104px; z-index:40; touch-action:manipulation; }
   .ball-ad-canvas { position:absolute; inset:0; width:100%; height:100%; transform:translate(var(--bx,0px), var(--by,0px)) scale(var(--bs,1)); transition:transform .35s cubic-bezier(.16,1,.3,1); animation:ballFloat 3.6s ease-in-out infinite; filter:drop-shadow(0 6px 14px rgba(3,4,40,0.45)); }
   .ball-ad-shadow { position:absolute; left:16%; right:16%; bottom:-10px; height:12px; border-radius:50%; background:radial-gradient(closest-side, rgba(3,4,40,0.55), transparent); animation:ballShadow 3.6s ease-in-out infinite; }
   .ball-ad.is-hover .ball-ad-canvas { --bs:1.12; animation-play-state:paused; }
@@ -1714,7 +1717,7 @@
   .ball-ad.is-hover .ball-ad-label { opacity:1; transform:translate(0,-50%); }
   @keyframes ballFloat { 0%,100% { translate:0 0; } 50% { translate:0 -7px; } }
   @keyframes ballShadow { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(0.82); opacity:0.7; } }
-  @media (max-width:640px) { .ball-ad { width:64px; height:64px; right:14px; bottom:14px; } }
+  @media (max-width:640px) { .ball-ad { width:64px; height:64px; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(14px + env(safe-area-inset-bottom, 0px)); } }
   @media (prefers-reduced-motion: reduce) { .ball-ad-canvas, .ball-ad-shadow { animation:none; } }
   @media print { .ball-ad { display:none; } }
 </style>
@@ -5096,6 +5099,15 @@ var CLUBS = [
     if (!railOn() || n < 2) { railNav.hidden = true; return; }
     railNav.hidden = false;
     var pad = function(x) { return (x < 10 ? '0' : '') + x; };
+    var dots = railNav.querySelectorAll('.trail-dot');
+    if (dots.length === n) {
+      // Same tickets: only flip states, so a focused button keeps its focus.
+      dots.forEach(function(d, i) { d.classList.toggle('is-active', i === railIndex); if (i === railIndex) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+      railNav.querySelector('[data-rail-step="-1"]').disabled = railIndex === 0;
+      railNav.querySelector('[data-rail-step="1"]').disabled = railIndex === n - 1;
+      railNav.querySelector('.trail-count').innerHTML = '<b>' + pad(railIndex + 1) + '</b> / ' + pad(n);
+      return;
+    }
     var arrow = function(d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '"/></svg>'; };
     railNav.innerHTML =
       '<button type="button" class="trail-btn" data-rail-step="-1" aria-label="Previous tournament"' + (railIndex === 0 ? ' disabled' : '') + '>' + arrow(-1) + '</button>' +
@@ -5109,7 +5121,7 @@ var CLUBS = [
   function setupTournamentRail(list, start) {
     var on = document.documentElement.getAttribute('data-design') === 'ig' && list.length > 0;
     grid.classList.toggle('is-rail', on);
-    railIndex = -1; railStart = start;
+    railIndex = -1; railStart = start; railNav.innerHTML = '';
     if (!on) { railNav.hidden = true; return; }
     // Now (layout is ready right after innerHTML) and again next frame, in
     // case the view only just became visible.
@@ -5158,6 +5170,7 @@ var CLUBS = [
     var d = railDrag; railDrag = null;
     if (!d.moved) return;
     railSuppressClick = true;
+    setTimeout(function() { railSuppressClick = false; }, 0);
     grid.classList.remove('is-dragging');
     var dx = e.clientX - d.x, w = (railSlots()[0] || {}).offsetWidth || 1;
     // Fling: a short, decisive drag still moves one ticket.
