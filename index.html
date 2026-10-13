@@ -2008,7 +2008,12 @@
 
   /* Landing tour head: layout toggle next to "All tournaments" */
   .landing-head-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
-  .landing-head-actions .layout-toggle { margin-left:0; }
+  .landing-head-actions .layout-toggle { margin-left:0; padding:3px; gap:2px; }
+  /* Compact on the landing page: icons only, same height as the button beside it */
+  .landing-head-actions .layout-toggle > button { padding:5px 10px; }
+  .landing-head-actions .layout-toggle > button svg { width:15px; height:15px; }
+  .landing-head-actions .layout-toggle-label { display:none; }
+  .landing-head-actions .layout-toggle-thumb { top:3px; bottom:3px; left:3px; }
   :root[data-design="ig"] .tour-overview { padding:16px 0 10px; }
   :root[data-design="ig"] .tour-overview > .tcard { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 35ms); }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tour-overview > .tcard { animation:none; } }
@@ -5699,11 +5704,12 @@ var CLUBS = [
       var p = b.dataset.layout === value; b.setAttribute('aria-pressed', String(p)); if (p) on = b;
       // Plain translated text (no inline-edit pencil: a button inside a button).
       var txt = uiText(LAYOUT_LABEL_KEYS[b.dataset.layout]);
-      b.setAttribute('aria-label', txt);
+      b.setAttribute('aria-label', txt); b.title = txt;
       var lab = b.querySelector('.layout-toggle-label'); if (lab) lab.textContent = txt;
     });
     var thumb = toggle.querySelector('.layout-toggle-thumb');
-    if (on && on.offsetWidth) { thumb.style.width = on.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (on.offsetLeft - 4) + 'px)'; }
+    var pad = parseFloat(getComputedStyle(toggle).paddingLeft) || 4;
+    if (on && on.offsetWidth) { thumb.style.width = on.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (on.offsetLeft - pad) + 'px)'; }
   }
   function syncLayoutToggle() { syncToggle(layoutToggle, tournamentLayout); }
   if (layoutToggle) {
