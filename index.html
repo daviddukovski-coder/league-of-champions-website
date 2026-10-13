@@ -4593,6 +4593,7 @@ var CLUBS = [
     'myteam.noMatches': 'No matches scheduled yet',
     'myteam.onlyMine': 'Only my matches',
     'myteam.change': 'Choose another team',
+    'myteam.graphic': 'Share graphic',
     'detail.copyLink': 'Copy link',
     'detail.creatingGraphic': 'Creating graphic…',
     'detail.partnersHeading': 'Looking for a partner',
@@ -4742,7 +4743,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -9918,6 +9919,7 @@ var CLUBS = [
         '<div class="myteam-status">' + status + '</div>' +
       '</div>' +
       '<div class="myteam-actions">' +
+        '<button type="button" class="btn btn-sm btn-outline" id="myTeamGraphicBtn">' + esc(uiText('myteam.graphic')) + '</button>' +
         (opts && opts.filter ? '<button type="button" class="btn btn-sm ' + (myTeamOnlyFilter ? 'btn-cyan' : 'btn-outline') + '" id="myTeamOnlyBtn" aria-pressed="' + myTeamOnlyFilter + '">' + esc(uiText('myteam.onlyMine')) + '</button>' : '') +
         '<button type="button" class="myteam-clear" id="myTeamClearBtn" aria-label="' + esc(uiText('myteam.change')) + '" title="' + esc(uiText('myteam.change')) + '">✕</button>' +
       '</div>' +
@@ -9926,6 +9928,8 @@ var CLUBS = [
   function wireMyTeamBar(bracket, rerender) {
     var clear = document.getElementById('myTeamClearBtn');
     if (clear) clear.addEventListener('click', function() { setMyTeam(null); myTeamOnlyFilter = false; rerender(); });
+    var gfx = document.getElementById('myTeamGraphicBtn');
+    if (gfx) gfx.addEventListener('click', function() { openMyTeamGraphic(bracket, myTeamId(bracket), gfx); });
     var only = document.getElementById('myTeamOnlyBtn');
     if (only) only.addEventListener('click', function() { myTeamOnlyFilter = !myTeamOnlyFilter; rerender(); });
     var input = document.getElementById('myTeamSearch'), dd = document.getElementById('myTeamDropdown');
@@ -9945,6 +9949,179 @@ var CLUBS = [
       setMyTeam(it.dataset.myteam); rerender();
     });
     document.addEventListener('click', function off(e) { if (!e.target.closest('.myteam-combo')) { dd.hidden = true; } if (!document.body.contains(input)) document.removeEventListener('click', off); });
+  }
+
+  /* My Team share graphic: the team big, its matches as ticket rows
+     (time, court, opponent, result) and the record — post 3:4 / story 9:16. */
+  function myTeamGraphicRows(bracket, id, max) {
+    var sched = scheduleIndex(bracket);
+    var rows = myTeamMatches(bracket, id).map(function(i) {
+      var mineA = i.a === id, oid = mineA ? i.b : i.a, w = sched[i.id];
+      return { info: i, where: w, opp: oid && findBracketTeam(bracket, oid),
+        sets: (i.sets || []).map(function(st) { return mineA ? [st[0], st[1]] : [st[1], st[0]]; }),
+        result: i.winner ? (i.winner === id ? 'W' : 'L') : i.live ? 'LIVE' : '' };
+    }).sort(function(x, y) {
+      var a = x.where, b = y.where; if (!a || !b) return a ? -1 : b ? 1 : 0;
+      return a.dayIndex - b.dayIndex || (a.time < b.time ? -1 : 1);
+    });
+    var onSchedule = !document.getElementById('view-schedule').hidden;
+    var playsSelected = onSchedule && rows.some(function(r) { return r.where && r.where.dayIndex === scheduleSelectedDayIndex; });
+    if (rows.length <= max && !playsSelected) return { rows: rows, day: '' };
+    // too many for one image: the day that is going on (first with an open match), else the last
+    var open = rows.filter(function(r) { return !r.info.winner && r.where; })[0];
+    var dayIdx = open ? open.where.dayIndex : (rows[rows.length - 1].where || {}).dayIndex;
+    // on the schedule page: the day that is selected there, if the team plays that day
+    if (playsSelected) dayIdx = scheduleSelectedDayIndex;
+    var dayRows = rows.filter(function(r) { return r.where && r.where.dayIndex === dayIdx; });
+    return { rows: dayRows.slice(-max), day: dayRows[0] && dayRows[0].where.dayLabel || '' };
+  }
+  function drawMyTeamCard(bracket, team, imgs, formatKey) {
+    var fmt = PLAYER_CARD_FORMATS[formatKey] || PLAYER_CARD_FORMATS.post;
+    var W = 1080, H = fmt.H, T = fmt.top, B = fmt.bottom, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    var CYAN = '#00f2ff', GREEN = '#5fd38a', RED = '#ff5a76', BEBAS = '"Bebas Neue", sans-serif', GEIST = '"Geist", "Poppins", sans-serif';
+    var t = currentBracketTournament;
+    var bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#080a55'); bg.addColorStop(0.55, '#1b1e86'); bg.addColorStop(1, '#5a55a8');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.save(); g.translate(W * 0.6, 0); g.transform(1, 0, -0.42, 1, 0, 0);
+    var band = g.createLinearGradient(0, 0, 360, 0);
+    band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(1, 'rgba(0,242,255,0.12)');
+    g.fillStyle = band; g.fillRect(0, 0, 360, H * 0.8); g.restore();
+    // club crest, big and faint behind the team name
+    if (imgs.clubBg) {
+      var cb = imgs.clubBg, cs = 560 / Math.max(cb.width, cb.height);
+      g.save(); g.globalAlpha = 0.12; g.translate(W - 210, T + 380); g.rotate(-0.12);
+      g.drawImage(cb, -cb.width * cs / 2, -cb.height * cs / 2, cb.width * cs, cb.height * cs); g.restore();
+    }
+    // header
+    g.save(); g.translate(0, T);
+    if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
+    spacing(6); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('FOOTVOLLEY', 182, 142);
+    g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(4); g.font = '800 22px ' + GEIST; var chip = 'LoC ' + t.tier + ' · ' + (t.city || '').toUpperCase(), cw = g.measureText(chip).width + 40;
+    g.fillStyle = CYAN; g.fillRect(-cw, 0, cw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(chip, -20, 31); g.restore();
+    g.restore();
+    // team name (two players on two lines) + club
+    var maxRows = formatKey === 'story' ? 9 : 7;
+    var data = myTeamGraphicRows(bracket, team.id, maxRows), rows = data.rows;
+    var parts = (team.name || '').split(' & ');
+    var y = T + 250;
+    spacing(3); g.font = '700 24px ' + GEIST; g.fillStyle = CYAN; g.textAlign = 'left';
+    g.fillText(('MY TEAM' + (data.day ? '  ·  ' + data.day : '')).toUpperCase(), 60, y);
+    spacing(1); g.fillStyle = '#fff'; g.shadowColor = 'rgba(3,4,40,0.6)'; g.shadowBlur = 24;
+    var lines = parts.length === 2 ? parts : [team.name || ''];
+    var nameSize = Math.min.apply(null, lines.map(function(l) { return pcFitText(g, l.toUpperCase(), W - 140, 118, '400 {s}px ' + BEBAS); }));
+    g.font = '400 ' + nameSize + 'px ' + BEBAS;
+    lines.forEach(function(l, k) { g.fillText(l.toUpperCase(), 56, y + 18 + nameSize * 0.86 * (k + 1)); });
+    g.shadowBlur = 0;
+    y += 18 + nameSize * 0.86 * lines.length + 62;
+    if (team.club) {
+      var cx = 60;
+      if (imgs.club) { var k = 48 / Math.max(imgs.club.width, imgs.club.height); g.drawImage(imgs.club, cx, y - 36, imgs.club.width * k, imgs.club.height * k); cx += 64; }
+      spacing(1); g.font = '600 28px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillText(team.club, cx, y);
+    }
+    // match rows
+    var won = rows.filter(function(r) { return r.result === 'W'; }).length, lost = rows.filter(function(r) { return r.result === 'L'; }).length;
+    var footY = H - B - 22, recH = 120, recY = footY - 50 - recH;
+    var listTop = y + 44, listH = recY - 30 - listTop, gapR = 16;
+    var rowH = Math.min(140, (listH - gapR * (rows.length - 1)) / Math.max(rows.length, 1));
+    // few matches: keep the rows together in the middle of the free space
+    listTop += Math.max(0, (listH - (rows.length * rowH + (rows.length - 1) * gapR)) / 2);
+    rows.forEach(function(r, k) {
+      var ry = listTop + k * (rowH + gapR), rx = 40, rw = W - 80;
+      var tk = g.createLinearGradient(rx, ry, rx + rw, ry + rowH);
+      tk.addColorStop(0, '#1a1d84'); tk.addColorStop(0.45, '#2c2f98'); tk.addColorStop(1, '#23268c');
+      g.save(); pcRoundRect(g, rx, ry, rw, rowH, 18); g.fillStyle = tk; g.fill();
+      g.strokeStyle = r.result === 'LIVE' ? RED : 'rgba(255,255,255,0.35)'; g.lineWidth = r.result === 'LIVE' ? 4 : 2; g.stroke(); g.restore();
+      var mid = ry + rowH / 2, sz = Math.min(1, rowH / 110);
+      // time + court
+      g.textAlign = 'left'; spacing(1); g.fillStyle = CYAN; g.font = '400 ' + Math.round(54 * sz) + 'px ' + BEBAS;
+      g.fillText(r.where ? r.where.time : '–', rx + 28, mid + 6 * sz);
+      spacing(2); g.font = '700 ' + Math.round(16 * sz) + 'px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.6)';
+      var multiDay = !data.day && rows.some(function(o) { return o.where && r.where && o.where.dayIndex !== r.where.dayIndex; });
+      g.fillText(((r.where && multiDay ? r.where.dayLabel.slice(0, 3) + ' · ' : '') + (r.where ? r.where.court : '')).toUpperCase(), rx + 28, mid + 32 * sz);
+      // dashed divider
+      var dx = rx + 190;
+      g.save(); g.setLineDash([6, 7]); g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(dx, ry + 16); g.lineTo(dx, ry + rowH - 16); g.stroke(); g.restore();
+      // opponent
+      var ox = dx + 28, oppImg = imgs.opp[r.opp ? r.opp.id : ''];
+      if (oppImg) { var ks = 50 * sz / Math.max(oppImg.width, oppImg.height); g.drawImage(oppImg, ox, mid - oppImg.height * ks / 2, oppImg.width * ks, oppImg.height * ks); ox += 64 * sz; }
+      spacing(2); g.font = '700 ' + Math.round(15 * sz) + 'px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.55)';
+      g.fillText(('VS  ·  ' + (r.info.label || '')).toUpperCase(), ox, mid - 16 * sz);
+      spacing(0.5); g.fillStyle = '#fff';
+      var oname = r.opp ? r.opp.name : 'TBD';
+      var setsW = r.sets.length ? r.sets.length * 64 * sz + 70 : 120;
+      pcFitText(g, oname, rx + rw - setsW - ox - 20, Math.round(32 * sz), '600 {s}px ' + GEIST);
+      g.fillText(oname, ox, mid + 22 * sz);
+      // result: sets (mine:theirs) + W/L badge
+      var ex = rx + rw - 26;
+      g.textAlign = 'right';
+      if (r.result) {
+        var badge = r.result, bw = badge === 'LIVE' ? 74 * sz : 44 * sz, bh = 44 * sz;
+        g.save(); pcRoundRect(g, ex - bw, mid - bh / 2, bw, bh, 10 * sz);
+        g.fillStyle = badge === 'W' ? GREEN : badge === 'L' ? 'rgba(255,90,118,0.85)' : RED; g.fill(); g.restore();
+        spacing(1); g.font = '800 ' + Math.round(20 * sz) + 'px ' + GEIST; g.fillStyle = badge === 'W' ? '#07331a' : '#fff'; g.textAlign = 'center';
+        g.fillText(badge, ex - bw / 2, mid + 7 * sz); g.textAlign = 'right'; ex -= bw + 18;
+      }
+      r.sets.slice().reverse().forEach(function(st) {
+        spacing(0); g.font = '400 ' + Math.round(46 * sz) + 'px ' + BEBAS;
+        g.fillStyle = Number(st[0]) > Number(st[1]) ? '#fff' : 'rgba(255,255,255,0.5)';
+        g.fillText(st[0] + ':' + st[1], ex, mid + 16 * sz); ex -= 64 * sz + 14;
+      });
+      if (!r.sets.length && !r.result) { spacing(3); g.font = '700 ' + Math.round(18 * sz) + 'px ' + GEIST; g.fillStyle = CYAN; g.fillText('UPCOMING', ex, mid + 7 * sz); }
+    });
+    // record ticket
+    var tx = 40, tw = W - 80;
+    var tk2 = g.createLinearGradient(tx, recY, tx + tw, recY + recH);
+    tk2.addColorStop(0, '#1a1d84'); tk2.addColorStop(0.4, '#2c2f98'); tk2.addColorStop(0.58, '#4a4cb0'); tk2.addColorStop(1, '#23268c');
+    g.save(); pcRoundRect(g, tx, recY, tw, recH, 20); g.fillStyle = tk2; g.fill(); g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 2; g.stroke(); g.restore();
+    var stats = [['MATCHES', String(rows.length)], ['WON', String(won)], ['LOST', String(lost)]];
+    var colW = tw / stats.length;
+    g.textAlign = 'center';
+    stats.forEach(function(st, k) {
+      var cx2 = tx + colW * k + colW / 2;
+      spacing(3); g.font = '700 18px ' + GEIST; g.fillStyle = CYAN; g.fillText(st[0], cx2, recY + 44);
+      spacing(1); g.font = '400 60px ' + BEBAS; g.fillStyle = '#fff'; g.fillText(st[1], cx2, recY + 100);
+      if (k) { g.save(); g.setLineDash([8, 8]); g.strokeStyle = 'rgba(255,255,255,0.3)'; g.lineWidth = 2; g.beginPath(); g.moveTo(tx + colW * k, recY + 18); g.lineTo(tx + colW * k, recY + recH - 18); g.stroke(); g.restore(); }
+    });
+    spacing(4); g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, footY);
+    return c;
+  }
+  function openMyTeamGraphic(bracket, id, btn) {
+    var team = id && findBracketTeam(bracket, id);
+    if (!team) return;
+    var label = btn.textContent;
+    btn.disabled = true; btn.textContent = uiText('detail.creatingGraphic');
+    var club = findClub(team.club);
+    var opps = {};
+    myTeamMatches(bracket, id).forEach(function(i) { var o = i.a === id ? i.b : i.a, ot = o && findBracketTeam(bracket, o); if (ot) opps[ot.id] = findClub(ot.club).logo; });
+    var oppIds = Object.keys(opps).filter(function(k) { return opps[k]; });
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
+    ]).catch(function() {}) : Promise.resolve();
+    Promise.all([fonts, loadImageAsync(BADGE_URI), cleanLogoAsync(club.logo).then(loadImageAsync),
+      Promise.all(oppIds.map(function(k) { return cleanLogoAsync(opps[k]).then(loadImageAsync); }))]).then(function(r) {
+      var imgs = { badge: r[1], club: r[2], clubBg: r[2], opp: {} };
+      oppIds.forEach(function(k, n) { imgs.opp[k] = r[3][n]; });
+      return Promise.all(['post', 'story'].map(function(k) {
+        var canvas = drawMyTeamCard(bracket, team, imgs, k);
+        return new Promise(function(res) { canvas.toBlob(function(b) { res({ key: k, blob: b, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
+      }));
+    }).then(function(list) {
+      btn.disabled = false; btn.textContent = label;
+      var t = currentBracketTournament;
+      showPlayerCardModal({ name: team.name }, { formats: list }, btn, {
+        base: 'loc-' + t.id + '-' + (team.name || 'team').toLowerCase().replace(/[^a-z0-9]+/g, '-'), label: team.name,
+        shareTitle: team.name + ' · ' + t.name
+      });
+    }).catch(function() { btn.disabled = false; btn.textContent = label; window.alert('Could not create the graphic. Please try again.'); });
   }
 
   function renderLiveTicker(bracket) {
