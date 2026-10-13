@@ -1859,25 +1859,25 @@
   /* Overview: every ticket at a glance, dealt in one after another */
   :root[data-design="ig"] .tournament-grid.is-overview { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 228px), 1fr)); gap:14px; padding:30px 0 80px; }
   /* Compact tickets: an overview, so as many as possible at a glance */
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
     -webkit-mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
             mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub { width:58px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-loc { font-size:9px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-tier { font-size:26px; max-height:96px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard h3 { font-size:24px; margin-top:12px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-cat { font-size:11px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard .badge { font-size:9px; padding:3px 8px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard-count { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub { width:58px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-loc { font-size:9px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-tier { font-size:26px; max-height:96px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard h3 { font-size:24px; margin-top:12px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-cat { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard .badge { font-size:9px; padding:3px 8px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-count { font-size:11px; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot, :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { display:block; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { height:100%; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 45ms); }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail) .tcard { width:100%; height:100%; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard { width:100%; height:100%; }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:none; } }
 
   /* ============ Cut-out player photos ============ */
@@ -1987,6 +1987,24 @@
   .ball-ad.is-popping .ball-ad-pop:hover::after { background:#fff; }
   @media (max-width:640px) { .ball-ad-pop { font-size:10px; padding:6px 11px; } .ball-ad-pop::after { right:20px; } }
   @media (prefers-reduced-motion: reduce) { .ball-ad-pop { transition:opacity .3s; transform:none; } }
+
+  /* ============ Round carousel (tickets on a 3D ring) ============ */
+  .rc { position:relative; width:100%; overflow:hidden; padding:6px 0 4px;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); }
+  .rc-stage { position:relative; height:260px; perspective:2400px; perspective-origin:50% 40%; cursor:grab; touch-action:pan-y; -webkit-user-select:none; user-select:none; }
+  .rc.is-dragging .rc-stage { cursor:grabbing; }
+  .rc-ring { position:absolute; left:50%; top:46px; width:0; height:0; transform-style:preserve-3d; }
+  .rc-item { position:absolute; left:-150px; top:0; width:300px; transform-style:preserve-3d; filter:brightness(var(--rc-b, 1)); }
+  .rc-item .tcard { width:100%; }
+  .rc-item:not(.is-front) .tcard { cursor:pointer; }
+  .rc-item.is-front .tcard { border-color:var(--cyan); box-shadow:inset 0 0 0 1px var(--cyan), inset 0 0 26px rgba(0,242,255,0.2); }
+  .rc-controls { display:flex; justify-content:center; gap:14px; margin-top:8px; }
+  .tournament-grid.is-round { display:block; padding:28px 0 70px; }
+  .tour-round { margin:6px 0 0; }
+  @media (max-width:640px) {
+    .rc-item { width:240px; left:-120px; }
+    .rc { -webkit-mask-image:none; mask-image:none; }
+  }
 </style>
 </head>
 <body>
@@ -5242,7 +5260,12 @@ var CLUBS = [
     var nextCard = el.querySelector('.tour-card.is-next, .tcard.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-rail > :last-child') : null);
     // Measured after setView() has unhidden the landing view.
     var railEl = el.querySelector('.tour-rail.is-tickets');
-    if (railEl) wireTicketRail(railEl, nextCard);
+    if (railEl) {
+      var cards = Array.prototype.map.call(railEl.children, function(c) { return c.outerHTML; });
+      var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
+      railEl.className = 'tour-round';
+      mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }) });
+    }
     else if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
   }
 
@@ -5743,6 +5766,158 @@ var CLUBS = [
     src.src = 'assets/mikasa-ft5.jpg';
   })(); } catch (err) { if (window.console) console.warn('Ball animation disabled:', err); }
 
+
+  /* ==================================================================
+     ROUND CAROUSEL ('ig' design) — the tournament tickets on a slowly
+     turning, slightly tilted 3D ring (after originkit's Round Carousel).
+     Auto-rotates, drag/swipe with momentum, arrow keys + buttons; a click
+     on a side ticket turns it to the front, a click on the front one opens
+     it. The back of the ring shows the tickets' dimmed inner faces.
+     Too few tickets for a round ring get repeated (aria-hidden copies).
+     ================================================================== */
+  var roundCarousels = [];
+  function mountRoundCarousel(host, cardsHtml, opts) {
+    opts = opts || {};
+    // Stop the old one living in this host, if any.
+    roundCarousels = roundCarousels.filter(function(rc) { if (rc.host === host || !document.body.contains(rc.root)) { rc.destroy(); return false; } return true; });
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var n0 = cardsHtml.length;
+    if (!n0) { host.innerHTML = ''; return null; }
+    var reps = Math.max(1, Math.ceil(8 / n0)), N = n0 * reps;
+    var items = '';
+    for (var r = 0; r < reps; r++) cardsHtml.forEach(function(h, i) {
+      var copy = r > 0;
+      items += '<div class="rc-item" data-i="' + (r * n0 + i) + '" data-orig="' + i + '"' + (copy ? ' aria-hidden="true"' : '') + '>' +
+        (copy ? h.replace('<button ', '<button tabindex="-1" ') : h) + '</div>';
+    });
+    host.innerHTML =
+      '<div class="rc" role="region" aria-roledescription="carousel" aria-label="' + esc(opts.label || 'Tournaments') + '">' +
+        '<div class="rc-stage"><div class="rc-ring">' + items + '</div></div>' +
+        '<div class="rc-controls">' +
+          '<button type="button" class="trail-btn" data-rc="-1" aria-label="Previous tournament"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+          '<button type="button" class="trail-btn" data-rc="1" aria-label="Next tournament"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>' +
+        '</div>' +
+      '</div>';
+    var root = host.querySelector('.rc'), stage = root.querySelector('.rc-stage'), ring = root.querySelector('.rc-ring');
+    var els = Array.prototype.slice.call(ring.children);
+    var step = 360 / N, R = 0, rot = -(opts.start || 0) * step, vel = 0, target = null;
+    var paused = false, resumeAt = 0, dragging = null, moved = false, raf = null, last = 0, alive = true;
+    var autoSpeed = reduce ? 0 : 7; // degrees per second
+    function layout() {
+      var w = els[0].offsetWidth || 300;
+      R = Math.round((w + 34) / (2 * Math.tan(Math.PI / N)));
+      els.forEach(function(el, i) { el.style.transform = 'rotateY(' + (i * step) + 'deg) translateZ(' + R + 'px)'; });
+      // The -7deg tilt pushes the front tickets down and the back ones up
+      // (smaller, by perspective); size the stage so neither gets clipped
+      // or covers the buttons below.
+      var P = 2400, tilt = Math.sin(7 * Math.PI / 180), h = els[0].offsetHeight || 170;
+      var down = R * tilt, up = R * tilt * P / (P + 2 * R);
+      ring.style.top = Math.round(up + 14) + 'px';
+      stage.style.height = Math.round(up + 14 + h + down + 18) + 'px';
+    }
+    function frontIndex() { return ((Math.round(-rot / step) % N) + N) % N; }
+    function paint() {
+      ring.style.transform = 'translateZ(' + (-R) + 'px) rotateX(-7deg) rotateY(' + rot.toFixed(3) + 'deg)';
+      var f = frontIndex();
+      els.forEach(function(el, i) {
+        var a = ((i * step + rot) % 360 + 540) % 360 - 180, ad = Math.abs(a);
+        // Front bright, sides darker, the inner (back) faces dimmed most.
+        el.style.setProperty('--rc-b', ad > 90 ? 0.32 : (1 - ad / 90 * 0.45).toFixed(3));
+        el.classList.toggle('is-front', i === f);
+      });
+    }
+    function tick(t) {
+      raf = null;
+      if (!alive) return;
+      var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016;
+      last = t;
+      if (target != null) {
+        var d = target - rot;
+        rot += d * Math.min(1, dt * (reduce ? 30 : 7));
+        if (Math.abs(d) < 0.05) { rot = target; target = null; }
+      } else if (!dragging) {
+        if (Math.abs(vel) > 0.5) { rot += vel * dt; vel *= Math.pow(0.04, dt); }
+        else {
+          vel = 0;
+          if (!paused && performance.now() > resumeAt) rot += autoSpeed * dt;
+        }
+      }
+      paint();
+      if (!document.hidden) raf = requestAnimationFrame(tick);
+    }
+    function start() { if (!raf && alive) { last = 0; raf = requestAnimationFrame(tick); } }
+    function hold(ms) { resumeAt = performance.now() + (ms || 3500); }
+    function goTo(i) {
+      // shortest way round to card i
+      var want = -i * step, k = Math.round((rot - want) / 360);
+      target = want + k * 360; vel = 0; hold(); start();
+    }
+    function stepBy(d) { goTo(frontIndex() + d); }
+    root.addEventListener('pointerenter', function(e) { if (e.pointerType === 'mouse') paused = true; });
+    root.addEventListener('pointerleave', function() { paused = false; hold(800); });
+    root.addEventListener('focusin', function(e) {
+      paused = true;
+      var it = e.target.closest && e.target.closest('.rc-item');
+      if (it && e.target.matches('.tcard')) goTo(+it.dataset.i);
+    });
+    root.addEventListener('focusout', function(e) { if (!root.contains(e.relatedTarget)) { paused = false; hold(800); } });
+    stage.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0) return;
+      dragging = { x: e.clientX, rot: rot, t: performance.now(), lx: e.clientX, lt: performance.now() };
+      moved = false; target = null; vel = 0;
+    });
+    var onMove = function(e) {
+      if (!dragging) return;
+      var dx = e.clientX - dragging.x;
+      if (!moved && Math.abs(dx) > 6) { moved = true; root.classList.add('is-dragging'); }
+      if (!moved) return;
+      var degPerPx = 360 / (2 * Math.PI * R) * 1.25;
+      rot = dragging.rot + dx * degPerPx;
+      var now = performance.now();
+      if (now - dragging.lt > 0) vel = (e.clientX - dragging.lx) * degPerPx / ((now - dragging.lt) / 1000);
+      dragging.lx = e.clientX; dragging.lt = now;
+      paint();
+    };
+    var onUp = function() {
+      if (!dragging) return;
+      dragging = null; root.classList.remove('is-dragging');
+      vel = Math.max(-400, Math.min(400, vel)); hold(4000);
+      if (moved) setTimeout(function() { moved = false; }, 0);
+      start();
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    // A drag never opens a ticket; a side ticket comes to the front first.
+    root.addEventListener('click', function(e) {
+      var b = e.target.closest('[data-rc]');
+      if (b) { stepBy(+b.dataset.rc); return; }
+      var it = e.target.closest('.rc-item');
+      if (moved || (it && !it.classList.contains('is-front'))) {
+        e.stopImmediatePropagation(); e.preventDefault();
+        if (!moved && it) goTo(+it.dataset.i);
+      }
+    }, true);
+    root.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault(); stepBy(e.key === 'ArrowLeft' ? -1 : 1);
+      var f = els[frontIndex()]; var c = f && f.querySelector('.tcard');
+      if (c && !f.hasAttribute('aria-hidden')) c.focus({ preventScroll: true });
+    });
+    var ro = new ResizeObserver(function() { layout(); paint(); });
+    ro.observe(root);
+    var onVis = function() { if (!document.hidden) start(); };
+    document.addEventListener('visibilitychange', onVis);
+    layout(); paint(); start();
+    var api = { host: host, root: root, goTo: goTo, destroy: function() {
+      alive = false; ro.disconnect();
+      window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('visibilitychange', onVis);
+    } };
+    roundCarousels.push(api);
+    return api;
+  }
+
   function renderCard(t) {
     var statusBadge = t.status === 'upcoming'
       ? '<span class="badge badge-upcoming">' + esc(uiText('home.badgeOpen')) + '</span>'
@@ -5808,8 +5983,19 @@ var CLUBS = [
       list = allTournaments().filter(function(t) { return t.status === filter; });
     }
     list = list.sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); }).map(effectiveTournament);
-    grid.innerHTML = list.map(function(t) { return '<div class="tslot"><div class="tslot-in">' + renderCard(t) + '</div></div>'; }).join('');
-    setupTournamentRail(list, filter === 'past' ? list.length - 1 : 0);
+    var igRound = document.documentElement.getAttribute('data-design') === 'ig' && tournamentLayout === 'rail';
+    if (igRound) {
+      grid.classList.remove('is-rail', 'is-overview');
+      grid.classList.add('is-round');
+      railNav.hidden = true;
+      mountRoundCarousel(grid, list.map(renderCard), { start: filter === 'past' ? list.length - 1 : 0, label: 'Tournaments' });
+      syncLayoutToggle();
+    } else {
+      grid.classList.remove('is-round');
+      roundCarousels = roundCarousels.filter(function(rc) { if (rc.host === grid) { rc.destroy(); return false; } return true; });
+      grid.innerHTML = list.map(function(t) { return '<div class="tslot"><div class="tslot-in">' + renderCard(t) + '</div></div>'; }).join('');
+      setupTournamentRail(list, filter === 'past' ? list.length - 1 : 0);
+    }
     updateSeasonTag(filter);
     if (filter === 'upcoming') loadCounts();
   }
