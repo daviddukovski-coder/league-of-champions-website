@@ -10032,6 +10032,18 @@ var CLUBS = [
     var rowH = Math.min(140, (listH - gapR * (rows.length - 1)) / Math.max(rows.length, 1));
     // few matches: keep the rows together in the middle of the free space
     listTop += Math.max(0, (listH - (rows.length * rowH + (rows.length - 1) * gapR)) / 2);
+    // Score columns shared by all rows: each set sits in a fixed column,
+    // aligned on its colon, so the results line up from row to row.
+    var sz0 = Math.min(1, rowH / 110);
+    g.font = '400 ' + Math.round(46 * sz0) + 'px ' + BEBAS; spacing(0);
+    var maxL = 0, maxR = 0, colonW = g.measureText(':').width, maxSets = 0;
+    rows.forEach(function(r) {
+      maxSets = Math.max(maxSets, r.sets.length);
+      r.sets.forEach(function(st) { maxL = Math.max(maxL, g.measureText(String(st[0])).width); maxR = Math.max(maxR, g.measureText(String(st[1])).width); });
+    });
+    var setColW = maxL + colonW + maxR, setGap = 26 * sz0;
+    var badgeSlot = rows.some(function(r) { return r.result === 'LIVE'; }) ? 74 * sz0 : rows.some(function(r) { return r.result; }) ? 44 * sz0 : 0;
+    var resultW = (badgeSlot ? badgeSlot + 22 : 0) + (maxSets ? maxSets * setColW + (maxSets - 1) * setGap : 0);
     rows.forEach(function(r, k) {
       var ry = listTop + k * (rowH + gapR), rx = 40, rw = W - 80;
       var tk = g.createLinearGradient(rx, ry, rx + rw, ry + rowH);
@@ -10056,30 +10068,36 @@ var CLUBS = [
       g.fillText(('VS  ·  ' + (r.info.label || '')).toUpperCase(), ox, mid - 16 * sz);
       spacing(0.5); g.fillStyle = '#fff';
       var oname = r.opp ? r.opp.name : 'TBD';
-      // measure the real width of the result block (sets + badge) first,
-      // so the opponent name is fitted into what is left
-      spacing(0); g.font = '400 ' + Math.round(46 * sz) + 'px ' + BEBAS;
-      var setGap = 22 * sz, setWs = r.sets.map(function(st) { return g.measureText(st[0] + ':' + st[1]).width; });
-      var badgeW = r.result ? (r.result === 'LIVE' ? 74 : 44) * sz + 18 : 0;
-      var setsW = r.sets.length ? setWs.reduce(function(a, b) { return a + b; }, 0) + setGap * (r.sets.length - 1) + badgeW : (r.result ? badgeW : 130 * sz);
+      // the opponent name gets whatever the shared result columns leave
+      var setsW = Math.max(resultW, 130 * sz);
       spacing(0.5); g.fillStyle = '#fff';
-      pcFitText(g, oname, rx + rw - 26 - setsW - 24 - ox, Math.round(32 * sz), '600 {s}px ' + GEIST);
+      var nameMax = rx + rw - 26 - setsW - 30 - ox;
+      pcFitText(g, oname, nameMax, Math.round(32 * sz), '600 {s}px ' + GEIST);
+      // still too long at the smallest size: cut it with an ellipsis
+      if (g.measureText(oname).width > nameMax) { while (oname.length > 4 && g.measureText(oname + '…').width > nameMax) oname = oname.slice(0, -1); oname = oname.trim() + '…'; }
       g.fillText(oname, ox, mid + 22 * sz);
       // result: sets (mine:theirs) + W/L badge
       var ex = rx + rw - 26;
       g.textAlign = 'right';
       if (r.result) {
         var badge = r.result, bw = badge === 'LIVE' ? 74 * sz : 44 * sz, bh = 44 * sz;
-        g.save(); pcRoundRect(g, ex - bw, mid - bh / 2, bw, bh, 10 * sz);
+        g.save(); pcRoundRect(g, ex - badgeSlot / 2 - bw / 2, mid - bh / 2, bw, bh, 10 * sz);
         g.fillStyle = badge === 'W' ? GREEN : badge === 'L' ? 'rgba(255,90,118,0.85)' : RED; g.fill(); g.restore();
         spacing(1); g.font = '800 ' + Math.round(20 * sz) + 'px ' + GEIST; g.fillStyle = badge === 'W' ? '#07331a' : '#fff'; g.textAlign = 'center';
-        g.fillText(badge, ex - bw / 2, mid + 7 * sz); g.textAlign = 'right'; ex -= bw + 18;
+        g.fillText(badge, ex - badgeSlot / 2, mid + 7 * sz); g.textAlign = 'right';
       }
-      r.sets.slice().reverse().forEach(function(st, k) {
+      if (badgeSlot) ex -= badgeSlot + 22;
+      // set columns from the right: column of set i (counted from the last
+      // possible set) is fixed, so set 1 of every row lines up
+      var firstColRight = ex - (maxSets - 1) * (setColW + setGap);
+      r.sets.forEach(function(st, k) {
+        var colRight = firstColRight + k * (setColW + setGap), colonX = colRight - maxR - colonW;
         spacing(0); g.font = '400 ' + Math.round(46 * sz) + 'px ' + BEBAS;
         g.fillStyle = Number(st[0]) > Number(st[1]) ? '#fff' : 'rgba(255,255,255,0.5)';
-        g.fillText(st[0] + ':' + st[1], ex, mid + 16 * sz); ex -= setWs[r.sets.length - 1 - k] + setGap;
+        g.textAlign = 'right'; g.fillText(String(st[0]), colonX, mid + 16 * sz);
+        g.textAlign = 'left'; g.fillText(':', colonX, mid + 16 * sz); g.fillText(String(st[1]), colonX + colonW, mid + 16 * sz);
       });
+      g.textAlign = 'right';
       if (!r.sets.length && !r.result) { spacing(3); g.font = '700 ' + Math.round(18 * sz) + 'px ' + GEIST; g.fillStyle = CYAN; g.fillText('UPCOMING', ex, mid + 7 * sz); }
     });
     // record ticket
