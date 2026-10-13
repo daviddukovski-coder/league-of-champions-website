@@ -2156,13 +2156,18 @@
   :root[data-design="ig"] .hero-top::before { height:calc(100% + 160px);
     background:linear-gradient(180deg, rgba(5,6,40,0.7) 0%, rgba(5,6,40,0.45) 35%, rgba(5,6,40,0.18) 70%, rgba(5,6,40,0) 100%); }
 
-  /* Nav melts into what is below it ('ig'): no hairline, a short fade in the
-     nav colour instead; the hero's top shade uses the same blue. */
-  :root[data-design="ig"] .nav { border-bottom-color:transparent; }
-  :root[data-design="ig"] .nav::after { content:''; position:absolute; left:0; right:0; top:100%; height:46px; pointer-events:none;
-    background:linear-gradient(180deg, rgba(11,13,99,0.88) 0%, rgba(11,13,99,0.45) 45%, rgba(11,13,99,0) 100%); }
   :root[data-design="ig"] .hero-top::before {
     background:linear-gradient(180deg, rgba(11,13,99,0.75) 0%, rgba(11,13,99,0.45) 35%, rgba(11,13,99,0.18) 70%, rgba(11,13,99,0) 100%); }
+
+  /* Logo shadows may fall below the strip (clipping them drew a line) */
+  :root[data-design="ig"] .hero-top .logo-wall { overflow-x:clip; overflow-y:visible; }
+  /* Landing page, top: the nav sits transparent on the hero video (the
+     video runs up behind it); once you scroll past the hero it gets its
+     blue background back. */
+  :root[data-design="ig"] body.nav-over-hero .nav { background:linear-gradient(180deg, rgba(11,13,99,0.55), rgba(11,13,99,0)); border-bottom-color:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:none; }
+  :root[data-design="ig"] .nav { transition:background-color .35s, border-color .35s; }
+  :root[data-design="ig"] body.nav-over-hero .landing-hero { margin-top:calc(-1 * var(--nav-h, 0px)); }
+  :root[data-design="ig"] body.nav-over-hero .hero-top { padding-top:calc(var(--nav-h, 0px) + 10px); }
 </style>
 </head>
 <body>
@@ -5219,6 +5224,24 @@ var CLUBS = [
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(navIndicatorRest);
   })();
 
+  // Transparent nav over the landing hero (see CSS 'nav-over-hero').
+  (function() {
+    var nav = document.querySelector('.nav');
+    if (!nav) return;
+    var measure = function() { document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px'); };
+    new ResizeObserver(measure).observe(nav); measure();
+    var update = function() {
+      var landing = document.getElementById('view-landing');
+      var hero = landing && !landing.hidden && landing.querySelector('.landing-hero');
+      var over = !!hero && hero.getBoundingClientRect().bottom - nav.offsetHeight > 40 && window.scrollY < hero.offsetHeight - nav.offsetHeight - 60;
+      document.body.classList.toggle('nav-over-hero', over);
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('hashchange', function() { setTimeout(update, 0); });
+    window.addEventListener('resize', update);
+    window.navOverHeroUpdate = update;
+  })();
+
   function setView(view) {
     ['landing','home','detail','compselect','register','live','schedule','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
@@ -5227,6 +5250,7 @@ var CLUBS = [
       l.classList.toggle('active', !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
     });
     navIndicatorRest();
+    if (window.navOverHeroUpdate) window.navOverHeroUpdate();
     instrumentUIText(document);
     renderHeroSub();
     window.scrollTo({ top:0, behavior: reduceMotion ? 'auto' : 'smooth' });
