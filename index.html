@@ -2145,32 +2145,7 @@
   }
   @media (max-width:480px) { .bento { grid-template-columns:1fr; } }
 
-  /* ============ FX: Europe globe ============ */
-  .fx-globe-wrap { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(0, 1fr); gap:34px; align-items:center; }
-  .fx-globe-stage { position:relative; width:100%; aspect-ratio:1; max-width:560px; margin:0 auto; }
-  .fx-globe-stage::before { content:''; position:absolute; inset:8%; border-radius:50%; background:radial-gradient(closest-side, rgba(0,242,255,0.18), transparent); filter:blur(20px); }
-  .fx-globe-canvas { position:relative; width:100%; height:100%; cursor:grab; touch-action:pan-y; opacity:0; transition:opacity 1.2s; }
-  .fx-globe-canvas.is-ready { opacity:1; }
-  .fx-globe-canvas:active { cursor:grabbing; }
-  .fx-globe-list { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:4px 18px; max-height:520px; overflow:auto; scrollbar-width:thin; }
-  .fx-globe-stop { width:100%; display:grid; grid-template-columns:auto 1fr; grid-template-areas:'date date' 'city tier'; align-items:baseline; gap:0 10px; text-align:left; padding:8px 10px; border:none; border-radius:10px; background:none; color:#fff; cursor:pointer; transition:background .2s; }
-  .fx-globe-stop:hover, .fx-globe-stop:focus-visible { background:rgba(0,242,255,0.12); outline:none; }
-  .fx-globe-date { grid-area:date; font-size:10px; font-weight:700; letter-spacing:0.1em; color:rgba(255,255,255,0.55); text-transform:uppercase; }
-  .fx-globe-city { grid-area:city; font-family:'Bebas Neue',sans-serif; font-size:24px; line-height:1; }
-  .fx-globe-tier { grid-area:tier; justify-self:end; white-space:nowrap; font-size:10px; font-weight:800; letter-spacing:0.12em; color:var(--cyan); }
-  .fx-globe-stop.is-past .fx-globe-city { opacity:0.65; }
-  .fx-globe-stop.is-next .fx-globe-city { color:var(--cyan); }
-  @media (max-width:760px) { .fx-globe-wrap { grid-template-columns:1fr; } .fx-globe-stage { max-width:380px; } .fx-globe-list { max-height:none; } }
 
-  /* Globe in the middle of the landing ring */
-  .tour-round.has-globe .rc { overflow-x:clip; overflow-y:visible; }
-  .tour-round.has-globe .rc-stage { margin-top:70px; margin-bottom:30px; }
-  .rc-globe { position:absolute; left:0; top:30px; width:440px; height:440px; pointer-events:none; opacity:0; transition:opacity 1.2s;
-    border-radius:50%; overflow:hidden; box-shadow:0 0 0 1.5px rgba(0,242,255,0.55), 0 0 60px rgba(0,242,255,0.25), inset 0 0 50px rgba(3,4,40,0.7); background:radial-gradient(circle at 40% 35%, #1b1e86, #05062e 75%); }
-  .rc-globe.is-ready { opacity:1; }
-  .rc-globe canvas { width:100%; height:100%; }
-  .rc-globe::after { content:''; position:absolute; inset:0; border-radius:50%; pointer-events:none; background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.14), transparent 45%); }
-  @media (max-width:640px) { .rc-globe { width:300px; height:300px; } }
 </style>
 </head>
 <body>
@@ -4367,7 +4342,6 @@ var CLUBS = [
     'landing.leadersTitle': 'Ranking leaders {year}',
     'fx.statTournaments': 'Tournaments', 'fx.statPlayers': 'Ranked players', 'fx.statClubs': 'Clubs', 'fx.statCountries': 'Countries',
     'fx.timelineTitle': 'The season',
-    'fx.globeTitle': 'Across Europe',
     'fx.bentoTitle': 'Season {year} at a glance', 'fx.bentoMen': "No. 1 Men's", 'fx.bentoWomen': "No. 1 Women's", 'fx.bentoClub': 'Top club',
     'landing.fullRanking': 'Full ranking',
     'landing.eyebrow': 'Season 2026',
@@ -4528,7 +4502,7 @@ var CLUBS = [
       'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen', 'ad.ballCaption': 'Offizieller Ball', 'ad.ballCta': 'Jetzt kaufen →', 'ad.ballAria': 'Mikasa FT-5, offizieller Footvolley-Ball – im Shop kaufen (öffnet in neuem Tab)', 'home.layoutSwipe': 'Swipe', 'home.layoutRing': 'Ring', 'home.layoutOverview': 'Übersicht',
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
-      'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'fx.statTournaments': 'Turniere', 'fx.statPlayers': 'Spieler im Ranking', 'fx.statClubs': 'Vereine', 'fx.statCountries': 'Länder', 'fx.timelineTitle': 'Die Saison', 'fx.globeTitle': 'Quer durch Europa', 'fx.bentoTitle': 'Saison {year} auf einen Blick', 'fx.bentoMen': 'Nr. 1 Herren', 'fx.bentoWomen': 'Nr. 1 Damen', 'fx.bentoClub': 'Top-Verein', 'landing.fullRanking': 'Zum Ranking',
+      'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'fx.statTournaments': 'Turniere', 'fx.statPlayers': 'Spieler im Ranking', 'fx.statClubs': 'Vereine', 'fx.statCountries': 'Länder', 'fx.timelineTitle': 'Die Saison', 'fx.bentoTitle': 'Saison {year} auf einen Blick', 'fx.bentoMen': 'Nr. 1 Herren', 'fx.bentoWomen': 'Nr. 1 Damen', 'fx.bentoClub': 'Top-Verein', 'landing.fullRanking': 'Zum Ranking',
       'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
       'demoBanner.text': 'DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)',
       'landing.eyebrow': 'Saison 2026', 'landing.headline': 'Europas Footvolley-Elite. Eine Tour.',
@@ -5544,21 +5518,6 @@ var CLUBS = [
       leadersHtml = '';
     }
 
-    // Europe globe (fx 'globe'): every stop of the season as a glowing point on
-    // a turning globe; hovering a stop in the list turns the globe to it.
-    var globeHtml = '';
-    if (false && fxOn('globe') && tours.length) {
-      globeHtml = '<section class="landing-section fx-globe"><div class="container">' +
-        '<div class="landing-section-head"><h2>' + esc(uiText('fx.globeTitle')) + '</h2></div>' +
-        '<div class="fx-globe-wrap"><div class="fx-globe-stage"><canvas class="fx-globe-canvas" aria-hidden="true"></canvas></div>' +
-        '<ol class="fx-globe-list">' + tours.map(function(t, i) {
-          var state = t.id === nextId ? ' is-next' : t.status === 'past' ? ' is-past' : '';
-          return '<li><button type="button" class="fx-globe-stop' + state + '" data-gi="' + i + '" data-route="event/' + esc(t.id) + '">' +
-            '<span class="fx-globe-date">' + esc(t.dateLabel) + '</span><span class="fx-globe-city">' + esc(t.city) + '</span>' +
-            '<span class="fx-globe-tier">LoC ' + esc(t.tier) + '</span></button></li>';
-        }).join('') + '</ol></div></div></section>';
-    }
-
     // Season timeline: every stop of the season on one line; past stops filled,
     // the next one pulsing. Each stop opens its tournament.
     var timelineHtml = '';
@@ -5593,14 +5552,12 @@ var CLUBS = [
           '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button>' +
         '</div></div>' +
         '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div>' + timelineHtml + '</div></section>' : '') +
-      globeHtml + bentoHtml + (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
+      bentoHtml + (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
         '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '');
 
     wireCountUps(el);
-    var gWrap = el.querySelector('.fx-globe-wrap');
-    if (gWrap) mountTourGlobe(gWrap, tours);
     // Draw the season line once it scrolls into view.
     var tl = el.querySelector('.fx-tl');
     if (tl && 'IntersectionObserver' in window) {
@@ -5668,17 +5625,8 @@ var CLUBS = [
       if (landingLayout === 'ring') {
         var cards = Array.prototype.map.call(railEl.children, function(c) { return c.outerHTML; });
         var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
-        railEl.className = 'tour-round' + (tlEl ? ' has-tl' : '') + (fxOn('globe') ? ' has-globe' : '');
-        var ringGlobe = null;
-        ringApi = mountRoundCarousel(railEl, cards, {
-          start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }),
-          onFront: function(i) { markStop(i); if (ringGlobe) ringGlobe.focus(i); },
-          onPaint: function(rot) { if (ringGlobe) ringGlobe.face(rot); }
-        });
-        if (fxOn('globe') && ringApi) {
-          ringGlobe = mountRingGlobe(railEl.querySelector('.rc-ring'), tours);
-          ringGlobe.focus(Math.max(0, startIdx));
-        }
+        railEl.className = 'tour-round' + (tlEl ? ' has-tl' : '');
+        ringApi = mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }), onFront: markStop });
       } else if (landingLayout === 'grid') {
         railEl.className = 'tournament-grid is-overview tour-overview';
         Array.prototype.forEach.call(railEl.children, function(c, i) { c.style.setProperty('--i', i); });
@@ -5739,112 +5687,14 @@ var CLUBS = [
   }
 
 
-  // Coordinates of the tour's venues (lat, lng) for the globe.
+  // Coordinates of the tour's venues (lat, lng), e.g. for maps.
   var CITY_COORDS = {
     'stockholm': [59.33, 18.07], 'amsterdam': [52.37, 4.90], 'vilanova': [41.22, 1.73], 'kalogria': [38.15, 21.38],
     'graz': [47.07, 15.44], 'cervia': [44.26, 12.35], 'saint laurent du var': [43.67, 7.19], 'helsinki': [60.17, 24.94],
     'london': [51.51, -0.13], 'santa luzia': [37.10, -7.66], 'mandal': [58.03, 7.45], 'copenhagen': [55.68, 12.57],
     'pula': [44.87, 13.85], 'wiesloch': [49.29, 8.70], 'matosinhos': [41.18, -8.69], 'valencia': [39.47, -0.38], 'faro': [37.02, -7.93]
   };
-  // A globe in the middle of the landing ring: it always faces the viewer
-  // (counter-rotates against the ring) and turns + zooms to the city of the
-  // ticket in front. Depth-sorted with the tickets, so the back ones pass
-  // behind it and the front ones in front of it.
-  function mountRingGlobe(ringEl, tours) {
-    var pts = tours.map(cityCoords);
-    var wrap = document.createElement('div');
-    wrap.className = 'rc-globe'; wrap.setAttribute('aria-hidden', 'true');
-    wrap.innerHTML = '<canvas></canvas>';
-    ringEl.appendChild(wrap);
-    var canvas = wrap.querySelector('canvas');
-    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var aim = function(c) { return { phi: Math.PI - (c[1] * Math.PI / 180 - Math.PI / 2), theta: c[0] * Math.PI / 180 }; };
-    var europe = { phi: aim([48, 10]).phi, theta: 0.62 };
-    var phi = europe.phi, theta = europe.theta, scale = 1, goal = { phi: phi, theta: theta, scale: 1 }, focus = -1, globe = null, alive = true;
-    import('https://cdn.jsdelivr.net/npm/cobe@0.6.3/+esm').then(function(mod) {
-      if (!alive) return;
-      var size = 440;
-      globe = mod.default(canvas, {
-        devicePixelRatio: Math.min(2, window.devicePixelRatio || 1), width: size * 2, height: size * 2,
-        phi: phi, theta: theta, dark: 1, diffuse: 1.3, mapSamples: 42000, mapBrightness: 6, mapBaseBrightness: 0.04,
-        baseColor: [0.17, 0.19, 0.64], markerColor: [0, 0.95, 1], glowColor: [0.45, 0.46, 1], scale: 1,
-        markers: [],
-        onRender: function(state) {
-          var k = reduce ? 1 : 0.06;
-          phi += (goal.phi - phi) * k; theta += (goal.theta - theta) * k; scale += (goal.scale - scale) * k;
-          state.phi = phi; state.theta = theta; state.scale = scale;
-          // Marker sizes shrink as the globe zooms in, so they stay points.
-          var z = Math.max(1, Math.sqrt(scale)), pulse = (0.075 + Math.sin(performance.now() / 260) * 0.02) / z;
-          state.markers = pts.map(function(c, i) { return c ? { location: c, size: i === focus ? pulse : 0.035 / z } : null; }).filter(Boolean);
-        }
-      });
-      requestAnimationFrame(function() { wrap.classList.add('is-ready'); });
-    }).catch(function() { wrap.remove(); });
-    return {
-      el: wrap,
-      // keep facing the viewer while the ring turns
-      face: function(rot) { wrap.style.transform = 'translate(-50%, -50%) rotateY(' + (-rot).toFixed(3) + 'deg) rotateX(7deg)'; },
-      focus: function(i) {
-        var c = pts[i]; focus = i;
-        if (!c) { goal = { phi: europe.phi, theta: europe.theta, scale: 1 }; return; }
-        var a = aim(c), kk = Math.round((phi - a.phi) / (2 * Math.PI));
-        goal = { phi: a.phi + kk * 2 * Math.PI, theta: a.theta, scale: 6 };
-      },
-      destroy: function() { alive = false; if (globe) globe.destroy(); }
-    };
-  }
-
   function cityCoords(t) { return CITY_COORDS[normalizeNameForMatch(t.city).replace(/-/g, ' ')] || null; }
-  var globeCleanup = null;
-  function mountTourGlobe(wrap, tours) {
-    if (globeCleanup) { globeCleanup(); globeCleanup = null; }
-    var canvas = wrap.querySelector('canvas'), stage = wrap.querySelector('.fx-globe-stage');
-    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var pts = tours.map(cityCoords);
-    // Globe angles that put a lat/lng in the middle (cobe's convention).
-    var aim = function(c) { return { phi: Math.PI - (c[1] * Math.PI / 180 - Math.PI / 2), theta: c[0] * Math.PI / 180 * 0.6 }; };
-    var home = aim([47, 8]);
-    var phi = home.phi, theta = home.theta, target = null, focus = -1, drag = null, alive = true, globe = null;
-    import('https://cdn.jsdelivr.net/npm/cobe@0.6.3/+esm').then(function(mod) {
-      if (!alive) return;
-      var size = stage.clientWidth || 480;
-      globe = mod.default(canvas, {
-        devicePixelRatio: Math.min(2, window.devicePixelRatio || 1), width: size * 2, height: size * 2,
-        phi: phi, theta: theta, dark: 1, diffuse: 1.25, mapSamples: 18000, mapBrightness: 5.5, mapBaseBrightness: 0.03,
-        baseColor: [0.16, 0.18, 0.62], markerColor: [0, 0.95, 1], glowColor: [0.42, 0.43, 0.95], scale: 1.05,
-        markers: pts.map(function(c, i) { return c ? { location: c, size: 0.045 } : null; }).filter(Boolean),
-        onRender: function(state) {
-          // Never drift away from Europe: sway gently around it; hovering a
-          // stop turns to that stop instead.
-          var goal = target || (drag ? null : { phi: home.phi + (reduce ? 0 : Math.sin(performance.now() / 4000) * 0.22), theta: home.theta });
-          if (goal) { phi += (goal.phi - phi) * (target ? 0.08 : 0.03); theta += (goal.theta - theta) * 0.05; }
-          state.phi = phi; state.theta = theta;
-          state.width = stage.clientWidth * 2; state.height = stage.clientWidth * 2;
-          state.markers = pts.map(function(c, i) { return c ? { location: c, size: i === focus ? 0.11 : 0.045 } : null; }).filter(Boolean);
-        }
-      });
-      requestAnimationFrame(function() { canvas.classList.add('is-ready'); });
-    }).catch(function() { stage.classList.add('is-unavailable'); });
-    // Hover/focus a stop: turn to it. Leaving the list: drift on.
-    var list = wrap.querySelector('.fx-globe-list');
-    var pick = function(e) {
-      var b = e.target.closest && e.target.closest('.fx-globe-stop'); if (!b) return;
-      var i = +b.dataset.gi, c = pts[i]; if (!c) return;
-      focus = i; target = aim(c);
-      // shortest way round
-      var k = Math.round((phi - target.phi) / (2 * Math.PI)); target.phi += k * 2 * Math.PI;
-    };
-    list.addEventListener('mouseover', pick); list.addEventListener('focusin', pick);
-    list.addEventListener('mouseleave', function() { target = null; focus = -1; });
-    // Drag to turn.
-    canvas.addEventListener('pointerdown', function(e) { drag = { x: e.clientX, y: e.clientY, phi: phi, theta: theta }; target = null; canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', function(e) {
-      if (!drag) return;
-      phi = drag.phi + (e.clientX - drag.x) / 200; theta = Math.max(-0.6, Math.min(0.9, drag.theta + (e.clientY - drag.y) / 300));
-    });
-    ['pointerup', 'pointercancel'].forEach(function(t) { canvas.addEventListener(t, function() { drag = null; }); });
-    globeCleanup = function() { alive = false; if (globe) globe.destroy(); };
-  }
 
   function renderHeroMedia() {
     var el = document.getElementById('heroMedia');
