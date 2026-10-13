@@ -7645,7 +7645,7 @@ var CLUBS = [
       [upcoming ? 'DEADLINE' : 'DIVISIONS', upcoming ? dlTxt : (t.competitions || []).map(function(x) { return x === 'Men' ? "MEN'S" : x === 'Women' ? "WOMEN'S" : x.toUpperCase(); }).join(' & ')],
       ['TEAMS', info && info.teams ? String(info.teams) : '–']
     ];
-    if (!upcoming) stats[0] = ['FORMAT', '2 VS 2'];
+    if (!upcoming) stats.shift();
     var colW = (lw - 44) / stats.length;
     g.textAlign = 'left';
     stats.forEach(function(st, i) {
