@@ -2212,6 +2212,10 @@
      admin edit mode is on. */
   .nav-user-dropdown .edit-pencil { display:none; }
   body.admin-edit-mode .nav-user-dropdown .edit-pencil { display:inline-flex; width:auto; padding:0; }
+  /* edit mode: the nav pencils float as small badges on the corner of each
+     label instead of taking space, so the glass bar keeps its width */
+  :root[data-design="ig"] .nav-inner .edit-text-wrap { position:relative; }
+  :root[data-design="ig"] .nav-inner .edit-pencil { position:absolute; top:-9px; right:-12px; width:17px; height:17px; font-size:8px; margin:0; z-index:2; box-shadow:0 2px 6px rgba(3,4,40,0.4); }
 </style>
 </head>
 <body>
