@@ -2055,6 +2055,34 @@
   /* Ball hop when a new section arrives */
   .ball-ad.is-hop .ball-ad-canvas { animation:ballHop .7s cubic-bezier(.3,1.6,.5,1); }
   @keyframes ballHop { 0% { translate:0 0; } 35% { translate:0 -34px; } 70% { translate:0 2px; } 100% { translate:0 0; } }
+
+  /* ============ FX: stats strip ============ */
+  .fx-stats { padding-top:46px; padding-bottom:10px; }
+  .fx-stats-row { display:grid; grid-template-columns:repeat(4, 1fr); }
+  .fx-stat { display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:4px 22px; border-left:1px solid rgba(0,242,255,0.3); }
+  .fx-stat-num { font-family:'Bebas Neue',sans-serif; font-size:clamp(54px, 7vw, 92px); line-height:0.9; color:#fff; font-variant-numeric:tabular-nums; }
+  .fx-stat-label { font-size:12px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--cyan); }
+  @media (max-width:640px) { .fx-stats-row { grid-template-columns:repeat(2, 1fr); row-gap:22px; } .fx-stat { padding:2px 14px; } }
+
+  /* ============ FX: season timeline ============ */
+  .fx-tl { position:relative; overflow-x:auto; scrollbar-width:none; padding:26px 4px 8px; scroll-snap-type:x proximity; }
+  .fx-tl-track { position:relative; display:flex; width:max-content; min-width:100%; justify-content:space-between; }
+  .fx-tl::-webkit-scrollbar { display:none; }
+  .fx-tl-line { position:absolute; left:60px; right:60px; top:7px; height:2px; background:rgba(255,255,255,0.18); }
+  .fx-tl-progress { position:absolute; left:0; top:0; bottom:0; width:100%; background:var(--cyan); box-shadow:0 0 12px rgba(0,242,255,0.6); transform-origin:left; transform:scaleX(0); transition:transform 1.6s cubic-bezier(.16,1,.3,1); }
+  .fx-tl.is-drawn .fx-tl-progress { transform:scaleX(var(--p)); }
+  .fx-tl-stop { position:relative; flex:0 0 120px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:0 4px 4px; background:none; border:none; color:#fff; cursor:pointer; scroll-snap-align:center; text-align:center; }
+  .fx-tl-dot { width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,0.45); background:#0b0d63; margin-bottom:10px; transition:transform .3s; }
+  .fx-tl-stop.is-past .fx-tl-dot { background:var(--cyan); border-color:var(--cyan); }
+  .fx-tl-stop.is-next .fx-tl-dot { border-color:var(--cyan); box-shadow:0 0 0 0 rgba(0,242,255,0.6); animation:tlPulse 1.8s ease-out infinite; }
+  @keyframes tlPulse { 70% { box-shadow:0 0 0 12px rgba(0,242,255,0); } 100% { box-shadow:0 0 0 0 rgba(0,242,255,0); } }
+  .fx-tl-stop:hover .fx-tl-dot, .fx-tl-stop:focus-visible .fx-tl-dot { transform:scale(1.3); }
+  .fx-tl-stop:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; border-radius:8px; }
+  .fx-tl-date { font-size:11px; font-weight:700; letter-spacing:0.08em; color:rgba(255,255,255,0.6); text-transform:uppercase; }
+  .fx-tl-city { font-family:'Bebas Neue',sans-serif; font-size:24px; line-height:1; }
+  .fx-tl-tier { font-size:10px; font-weight:800; letter-spacing:0.14em; color:var(--cyan); }
+  .fx-tl-stop.is-past .fx-tl-city { opacity:0.7; }
+  @media (prefers-reduced-motion: reduce) { .fx-tl-progress { transition:none; } .fx-tl-stop.is-next .fx-tl-dot { animation:none; } }
 </style>
 </head>
 <body>
@@ -2328,6 +2356,9 @@
     // Logged-in users whose email is in this list get the on-page editor
     // (click photos/text to swap them) — everyone else just sees the site.
     ADMIN_EMAILS: ['daviddukovski@gmail.com'],
+    // Optional landing extras, switched on by name. Each can also be tried
+    // without changing this list via the address: ?fx=stats,timeline
+    FX: [],
     // Visual design. 'ig' = the look of the League of Champions Instagram
     // graphics (metallic glass tiles, navy→lavender, always dark). Set to null
     // to switch back to the previous design — everything 'ig' lives in CSS
@@ -4245,6 +4276,8 @@ var CLUBS = [
     'landing.tourTitle': 'The {year} Tour',
     'landing.allTournaments': 'All tournaments',
     'landing.leadersTitle': 'Ranking leaders {year}',
+    'fx.statTournaments': 'Tournaments', 'fx.statPlayers': 'Ranked players', 'fx.statClubs': 'Clubs', 'fx.statCountries': 'Countries',
+    'fx.timelineTitle': 'The season',
     'landing.fullRanking': 'Full ranking',
     'landing.eyebrow': 'Season 2026',
     'landing.headline': "Europe's Footvolley Elite. One Tour.",
@@ -4404,7 +4437,7 @@ var CLUBS = [
       'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen', 'ad.ballCaption': 'Offizieller Ball', 'ad.ballCta': 'Jetzt kaufen →', 'ad.ballAria': 'Mikasa FT-5, offizieller Footvolley-Ball – im Shop kaufen (öffnet in neuem Tab)', 'home.layoutSwipe': 'Swipe', 'home.layoutRing': 'Ring', 'home.layoutOverview': 'Übersicht',
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
-      'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'landing.fullRanking': 'Zum Ranking',
+      'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'fx.statTournaments': 'Turniere', 'fx.statPlayers': 'Spieler im Ranking', 'fx.statClubs': 'Vereine', 'fx.statCountries': 'Länder', 'fx.timelineTitle': 'Die Saison', 'landing.fullRanking': 'Zum Ranking',
       'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
       'demoBanner.text': 'DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)',
       'landing.eyebrow': 'Saison 2026', 'landing.headline': 'Europas Footvolley-Elite. Eine Tour.',
@@ -5296,6 +5329,31 @@ var CLUBS = [
   // cards and the current ranking leaders. Built only from data the site
   // already has (tournaments + ranking rows).
   var landingLayout = storedLayout('loc_landing_layout', 'ring');
+  function fxOn(name) {
+    var q = (/[?&]fx=([^&#]*)/.exec(location.search) || [])[1];
+    var list = (CONFIG.FX || []).concat(q ? decodeURIComponent(q).split(',') : []);
+    return list.indexOf(name) !== -1;
+  }
+  // Numbers count up once when they scroll into view (instant with reduced motion).
+  function wireCountUps(root) {
+    var els = root.querySelectorAll('[data-count-to]');
+    if (!els.length) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var run = function(el) {
+      var to = +el.dataset.countTo, t0 = performance.now(), dur = 1400;
+      if (reduce) { el.textContent = to; return; }
+      (function step(t) {
+        var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = Math.round(to * e);
+        if (k < 1) requestAnimationFrame(step);
+      })(t0);
+    };
+    if (!('IntersectionObserver' in window)) { els.forEach(run); return; }
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(en) { if (en.isIntersecting) { io.unobserve(en.target); run(en.target); } });
+    }, { threshold: 0.4 });
+    els.forEach(function(el) { io.observe(el); });
+  }
   function renderLandingExtras() {
     var el = document.getElementById('landingExtras');
     if (!el) return;
@@ -5348,7 +5406,38 @@ var CLUBS = [
     }
     var leadersHtml = leaders('men') + leaders('women');
 
-    el.innerHTML = ticker +
+    // Stats strip: real counts only (season tournaments, ranked players, clubs, countries).
+    var statsHtml = '';
+    if (fxOn('stats')) {
+      var nPlayers = rYear ? rankingRows(rYear, 'men', 'players').length + rankingRows(rYear, 'women', 'players').length : 0;
+      var nCountries = Object.keys(tours.reduce(function(m, t) { m[t.country] = 1; return m; }, {})).length;
+      var stat = function(n, label) { return n ? '<div class="fx-stat"><span class="fx-stat-num" data-count-to="' + n + '">' + n + '</span><span class="fx-stat-label">' + esc(label) + '</span></div>' : ''; };
+      statsHtml = '<section class="landing-section fx-stats"><div class="container"><div class="fx-stats-row">' +
+        stat(tours.length, uiText('fx.statTournaments')) + stat(nPlayers, uiText('fx.statPlayers')) +
+        stat(CLUBS.length, uiText('fx.statClubs')) + stat(nCountries, uiText('fx.statCountries')) +
+      '</div></div></section>';
+    }
+
+    // Season timeline: every stop of the season on one line; past stops filled,
+    // the next one pulsing. Each stop opens its tournament.
+    var timelineHtml = '';
+    if (fxOn('timeline') && tours.length) {
+      timelineHtml = '<section class="landing-section fx-timeline"><div class="container">' +
+        '<div class="landing-section-head"><h2>' + esc(uiText('fx.timelineTitle')) + '</h2></div>' +
+        '<div class="fx-tl"><div class="fx-tl-track" role="list"><div class="fx-tl-line" aria-hidden="true"><span class="fx-tl-progress" style="--p:' +
+          (tours.filter(function(t) { return t.status === 'past'; }).length / Math.max(1, tours.length - 1)).toFixed(3) + '"></span></div>' +
+        tours.map(function(t) {
+          var state = t.id === nextId ? 'is-next' : t.status === 'past' ? 'is-past' : 'is-future';
+          return '<button type="button" role="listitem" class="fx-tl-stop ' + state + '" data-route="event/' + esc(t.id) + '">' +
+            '<span class="fx-tl-dot" aria-hidden="true"></span>' +
+            '<span class="fx-tl-date">' + esc(t.dateLabel) + '</span>' +
+            '<span class="fx-tl-city">' + esc(t.city) + '</span>' +
+            '<span class="fx-tl-tier">LoC ' + esc(t.tier) + '</span></button>';
+        }).join('') +
+        '</div></div></div></section>';
+    }
+
+    el.innerHTML = ticker + statsHtml +
       (tours.length ? '<section class="landing-section"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.tourTitle', { year: season })) + '</h2>' +
         '<div class="landing-head-actions">' +
@@ -5357,11 +5446,21 @@ var CLUBS = [
           '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button>' +
         '</div></div>' +
         '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div></div></section>' : '') +
+      timelineHtml +
       (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
         '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '');
 
+    wireCountUps(el);
+    // Draw the season line once it scrolls into view.
+    var tl = el.querySelector('.fx-tl');
+    if (tl && 'IntersectionObserver' in window) {
+      var tlIO = new IntersectionObserver(function(en) { if (en[0].isIntersecting) { tl.classList.add('is-drawn'); tlIO.disconnect(); } }, { threshold: 0.3 });
+      tlIO.observe(tl);
+      var nx = tl.querySelector('.is-next');
+      if (nx) requestAnimationFrame(function() { tl.scrollLeft = Math.max(0, nx.offsetLeft - tl.clientWidth / 2); });
+    } else if (tl) tl.classList.add('is-drawn');
     // Start the rail at the next tournament instead of the season opener.
     var nextCard = el.querySelector('.tour-card.is-next, .tcard.is-next') || (pick && !pick.upcoming ? el.querySelector('.tour-rail > :last-child') : null);
     // Measured after setView() has unhidden the landing view.
