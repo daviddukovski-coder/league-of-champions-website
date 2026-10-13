@@ -2248,6 +2248,8 @@
   @media (max-width:760px) { .venue-wrap.has-map { grid-template-columns:1fr; } }
 
   #partnerSeek:empty { display:none; }
+  .venue-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .venue-off { margin:18px 0; }
   #partnerSeek { margin:34px 0 10px; }
   .ps-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
   .ps-head h2 { margin:0; display:flex; align-items:center; gap:10px; }
@@ -7455,6 +7457,10 @@ var CLUBS = [
       ['venueParking', 'detail.venueParkingLabel', 'parking info', t.venueParking],
       ['venueChanging', 'detail.venueChangingLabel', 'changing rooms info', t.venueChanging]
     ];
+    // Off by default per tournament; the admin switches it on when needed.
+    var toggle = '<button type="button" class="btn btn-outline btn-sm admin-only-inline venue-toggle-btn" data-toggle-venue="' + esc(t.id) + '">' +
+      (t.venueEnabled ? 'Hide venue section' : 'Show venue section') + '</button>';
+    if (!t.venueEnabled) return isAdmin ? '<div class="venue-off">' + toggle + '</div>' : '';
     var visible = isAdmin ? fields : fields.filter(function(f) { return f[3]; });
     if (!visible.length) return '';
     var rows = visible.map(function(f) {
@@ -7467,7 +7473,7 @@ var CLUBS = [
       ? '<div class="venue-map"><iframe title="' + esc(t.name) + ' map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=' + encodeURIComponent(addr) + '&z=15&output=embed"></iframe>' +
         '<a class="btn btn-cyan btn-sm venue-route" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener">' + esc(uiText('detail.directions')) + '</a></div>'
       : '';
-    return '<h2>' + uiEdit('detail.venueHeading') + '</h2><div class="venue-wrap' + (map ? ' has-map' : '') + '">' + map + '<div class="detail-info-grid">' + rows + '</div></div>';
+    return '<div class="venue-head"><h2>' + uiEdit('detail.venueHeading') + '</h2>' + toggle + '</div><div class="venue-wrap' + (map ? ' has-map' : '') + '">' + map + '<div class="detail-info-grid">' + rows + '</div></div>';
   }
 
   var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'venue', 'registerActions', 'partners', 'teams'];
@@ -7593,6 +7599,7 @@ var CLUBS = [
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
+      wireVenueToggle(t);
       wireLiveBracketDisable(t);
       wireTournamentPhaseControl(t);
       wireTournamentShare(t);
@@ -7617,6 +7624,7 @@ var CLUBS = [
     initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
     wireGoRegisterBtn(t);
     wireLiveToggle(t);
+    wireVenueToggle(t);
     wireLiveBracketDisable(t);
     wireTournamentPhaseControl(t);
 
@@ -7733,6 +7741,17 @@ var CLUBS = [
     var toggle = '<button type="button" class="btn btn-outline live-toggle-btn admin-only-inline" data-toggle-live="' + esc(t.id) + '">' +
       (t.liveEnabled ? 'Hide LIVE button' : 'Show LIVE button') + '</button>';
     return live + toggle;
+  }
+
+  function wireVenueToggle(t) {
+    var btn = document.querySelector('[data-toggle-venue="' + t.id + '"]');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      if (!isAdmin) return;
+      saveContentField(t.id, 'venueEnabled', !t.venueEnabled).then(function() {
+        showDetail(effectiveTournament(tourById(t.id)));
+      });
+    });
   }
 
   function wireLiveToggle(t) {
