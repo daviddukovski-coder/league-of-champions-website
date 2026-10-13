@@ -2005,6 +2005,13 @@
     .rc-item { width:240px; left:-120px; }
     .rc { -webkit-mask-image:none; mask-image:none; }
   }
+
+  /* Landing tour head: layout toggle next to "All tournaments" */
+  .landing-head-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+  .landing-head-actions .layout-toggle { margin-left:0; }
+  :root[data-design="ig"] .tour-overview { padding:16px 0 10px; }
+  :root[data-design="ig"] .tour-overview > .tcard { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 35ms); }
+  @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tour-overview > .tcard { animation:none; } }
 </style>
 </head>
 <body>
@@ -2076,6 +2083,7 @@
         <div class="layout-toggle" id="tournamentLayoutToggle" role="group" aria-label="Tournament layout">
           <span class="layout-toggle-thumb" aria-hidden="true"></span>
           <button type="button" data-layout="rail" aria-pressed="true" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span class="layout-toggle-label">Swipe</span></button>
+          <button type="button" data-layout="ring" aria-pressed="false" aria-label="Ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="4.5"/><rect x="9" y="7.5" width="6" height="8" rx="1.2"/></svg><span class="layout-toggle-label">Ring</span></button>
           <button type="button" data-layout="grid" aria-pressed="false" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="layout-toggle-label">Overview</span></button>
         </div>
       </div>
@@ -4180,6 +4188,7 @@ var CLUBS = [
     'ad.ballCta': 'Shop now →',
     'ad.ballAria': 'Mikasa FT-5 official footvolley ball – buy it in the shop (opens in a new tab)',
     'home.layoutSwipe': 'Swipe',
+    'home.layoutRing': 'Ring',
     'home.layoutOverview': 'Overview',
     'home.inOneDay': 'Tomorrow',
     'landing.nextEvent': 'Next tournament',
@@ -4349,7 +4358,7 @@ var CLUBS = [
   // deliberately omitted so they always fall through to UI_DEFAULTS.
   var TRANSLATIONS = {
     de: {
-      'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen', 'ad.ballCaption': 'Offizieller Ball', 'ad.ballCta': 'Jetzt kaufen →', 'ad.ballAria': 'Mikasa FT-5, offizieller Footvolley-Ball – im Shop kaufen (öffnet in neuem Tab)', 'home.layoutSwipe': 'Karussell', 'home.layoutOverview': 'Übersicht',
+      'home.inDays': 'In {n} Tagen', 'home.inOneDay': 'Morgen', 'ad.ballCaption': 'Offizieller Ball', 'ad.ballCta': 'Jetzt kaufen →', 'ad.ballAria': 'Mikasa FT-5, offizieller Footvolley-Ball – im Shop kaufen (öffnet in neuem Tab)', 'home.layoutSwipe': 'Swipe', 'home.layoutRing': 'Ring', 'home.layoutOverview': 'Übersicht',
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
       'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'landing.fullRanking': 'Zum Ranking',
@@ -5203,6 +5212,7 @@ var CLUBS = [
   // Everything below the landing hero: a city ticker, the season's tour
   // cards and the current ranking leaders. Built only from data the site
   // already has (tournaments + ranking rows).
+  var landingLayout = storedLayout('loc_landing_layout', 'ring');
   function renderLandingExtras() {
     var el = document.getElementById('landingExtras');
     if (!el) return;
@@ -5249,7 +5259,11 @@ var CLUBS = [
     el.innerHTML = ticker +
       (tours.length ? '<section class="landing-section"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.tourTitle', { year: season })) + '</h2>' +
-        '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button></div>' +
+        '<div class="landing-head-actions">' +
+          (igDesign ? '<div class="layout-toggle" id="landingLayoutToggle" role="group" aria-label="Tournament layout"><span class="layout-toggle-thumb" aria-hidden="true"></span>' +
+            document.getElementById('tournamentLayoutToggle').innerHTML.replace(/<span class="layout-toggle-thumb"[^>]*><\/span>/, '') + '</div>' : '') +
+          '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button>' +
+        '</div></div>' +
         '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div></div></section>' : '') +
       (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
@@ -5261,10 +5275,31 @@ var CLUBS = [
     // Measured after setView() has unhidden the landing view.
     var railEl = el.querySelector('.tour-rail.is-tickets');
     if (railEl) {
-      var cards = Array.prototype.map.call(railEl.children, function(c) { return c.outerHTML; });
-      var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
-      railEl.className = 'tour-round';
-      mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }) });
+      var toggleEl = el.querySelector('#landingLayoutToggle');
+      syncToggle(toggleEl, landingLayout);
+      if (toggleEl && !toggleEl.dataset.wired) {
+        toggleEl.dataset.wired = '1';
+        new ResizeObserver(function() { syncToggle(toggleEl, landingLayout); }).observe(toggleEl);
+        toggleEl.addEventListener('click', function(e) {
+          var b = e.target.closest('button[data-layout]');
+          if (!b || b.dataset.layout === landingLayout) return;
+          landingLayout = b.dataset.layout;
+          try { localStorage.setItem('loc_landing_layout', landingLayout); } catch (err) {}
+          renderLandingExtras();
+          var t2 = document.getElementById('landingLayoutToggle'); if (t2) t2.querySelector('[aria-pressed="true"]').focus();
+        });
+      }
+      if (landingLayout === 'ring') {
+        var cards = Array.prototype.map.call(railEl.children, function(c) { return c.outerHTML; });
+        var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
+        railEl.className = 'tour-round';
+        mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }) });
+      } else if (landingLayout === 'grid') {
+        railEl.className = 'tournament-grid is-overview tour-overview';
+        Array.prototype.forEach.call(railEl.children, function(c, i) { c.style.setProperty('--i', i); });
+      } else {
+        wireTicketRail(railEl, nextCard);
+      }
     }
     else if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
   }
@@ -5560,22 +5595,30 @@ var CLUBS = [
   }
   // Swipe rail or an overview of every ticket; the choice is remembered per
   // browser (a convenience only — the page works the same without it).
-  var tournamentLayout = 'rail';
-  try { if (localStorage.getItem('loc_tournament_layout') === 'grid') tournamentLayout = 'grid'; } catch (e) {}
+  // Three layouts: 'rail' (swipe), 'ring' (round carousel), 'grid' (overview).
+  // Tournaments page defaults to swipe, the landing page to the ring; each
+  // remembers its own choice per browser.
+  var LAYOUTS = ['rail', 'ring', 'grid'];
+  function storedLayout(key, def) {
+    try { var v = localStorage.getItem(key); return LAYOUTS.indexOf(v) !== -1 ? v : def; } catch (e) { return def; }
+  }
+  var tournamentLayout = storedLayout('loc_tournament_layout', 'rail');
   var layoutToggle = document.getElementById('tournamentLayoutToggle');
-  function syncLayoutToggle() {
-    if (!layoutToggle) return;
-    var btns = layoutToggle.querySelectorAll('button[data-layout]'), on = null;
-    btns.forEach(function(b) {
-      var p = b.dataset.layout === tournamentLayout; b.setAttribute('aria-pressed', String(p)); if (p) on = b;
+  var LAYOUT_LABEL_KEYS = { rail: 'home.layoutSwipe', ring: 'home.layoutRing', grid: 'home.layoutOverview' };
+  function syncToggle(toggle, value) {
+    if (!toggle) return;
+    var on = null;
+    toggle.querySelectorAll('button[data-layout]').forEach(function(b) {
+      var p = b.dataset.layout === value; b.setAttribute('aria-pressed', String(p)); if (p) on = b;
       // Plain translated text (no inline-edit pencil: a button inside a button).
-      var txt = uiText(b.dataset.layout === 'grid' ? 'home.layoutOverview' : 'home.layoutSwipe');
+      var txt = uiText(LAYOUT_LABEL_KEYS[b.dataset.layout]);
       b.setAttribute('aria-label', txt);
       var lab = b.querySelector('.layout-toggle-label'); if (lab) lab.textContent = txt;
     });
-    var thumb = layoutToggle.querySelector('.layout-toggle-thumb');
+    var thumb = toggle.querySelector('.layout-toggle-thumb');
     if (on && on.offsetWidth) { thumb.style.width = on.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + (on.offsetLeft - 4) + 'px)'; }
   }
+  function syncLayoutToggle() { syncToggle(layoutToggle, tournamentLayout); }
   if (layoutToggle) {
     layoutToggle.addEventListener('click', function(e) {
       var b = e.target.closest('button[data-layout]');
@@ -5837,6 +5880,8 @@ var CLUBS = [
     function tick(t) {
       raf = null;
       if (!alive) return;
+      // Replaced by another layout: stop for good.
+      if (!root.isConnected) { destroy(); return; }
       var dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016;
       last = t;
       if (target != null) {
@@ -5917,11 +5962,12 @@ var CLUBS = [
     var onVis = function() { if (!document.hidden) start(); };
     document.addEventListener('visibilitychange', onVis);
     layout(); paint(); start();
-    var api = { host: host, root: root, goTo: goTo, destroy: function() {
+    function destroy() {
       alive = false; ro.disconnect();
       window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
       document.removeEventListener('visibilitychange', onVis);
-    } };
+    }
+    var api = { host: host, root: root, goTo: goTo, destroy: destroy };
     roundCarousels.push(api);
     return api;
   }
@@ -5991,7 +6037,7 @@ var CLUBS = [
       list = allTournaments().filter(function(t) { return t.status === filter; });
     }
     list = list.sort(function(a,b){ return a.dateSort.localeCompare(b.dateSort); }).map(effectiveTournament);
-    var igRound = document.documentElement.getAttribute('data-design') === 'ig' && tournamentLayout === 'rail';
+    var igRound = document.documentElement.getAttribute('data-design') === 'ig' && tournamentLayout === 'ring';
     if (igRound) {
       grid.classList.remove('is-rail', 'is-overview');
       grid.classList.add('is-round');
