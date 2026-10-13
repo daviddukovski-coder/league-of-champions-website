@@ -2303,6 +2303,50 @@
   .myteam-clear { width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); background:none; color:rgba(255,255,255,0.7); cursor:pointer; }
   .myteam-clear:hover, .myteam-clear:focus-visible { color:#fff; border-color:var(--cyan); }
   @media (max-width:600px) { .myteam-bar { flex-wrap:wrap; } .myteam-actions { width:100%; justify-content:space-between; } }
+
+  /* Court display: full screen board */
+  body.court-mode .nav, body.court-mode footer, body.court-mode .ball-ad { display:none !important; }
+  #view-court { min-height:100dvh; padding:clamp(14px, 2.4vw, 32px); }
+  .cd-top { display:flex; align-items:center; gap:18px; margin-bottom:clamp(14px, 2vw, 28px); }
+  .cd-brand { display:flex; align-items:center; gap:14px; color:#fff; text-decoration:none; min-width:0; }
+  .cd-brand span { display:flex; flex-direction:column; min-width:0; }
+  .cd-brand strong { font-family:'Bebas Neue', sans-serif; font-size:clamp(24px, 3vw, 44px); letter-spacing:0.03em; line-height:1; font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cd-brand em { font-style:normal; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cyan); font-weight:700; }
+  .cd-clock { margin-left:auto; font-family:'Bebas Neue', sans-serif; font-size:clamp(30px, 4vw, 60px); line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+  .cd-exit { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.7); text-decoration:none; flex-shrink:0; }
+  .cd-exit:hover, .cd-exit:focus-visible { color:#fff; border-color:var(--cyan); }
+  .cd-grid { display:grid; gap:clamp(14px, 2vw, 28px); grid-template-columns:repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+  .cd-court { display:flex; flex-direction:column; gap:clamp(12px, 1.6vw, 20px); min-width:0; }
+  .cd-court-head { display:flex; align-items:center; gap:12px; }
+  .cd-court-name { font-family:'Bebas Neue', sans-serif; font-size:clamp(26px, 3vw, 46px); letter-spacing:0.04em; color:#fff; line-height:1; }
+  .cd-court-name::after { content:''; display:block; width:48px; height:4px; margin-top:8px; border-radius:2px; background:var(--cyan); }
+  .cd-kicker { display:inline-flex; align-items:center; gap:8px; font:800 clamp(11px, 1vw, 14px) 'Poppins', sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:var(--cyan); }
+  .cd-now { padding:clamp(18px, 2.4vw, 36px); border-radius:calc(var(--tk-radius, 14px) + 6px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.35)); box-shadow:var(--tk-shadow, none); display:flex; flex-direction:column; gap:clamp(8px, 1vw, 14px); }
+  .cd-now.is-live { box-shadow:0 0 0 2px #ff3b5c, 0 18px 50px rgba(255,59,92,0.22); }
+  .cd-now.is-live .cd-kicker { color:#ff3b5c; }
+  .cd-empty { align-items:center; justify-content:center; min-height:200px; }
+  .cd-now-top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .cd-label { font-size:clamp(12px, 1vw, 15px); color:rgba(255,255,255,0.65); }
+  .cd-live-dot { width:10px; height:10px; border-radius:50%; background:#ff3b5c; animation:navLivePulse 1.6s ease-out infinite; }
+  .cd-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .cd-team { display:flex; align-items:center; gap:clamp(10px, 1.2vw, 18px); min-width:0; }
+  .cd-team .club-avatar { width:clamp(40px, 4.4vw, 72px); height:clamp(40px, 4.4vw, 72px); flex-shrink:0; }
+  .cd-team-name { font-family:'Bebas Neue', sans-serif; font-size:clamp(28px, 3.6vw, 58px); line-height:0.98; letter-spacing:0.02em; color:#fff; min-width:0; overflow-wrap:anywhere; }
+  .cd-team-name.tbd { color:rgba(255,255,255,0.45); }
+  .cd-row.is-winner .cd-team-name { color:var(--cyan); }
+  .cd-sets { display:flex; gap:clamp(6px, 0.8vw, 12px); flex-shrink:0; }
+  .cd-set { min-width:1.4em; text-align:center; font-family:'Bebas Neue', sans-serif; font-size:clamp(34px, 4.6vw, 76px); line-height:1; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums; }
+  .cd-set.is-current { color:#fff; background:rgba(255,59,92,0.18); border-radius:10px; padding:0 6px; }
+  .cd-vs { font:700 12px 'Poppins', sans-serif; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.4); padding-left:clamp(50px, 5.6vw, 90px); }
+  .cd-custom { font-family:'Bebas Neue', sans-serif; font-size:clamp(32px, 4vw, 64px); color:#fff; line-height:1; }
+  .cd-next ul { list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .cd-next li { display:grid; grid-template-columns:auto 1fr; gap:4px 14px; align-items:baseline; padding:12px 16px; border-radius:var(--tk-radius, 14px); background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); }
+  .cd-time { font-family:'Bebas Neue', sans-serif; font-size:clamp(22px, 2vw, 32px); color:var(--cyan); line-height:1; font-variant-numeric:tabular-nums; }
+  .cd-next-teams { font-size:clamp(14px, 1.3vw, 19px); font-weight:600; color:#fff; min-width:0; }
+  .cd-next-teams em { font-style:normal; color:rgba(255,255,255,0.45); font-weight:500; margin:0 4px; }
+  .cd-next-label { grid-column:2; font-size:12px; color:rgba(255,255,255,0.55); }
+  .court-display-link { display:inline-grid; place-items:center; width:28px; height:28px; margin-left:8px; border-radius:50%; vertical-align:middle; color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.2); transition:color .2s, border-color .2s; }
+  .court-display-link:hover, .court-display-link:focus-visible { color:var(--cyan); border-color:var(--cyan); }
 </style>
 </head>
 <body>
@@ -2421,6 +2465,10 @@
       <button class="back-btn" data-back="detail" data-ui-key="register.backLink">← Back to Tournament</button>
       <div id="liveContent"></div>
     </div>
+  </section>
+
+  <section id="view-court" class="view" hidden>
+    <div id="courtContent"></div>
   </section>
 
   <section id="view-schedule" class="view" hidden>
@@ -4533,6 +4581,11 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'court.open': 'Court display (for a screen at the court)',
+    'court.upNext': 'Up next',
+    'court.done': 'All matches played',
+    'court.nothing': 'No matches on this court',
+    'court.exit': 'Back to schedule',
     'myteam.follow': 'Follow your team…',
     'myteam.liveNow': 'Live now',
     'myteam.next': 'Next',
@@ -4689,7 +4742,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -5400,9 +5453,11 @@ var CLUBS = [
   })();
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','court','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
+    document.body.classList.toggle('court-mode', view === 'court');
+    if (view !== 'court') { clearInterval(courtClockTimer); courtClockTimer = null; }
     document.querySelectorAll('.nav-link').forEach(function(l) {
       l.classList.toggle('active', !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
     });
@@ -5448,6 +5503,8 @@ var CLUBS = [
         showLive(t, p[3] && decodeURIComponent(p[3]));
       } else if (p[2] === 'schedule') {
         showSchedule(t);
+      } else if (p[2] === 'court') {
+        showCourtDisplay(t, p[3] ? parseInt(p[3], 10) : null, h.query.day ? parseInt(h.query.day, 10) : null);
       } else if (p[2] === 'exchange') {
         if (!currentUser) { pendingPath = h.parts.join('/'); navigate('login'); return; }
         showExchange(t);
@@ -11688,6 +11745,123 @@ var CLUBS = [
   /* ==================================================================
      SCHEDULE
      ================================================================== */
+  /* ==================================================================
+     COURT DISPLAY (#/event/:id/court/:n, or /court for every court): a
+     full-screen board for a TV/tablet next to the court. The match being
+     played big with its live score, the next ones below. Re-renders on
+     every bracket change (Firestore snapshot) and ticks a clock.
+     ================================================================== */
+  var courtClockTimer = null, courtDisplayCourt = null, courtDisplayDayNo = null;
+  function showCourtDisplay(t, courtNo, dayNo) {
+    courtDisplayDayNo = dayNo;
+    var el = document.getElementById('courtContent');
+    el.innerHTML = '<p class="empty-note" style="padding:40px;">Loading …</p>';
+    courtDisplayCourt = courtNo;
+    setView('court');
+    loadBracket(t.id).then(function(bracket) {
+      currentBracket = bracket;
+      currentBracketTournament = t;
+      renderCourtDisplay();
+      clearInterval(courtClockTimer);
+      courtClockTimer = setInterval(function() {
+        var c = document.getElementById('courtClock');
+        if (c) c.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }, 15000);
+      if (!AUTH_DEMO_MODE) {
+        bracketUnsub = firebase.firestore().collection('brackets').doc(t.id).onSnapshot(function(doc) {
+          currentBracket = normalizeBracket(doc.exists ? doc.data() : null);
+          renderCourtDisplay();
+        });
+      }
+    });
+  }
+  // The day to show: the first one that still has something unplayed.
+  function courtDisplayDay(bracket) {
+    var days = (bracket.schedule && bracket.schedule.days) || [];
+    if (courtDisplayDayNo && days[courtDisplayDayNo - 1]) return days[courtDisplayDayNo - 1];
+    for (var d = 0; d < days.length; d++) {
+      var open = (days[d].courts || []).some(function(items) { return items.some(function(it) { return it.type === 'match' && !scheduleItemHasResult(it); }); });
+      if (open) return days[d];
+    }
+    return days[days.length - 1] || null;
+  }
+  function courtItemTeams(item) {
+    if (item.type === 'external') return { a: item.teamA, b: item.teamB, sets: [], label: item.competition };
+    if (item.type !== 'match') return null;
+    var i = tickerMatchInfo(currentBracket, item.matchId);
+    if (!i) return null;
+    var name = function(id) { var tm = id && findBracketTeam(currentBracket, id); return tm || null; };
+    return { a: name(i.a), b: name(i.b), sets: i.sets, winner: i.winner, live: i.live, label: [divisionWord(i.competition || ''), i.label].filter(Boolean).join(' · '), aId: i.a, bId: i.b };
+  }
+  function courtTeamHtml(team, big) {
+    if (!team) return '<div class="cd-team"><span class="cd-team-name tbd">TBD</span></div>';
+    if (typeof team === 'string') return '<div class="cd-team"><span class="cd-team-name">' + esc(team) + '</span></div>';
+    var parts = (team.name || '').split(' & ');
+    return '<div class="cd-team">' + clubAvatarHtml(findClub(team.club)) +
+      '<span class="cd-team-name" translate="no">' + (parts.length === 2 && big ? esc(parts[0]) + '<br>' + esc(parts[1]) : esc(team.name)) + '</span></div>';
+  }
+  function courtColumnHtml(day, ci, single) {
+    var items = (day.courts || [])[ci] || [];
+    var names = (currentBracket.schedule && currentBracket.schedule.courtNames) || [];
+    var courtName = names[ci] || uiFormat('schedule.court', { n: ci + 1 });
+    var cum = 0, timed = items.map(function(it) { var r = { it: it, time: addMinutesToTime(day.startTime, cum) }; cum += scheduleItemDuration(it); return r; })
+      .filter(function(r) { return r.it.type !== 'break'; });
+    // current = right after the last result (the schedule's "Now"); nothing
+    // scored yet = the first item; everything scored = done
+    var lastDone = -1;
+    timed.forEach(function(r, k) { if (scheduleItemHasResult(r.it)) lastDone = k; });
+    var curK = lastDone + 1 < timed.length ? lastDone + 1 : -1;
+    var head = '<div class="cd-court-head"><span class="cd-court-name">' + esc(courtName) + '</span>' + (single ? '' : '') + '</div>';
+    // all played: keep the last match up with its final score
+    var allDone = curK < 0;
+    if (allDone) { for (var lk = timed.length - 1; lk >= 0; lk--) if (timed[lk].it.type === 'match') { curK = lk; break; } }
+    if (curK < 0) return '<div class="cd-court">' + head + '<div class="cd-now cd-empty"><span class="cd-kicker">' + esc(uiText('court.nothing')) + '</span></div></div>';
+    var cur = timed[curK], info = cur.it.type === 'custom' ? null : courtItemTeams(cur.it);
+    var nowHtml;
+    if (!info) {
+      nowHtml = '<div class="cd-now"><span class="cd-kicker">' + esc(cur.time) + '</span><div class="cd-custom">' + esc(cur.it.label || '') + '</div></div>';
+    } else {
+      var setCols = function(idx) {
+        return (info.sets || []).map(function(st, si) {
+          var isCur = info.live && si === info.sets.length - 1;
+          return '<span class="cd-set' + (isCur ? ' is-current' : '') + '">' + esc(st[idx]) + '</span>';
+        }).join('');
+      };
+      var aWin = info.winner && info.winner === info.aId, bWin = info.winner && info.winner === info.bId;
+      nowHtml = '<div class="cd-now' + (info.live ? ' is-live' : '') + '">' +
+        '<div class="cd-now-top"><span class="cd-kicker">' + (info.live ? '<span class="cd-live-dot"></span>' + esc(uiText('myteam.liveNow')) : allDone ? esc(uiText('court.done')) : esc(uiText('schedule.now')) + ' · ' + esc(cur.time)) + '</span>' +
+          '<span class="cd-label">' + esc(info.label || '') + '</span></div>' +
+        '<div class="cd-row' + (aWin ? ' is-winner' : '') + '">' + courtTeamHtml(info.a, true) + '<div class="cd-sets">' + setCols(0) + '</div></div>' +
+        '<div class="cd-vs">vs</div>' +
+        '<div class="cd-row' + (bWin ? ' is-winner' : '') + '">' + courtTeamHtml(info.b, true) + '<div class="cd-sets">' + setCols(1) + '</div></div>' +
+      '</div>';
+    }
+    var next = allDone ? '' : timed.slice(curK + 1, curK + (single ? 4 : 3)).map(function(r) {
+      if (r.it.type === 'custom') return '<li><span class="cd-time">' + esc(r.time) + '</span><span class="cd-next-teams">' + esc(r.it.label || '') + '</span></li>';
+      var n = courtItemTeams(r.it); if (!n) return '';
+      var nm = function(x) { return x ? esc(typeof x === 'string' ? x : x.name) : 'TBD'; };
+      return '<li><span class="cd-time">' + esc(r.time) + '</span><span class="cd-next-teams">' + nm(n.a) + ' <em>vs</em> ' + nm(n.b) + '</span><span class="cd-next-label">' + esc(n.label || '') + '</span></li>';
+    }).join('');
+    return '<div class="cd-court">' + head + nowHtml +
+      (next ? '<div class="cd-next"><span class="cd-kicker">' + esc(uiText('court.upNext')) + '</span><ul>' + next + '</ul></div>' : '') + '</div>';
+  }
+  function renderCourtDisplay() {
+    var el = document.getElementById('courtContent');
+    var t = currentBracketTournament, bracket = currentBracket;
+    var day = courtDisplayDay(bracket);
+    var top = '<div class="cd-top">' +
+      '<a class="cd-brand" href="#/event/' + esc(t.id) + '/schedule" title="' + esc(uiText('court.exit')) + '"><img src="' + esc(BADGE_URI) + '" alt="" width="44" height="44"><span><strong>' + esc(t.name) + '</strong><em>' + esc(day ? day.label : '') + '</em></span></a>' +
+      '<span class="cd-clock" id="courtClock">' + esc(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) + '</span>' +
+      '<a class="cd-exit" href="#/event/' + esc(t.id) + '/schedule" aria-label="' + esc(uiText('court.exit')) + '">✕</a>' +
+    '</div>';
+    if (!day) { el.innerHTML = top + '<p class="empty-note" style="padding:40px;">' + esc(uiText('schedule.noDays')) + '</p>'; return; }
+    var n = dayCourtCount(day), courts = [];
+    if (courtDisplayCourt && courtDisplayCourt >= 1 && courtDisplayCourt <= n) courts = [courtDisplayCourt - 1];
+    else for (var i = 0; i < n; i++) courts.push(i);
+    el.innerHTML = top + '<div class="cd-grid cd-n' + courts.length + '">' + courts.map(function(ci) { return courtColumnHtml(day, ci, courts.length === 1); }).join('') + '</div>';
+    highlightChangedScores(el);
+  }
+
   function showSchedule(t) {
     var el = document.getElementById('scheduleContent');
     el.innerHTML = '<p class="empty-note">Loading …</p>';
@@ -12427,7 +12601,8 @@ var CLUBS = [
       var isEditMode = document.body.classList.contains('admin-edit-mode');
       var hasVisibleItems = isEditMode ? items.length > 0 : items.some(function(it) { return it.type !== 'break'; });
       var courtNames = (currentBracket.schedule && currentBracket.schedule.courtNames) || [];
-      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + (courtNames[i] ? esc(courtNames[i]) : uiFormat('schedule.court', { n: i + 1 })) + '</div>' +
+      cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + (courtNames[i] ? esc(courtNames[i]) : uiFormat('schedule.court', { n: i + 1 })) +
+        '<a class="court-display-link" href="#/event/' + esc(currentBracketTournament.id) + '/court/' + (i + 1) + '" title="' + esc(uiText('court.open')) + '" aria-label="' + esc(uiText('court.open')) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a></div>' +
         '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
         (hasVisibleItems || mine ? '' : '<p class="empty-note">No matches yet.</p>') +
         '<div class="admin-only-flex schedule-add-block">' +
