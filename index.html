@@ -5518,12 +5518,21 @@ var CLUBS = [
         });
       }
       var tlEl = el.querySelector('.fx-tl');
-      var markStop = function(i) {
+      // While someone is using the timeline themselves, it is never moved for
+      // them and the ring holds still; otherwise it only follows when the
+      // current stop would leave the visible part.
+      var tlUserUntil = 0;
+      var markStop = function(i, force) {
         if (!tlEl) return;
         tlEl.querySelectorAll('.fx-tl-stop').forEach(function(b) { var on = +b.dataset.tlIndex === i; b.classList.toggle('is-current', on); if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
         var cur = tlEl.querySelector('.is-current');
-        if (cur) tlEl.scrollTo({ left: cur.offsetLeft - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' });
+        if (!cur || (!force && Date.now() < tlUserUntil)) return;
+        var l = cur.offsetLeft, r = l + cur.offsetWidth, vl = tlEl.scrollLeft, vr = vl + tlEl.clientWidth;
+        if (force || l < vl || r > vr) tlEl.scrollTo({ left: l - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' });
       };
+      if (tlEl) ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function(ev) {
+        tlEl.addEventListener(ev, function() { tlUserUntil = Date.now() + 6000; if (ringApi) ringApi.hold(6000); }, { passive: true });
+      });
       var ringApi = null;
       if (tlEl) tlEl.addEventListener('click', function(e) {
         var b = e.target.closest('.fx-tl-stop');
@@ -5534,7 +5543,7 @@ var CLUBS = [
         // own, so "is it current right now" alone would be a surprise).
         if (tlEl.dataset.picked === String(i)) { navigate('event/' + b.dataset.tlId); return; }
         tlEl.dataset.picked = String(i);
-        if (ringApi) ringApi.goTo(i);
+        if (ringApi) { ringApi.goTo(i); ringApi.hold(6000); }
         else {
           var card = railEl.querySelector('.tcard[data-id="' + b.dataset.tlId + '"]');
           if (card) {
@@ -6250,7 +6259,7 @@ var CLUBS = [
       window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
       document.removeEventListener('visibilitychange', onVis);
     }
-    var api = { host: host, root: root, goTo: goTo, destroy: destroy };
+    var api = { host: host, root: root, goTo: goTo, destroy: destroy, hold: function(ms) { vel = 0; hold(ms); } };
     roundCarousels.push(api);
     return api;
   }
