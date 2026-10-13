@@ -2282,6 +2282,27 @@
   @keyframes schedNowPulse { 0% { box-shadow:0 0 0 0 rgba(255,255,255,0.8); } 100% { box-shadow:0 0 0 7px rgba(255,255,255,0); } }
   .schedule-item.is-now { box-shadow:0 0 0 2px #ff3b5c, 0 10px 26px rgba(255,59,92,0.25); }
   @media (prefers-reduced-motion: reduce) { .sched-now span::before { animation:none; } }
+
+  /* My Team bar (live + schedule) */
+  .myteam-bar { display:flex; align-items:center; gap:14px; margin:14px 0 18px; padding:14px 16px; border-radius:var(--tk-radius, 14px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); }
+  .myteam-bar.is-empty { background:rgba(255,255,255,0.05); border-style:dashed; box-shadow:none; }
+  .myteam-star { color:var(--cyan); font-size:20px; line-height:1; flex-shrink:0; }
+  .myteam-combo { position:relative; flex:1; max-width:420px; }
+  .myteam-combo input { width:100%; }
+  .myteam-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .myteam-name { display:flex; align-items:center; gap:10px; min-width:0; }
+  .myteam-name strong { font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .myteam-name .club-avatar { width:28px; height:28px; flex-shrink:0; }
+  .myteam-record { flex-shrink:0; font:700 12px 'Poppins', sans-serif; color:var(--cyan); background:rgba(0,242,255,0.12); padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums; }
+  .myteam-status { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:13px; color:rgba(255,255,255,0.85); }
+  .myteam-pill { display:inline-flex; align-items:center; gap:6px; font:800 10.5px 'Poppins', sans-serif; letter-spacing:0.12em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:var(--cyan); color:#07083f; }
+  .myteam-pill.is-live { background:#ff3b5c; color:#fff; }
+  .myteam-pill.is-done { background:rgba(255,255,255,0.14); color:#fff; }
+  .myteam-score { color:#fff; font-variant-numeric:tabular-nums; margin-left:4px; }
+  .myteam-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .myteam-clear { width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); background:none; color:rgba(255,255,255,0.7); cursor:pointer; }
+  .myteam-clear:hover, .myteam-clear:focus-visible { color:#fff; border-color:var(--cyan); }
+  @media (max-width:600px) { .myteam-bar { flex-wrap:wrap; } .myteam-actions { width:100%; justify-content:space-between; } }
 </style>
 </head>
 <body>
@@ -4512,6 +4533,13 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'myteam.follow': 'Follow your team…',
+    'myteam.liveNow': 'Live now',
+    'myteam.next': 'Next',
+    'myteam.done': 'All matches played',
+    'myteam.noMatches': 'No matches scheduled yet',
+    'myteam.onlyMine': 'Only my matches',
+    'myteam.change': 'Choose another team',
     'detail.copyLink': 'Copy link',
     'detail.creatingGraphic': 'Creating graphic…',
     'detail.partnersHeading': 'Looking for a partner',
@@ -4661,7 +4689,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -9044,6 +9072,7 @@ var CLUBS = [
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + liveBracketLabel(t) + (scheduleLinkVisible(t) ? ' · <a href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.viewLink') + ' →</a>' : '') + '</div></div>' +
       renderLiveTicker(bracket) +
+      renderMyTeamBar(bracket) +
       renderDivisionFilterTabs(bracket) +
       renderTierFilterTabs(tiersHere) +
       renderRosterPanel(bracket) +
@@ -9056,6 +9085,7 @@ var CLUBS = [
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
     wireLiveEvents();
+    wireMyTeamBar(bracket, renderLive);
     wireTurnierAppImport();
     scheduleBracketConnectors();
     highlightChangedScores(el);
@@ -9756,6 +9786,108 @@ var CLUBS = [
       (st.rounds || []).forEach(function(r) { (r.matches || []).forEach(function(m) { ids.push(m.id); }); });
     });
     return ids;
+  }
+
+  /* ==================================================================
+     MY TEAM: a spectator/player follows one team per tournament (stored
+     in this browser). A logged-in player is matched to their own team
+     automatically. Shows live/next match + record, highlights the team's
+     matches everywhere, and can filter the schedule to just those.
+     ================================================================== */
+  var myTeamOnlyFilter = false;
+  function myTeamStoreKey() { return 'loc_myteam_' + (currentBracketTournament ? currentBracketTournament.id : ''); }
+  function myTeamId(bracket) {
+    var stored = null;
+    try { stored = localStorage.getItem(myTeamStoreKey()); } catch (e) {}
+    if (stored === 'none') return null;
+    if (stored && findBracketTeam(bracket, stored)) return stored;
+    if (!currentUser) return null;
+    var nm = (currentUser.name || '').trim().toLowerCase();
+    var mine = (bracket.teams || []).filter(function(tm) {
+      return tm.uid === currentUser.uid || tm.partnerUid === currentUser.uid ||
+        (nm && (tm.name || '').toLowerCase().split(/\s*&\s*/).indexOf(nm) !== -1);
+    });
+    return mine.length ? mine[mine.length - 1].id : null;
+  }
+  function setMyTeam(id) { try { localStorage.setItem(myTeamStoreKey(), id || 'none'); } catch (e) {} }
+  function myTeamMatches(bracket, teamId) {
+    return allBracketMatchIds(bracket).map(function(id) { return tickerMatchInfo(bracket, id); })
+      .filter(function(i) { return i && (i.a === teamId || i.b === teamId); });
+  }
+  function myTeamCssHtml(teamId) {
+    if (!teamId) return '';
+    var sel = '[data-team="' + teamId.replace(/["\\]/g, '') + '"]';
+    return '<style id="myTeamCss">' +
+      '.match-team' + sel + ' .team-name { color:var(--cyan); font-weight:700; }' +
+      '.schedule-item:has(.match-team' + sel + '), [data-match-id]:has(.match-team' + sel + ') { box-shadow:0 0 0 2px var(--cyan), 0 8px 22px rgba(0,242,255,0.18); }' +
+    '</style>';
+  }
+  function renderMyTeamBar(bracket, opts) {
+    if (!bracket.teams || !bracket.teams.length) return '';
+    var id = myTeamId(bracket), team = id && findBracketTeam(bracket, id);
+    if (!team) {
+      return '<div class="myteam-bar is-empty">' +
+        '<span class="myteam-star" aria-hidden="true">★</span>' +
+        '<div class="combo-group myteam-combo"><label class="sr-only" for="myTeamSearch">' + esc(uiText('myteam.follow')) + '</label>' +
+          '<input id="myTeamSearch" autocomplete="off" placeholder="' + esc(uiText('myteam.follow')) + '">' +
+          '<div class="combo-dropdown" id="myTeamDropdown" hidden></div></div>' +
+      '</div>';
+    }
+    var list = myTeamMatches(bracket, id), sched = scheduleIndex(bracket);
+    var won = list.filter(function(i) { return i.winner === id; }).length;
+    var lost = list.filter(function(i) { return i.winner && i.winner !== id; }).length;
+    var opp = function(i) { var o = i.a === id ? i.b : i.a, ot = o && findBracketTeam(bracket, o); return ot ? ot.name : 'TBD'; };
+    var live = list.filter(function(i) { return i.live; })[0];
+    var open = list.filter(function(i) { return !i.winner && !i.live; })
+      .sort(function(x, y) { var a = sched[x.id], b = sched[y.id]; if (!a || !b) return a ? -1 : b ? 1 : 0; return a.dayIndex - b.dayIndex || (a.time < b.time ? -1 : 1); });
+    var status;
+    if (live) {
+      var w = sched[live.id], cur = live.sets[live.sets.length - 1] || [0, 0], mineFirst = live.a === id;
+      status = '<span class="myteam-pill is-live"><span class="live-ticker-dot"></span>' + esc(uiText('myteam.liveNow')) + '</span>' +
+        '<span class="myteam-line">' + esc([w ? w.court : '', 'vs ' + opp(live), live.label].filter(Boolean).join(' · ')) +
+        ' <strong class="myteam-score">' + esc(mineFirst ? cur[0] : cur[1]) + ':' + esc(mineFirst ? cur[1] : cur[0]) + '</strong></span>';
+    } else if (open.length) {
+      var n = open[0], ws = sched[n.id];
+      status = '<span class="myteam-pill">' + esc(uiText('myteam.next')) + '</span>' +
+        '<span class="myteam-line">' + esc([ws ? (bracket.schedule.days.length > 1 ? ws.dayLabel + ' ' : '') + ws.time : '', ws ? ws.court : '', 'vs ' + opp(n), n.label].filter(Boolean).join(' · ')) + '</span>';
+    } else {
+      status = '<span class="myteam-pill is-done">' + esc(uiText(list.length ? 'myteam.done' : 'myteam.noMatches')) + '</span>';
+    }
+    return myTeamCssHtml(id) + '<div class="myteam-bar">' +
+      '<span class="myteam-star" aria-hidden="true">★</span>' +
+      '<div class="myteam-main">' +
+        '<div class="myteam-name">' + clubAvatarHtml(findClub(team.club)) + '<strong>' + esc(team.name) + '</strong>' +
+          (won + lost ? '<span class="myteam-record">' + won + 'W · ' + lost + 'L</span>' : '') + '</div>' +
+        '<div class="myteam-status">' + status + '</div>' +
+      '</div>' +
+      '<div class="myteam-actions">' +
+        (opts && opts.filter ? '<button type="button" class="btn btn-sm ' + (myTeamOnlyFilter ? 'btn-cyan' : 'btn-outline') + '" id="myTeamOnlyBtn" aria-pressed="' + myTeamOnlyFilter + '">' + esc(uiText('myteam.onlyMine')) + '</button>' : '') +
+        '<button type="button" class="myteam-clear" id="myTeamClearBtn" aria-label="' + esc(uiText('myteam.change')) + '" title="' + esc(uiText('myteam.change')) + '">✕</button>' +
+      '</div>' +
+    '</div>';
+  }
+  function wireMyTeamBar(bracket, rerender) {
+    var clear = document.getElementById('myTeamClearBtn');
+    if (clear) clear.addEventListener('click', function() { setMyTeam(null); myTeamOnlyFilter = false; rerender(); });
+    var only = document.getElementById('myTeamOnlyBtn');
+    if (only) only.addEventListener('click', function() { myTeamOnlyFilter = !myTeamOnlyFilter; rerender(); });
+    var input = document.getElementById('myTeamSearch'), dd = document.getElementById('myTeamDropdown');
+    if (!input) return;
+    var show = function() {
+      var q = input.value.trim().toLowerCase();
+      var hits = (bracket.teams || []).filter(function(tm) { return !q || (tm.name || '').toLowerCase().indexOf(q) !== -1 || (tm.club || '').toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
+      dd.innerHTML = hits.map(function(tm) {
+        return '<div class="combo-item" data-myteam="' + esc(tm.id) + '">' + clubAvatarHtml(findClub(tm.club)) + '<span>' + esc(tm.name) + (tm.competition ? ' <em>· ' + esc(divisionWord(tm.competition)) + '</em>' : '') + '</span></div>';
+      }).join('');
+      dd.hidden = !hits.length;
+    };
+    input.addEventListener('input', show);
+    input.addEventListener('focus', show);
+    dd.addEventListener('click', function(e) {
+      var it = e.target.closest('[data-myteam]'); if (!it) return;
+      setMyTeam(it.dataset.myteam); rerender();
+    });
+    document.addEventListener('click', function off(e) { if (!e.target.closest('.myteam-combo')) { dd.hidden = true; } if (!document.body.contains(input)) document.removeEventListener('click', off); });
   }
 
   function renderLiveTicker(bracket) {
@@ -12275,9 +12407,14 @@ var CLUBS = [
       var items = day.courts[i] || [];
       var cumMinutes = 0;
       var nowIdx = scheduleNowIndex(items);
+      var mine = myTeamOnlyFilter ? myTeamId(currentBracket) : null;
       var itemsHtml = items.map(function(item, k) {
         var startLabel = addMinutesToTime(day.startTime, cumMinutes);
         var duration = scheduleItemDuration(item);
+        if (mine) {
+          var inf = item.type === 'match' && tickerMatchInfo(currentBracket, item.matchId);
+          if (!inf || (inf.a !== mine && inf.b !== mine)) { cumMinutes += duration; return ''; }
+        }
         var html = renderScheduleItem(item, startLabel, duration);
         if (k === nowIdx) html = '<div class="sched-now" aria-label="' + esc(uiText('schedule.now')) + '"><span>' + esc(uiText('schedule.now')) + '</span></div>' + html.replace('class="schedule-item', 'class="schedule-item is-now');
         cumMinutes += duration;
@@ -12292,7 +12429,7 @@ var CLUBS = [
       var courtNames = (currentBracket.schedule && currentBracket.schedule.courtNames) || [];
       cols.push('<div class="schedule-court-col"><div class="schedule-court-title">' + (courtNames[i] ? esc(courtNames[i]) : uiFormat('schedule.court', { n: i + 1 })) + '</div>' +
         '<div class="schedule-court-items" data-court-index="' + i + '">' + itemsHtml + '</div>' +
-        (hasVisibleItems ? '' : '<p class="empty-note">No matches yet.</p>') +
+        (hasVisibleItems || mine ? '' : '<p class="empty-note">No matches yet.</p>') +
         '<div class="admin-only-flex schedule-add-block">' +
           '<input class="new-block-label" placeholder="e.g. Fan\'s Challenge">' +
           '<input type="number" class="new-block-duration" placeholder="min" min="1" value="10">' +
@@ -12500,6 +12637,7 @@ var CLUBS = [
     el.innerHTML =
       '<div class="detail-head"><span class="tier mono">LoC ' + t.tier + '</span><h1>' + esc(t.name) + '</h1><div class="detail-meta mono">' + uiText('schedule.label') + ' · ' + liveLinkHtml + '</div></div>' +
       renderLiveTicker(bracket) +
+      renderMyTeamBar(bracket, { filter: true }) +
       renderScheduleSetupPanel(bracket) +
       renderStageScheduleControls(bracket) +
       renderScheduleDayTabs(bracket) +
@@ -12507,6 +12645,7 @@ var CLUBS = [
       (bracket.schedule.days.length ? '' : '<p class="empty-note">' + uiText('schedule.noDays') + '</p>') +
       (visibleDays.length ? renderScheduleGraphicPanel(visibleDays[0]) : '');
     wireScheduleEvents();
+    wireMyTeamBar(bracket, renderSchedule);
     initScheduleSortable();
     highlightChangedScores(el);
   }
