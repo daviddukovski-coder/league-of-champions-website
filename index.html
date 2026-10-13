@@ -2012,6 +2012,42 @@
   :root[data-design="ig"] .tour-overview { padding:16px 0 10px; }
   :root[data-design="ig"] .tour-overview > .tcard { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 35ms); }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tour-overview > .tcard { animation:none; } }
+
+  /* ============ ig: club logo wall (replaces the city band) ============ */
+  .logo-wall { position:relative; overflow:hidden; padding:16px 0; background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border-top:1px solid rgba(0,242,255,0.35); border-bottom:1px solid rgba(0,242,255,0.35);
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); }
+  .logo-wall-track { display:flex; width:max-content; align-items:center; gap:34px; padding-right:34px; }
+  .logo-wall-item .club-avatar { width:58px; height:58px; background:none !important; box-shadow:none !important; border-radius:0 !important; filter:drop-shadow(0 6px 12px rgba(3,4,40,0.4)); transition:transform .3s cubic-bezier(.16,1,.3,1); }
+  .logo-wall-item .club-avatar img { width:100%; height:100%; object-fit:contain; padding:0; }
+  .logo-wall-item:hover .club-avatar { transform:scale(1.18); }
+  @media (prefers-reduced-motion: no-preference) {
+    .logo-wall-track { animation:tickerMove calc(var(--n, 40) * 1.4s) linear infinite; }
+    .logo-wall:hover .logo-wall-track { animation-play-state:paused; }
+  }
+  @media (max-width:640px) { .logo-wall-item .club-avatar { width:44px; height:44px; } .logo-wall-track { gap:24px; padding-right:24px; } }
+
+  /* ============ ig: LED scoreboard countdown ============ */
+  .countdown.led-board { --led:3.5px; display:flex; align-items:flex-start; justify-content:space-between; gap:6px; padding:12px 14px; border-radius:12px; width:100%; max-width:100%;
+    background:radial-gradient(120% 140% at 50% 0%, #0b0d4a, #04052a); border:1px solid rgba(0,242,255,0.35); box-shadow:inset 0 0 22px rgba(0,0,0,0.6), 0 0 24px rgba(0,242,255,0.12); }
+  .led-cell { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .led-digits { display:flex; gap:calc(var(--led) * 0.9); }
+  .led-digit { display:grid; grid-template-columns:repeat(5, var(--led)); grid-template-rows:repeat(7, var(--led)); gap:calc(var(--led) * 0.35); perspective:200px; }
+  .led-digit i { width:var(--led); height:var(--led); border-radius:50%; background:rgba(0,242,255,0.10); }
+  .led-colon { display:flex; flex-direction:column; justify-content:center; gap:calc(var(--led) * 2); height:calc(var(--led) * 9.1); padding:0 1px; }
+  .led-colon i { width:var(--led); height:var(--led); border-radius:50%; background:#7ff8ff; box-shadow:0 0 4px #00f2ff; animation:ledBlink 1s steps(1) infinite; }
+  @keyframes ledBlink { 50% { opacity:.25; } }
+  @media (max-width:420px) { .countdown.led-board { --led:2.6px; padding:10px; } }
+  @media (prefers-reduced-motion: reduce) { .led-colon i { animation:none; } }
+  .led-digit i.on { background:#7ff8ff; box-shadow:0 0 4px #00f2ff, 0 0 9px rgba(0,242,255,0.6); }
+  .led-digit.is-flip { animation:ledFlip .45s cubic-bezier(.16,1,.3,1); }
+  @keyframes ledFlip { 0% { transform:rotateX(90deg); opacity:.3; } 100% { transform:none; opacity:1; } }
+  .led-board .countdown-unit { margin-top:0; color:rgba(127,248,255,0.75); font-size:9px; }
+  @media (prefers-reduced-motion: reduce) { .led-digit.is-flip { animation:none; } }
+
+  /* Ball hop when a new section arrives */
+  .ball-ad.is-hop .ball-ad-canvas { animation:ballHop .7s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes ballHop { 0% { translate:0 0; } 35% { translate:0 -34px; } 70% { translate:0 2px; } 100% { translate:0 0; } }
 </style>
 </head>
 <body>
@@ -5177,6 +5213,44 @@ var CLUBS = [
   }
 
   var heroCountdownTimer = null;
+  // Stadium-scoreboard countdown ('ig'): each digit is a 5x7 grid of LEDs;
+  // a digit that changes flips once (only that digit, not the whole board).
+  var LED_DIGITS = {
+    '0': ['01110','10001','10011','10101','11001','10001','01110'], '1': ['00100','01100','00100','00100','00100','00100','01110'],
+    '2': ['01110','10001','00001','00010','00100','01000','11111'], '3': ['11111','00010','00100','00010','00001','10001','01110'],
+    '4': ['00010','00110','01010','10010','11111','00010','00010'], '5': ['11111','10000','11110','00001','00001','10001','01110'],
+    '6': ['00110','01000','10000','11110','10001','10001','01110'], '7': ['11111','00001','00010','00100','01000','01000','01000'],
+    '8': ['01110','10001','10001','01110','10001','10001','01110'], '9': ['01110','10001','10001','01111','00001','00010','01100']
+  };
+  function ledDigitHtml(d) {
+    return LED_DIGITS[d].join('').split('').map(function(b) { return '<i' + (b === '1' ? ' class="on"' : '') + '></i>'; }).join('');
+  }
+  function ledCountdownTick(box, start, units) {
+    var left = Math.max(0, start - Date.now());
+    if (!box.dataset.built) {
+      box.dataset.built = '1';
+      box.classList.add('led-board');
+      box.innerHTML = units.map(function(u) {
+        return '<div class="led-cell" data-u="' + u[0] + '"><span class="led-digits"></span><span class="countdown-unit">' + esc(uiText(u[2])) + '</span></div>';
+      }).join('<span class="led-colon" aria-hidden="true"><i></i><i></i></span>');
+    }
+    units.forEach(function(u, i) {
+      var v = i === 0 ? Math.floor(left / u[1]) : Math.floor(left % units[i - 1][1] / u[1]);
+      var str = i === 0 ? String(v).padStart(2, '0') : ('0' + v).slice(-2);
+      var wrap = box.querySelector('[data-u="' + u[0] + '"] .led-digits');
+      if (wrap.dataset.v === str) return;
+      var old = wrap.dataset.v || '';
+      wrap.dataset.v = str;
+      wrap.setAttribute('aria-label', String(v));
+      if (wrap.children.length !== str.length) wrap.innerHTML = str.split('').map(function() { return '<span class="led-digit"></span>'; }).join('');
+      str.split('').forEach(function(ch, k) {
+        if (old[k] === ch && wrap.children[k].innerHTML) return;
+        var el = wrap.children[k];
+        el.innerHTML = ledDigitHtml(ch);
+        el.classList.remove('is-flip'); void el.offsetWidth; if (old) el.classList.add('is-flip');
+      });
+    });
+  }
   function renderHeroNext() {
     var el = document.getElementById('heroNext');
     clearInterval(heroCountdownTimer);
@@ -5196,8 +5270,10 @@ var CLUBS = [
       '<span class="hero-next-stub" aria-hidden="true"><span class="tcard-stub-loc">LoC</span><span class="tcard-stub-tier">' + esc(t.tier) + '</span></span>';
     if (!showCountdown) return;
     var units = [['d', 864e5, 'landing.cdDays'], ['h', 36e5, 'landing.cdHours'], ['m', 6e4, 'landing.cdMinutes'], ['s', 1e3, 'landing.cdSeconds']];
+    var led = document.documentElement.getAttribute('data-design') === 'ig';
     function tick() {
       var box = document.getElementById('heroCountdown');
+      if (led && box) { ledCountdownTick(box, start, units); return; }
       if (!box || document.getElementById('view-landing').hidden) { clearInterval(heroCountdownTimer); return; }
       var left = Math.max(0, start - Date.now());
       box.innerHTML = units.map(function(u, i) {
@@ -5224,6 +5300,15 @@ var CLUBS = [
 
     var cities = tours.map(function(t) { return '<span class="ticker-item">' + esc(t.city) + '</span>'; }).join('');
     var ticker = tours.length ? '<div class="ticker" aria-hidden="true"><div class="ticker-track">' + cities + cities + '</div></div>' : '';
+    // 'ig': the clubs of the tour as a logo wall instead of the city band. Any
+    // club added to the list with a logo shows up here automatically.
+    if (document.documentElement.getAttribute('data-design') === 'ig') {
+      var clubLogos = CLUBS.filter(function(c) { return c.logo; }).map(function(c) {
+        return '<span class="logo-wall-item" title="' + esc(c.name) + '">' + clubAvatarHtml(c) + '</span>';
+      }).join('');
+      ticker = clubLogos ? '<div class="logo-wall" role="img" aria-label="' + esc(CLUBS.filter(function(c) { return c.logo; }).length + ' clubs on the tour') + '">' +
+        '<div class="logo-wall-track" style="--n:' + CLUBS.filter(function(c) { return c.logo; }).length + '">' + clubLogos + clubLogos + '</div></div>' : '';
+    }
 
     var igDesign = document.documentElement.getAttribute('data-design') === 'ig';
     var tourCards = igDesign ? tours.map(function(t) {
@@ -5799,6 +5884,30 @@ var CLUBS = [
     document.addEventListener('visibilitychange', function() { if (!document.hidden) start(); });
     window.addEventListener('resize', function() { size(); draw(); });
     if (reduce.matches) spinSpeed = 0;
+    // Rolls along with the page: scrolling down spins it forward, up spins it
+    // back (passive listener, the redraw rides on the existing frame loop).
+    if (!reduce.matches) {
+      var lastY = window.scrollY;
+      window.addEventListener('scroll', function() {
+        var d = window.scrollY - lastY; lastY = window.scrollY;
+        spin += d * 0.012; start();
+      }, { passive: true });
+      // A little hop whenever a new section heading comes into view.
+      if ('IntersectionObserver' in window) {
+        var hopIO = new IntersectionObserver(function(entries) {
+          entries.forEach(function(en) {
+            if (!en.isIntersecting) return;
+            box.classList.remove('is-hop'); void box.offsetWidth; box.classList.add('is-hop');
+          });
+        }, { rootMargin: '0px 0px -35% 0px' });
+        var watchHeads = function() {
+          hopIO.disconnect();
+          document.querySelectorAll('main .view:not([hidden]) :is(.landing-section-head h2, .section-title, .page-band h1)').forEach(function(h) { hopIO.observe(h); });
+        };
+        window.addEventListener('hashchange', function() { setTimeout(watchHeads, 600); });
+        setTimeout(watchHeads, 1500);
+      }
+    }
     var src = new Image();
     src.onload = function() {
       var c = document.createElement('canvas'); c.width = c.height = PW;
