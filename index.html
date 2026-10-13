@@ -2065,7 +2065,8 @@
   @media (max-width:640px) { .fx-stats-row { grid-template-columns:repeat(2, 1fr); row-gap:22px; } .fx-stat { padding:2px 14px; } }
 
   /* ============ FX: season timeline ============ */
-  .fx-tl { position:relative; overflow-x:auto; scrollbar-width:none; padding:26px 4px 8px; scroll-snap-type:x proximity; }
+  .fx-tl { position:relative; overflow-x:auto; scrollbar-width:none; padding:26px calc(50% - 60px) 8px; scroll-snap-type:x proximity;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%); }
   .fx-tl-track { position:relative; display:flex; width:max-content; min-width:100%; justify-content:space-between; }
   .fx-tl::-webkit-scrollbar { display:none; }
   .fx-tl-line { position:absolute; left:60px; right:60px; top:7px; height:2px; background:rgba(255,255,255,0.18); }
@@ -5596,8 +5597,32 @@ var CLUBS = [
         var cur = tlEl.querySelector('.is-current');
         if (!cur || (!force && Date.now() < tlUserUntil)) return;
         var l = cur.offsetLeft, r = l + cur.offsetWidth, vl = tlEl.scrollLeft, vr = vl + tlEl.clientWidth;
-        if (force || l < vl || r > vr) tlEl.scrollTo({ left: l - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' });
+        if (force || l < vl || r > vr) { tlProgUntil = Date.now() + 900; tlEl.scrollTo({ left: l - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' }); }
       };
+      // Scrolling the timeline itself turns the tickets: the stop in the
+      // middle of the timeline becomes the current one.
+      var tlProgUntil = 0, tlRaf = null, tlLast = -1;
+      if (tlEl) tlEl.addEventListener('scroll', function() {
+        if (Date.now() < tlProgUntil || tlRaf) return;
+        tlRaf = requestAnimationFrame(function() {
+          tlRaf = null;
+          var mid = tlEl.scrollLeft + tlEl.clientWidth / 2, best = -1, bestD = Infinity;
+          tlEl.querySelectorAll('.fx-tl-stop').forEach(function(b) {
+            var d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - mid);
+            if (d < bestD) { bestD = d; best = +b.dataset.tlIndex; }
+          });
+          if (best < 0 || best === tlLast) return;
+          tlLast = best;
+          tlUserUntil = Date.now() + 6000;
+          markStop(best);
+          if (ringApi) { ringApi.goTo(best); ringApi.hold(6000); }
+          else {
+            var id = tlEl.querySelector('[data-tl-index="' + best + '"]').dataset.tlId;
+            var card = railEl.querySelector('.tcard[data-id="' + id + '"]');
+            if (card && railEl.classList.contains('is-tickets')) railEl.scrollTo({ left: card.offsetLeft - (railEl.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+          }
+        });
+      }, { passive: true });
       if (tlEl) ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function(ev) {
         tlEl.addEventListener(ev, function() { tlUserUntil = Date.now() + 6000; if (ringApi) ringApi.hold(6000); }, { passive: true });
       });
