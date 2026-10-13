@@ -2147,6 +2147,14 @@
   @media (max-width:480px) { .bento { grid-template-columns:1fr; } }
 
 
+
+  /* Smooth edges around the hero ('ig'): the video fades into the page at
+     the bottom (no hard line, no cyan bar), and the strip on top has no box. */
+  :root[data-design="ig"] .landing-hero::after { display:none; }
+  :root[data-design="ig"] .hero-media { -webkit-mask-image:linear-gradient(180deg, #000 0%, #000 68%, transparent 100%); mask-image:linear-gradient(180deg, #000 0%, #000 68%, transparent 100%); }
+  :root[data-design="ig"] .hero-top .logo-wall { -webkit-mask-image:none; mask-image:none; }
+  :root[data-design="ig"] .hero-top::before { height:calc(100% + 160px);
+    background:linear-gradient(180deg, rgba(5,6,40,0.7) 0%, rgba(5,6,40,0.45) 35%, rgba(5,6,40,0.18) 70%, rgba(5,6,40,0) 100%); }
 </style>
 </head>
 <body>
@@ -5587,28 +5595,32 @@ var CLUBS = [
         });
       }
       var tlEl = el.querySelector('.fx-tl');
-      // While someone is using the timeline themselves, it is never moved for
-      // them and the ring holds still; otherwise it only follows when the
-      // current stop would leave the visible part.
+      // While someone is scrolling the timeline themselves it is never moved
+      // for them (and the ring holds still); otherwise the selected stop is
+      // kept centred.
       var tlUserUntil = 0;
       var markStop = function(i, force) {
         if (!tlEl) return;
         tlEl.querySelectorAll('.fx-tl-stop').forEach(function(b) { var on = +b.dataset.tlIndex === i; b.classList.toggle('is-current', on); if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
         var cur = tlEl.querySelector('.is-current');
         if (!cur || (!force && Date.now() < tlUserUntil)) return;
-        var l = cur.offsetLeft, r = l + cur.offsetWidth, vl = tlEl.scrollLeft, vr = vl + tlEl.clientWidth;
-        if (force || l < vl || r > vr) { tlProgUntil = Date.now() + 900; tlEl.scrollTo({ left: l - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' }); }
+        // The selected stop always sits in the middle of the timeline.
+        tlProgUntil = Date.now() + 900;
+        var tr = tlEl.getBoundingClientRect(), cr = cur.getBoundingClientRect();
+        tlEl.scrollTo({ left: tlEl.scrollLeft + (cr.left + cr.width / 2) - (tr.left + tr.width / 2), behavior: 'smooth' });
       };
       // Scrolling the timeline itself turns the tickets: the stop in the
       // middle of the timeline becomes the current one.
-      var tlProgUntil = 0, tlRaf = null, tlLast = -1;
+      var tlProgUntil = 0, tlRaf = null, tlLast = -1, tlInputAt = 0;
       if (tlEl) tlEl.addEventListener('scroll', function() {
-        if (Date.now() < tlProgUntil || tlRaf) return;
+        // Only scrolling caused by a person's own input on the timeline counts;
+        // the smooth centring below scrolls too and must not count as that.
+        if (Date.now() - tlInputAt > 1200 || tlRaf) return;
         tlRaf = requestAnimationFrame(function() {
           tlRaf = null;
-          var mid = tlEl.scrollLeft + tlEl.clientWidth / 2, best = -1, bestD = Infinity;
+          var tr = tlEl.getBoundingClientRect(), mid = tr.left + tr.width / 2, best = -1, bestD = Infinity;
           tlEl.querySelectorAll('.fx-tl-stop').forEach(function(b) {
-            var d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - mid);
+            var br = b.getBoundingClientRect(), d = Math.abs(br.left + br.width / 2 - mid);
             if (d < bestD) { bestD = d; best = +b.dataset.tlIndex; }
           });
           if (best < 0 || best === tlLast) return;
@@ -5623,8 +5635,8 @@ var CLUBS = [
           }
         });
       }, { passive: true });
-      if (tlEl) ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function(ev) {
-        tlEl.addEventListener(ev, function() { tlUserUntil = Date.now() + 6000; if (ringApi) ringApi.hold(6000); }, { passive: true });
+      if (tlEl) ['pointerdown', 'wheel', 'touchstart', 'touchmove', 'keydown'].forEach(function(ev) {
+        tlEl.addEventListener(ev, function() { tlInputAt = Date.now(); tlUserUntil = Date.now() + 6000; if (ringApi) ringApi.hold(6000); }, { passive: true });
       });
       var ringApi = null;
       if (tlEl) tlEl.addEventListener('click', function(e) {
