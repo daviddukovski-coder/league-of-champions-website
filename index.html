@@ -2273,6 +2273,15 @@
   .tw-face > span { width:100%; height:100%; display:grid; place-items:center; color:#fff; font-weight:800; font-size:16px; letter-spacing:0.04em; }
   @media (max-width:520px) { .glance-v { font-size:22px; } }
   @media (prefers-reduced-motion: reduce) { .tour-share-btn { transition:none; } }
+
+  /* schedule: "Now" line above the match being played on each court */
+  .sched-now { position:relative; display:flex; align-items:center; gap:10px; margin:6px 0 8px; }
+  .sched-now::after { content:''; flex:1; height:2px; border-radius:2px; background:#ff3b5c; box-shadow:0 0 10px rgba(255,59,92,0.7); }
+  .sched-now span { display:inline-flex; align-items:center; gap:7px; font:800 11px 'Poppins', sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:#fff; background:#ff3b5c; padding:4px 10px 4px 9px; border-radius:999px; }
+  .sched-now span::before { content:''; width:7px; height:7px; border-radius:50%; background:#fff; animation:schedNowPulse 1.4s ease-out infinite; }
+  @keyframes schedNowPulse { 0% { box-shadow:0 0 0 0 rgba(255,255,255,0.8); } 100% { box-shadow:0 0 0 7px rgba(255,255,255,0); } }
+  .schedule-item.is-now { box-shadow:0 0 0 2px #ff3b5c, 0 10px 26px rgba(255,59,92,0.25); }
+  @media (prefers-reduced-motion: reduce) { .sched-now span::before { animation:none; } }
 </style>
 </head>
 <body>
@@ -4502,6 +4511,7 @@ var CLUBS = [
     'detail.directions': 'Plan route ↗',
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
+    'schedule.now': 'Now',
     'detail.copyLink': 'Copy link',
     'detail.creatingGraphic': 'Creating graphic…',
     'detail.partnersHeading': 'Looking for a partner',
@@ -4651,7 +4661,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -12236,15 +12246,40 @@ var CLUBS = [
     '</div>';
   }
 
+  // Has this schedule slot's match got a result entered?
+  function scheduleItemHasResult(item) {
+    if (item.type && item.type !== 'match') return false;
+    var found = findMatchAnywhere(currentBracket, item.matchId);
+    if (!found) return false;
+    var m = found.match;
+    if (found.round) {
+      var ri = found.stage.rounds.indexOf(found.round);
+      m = { teamAId: resolveSlotTeam(currentBracket, found.stage, ri, m.slotAIndex), teamBId: resolveSlotTeam(currentBracket, found.stage, ri, m.slotBIndex), sets: m.sets, format: m.format };
+    }
+    return !!matchWinner(m, currentBracket.defaultFormat);
+  }
+  // "Now" line: on each court, the item right after the last match with a
+  // result is the one being played (breaks are skipped). Nothing scored yet
+  // or everything done: no line.
+  function scheduleNowIndex(items) {
+    var last = -1;
+    items.forEach(function(it, k) { if (scheduleItemHasResult(it)) last = k; });
+    if (last < 0) return -1;
+    for (var k = last + 1; k < items.length; k++) if (items[k].type !== 'break') return k;
+    return -1;
+  }
+
   function renderScheduleDayBlock(day) {
     var cols = [];
     for (var i = 0; i < dayCourtCount(day); i++) {
       var items = day.courts[i] || [];
       var cumMinutes = 0;
-      var itemsHtml = items.map(function(item) {
+      var nowIdx = scheduleNowIndex(items);
+      var itemsHtml = items.map(function(item, k) {
         var startLabel = addMinutesToTime(day.startTime, cumMinutes);
         var duration = scheduleItemDuration(item);
         var html = renderScheduleItem(item, startLabel, duration);
+        if (k === nowIdx) html = '<div class="sched-now" aria-label="' + esc(uiText('schedule.now')) + '"><span>' + esc(uiText('schedule.now')) + '</span></div>' + html.replace('class="schedule-item', 'class="schedule-item is-now');
         cumMinutes += duration;
         return html;
       }).join('');
