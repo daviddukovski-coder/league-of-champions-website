@@ -2216,6 +2216,76 @@
      label instead of taking space, so the glass bar keeps its width */
   :root[data-design="ig"] .nav-inner .edit-text-wrap { position:relative; }
   :root[data-design="ig"] .nav-inner .edit-pencil { position:absolute; top:-9px; right:-12px; width:17px; height:17px; font-size:8px; margin:0; z-index:2; box-shadow:0 2px 6px rgba(3,4,40,0.4); }
+
+  /* ============ tournament page: at a glance / share / venue / partners / team wall ============ */
+  .glance { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)) minmax(150px, 0.8fr); margin:8px 0 34px; border-radius:var(--tk-radius, 14px); overflow:hidden;
+    background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); }
+  .glance-cell { display:flex; flex-direction:column; gap:4px; padding:18px 20px; border-right:1px dashed rgba(255,255,255,0.22); border-bottom:1px dashed rgba(255,255,255,0.22); margin:0 -1px -1px 0; min-width:0; }
+  .glance-k { font-size:10.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--cyan); }
+  .glance-v { font-family:'Bebas Neue', sans-serif; font-size:26px; line-height:1.05; letter-spacing:0.02em; color:#fff; overflow-wrap:anywhere; }
+  .glance-s { font-size:12px; color:rgba(255,255,255,0.65); }
+  .glance-cell.is-open .glance-s { color:var(--cyan); font-weight:600; }
+  .glance-cell.is-closed .glance-s { color:rgba(255,255,255,0.5); }
+  .glance-stub { grid-column:4; grid-row:1 / span 2; justify-content:center; align-items:center; text-align:center; border-right:0; border-left:2px dashed rgba(255,255,255,0.35); background:rgba(0,242,255,0.06); }
+  .glance-stub .glance-v { font-size:64px; color:var(--cyan); text-shadow:0 0 22px rgba(0,242,255,0.35); }
+  #glanceTeams { font-variant-numeric:tabular-nums; }
+  @media (max-width:700px) {
+    .glance { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .glance-stub { grid-column:1 / -1; grid-row:auto; border-left:0; border-top:2px dashed rgba(255,255,255,0.35); flex-direction:row; gap:14px; }
+    .glance-stub .glance-v { font-size:40px; }
+  }
+
+  .tour-share-btn { margin-top:14px; display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.06); color:#fff;
+    font:600 13px 'Poppins', sans-serif; cursor:pointer; transition:border-color .2s, color .2s, transform .15s; }
+  .tour-share-btn:hover, .tour-share-btn:focus-visible { border-color:var(--cyan); color:var(--cyan); }
+  .tour-share-btn:active { transform:scale(0.97); }
+
+  .venue-wrap.has-map { display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(0, 1fr); gap:18px; align-items:start; }
+  .venue-wrap.has-map .detail-info-grid { grid-template-columns:1fr 1fr; }
+  .venue-map { position:relative; border-radius:var(--tk-radius, 14px); overflow:hidden; border:1px solid var(--tk-border, rgba(255,255,255,0.3)); aspect-ratio:16/10; background:#10137a; }
+  .venue-map iframe { width:100%; height:100%; border:0; display:block; filter:saturate(0.85); }
+  .venue-route { position:absolute; right:12px; bottom:12px; box-shadow:0 6px 18px rgba(3,4,40,0.45); }
+  @media (max-width:760px) { .venue-wrap.has-map { grid-template-columns:1fr; } }
+
+  #partnerSeek:empty { display:none; }
+  #partnerSeek { margin:34px 0 10px; }
+  .ps-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .ps-head h2 { margin:0; display:flex; align-items:center; gap:10px; }
+  .ps-count { font:700 12px 'Poppins', sans-serif; background:var(--cyan); color:#07083f; border-radius:999px; padding:2px 9px; letter-spacing:0; }
+  .ps-row { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(250px, 1fr); gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px; scrollbar-width:thin; }
+  .ps-card { scroll-snap-align:start; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; gap:12px 14px; align-items:center; padding:16px; border-radius:var(--tk-radius, 14px);
+    background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); }
+  .ps-card .btn { grid-column:1 / -1; justify-self:stretch; }
+  .ps-info { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .ps-info strong { font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ps-meta { display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ps-meta img { border-radius:50%; object-fit:cover; flex-shrink:0; }
+  .ps-tags { display:flex; gap:6px; margin-top:3px; }
+  .ps-tags span { font-size:10.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:3px 8px; border-radius:999px; background:rgba(0,242,255,0.12); color:var(--cyan); }
+
+  .tw-face { width:52px; height:52px; border-radius:50%; overflow:hidden; flex-shrink:0; display:grid; place-items:center; box-shadow:0 0 0 2px rgba(255,255,255,0.85), 0 6px 14px rgba(3,4,40,0.4); background:#2c2f98; }
+  .tw-face[data-route] { cursor:pointer; }
+  .tw-face img { width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
+  .tw-face.is-cutout { background:linear-gradient(160deg, #3a3db0, #0b0d63); }
+  .tw-face.is-cutout img { object-position:50% 30%; transform:scale(1.25); transform-origin:50% 30%; }
+  .tw-face > span { width:100%; height:100%; display:grid; place-items:center; color:#fff; font-weight:800; font-size:16px; letter-spacing:0.04em; }
+  .team-wall { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-top:6px; }
+  .tw-card { position:relative; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:20px 14px 14px; border-radius:var(--tk-radius, 14px);
+    background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); transition:transform .25s cubic-bezier(.16,1,.3,1); }
+  .tw-card:hover { transform:translateY(-3px); }
+  .tw-card.is-pending { opacity:0.78; }
+  .tw-faces { position:relative; display:flex; margin-bottom:6px; }
+  .tw-faces .tw-face + .tw-face { margin-left:-12px; }
+  .tw-faces > .club-avatar { width:52px; height:52px; }
+  .tw-club-logo { position:absolute; right:-14px; bottom:-6px; width:26px; height:26px; border-radius:50%; overflow:hidden; background:#fff; box-shadow:0 0 0 2px #1a1d84; }
+  .tw-club-logo img { width:100%; height:100%; object-fit:cover; }
+  .tw-names { display:flex; flex-direction:column; gap:1px; min-width:0; max-width:100%; }
+  .tw-names strong { font-size:14px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tw-club { font-size:11.5px; color:rgba(255,255,255,0.6); min-height:1em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .tw-foot { margin-top:auto; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.22); width:100%; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; }
+  .tw-pts { font-size:12px; font-weight:700; color:var(--cyan); font-variant-numeric:tabular-nums; }
+  @media (max-width:520px) { .team-wall { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; } .tw-face { width:44px; height:44px; } .glance-v { font-size:22px; } }
+  @media (prefers-reduced-motion: reduce) { .tw-card, .tour-share-btn { transition:none; } .tw-card:hover { transform:none; } }
 </style>
 </head>
 <body>
@@ -4435,6 +4505,19 @@ var CLUBS = [
     'detail.venueMapLinkText': 'Open in Maps ↗',
     'detail.venueParkingLabel': 'Parking',
     'detail.venueChangingLabel': 'Changing rooms',
+    'detail.glanceHeading': 'At a glance',
+    'detail.whenLabel': 'When',
+    'detail.whereLabel': 'Where',
+    'detail.teamsLabel': 'Teams registered',
+    'detail.daysLeft': '{n} days left',
+    'detail.lastDay': 'Last day today',
+    'detail.regClosed': 'Closed',
+    'detail.directions': 'Plan route ↗',
+    'detail.share': 'Share',
+    'detail.linkCopied': 'Link copied',
+    'detail.partnersHeading': 'Looking for a partner',
+    'detail.partnersEmpty': 'Nobody is looking yet. Need a partner? Post yourself in the Player Exchange.',
+    'detail.partnersAll': 'Open Player Exchange →',
     'detail.registerNow': 'Register now',
     'detail.alreadyRegisteredNote': "You're already registered for this tournament.",
     'detail.registeredTeams': 'Registered Teams',
@@ -4579,7 +4662,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -7336,23 +7419,26 @@ var CLUBS = [
     });
   }
 
+  // Team wall: one card per team, both players' faces side by side.
+  // Admin controls (confirm payment / delete) stay inside each card, with
+  // the same classes and data attributes wirePlayerListEvents expects.
   function renderPlayerList(players) {
     if (!players.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
-    return '<div class="player-list">' + players.map(function(p) {
-      var statusClass = p.status === 'paid' ? 'status-paid' : 'status-pending';
-      var statusLabel = p.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
-      var points = (findRankingPointsForPlayer(p.firstName + ' ' + p.lastName) || 0) + (findRankingPointsForPlayer(p.partner) || 0);
+    return '<div class="team-wall">' + players.map(function(p) {
+      var paid = p.status === 'paid';
+      var me = p.firstName + ' ' + p.lastName;
+      var club = findClub(p.club);
+      var points = (findRankingPointsForPlayer(me) || 0) + (findRankingPointsForPlayer(p.partner) || 0);
       return (
-        '<div class="player-row" data-reg-id="' + esc(p.id) + '">' +
-          '<div class="player-info">' +
-            clubAvatarHtml(findClub(p.club)) +
-            '<div><strong>' + playerNameLinkHtml(p.firstName + ' ' + p.lastName, p.uid) + '</strong> &amp; ' + playerNameLinkHtml(p.partner, p.partnerUid) +
-            '<span class="player-club">' + esc(p.club) + '</span></div>' +
-          '</div>' +
-          '<div class="player-row-actions">' +
-            '<span class="roster-points-badge" title="Combined ranking points">' + points + ' pts</span>' +
-            '<span class="status ' + statusClass + '">' + statusLabel + '</span>' +
-            (p.status !== 'paid' ?
+        '<div class="tw-card' + (paid ? '' : ' is-pending') + '" data-reg-id="' + esc(p.id) + '">' +
+          '<div class="tw-faces">' + playerFaceHtml(me, p.uid) + playerFaceHtml(p.partner, p.partnerUid) +
+            (club.logo ? '<span class="tw-club-logo"><img src="' + esc(club.logo) + '" alt="" width="40" height="40" loading="lazy"></span>' : '') + '</div>' +
+          '<div class="tw-names"><strong>' + playerNameLinkHtml(me, p.uid) + '</strong><strong>' + playerNameLinkHtml(p.partner, p.partnerUid) + '</strong></div>' +
+          '<span class="tw-club">' + esc(p.club || '') + '</span>' +
+          '<div class="tw-foot player-row-actions">' +
+            '<span class="tw-pts" title="Combined ranking points">' + points + ' pts</span>' +
+            '<span class="status ' + (paid ? 'status-paid' : 'status-pending') + '">' + (paid ? uiText('detail.paidLabel') : uiText('detail.pendingLabel')) + '</span>' +
+            (!paid ?
               '<select class="reg-payment-method admin-only-inline" data-payment-method-for="' + esc(p.id) + '">' +
                 '<option value="cash">Cash</option>' +
                 '<option value="bank_transfer">Bank Transfer</option>' +
@@ -7364,6 +7450,19 @@ var CLUBS = [
         '</div>'
       );
     }).join('') + '</div>';
+  }
+
+  // Teams added straight in the bracket (no registration behind them).
+  function teamWallCardHtml(team) {
+    var club = findClub(team.club);
+    var names = (team.name || '').split(/\s*[&\/]\s*/);
+    return '<div class="tw-card">' +
+      '<div class="tw-faces">' + (names.length === 2 ? playerFaceHtml(names[0]) + playerFaceHtml(names[1]) : clubAvatarHtml(club)) +
+        (names.length === 2 && club.logo ? '<span class="tw-club-logo"><img src="' + esc(club.logo) + '" alt="" width="40" height="40" loading="lazy"></span>' : '') + '</div>' +
+      '<div class="tw-names">' + names.map(function(n) { return '<strong>' + esc(n) + '</strong>'; }).join('') + '</div>' +
+      '<span class="tw-club">' + esc(team.club || '') + '</span>' +
+      '<div class="tw-foot"><span class="tw-pts">' + computeTeamRankingPoints(team) + ' pts</span></div>' +
+    '</div>';
   }
 
   function eventImageHtml(t) {
@@ -7394,10 +7493,15 @@ var CLUBS = [
       var mapLink = (key === 'venueMapUrl' && value) ? ' <a class="venue-map-link" href="' + esc(value) + '" target="_blank" rel="noopener">' + esc(uiText('detail.venueMapLinkText')) + '</a>' : '';
       return '<div class="info-block"><span class="label">' + uiEdit(uiKey) + '</span><span class="value">' + editTextHtml(t.id, key, value, value || '–', editLabel) + mapLink + '</span></div>';
     }).join('');
-    return '<h2>' + uiEdit('detail.venueHeading') + '</h2><div class="detail-info-grid">' + rows + '</div>';
+    var addr = t.venueAddress || '';
+    var map = addr
+      ? '<div class="venue-map"><iframe title="' + esc(t.name) + ' map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=' + encodeURIComponent(addr) + '&z=15&output=embed"></iframe>' +
+        '<a class="btn btn-cyan btn-sm venue-route" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener">' + esc(uiText('detail.directions')) + '</a></div>'
+      : '';
+    return '<h2>' + uiEdit('detail.venueHeading') + '</h2><div class="venue-wrap' + (map ? ' has-map' : '') + '">' + map + '<div class="detail-info-grid">' + rows + '</div></div>';
   }
 
-  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'venue', 'registerActions', 'teams'];
+  var DEFAULT_BLOCK_ORDER = ['image', 'header', 'infoGrid', 'venue', 'registerActions', 'partners', 'teams'];
   var DEFAULT_LANDING_ORDER = ['eyebrow', 'headline', 'subtitle', 'actions', 'browseLink'];
 
   function getBlockOrder(overrideKey, defaultOrder, rawOrderJson) {
@@ -7420,33 +7524,109 @@ var CLUBS = [
     '</div>';
   }
 
+  // "At a glance": every fact a team needs before signing up, in one
+  // ticket-style strip. Fee/deadline/divisions stay inline-editable; the
+  // team count is patched in once the registrations have loaded.
+  function deadlineInfo(t) {
+    var d = t.deadline ? new Date(t.deadline) : null;
+    if (!d || isNaN(d)) return '';
+    var days = Math.ceil((new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1) - Date.now()) / 864e5);
+    if (t.status !== 'upcoming' || days <= 0) return uiText('detail.regClosed');
+    return days === 1 ? uiText('detail.lastDay') : uiFormat('detail.daysLeft', { n: days });
+  }
+  function glanceHtml(t) {
+    var dl = deadlineInfo(t);
+    var cell = function(label, value, sub, cls) {
+      return '<div class="glance-cell' + (cls ? ' ' + cls : '') + '"><span class="glance-k">' + label + '</span><span class="glance-v">' + value + '</span>' + (sub ? '<span class="glance-s">' + sub + '</span>' : '') + '</div>';
+    };
+    return '<section class="glance" aria-label="' + esc(uiText('detail.glanceHeading')) + '">' +
+      cell(uiEdit('detail.whenLabel'), esc(t.dateLabel) + ' ' + esc((t.dateSort || '').slice(0, 4))) +
+      cell(uiEdit('detail.whereLabel'), t.flag + ' ' + esc(t.city), esc(t.country)) +
+      cell(uiEdit('detail.formatLabel'), uiEdit('detail.formatValue')) +
+      cell(uiEdit('detail.feeLabel'), editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee : '–', 'entry fee'), t.fee ? 'per team' : '') +
+      cell(uiEdit('detail.deadlineLabel'), editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline'), dl ? esc(dl) : '', dl === uiText('detail.regClosed') ? 'is-closed' : 'is-open') +
+      cell(uiEdit('detail.divisionsLabel'), editTextHtml(t.id, 'competitions', t.competitions.join(', '), divisionsText(t), 'divisions — comma-separated, e.g. Men, Women, Men 100')) +
+      cell(uiEdit('detail.teamsLabel'), '<span id="glanceTeams">–</span>', '', 'glance-stub') +
+    '</section>';
+  }
+
+  function wireTournamentShare(t) {
+    var btn = document.getElementById('shareTournamentBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      var url = location.origin + location.pathname + '#/event/' + t.id;
+      var data = { title: t.name + ' · League of Champions', text: t.name + ' · ' + t.dateLabel + ' · ' + t.city, url: url };
+      if (navigator.share) { navigator.share(data).catch(function() {}); return; }
+      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function() { showToast(uiText('detail.linkCopied')); }, function() { window.prompt('', url); });
+    });
+  }
+
+  // Face for the team wall / partner cards: the player's own photo when
+  // they have an account with one, otherwise initials on their colour.
+  function playerFaceHtml(name, uid) {
+    var p = uid ? findPlayer(uid) : findPlayerByName(name);
+    var inner = p && p.photoUrl && !p.videoUrl
+      ? '<img src="' + esc(p.photoUrl) + '" alt="" loading="lazy">'
+      : '<span style="background:' + avatarColor(name || '?') + '">' + esc(initials(name || '?')) + '</span>';
+    var route = p ? ' data-route="player/' + esc(p.uid) + '"' : '';
+    return '<span class="tw-face' + (p && isCutoutPhoto(p) ? ' is-cutout' : '') + '"' + route + ' title="' + esc(name || '') + '">' + inner + '</span>';
+  }
+
+  // "Looking for a partner" right on the tournament page: the open
+  // Player Exchange listings of every division, newest first.
+  function loadPartnerSeek(t) {
+    var el = document.getElementById('partnerSeek');
+    if (!el || t.status !== 'upcoming') return;
+    Promise.all(t.competitions.map(function(c) { return loadExchangeListings(t.id, c).catch(function() { return []; }); })).then(function(lists) {
+      var box = document.getElementById('partnerSeek');
+      if (!box) return;
+      var all = [].concat.apply([], lists).filter(function(l) { return !currentUser || l.uid !== currentUser.uid; })
+        .sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      var head = '<div class="ps-head"><h2>' + uiEdit('detail.partnersHeading') + (all.length ? ' <span class="ps-count">' + all.length + '</span>' : '') + '</h2>' +
+        '<a class="btn btn-outline btn-sm" href="#/event/' + esc(t.id) + '/exchange">' + esc(uiText('detail.partnersAll')) + '</a></div>';
+      if (!all.length) { box.innerHTML = head + '<p class="empty-note">' + uiEdit('detail.partnersEmpty') + '</p>'; return; }
+      box.innerHTML = head + '<div class="ps-row">' + all.slice(0, 8).map(function(l) {
+        var club = l.club ? findClub(l.club) : null;
+        return '<div class="ps-card">' + playerFaceHtml(l.name, l.uid) +
+          '<div class="ps-info"><strong>' + esc(l.name) + '</strong>' +
+            '<span class="ps-meta">' + (club && club.logo ? '<img src="' + esc(club.logo) + '" alt="" width="16" height="16">' : '') + esc(l.club || '–') + '</span>' +
+            '<span class="ps-tags"><span>' + esc(divisionLabel(l.competition)) + '</span><span>' + esc(sideLabel(l.side)) + '</span></span></div>' +
+          '<button type="button" class="btn btn-cyan btn-sm" data-ps-contact="' + esc(l.uid) + '" data-ps-name="' + esc(l.name) + '" data-ps-comp="' + esc(l.competition) + '">' + esc(uiText('exchange.contactBtn')) + '</button>' +
+        '</div>';
+      }).join('') + '</div>';
+      box.querySelectorAll('[data-ps-contact]').forEach(function(b) {
+        b.addEventListener('click', function() {
+          if (!currentUser) { navigate('login'); return; }
+          b.disabled = true;
+          findOrCreateConversation(t.id, t.name, b.dataset.psComp, b.dataset.psContact, b.dataset.psName).then(function(convo) { navigate('inbox/' + convo.id); });
+        });
+      });
+    });
+  }
+
   function showDetail(t) {
     // Kept in sync here too (not just in showLive/showSchedule) so
     // divisionOptionsHtml() has the right tournament's competitions list
     // when a team's Division <select> renders on this public page.
     currentBracketTournament = t;
-    var infoRows =
-      '<div class="detail-info-grid">' +
-        '<div class="info-block"><span class="label">' + uiEdit('detail.formatLabel') + '</span><span class="value">' + uiEdit('detail.formatValue') + '</span></div>' +
-        '<div class="info-block"><span class="label">' + uiEdit('detail.feeLabel') + '</span><span class="value">' + editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee + ' / team' : '–', 'entry fee') + '</span></div>' +
-        '<div class="info-block"><span class="label">' + uiEdit('detail.deadlineLabel') + '</span><span class="value">' + editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline') + '</span></div>' +
-        '<div class="info-block"><span class="label">' + uiEdit('detail.divisionsLabel') + '</span><span class="value">' + editTextHtml(t.id, 'competitions', t.competitions.join(', '), divisionsText(t), 'divisions — comma-separated, e.g. Men, Women, Men 100') + '</span></div>' +
-      '</div>';
+    var infoRows = glanceHtml(t);
 
     var headerHtml =
       '<div class="detail-head">' +
         '<span class="tier mono">LoC ' + t.tier + '</span>' +
         '<h1>' + editTextHtml(t.id, 'name', t.name, t.name, 'tournament name') + '</h1>' +
         '<div class="detail-meta mono">' + editTextHtml(t.id, 'dateLabel', t.dateLabel, t.dateLabel, 'dates') + ' 2026 · ' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
+        '<button type="button" class="tour-share-btn" id="shareTournamentBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>' + esc(uiText('detail.share')) + '</button>' +
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), teams: '<div id="playerLists"></div>' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), partners: '', teams: '<div id="playerLists"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
       wireLiveBracketDisable(t);
       wireTournamentPhaseControl(t);
+      wireTournamentShare(t);
       loadAndRenderPlayerLists(t);
       setView('detail');
       return;
@@ -7461,6 +7641,7 @@ var CLUBS = [
       infoGrid: infoRows,
       venue: venueBlockHtml(t),
       registerActions: '<div id="resumeSlot"></div><div class="comp-actions">' + actionsHtml + bracketLinksHtml(t) + liveButtonHtml(t) + '</div>' + tournamentPhaseControlHtml(t),
+      partners: '<div id="partnerSeek"></div>',
       teams: '<div id="playerLists"></div>'
     };
     detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocks[k]); }).join('') + '</div>';
@@ -7472,6 +7653,8 @@ var CLUBS = [
 
     checkResumablePayment(t);
     verifyAlreadyRegistered(t);
+    wireTournamentShare(t);
+    loadPartnerSeek(t);
     loadAndRenderPlayerLists(t);
 
     setView('detail');
@@ -7661,9 +7844,11 @@ var CLUBS = [
         var regRows = comp ? all.filter(function(p) { return p.competition === comp; }) : all;
         var teamRows = comp ? extraTeams.filter(function(tm) { return tm.competition === comp; }) : extraTeams;
         if (!regRows.length && !teamRows.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
-        var extraHtml = teamRows.length ? '<div class="player-list">' + teamRows.map(teamPublicRowHtml).join('') + '</div>' : '';
-        return (regRows.length ? renderPlayerList(regRows) : '') + extraHtml;
+        var cards = (regRows.length ? renderPlayerList(regRows).replace(/^<div class="team-wall">|<\/div>$/g, '') : '') + teamRows.map(teamWallCardHtml).join('');
+        return '<div class="team-wall">' + cards + '</div>';
       }
+      var gt = document.getElementById('glanceTeams');
+      if (gt) gt.textContent = divisionCount(null);
       function renderLists() {
         if (t.competitions.length > 1) {
           if (!registeredTeamsDivision || t.competitions.indexOf(registeredTeamsDivision) === -1) {
