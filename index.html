@@ -7531,7 +7531,12 @@ var CLUBS = [
   function wireTournamentShare(t) {
     var btn = document.getElementById('shareTournamentBtn');
     if (!btn) return;
-    btn.addEventListener('click', function() { openTournamentGraphic(t, btn); });
+    btn.addEventListener('click', function() {
+      if (isAdmin) { openTournamentGraphic(t, btn); return; }
+      var url = location.origin + location.pathname + '#/event/' + t.id;
+      if (navigator.share) { navigator.share({ title: t.name + ' · League of Champions', text: t.name + ' · ' + t.dateLabel + ' · ' + t.city, url: url }).catch(function() {}); return; }
+      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function() { showToast(uiText('detail.linkCopied')); }, function() { window.prompt('', url); });
+    });
   }
 
   /* Tournament share graphic: Instagram post (3:4) and story (9:16) in the
@@ -7608,9 +7613,11 @@ var CLUBS = [
       var gap = 18, rowW = clubs.length * logoS + (clubs.length - 1) * gap, lx = (W - rowW) / 2;
       clubs.forEach(function(cl, i) {
         var im = imgs.clubs[i]; if (!im) return;
-        var x = lx + i * (logoS + gap), cx = x + logoS / 2, cy = logosY + logoS / 2;
-        g.save(); g.beginPath(); g.arc(cx, cy, logoS / 2, 0, Math.PI * 2); g.fillStyle = '#fff'; g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 16; g.fill();
-        g.shadowBlur = 0; g.clip(); g.drawImage(im, x, logosY, logoS, logoS); g.restore();
+        // logo as it is (white background already removed), fitted into its slot
+        var k = logoS / Math.max(im.width, im.height), iw = im.width * k, ih = im.height * k;
+        var x = lx + i * (logoS + gap);
+        g.save(); g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 14; g.shadowOffsetY = 4;
+        g.drawImage(im, x + (logoS - iw) / 2, logosY + (logoS - ih) / 2, iw, ih); g.restore();
       });
     }
 
@@ -7658,6 +7665,17 @@ var CLUBS = [
     g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - B - 22);
     return c;
   }
+  // The logo with its white background removed (same cleanup as the podium
+  // and logo wall); falls back to the original file after 2s.
+  function cleanLogoAsync(src) {
+    if (!src || knockedOutLogos[src]) return Promise.resolve(src && knockedOutLogos[src] || src);
+    return new Promise(function(res) {
+      var probe = document.createElement('img'); probe.setAttribute('src', src); knockOutWhiteBg(probe);
+      var t0 = Date.now(), iv = setInterval(function() {
+        if (knockedOutLogos[src] || Date.now() - t0 > 2000) { clearInterval(iv); res(knockedOutLogos[src] || src); }
+      }, 40);
+    });
+  }
   function openTournamentGraphic(t, btn) {
     var label = btn.innerHTML;
     btn.disabled = true; btn.textContent = uiText('detail.creatingGraphic');
@@ -7666,7 +7684,7 @@ var CLUBS = [
     var fonts = document.fonts ? Promise.all([
       document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
     ]).catch(function() {}) : Promise.resolve();
-    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(t.image), Promise.all(clubs.map(function(cl) { return loadImageAsync(cl.logo); }))]).then(function(r) {
+    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(t.image), Promise.all(clubs.map(function(cl) { return cleanLogoAsync(cl.logo).then(loadImageAsync); }))]).then(function(r) {
       var imgs = { badge: r[1], photo: r[2], clubs: r[3] };
       return Promise.all(['post', 'story'].map(function(k) {
         var canvas = drawTournamentCard(t, info, imgs, k);
