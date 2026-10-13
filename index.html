@@ -4502,6 +4502,8 @@ var CLUBS = [
     'detail.directions': 'Plan route ↗',
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
+    'detail.copyLink': 'Copy link',
+    'detail.creatingGraphic': 'Creating graphic…',
     'detail.partnersHeading': 'Looking for a partner',
     'detail.partnersEmpty': 'Nobody is looking yet. Need a partner? Post yourself in the Player Exchange.',
     'detail.partnersAll': 'Open Player Exchange →',
@@ -4649,7 +4651,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -7525,15 +7527,159 @@ var CLUBS = [
     '</section>';
   }
 
+  var detailShareInfo = null;
   function wireTournamentShare(t) {
     var btn = document.getElementById('shareTournamentBtn');
     if (!btn) return;
-    btn.addEventListener('click', function() {
-      var url = location.origin + location.pathname + '#/event/' + t.id;
-      var data = { title: t.name + ' · League of Champions', text: t.name + ' · ' + t.dateLabel + ' · ' + t.city, url: url };
-      if (navigator.share) { navigator.share(data).catch(function() {}); return; }
-      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function() { showToast(uiText('detail.linkCopied')); }, function() { window.prompt('', url); });
+    btn.addEventListener('click', function() { openTournamentGraphic(t, btn); });
+  }
+
+  /* Tournament share graphic: Instagram post (3:4) and story (9:16) in the
+     ticket look — giant city name, the event photo when there is one, the
+     key facts on a ticket and the logos of the clubs that are coming. */
+  function drawTournamentCard(t, info, imgs, formatKey) {
+    var fmt = PLAYER_CARD_FORMATS[formatKey] || PLAYER_CARD_FORMATS.post;
+    var W = 1080, H = fmt.H, T = fmt.top, B = fmt.bottom, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    var CYAN = '#00f2ff', BEBAS = '"Bebas Neue", sans-serif', GEIST = '"Geist", "Poppins", sans-serif';
+    var bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#080a55'); bg.addColorStop(0.55, '#1b1e86'); bg.addColorStop(1, '#5a55a8');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.save(); g.translate(W * 0.58, 0); g.transform(1, 0, -0.42, 1, 0, 0);
+    var band = g.createLinearGradient(0, 0, 360, 0);
+    band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(1, 'rgba(0,242,255,0.12)');
+    g.fillStyle = band; g.fillRect(0, 0, 360, H * 0.8); g.restore();
+
+    var upcoming = t.status === 'upcoming' && deadlineInfo(t) !== uiText('detail.regClosed');
+    var tier = String(t.tier), year = (t.dateSort || '').slice(0, 4);
+    // bottom-up layout: footer, call-to-action, ticket, club logos, hero
+    var ctaH = 76, ctaY = H - B - 70 - ctaH;
+    var th = 330, ty = ctaY - 44 - th;
+    var clubs = (info && info.clubs || []).slice(0, 9), logoS = 74, logosY = clubs.length ? ty - 40 - logoS : ty;
+    var heroTop = T + 190, heroBot = (clubs.length ? logosY - 50 : ty - 40), heroH = heroBot - heroTop;
+
+    // Hero: the event photo, or a big spotlight + outlined tier
+    if (imgs.photo) {
+      var ph = imgs.photo, sc = Math.max(W / ph.width, heroH / ph.height), pw = ph.width * sc, phh = ph.height * sc;
+      var off = document.createElement('canvas'); off.width = W; off.height = H; var o = off.getContext('2d');
+      o.drawImage(ph, (W - pw) / 2, heroTop + (heroH - phh) / 2, pw, phh);
+      o.globalCompositeOperation = 'destination-in';
+      var fade = o.createLinearGradient(0, heroTop, 0, heroBot);
+      fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(0.12, '#000'); fade.addColorStop(0.7, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+      o.fillStyle = fade; o.fillRect(0, 0, W, H);
+      g.save(); g.globalAlpha = 0.85; g.drawImage(off, 0, 0); g.restore();
+      var shade = g.createLinearGradient(0, heroTop, 0, heroBot);
+      shade.addColorStop(0, 'rgba(8,10,85,0.1)'); shade.addColorStop(1, 'rgba(8,10,85,0.75)');
+      g.fillStyle = shade; g.fillRect(0, heroTop, W, heroH);
+    } else {
+      var spot = g.createRadialGradient(W / 2, heroTop + heroH * 0.45, 20, W / 2, heroTop + heroH * 0.45, 520);
+      spot.addColorStop(0, 'rgba(0,242,255,0.28)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.07)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
+      g.fillStyle = spot; g.fillRect(0, 0, W, H);
+      if (imgs.badge) { g.save(); g.globalAlpha = 0.1; var bs = Math.min(heroH * 0.95, 700); g.drawImage(imgs.badge, (W - bs) / 2, heroTop + (heroH - bs) / 2, bs, bs); g.restore(); }
+    }
+    // Giant city name across the hero, tier chip above it
+    var city = (t.city || t.name || '').toUpperCase();
+    g.save(); g.textAlign = 'center'; g.textBaseline = 'alphabetic'; spacing(4);
+    var citySize = pcFitText(g, city, W - 100, Math.min(380, heroH * 0.6), '400 {s}px ' + BEBAS);
+    var cityY = heroTop + heroH * 0.5 + citySize * 0.36;
+    g.shadowColor = 'rgba(3,4,40,0.6)'; g.shadowBlur = 40; g.fillStyle = '#fff'; g.fillText(city, W / 2, cityY);
+    g.shadowBlur = 0; g.strokeStyle = 'rgba(0,242,255,0.5)'; g.lineWidth = 2; g.strokeText(city, W / 2 + 8, cityY + 8);
+    g.fillStyle = '#fff'; g.fillText(city, W / 2, cityY);
+    g.restore();
+    g.save(); g.translate(W / 2, cityY - citySize * 0.82 - 30); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(5); g.font = '800 30px ' + GEIST; var chip = 'LoC ' + tier, cw = g.measureText(chip).width + 52;
+    g.fillStyle = CYAN; g.fillRect(-cw / 2, -38, cw, 56); g.fillStyle = '#07083f'; g.textAlign = 'center'; g.fillText(chip, 0, 2); g.restore();
+
+    // Header: badge + wordmark, season chip
+    g.save(); g.translate(0, T);
+    if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
+    spacing(6); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('FOOTVOLLEY', 182, 142);
+    g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(4); g.font = '800 22px ' + GEIST; var schip = 'TOUR ' + year, scw = g.measureText(schip).width + 40;
+    g.fillStyle = CYAN; g.fillRect(-scw, 0, scw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(schip, -20, 31); g.restore();
+    g.restore();
+
+    // Club logos that are coming
+    if (clubs.length) {
+      var gap = 18, rowW = clubs.length * logoS + (clubs.length - 1) * gap, lx = (W - rowW) / 2;
+      clubs.forEach(function(cl, i) {
+        var im = imgs.clubs[i]; if (!im) return;
+        var x = lx + i * (logoS + gap), cx = x + logoS / 2, cy = logosY + logoS / 2;
+        g.save(); g.beginPath(); g.arc(cx, cy, logoS / 2, 0, Math.PI * 2); g.fillStyle = '#fff'; g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 16; g.fill();
+        g.shadowBlur = 0; g.clip(); g.drawImage(im, x, logosY, logoS, logoS); g.restore();
+      });
+    }
+
+    // Ticket with the facts
+    var tx = 40, tw = W - 80, stub = 190;
+    var tk = g.createLinearGradient(tx, ty, tx + tw, ty + th);
+    tk.addColorStop(0, '#1a1d84'); tk.addColorStop(0.4, '#2c2f98'); tk.addColorStop(0.58, '#4a4cb0'); tk.addColorStop(1, '#23268c');
+    g.save(); pcRoundRect(g, tx, ty, tw, th, 22); g.fillStyle = tk; g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 2; g.stroke(); g.restore();
+    var sx = tx + tw - stub;
+    g.save(); g.fillStyle = bg; [ty, ty + th].forEach(function(y) { g.beginPath(); g.arc(sx, y, 16, 0, Math.PI * 2); g.fill(); }); g.restore();
+    g.save(); g.setLineDash([10, 9]); g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(sx, ty + 22); g.lineTo(sx, ty + th - 22); g.stroke(); g.restore();
+    var lw = tw - stub, lx0 = tx + 44;
+    g.textAlign = 'left'; spacing(1); g.fillStyle = '#fff';
+    pcFitText(g, (t.name || '').toUpperCase(), lw - 88, 88, '400 {s}px ' + BEBAS); g.fillText((t.name || '').toUpperCase(), lx0, ty + 104);
+    spacing(3); g.font = '700 26px ' + GEIST; g.fillStyle = CYAN;
+    g.fillText(((t.dateLabel || '') + ' ' + year + '  ·  ' + (t.city || '') + ', ' + (t.country || '')).toUpperCase(), lx0, ty + 150);
+    g.save(); g.setLineDash([8, 8]); g.strokeStyle = 'rgba(255,255,255,0.22)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(lx0, ty + 186); g.lineTo(sx - 30, ty + 186); g.stroke(); g.restore();
+    var dl = t.deadline ? new Date(t.deadline) : null;
+    var dlTxt = dl && !isNaN(dl) ? dl.toLocaleDateString('en', { month: 'short', day: 'numeric' }).toUpperCase() : '–';
+    var stats = [
+      ['ENTRY FEE', t.fee ? '€' + t.fee : '–'],
+      [upcoming ? 'DEADLINE' : 'DIVISIONS', upcoming ? dlTxt : (t.competitions || []).map(function(x) { return x === 'Men' ? "MEN'S" : x === 'Women' ? "WOMEN'S" : x.toUpperCase(); }).join(' & ')],
+      ['TEAMS', info && info.teams ? String(info.teams) : '–']
+    ];
+    if (!upcoming) stats[0] = ['FORMAT', '2 VS 2'];
+    var colW = (lw - 44) / stats.length;
+    g.textAlign = 'left';
+    stats.forEach(function(st, i) {
+      var cx2 = lx0 + colW * i;
+      spacing(3); g.font = '700 20px ' + GEIST; g.fillStyle = CYAN; g.fillText(st[0], cx2, ty + 236);
+      spacing(1); g.fillStyle = '#fff'; pcFitText(g, st[1], colW - 24, 70, '400 {s}px ' + BEBAS); g.fillText(st[1], cx2, ty + 300);
     });
+    g.textAlign = 'center'; spacing(4); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('LoC', sx + stub / 2, ty + th / 2 - 34);
+    spacing(1); g.fillStyle = '#fff'; pcFitText(g, tier, stub - 36, 110, '400 {s}px ' + BEBAS); g.fillText(tier, sx + stub / 2, ty + th / 2 + 58);
+
+    // Call to action
+    var cta = upcoming ? 'REGISTER NOW' : t.status === 'past' ? 'RESULTS & BRACKET' : 'FOLLOW LIVE';
+    g.save(); spacing(4); g.font = '800 28px ' + GEIST; var ctaW = g.measureText(cta).width + 90;
+    pcRoundRect(g, (W - ctaW) / 2, ctaY, ctaW, ctaH, ctaH / 2); g.fillStyle = CYAN; g.shadowColor = 'rgba(0,242,255,0.5)'; g.shadowBlur = 30; g.fill();
+    g.shadowBlur = 0; g.fillStyle = '#07083f'; g.textAlign = 'center'; g.fillText(cta, W / 2, ctaY + ctaH / 2 + 10); g.restore();
+    spacing(4); g.textAlign = 'center'; g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - B - 22);
+    return c;
+  }
+  function openTournamentGraphic(t, btn) {
+    var label = btn.innerHTML;
+    btn.disabled = true; btn.textContent = uiText('detail.creatingGraphic');
+    var info = detailShareInfo && detailShareInfo.id === t.id ? detailShareInfo : null;
+    var clubs = info ? info.clubs.slice(0, 9) : [];
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
+    ]).catch(function() {}) : Promise.resolve();
+    Promise.all([fonts, loadImageAsync(BADGE_URI), loadImageAsync(t.image), Promise.all(clubs.map(function(cl) { return loadImageAsync(cl.logo); }))]).then(function(r) {
+      var imgs = { badge: r[1], photo: r[2], clubs: r[3] };
+      return Promise.all(['post', 'story'].map(function(k) {
+        var canvas = drawTournamentCard(t, info, imgs, k);
+        return new Promise(function(res) { canvas.toBlob(function(b) { res({ key: k, blob: b, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
+      }));
+    }).then(function(list) {
+      btn.disabled = false; btn.innerHTML = label;
+      var url = location.origin + location.pathname + '#/event/' + t.id;
+      showPlayerCardModal({ name: t.name }, { formats: list }, btn, {
+        base: 'loc-' + t.id, label: t.name, shareTitle: t.name + ' · League of Champions',
+        shareText: t.name + ' · ' + t.dateLabel + ' · ' + t.city + '\n' + url, link: url
+      });
+    }).catch(function() { btn.disabled = false; btn.innerHTML = label; window.alert('Could not create the graphic. Please try again.'); });
   }
 
   // Face for the team wall / partner cards: the player's own photo when
@@ -7835,6 +7981,10 @@ var CLUBS = [
       }
       var gt = document.getElementById('glanceTeams');
       if (gt) gt.textContent = divisionCount(null);
+      // for the share graphic: how many teams + which clubs are coming
+      var seen = {};
+      detailShareInfo = { id: t.id, teams: divisionCount(null), clubs: all.map(function(r) { return r.club; }).concat(extraTeams.map(function(tm) { return tm.club; }))
+        .map(function(n) { return findClub(n || ""); }).filter(function(c) { if (!c || !c.logo || seen[c.name]) return false; seen[c.name] = 1; return true; }) };
       function renderLists() {
         if (t.competitions.length > 1) {
           if (!registeredTeamsDivision || t.competitions.indexOf(registeredTeamsDivision) === -1) {
@@ -8523,26 +8673,30 @@ var CLUBS = [
       showPlayerCardModal(player, out, triggerBtn);
     }).catch(function() { triggerBtn.disabled = false; triggerBtn.textContent = label; window.alert('Could not create the card. Please try again.'); });
   }
-  function showPlayerCardModal(player, out, returnFocus) {
-    var base = 'loc-player-card-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  // opts (optional, used by the tournament graphic): base file name,
+  // dialog label, share title/text, and a page link to copy.
+  function showPlayerCardModal(player, out, returnFocus, opts) {
+    opts = opts || {};
+    var base = opts.base || 'loc-player-card-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-');
     var files = {};
     out.formats.forEach(function(f) { if (f.blob) files[f.key] = new File([f.blob], base + '-' + f.key + '.png', { type: 'image/png' }); });
     var canShare = !!(files.post && navigator.canShare && navigator.canShare({ files: [files.post] }));
     var current = 'post';
     var wrap = document.createElement('div');
     wrap.className = 'pcard-modal';
-    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', 'Player card');
+    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', opts.label || 'Player card');
     wrap.innerHTML = '<div class="pcard-sheet">' +
       '<div class="layout-toggle pcard-format" role="group" aria-label="Format">' +
         '<span class="layout-toggle-thumb" aria-hidden="true"></span>' +
         '<button type="button" data-pcard-format="post" aria-pressed="true">Post 3:4</button>' +
         '<button type="button" data-pcard-format="story" aria-pressed="false">Story 9:16</button>' +
       '</div>' +
-      '<img class="pcard-img" alt="Player card of ' + esc(player.name || '') + '">' +
+      '<img class="pcard-img" alt="' + esc(opts.label ? opts.label + ': ' + (player.name || '') : 'Player card of ' + (player.name || '')) + '">' +
       (out.photoMissing ? '<p class="pcard-note">The photo could not be added (storage access). The card was created without it.</p>' : '') +
       '<div class="pcard-actions">' +
         (canShare ? '<button type="button" class="btn btn-cyan" data-pcard="share">Share</button>' : '') +
         '<a class="btn ' + (canShare ? 'btn-outline' : 'btn-cyan') + '" data-pcard="download">Download PNG</a>' +
+        (opts.link ? '<button type="button" class="btn btn-outline" data-pcard="link">' + esc(uiText('detail.copyLink')) + '</button>' : '') +
         '<button type="button" class="btn btn-outline" data-pcard="close">Close</button>' +
       '</div></div>';
     document.body.appendChild(wrap);
@@ -8566,7 +8720,10 @@ var CLUBS = [
       var fb = e.target.closest('[data-pcard-format]');
       if (fb) { show(fb.dataset.pcardFormat); return; }
       if (e.target === wrap || e.target.closest('[data-pcard="close"]')) close();
-      else if (e.target.closest('[data-pcard="share"]')) navigator.share({ files: [files[current]], title: (player.name || '') + ' · League of Champions' }).catch(function() {});
+      else if (e.target.closest('[data-pcard="share"]')) navigator.share(Object.assign({ files: [files[current]], title: opts.shareTitle || (player.name || '') + ' · League of Champions' }, opts.shareText ? { text: opts.shareText } : {})).catch(function() {});
+      else if (e.target.closest('[data-pcard="link"]')) {
+        (navigator.clipboard ? navigator.clipboard.writeText(opts.link) : Promise.reject()).then(function() { showToast(uiText('detail.linkCopied')); }, function() { window.prompt('', opts.link); });
+      }
     });
     (wrap.querySelector('[data-pcard="share"]') || dl).focus();
   }
