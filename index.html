@@ -7671,10 +7671,8 @@ var CLUBS = [
     var schedule = scheduleLinkVisible(t)
       ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/schedule">' + uiText('schedule.label') + ' →</a>'
       : '';
-    var exchange = t.status === 'upcoming'
-      ? ' <a class="btn btn-outline" href="#/event/' + esc(t.id) + '/exchange">' + uiText('exchange.navLabel') + ' →</a>'
-      : '';
-    return primary + schedule + exchange;
+    // the Player Exchange link lives in the "Looking for a partner" block
+    return primary + schedule;
   }
 
   // Visitors shouldn't be able to click into an empty bracket page — admins
