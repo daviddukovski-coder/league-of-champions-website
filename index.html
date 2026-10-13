@@ -6338,6 +6338,19 @@ var CLUBS = [
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
+    // Sideways scrolling (trackpad two-finger swipe, or Shift + wheel) turns
+    // the ring; plain vertical scrolling stays page scrolling. When the
+    // scrolling stops it settles on the nearest ticket.
+    var wheelSnap = null;
+    stage.addEventListener('wheel', function(e) {
+      var dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+      if (!dx) return;
+      e.preventDefault();
+      var degPerPx = 360 / (2 * Math.PI * R) * 0.9;
+      rot -= dx * degPerPx; target = null; vel = 0; hold(4000); paint();
+      clearTimeout(wheelSnap);
+      wheelSnap = setTimeout(function() { goTo(frontIndex()); }, 160);
+    }, { passive: false });
     // A drag never opens a ticket; a side ticket comes to the front first.
     root.addEventListener('click', function(e) {
       var b = e.target.closest('[data-rc]');
