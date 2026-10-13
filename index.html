@@ -2106,6 +2106,14 @@
     :root[data-design="ig"] .hero-top .fx-stat-num { font-size:30px; }
     :root[data-design="ig"] .hero-top .fx-stat-label { font-size:8px; letter-spacing:0.08em; }
   }
+
+  /* Timeline under the tickets steers them; replaces the ring's arrows + count */
+  .tour-round.has-tl .rc-controls { display:none; }
+  .fx-timeline { margin-top:18px; }
+  .fx-tl-stop.is-current .fx-tl-dot { transform:scale(1.45); border-color:#fff; background:var(--cyan); box-shadow:0 0 0 4px rgba(0,242,255,0.25), 0 0 16px rgba(0,242,255,0.7); }
+  .fx-tl-stop.is-current .fx-tl-city { color:var(--cyan); opacity:1; }
+  .tcard.is-flash { animation:tcardFlash 1s ease-out; }
+  @keyframes tcardFlash { 0% { box-shadow:0 0 0 3px var(--cyan), 0 0 40px rgba(0,242,255,0.6); } 100% { box-shadow:var(--tk-shadow); } }
 </style>
 </head>
 <body>
@@ -5445,20 +5453,19 @@ var CLUBS = [
     // Season timeline: every stop of the season on one line; past stops filled,
     // the next one pulsing. Each stop opens its tournament.
     var timelineHtml = '';
-    if (fxOn('timeline') && tours.length) {
-      timelineHtml = '<section class="landing-section fx-timeline"><div class="container">' +
-        '<div class="landing-section-head"><h2>' + esc(uiText('fx.timelineTitle')) + '</h2></div>' +
-        '<div class="fx-tl"><div class="fx-tl-track" role="list"><div class="fx-tl-line" aria-hidden="true"><span class="fx-tl-progress" style="--p:' +
+    if (igDesign && tours.length) {
+      timelineHtml = '<div class="fx-timeline">' +
+        '<div class="fx-tl" aria-label="' + esc(uiText('fx.timelineTitle')) + '"><div class="fx-tl-track" role="list"><div class="fx-tl-line" aria-hidden="true"><span class="fx-tl-progress" style="--p:' +
           (tours.filter(function(t) { return t.status === 'past'; }).length / Math.max(1, tours.length - 1)).toFixed(3) + '"></span></div>' +
-        tours.map(function(t) {
+        tours.map(function(t, i) {
           var state = t.id === nextId ? 'is-next' : t.status === 'past' ? 'is-past' : 'is-future';
-          return '<button type="button" role="listitem" class="fx-tl-stop ' + state + '" data-route="event/' + esc(t.id) + '">' +
+          return '<button type="button" role="listitem" class="fx-tl-stop ' + state + '" data-tl-index="' + i + '" data-tl-id="' + esc(t.id) + '">' +
             '<span class="fx-tl-dot" aria-hidden="true"></span>' +
             '<span class="fx-tl-date">' + esc(t.dateLabel) + '</span>' +
             '<span class="fx-tl-city">' + esc(t.city) + '</span>' +
             '<span class="fx-tl-tier">LoC ' + esc(t.tier) + '</span></button>';
         }).join('') +
-        '</div></div></div></section>';
+        '</div></div></div>';
     }
 
     // 'ig': logo wall + numbers sit on top of the hero video, no band behind them.
@@ -5476,8 +5483,7 @@ var CLUBS = [
             document.getElementById('tournamentLayoutToggle').innerHTML.replace(/<span class="layout-toggle-thumb"[^>]*><\/span>/, '') + '</div>' : '') +
           '<button class="btn btn-outline btn-sm" data-route="tournaments">' + esc(uiText('landing.allTournaments')) + '</button>' +
         '</div></div>' +
-        '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div></div></section>' : '') +
-      timelineHtml +
+        '<div class="tour-rail' + (igDesign ? ' is-tickets' : '') + '">' + tourCards + '</div>' + timelineHtml + '</div></section>' : '') +
       (leadersHtml ? '<section class="landing-section landing-leaders"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
@@ -5511,17 +5517,46 @@ var CLUBS = [
           var t2 = document.getElementById('landingLayoutToggle'); if (t2) t2.querySelector('[aria-pressed="true"]').focus();
         });
       }
+      var tlEl = el.querySelector('.fx-tl');
+      var markStop = function(i) {
+        if (!tlEl) return;
+        tlEl.querySelectorAll('.fx-tl-stop').forEach(function(b) { var on = +b.dataset.tlIndex === i; b.classList.toggle('is-current', on); if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+        var cur = tlEl.querySelector('.is-current');
+        if (cur) tlEl.scrollTo({ left: cur.offsetLeft - (tlEl.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' });
+      };
+      var ringApi = null;
+      if (tlEl) tlEl.addEventListener('click', function(e) {
+        var b = e.target.closest('.fx-tl-stop');
+        if (!b) return;
+        var i = +b.dataset.tlIndex;
+        // The first click on a stop brings its ticket forward; clicking that
+        // same stop again opens the tournament (the ring keeps turning on its
+        // own, so "is it current right now" alone would be a surprise).
+        if (tlEl.dataset.picked === String(i)) { navigate('event/' + b.dataset.tlId); return; }
+        tlEl.dataset.picked = String(i);
+        if (ringApi) ringApi.goTo(i);
+        else {
+          var card = railEl.querySelector('.tcard[data-id="' + b.dataset.tlId + '"]');
+          if (card) {
+            if (railEl.classList.contains('is-tickets')) railEl.scrollTo({ left: card.offsetLeft - (railEl.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+            else card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            card.classList.remove('is-flash'); void card.offsetWidth; card.classList.add('is-flash');
+          }
+          markStop(i);
+        }
+      });
       if (landingLayout === 'ring') {
         var cards = Array.prototype.map.call(railEl.children, function(c) { return c.outerHTML; });
         var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
-        railEl.className = 'tour-round';
-        mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }) });
+        railEl.className = 'tour-round' + (tlEl ? ' has-tl' : '');
+        ringApi = mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }), onFront: markStop });
       } else if (landingLayout === 'grid') {
         railEl.className = 'tournament-grid is-overview tour-overview';
         Array.prototype.forEach.call(railEl.children, function(c, i) { c.style.setProperty('--i', i); });
       } else {
         wireTicketRail(railEl, nextCard);
       }
+      if (!ringApi && nextCard) markStop(Array.prototype.indexOf.call(railEl.children, nextCard));
     }
     else if (nextCard) requestAnimationFrame(function() { nextCard.parentElement.scrollLeft = Math.max(0, nextCard.offsetLeft - nextCard.parentElement.offsetLeft - 8); });
   }
@@ -6116,6 +6151,7 @@ var CLUBS = [
         // Position within the real tournaments (copies count as their original).
         var pad = function(x) { return (x < 10 ? '0' : '') + x; };
         countEl.innerHTML = '<b>' + pad(+els[f].dataset.orig + 1) + '</b> / ' + pad(n0);
+        if (opts.onFront) opts.onFront(+els[f].dataset.orig);
       }
       els.forEach(function(el, i) {
         var a = ((i * step + rot) % 360 + 540) % 360 - 180, ad = Math.abs(a);
