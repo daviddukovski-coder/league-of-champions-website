@@ -2083,6 +2083,29 @@
   .fx-tl-tier { font-size:10px; font-weight:800; letter-spacing:0.14em; color:var(--cyan); }
   .fx-tl-stop.is-past .fx-tl-city { opacity:0.7; }
   @media (prefers-reduced-motion: reduce) { .fx-tl-progress { transition:none; } .fx-tl-stop.is-next .fx-tl-dot { animation:none; } }
+
+  /* ============ ig: logo wall + numbers on top of the hero video ============ */
+  .hero-top { display:none; }
+  :root[data-design="ig"] .landing-hero { flex-direction:column; align-items:stretch; }
+  :root[data-design="ig"] .hero-layout { margin-top:auto; }
+  :root[data-design="ig"] .hero-top { display:block; position:relative; z-index:1; width:100%; padding-top:10px; }
+  :root[data-design="ig"] .hero-top:empty { display:none; }
+  /* only a soft dark fade from the top, no band */
+  :root[data-design="ig"] .hero-top::before { content:''; position:absolute; left:0; right:0; top:0; height:calc(100% + 70px); z-index:-1; pointer-events:none;
+    background:linear-gradient(180deg, rgba(5,6,40,0.72) 0%, rgba(5,6,40,0.35) 60%, transparent 100%); }
+  :root[data-design="ig"] .hero-top .logo-wall { background:none; border:none; padding:10px 0 6px; }
+  :root[data-design="ig"] .hero-top .logo-wall-item .club-avatar { width:48px; height:48px; }
+  :root[data-design="ig"] .hero-top .fx-stats { padding:6px 0 0; }
+  :root[data-design="ig"] .hero-top .fx-stat { padding:2px 18px; border-left-color:rgba(255,255,255,0.28); }
+  :root[data-design="ig"] .hero-top .fx-stat-num { font-size:clamp(34px, 4vw, 54px); text-shadow:0 2px 14px rgba(3,4,40,0.6); }
+  :root[data-design="ig"] .hero-top .fx-stat-label { font-size:10px; text-shadow:0 1px 8px rgba(3,4,40,0.8); }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .hero-top .logo-wall-item .club-avatar { width:36px; height:36px; }
+    :root[data-design="ig"] .hero-top .fx-stats-row { grid-template-columns:repeat(4, 1fr); }
+    :root[data-design="ig"] .hero-top .fx-stat { padding:2px 8px; }
+    :root[data-design="ig"] .hero-top .fx-stat-num { font-size:30px; }
+    :root[data-design="ig"] .hero-top .fx-stat-label { font-size:8px; letter-spacing:0.08em; }
+  }
 </style>
 </head>
 <body>
@@ -2131,6 +2154,7 @@
   <section id="view-landing" class="view">
     <div class="landing-hero">
       <div class="hero-media edit-target" id="heroMedia"></div>
+      <div class="hero-top" id="heroTop"></div>
       <div class="hero-layout">
         <div class="hero-content" id="heroContentBlocks"></div>
         <aside class="hero-next" id="heroNext"></aside>
@@ -5408,7 +5432,7 @@ var CLUBS = [
 
     // Stats strip: real counts only (season tournaments, ranked players, clubs, countries).
     var statsHtml = '';
-    if (fxOn('stats')) {
+    if (igDesign || fxOn('stats')) {
       var nPlayers = rYear ? rankingRows(rYear, 'men', 'players').length + rankingRows(rYear, 'women', 'players').length : 0;
       var nCountries = Object.keys(tours.reduce(function(m, t) { m[t.country] = 1; return m; }, {})).length;
       var stat = function(n, label) { return n ? '<div class="fx-stat"><span class="fx-stat-num" data-count-to="' + n + '">' + n + '</span><span class="fx-stat-label">' + esc(label) + '</span></div>' : ''; };
@@ -5437,6 +5461,13 @@ var CLUBS = [
         '</div></div></div></section>';
     }
 
+    // 'ig': logo wall + numbers sit on top of the hero video, no band behind them.
+    var heroTop = document.getElementById('heroTop');
+    if (heroTop && igDesign) {
+      heroTop.innerHTML = ticker + statsHtml;
+      wireCountUps(heroTop);
+      ticker = ''; statsHtml = '';
+    } else if (heroTop) heroTop.innerHTML = '';
     el.innerHTML = ticker + statsHtml +
       (tours.length ? '<section class="landing-section"><div class="container">' +
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.tourTitle', { year: season })) + '</h2>' +
