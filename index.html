@@ -6369,11 +6369,12 @@ var CLUBS = [
         target.fly = D > 1 ? clamp(scrollY / D, 0, 1) : 1;
         target.flyD = D;
       } else target.fly = 1;
-      // ball: from when the leaders come into view until they sit in the upper half
+      // ball: from when the leaders are on screen until they sit near the top
       var lead = document.querySelector('.landing-leaders');
       if (lead) {
         var lr = lead.getBoundingClientRect();
-        target.ball = clamp((vh * 1.1 - lr.top) / (vh * 0.75), 0, 1);
+        // approach while the leaders scroll in, kicks only once they are well on screen
+        target.ball = clamp((vh * 0.85 - lr.top) / (vh * 0.65), 0, 1);
       } else target.ball = 0;
       var max = document.documentElement.scrollHeight - vh;
       target.page = max > 0 ? clamp(scrollY / max, 0, 1) : 0;
@@ -6400,13 +6401,16 @@ var CLUBS = [
       var f = cur.fly || 0, e = ease(f), cr = card.getBoundingClientRect();
       if (f >= 1) {
         // touchdown: it IS the ring ticket now
-        hc.style.visibility = 'hidden'; card.style.visibility = '';
+        hc.style.visibility = 'hidden'; hc.style.willChange = ''; card.style.visibility = '';
       } else {
         var cardX = cr.left + cr.width / 2, cardDocY = landY != null ? landY : cr.top + cr.height / 2 + scrollY;
-        var wantX = lerp(heroNat.cx, cardX, e), wantY = lerp(heroNat.cy, cardDocY - (target.flyD || 0), e);
-        var natX = heroNat.cx, natY = heroNat.cy - scrollY;
-        var s = lerp(1, cr.width / heroNat.w, e), tilt = Math.sin(e * Math.PI) * -7;
-        hc.style.transform = 'translate(' + (wantX - natX).toFixed(1) + 'px,' + (wantY - natY).toFixed(1) + 'px) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
+        // moved in page space (not screen space): it scrolls with the page and
+        // glides steadily toward the ring ticket, so even when the eased value
+        // lags behind a fast scroll it ends exactly on the ticket, no jump
+        var dx = f * (cardX - heroNat.cx), dy = f * (cardDocY - heroNat.cy);
+        var s = lerp(1, cr.width / heroNat.w, e), tilt = Math.sin(f * Math.PI) * -6;
+        hc.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px,0) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
+        hc.style.willChange = 'transform';
         hc.style.visibility = ''; card.style.visibility = 'hidden';
       }
       // the ring holds still (on this ticket) until the landing, then turns
@@ -6447,8 +6451,8 @@ var CLUBS = [
       }
       if (ballHome) { ballHome = false; ball.style.transition = 'none'; }
       if (b <= 0) { ball.style.translate = ''; ball.classList.remove('is-traveling'); rows.forEach(unkickRow); return; }
-      // waypoints: each leader row (a little left of its name), men first, then women
-      var pts = rows.map(function(r) { var rr = r.getBoundingClientRect(); return { x: rr.left + 34, y: rr.top + rr.height / 2 }; });
+      // waypoints: the left edge of each leader row (kicks it in from the side), men first, then women
+      var pts = rows.map(function(r) { var rr = r.getBoundingClientRect(); return { x: rr.left - 6, y: rr.top + rr.height / 2 }; });
       var x, y;
       if (!pts.length) { x = homeX; y = homeY; }
       else if (b < 0.4) {
