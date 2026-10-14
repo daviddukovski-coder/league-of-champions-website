@@ -2570,6 +2570,25 @@
   :root[data-design="ig"] .btn.btn-gradient:active { transform:scale(0.98); }
   @keyframes gbSpin { to { --gb-angle:360deg; } }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .btn.btn-gradient::before, :root[data-design="ig"] .btn.btn-gradient::after { animation:none; } }
+
+  /* ranking video dialog (admins) */
+  .cmp-open-row { gap:10px; flex-wrap:wrap; }
+  .rv-sheet { width:min(560px, 100%); max-height:calc(100dvh - 40px); overflow-y:auto; padding:22px; border-radius:20px; background:rgba(11,13,99,0.97); border:1px solid rgba(255,255,255,0.18); align-items:stretch; }
+  .rv-h { margin:0 0 6px; }
+  .rv-grid { display:flex; flex-direction:column; gap:10px; }
+  .rv-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .rv-k { width:96px; flex-shrink:0; font:700 11px 'Poppins', sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:var(--cyan); }
+  .rv-opt { position:relative; cursor:pointer; }
+  .rv-opt input { position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
+  .rv-opt span { display:inline-block; padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.25); font:600 12.5px 'Poppins', sans-serif; color:#fff; transition:background-color .2s, border-color .2s, color .2s; }
+  .rv-opt input:checked + span { background:var(--cyan); border-color:var(--cyan); color:#07083f; }
+  .rv-opt input:focus-visible + span { outline:2px solid var(--cyan); outline-offset:2px; }
+  .rv-note { font-size:12.5px; color:rgba(255,255,255,0.7); margin:4px 0 0; min-height:1em; }
+  .rv-progress { display:flex; align-items:center; gap:12px; }
+  .rv-bar { flex:1; height:8px; border-radius:4px; background:rgba(255,255,255,0.15); overflow:hidden; }
+  .rv-bar span { display:block; height:100%; width:0; background:var(--cyan); transition:width .2s; }
+  #rvPct { font:700 12px 'Poppins', sans-serif; font-variant-numeric:tabular-nums; min-width:3.5ch; text-align:right; }
+  .rv-video { width:100%; max-height:52vh; border-radius:14px; background:#000; }
 </style>
 </head>
 <body>
@@ -4881,6 +4900,25 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'rv.button': 'Ranking video',
+    'rv.title': 'Ranking video',
+    'rv.what': 'Ranking',
+    'rv.division': 'Division',
+    'rv.places': 'Places',
+    'rv.quality': 'Quality',
+    'rv.background': 'Background',
+    'rv.bgDesign': 'LoC design',
+    'rv.bgPhoto': 'Own photo',
+    'rv.bgTransparent': 'Transparent',
+    'rv.webmNote': 'transparent videos are WebM (for video editors, not for posting directly)',
+    'rv.pickPhoto': 'choose a photo',
+    'rv.demoNote': 'DEMO: no per-tournament points yet, today\'s totals are split across the season.',
+    'rv.create': 'Create video',
+    'rv.again': 'Create again',
+    'rv.preparing': 'Preparing…',
+    'rv.rendering': 'Rendering…',
+    'rv.download': 'Download',
+    'rv.error': 'The video could not be created.',
     'search.label': 'Search',
     'search.short': 'Search',
     'search.placeholder': 'Search players, clubs, tournaments…',
@@ -5103,7 +5141,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'search.label': 'Suche', 'search.short': 'Suche', 'search.placeholder': 'Spieler, Vereine, Turniere suchen…', 'search.players': 'Spieler', 'search.clubs': 'Vereine', 'search.tournaments': 'Turniere', 'search.none': 'Nichts gefunden.', 'appbar.label': 'App-Navigation', 'appbar.home': 'Start', 'appbar.me': 'Ich', 'install.title': 'League of Champions als App', 'install.text': 'Auf dem Homescreen, im Vollbild, einen Tipp entfernt.', 'install.ios': 'Tippe auf Teilen und dann „Zum Home-Bildschirm“.', 'install.btn': 'Installieren', 'install.dismiss': 'Später', 'install.footer': 'App installieren', 'profile.partners': 'Partner', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.follower': 'Follower', 'profile.followers': 'Follower', 'profile.followingHeading': 'Du folgst', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'rv.button': 'Ranking-Video', 'rv.title': 'Ranking-Video', 'rv.what': 'Ranking', 'rv.division': 'Kategorie', 'rv.places': 'Plätze', 'rv.quality': 'Qualität', 'rv.background': 'Hintergrund', 'rv.bgDesign': 'LoC-Design', 'rv.bgPhoto': 'Eigenes Foto', 'rv.bgTransparent': 'Transparent', 'rv.webmNote': 'transparente Videos sind WebM (für Videoschnitt-Apps, nicht zum direkten Posten)', 'rv.pickPhoto': 'Foto wählen', 'rv.demoNote': 'DEMO: noch keine Punkte pro Turnier, die heutigen Gesamtpunkte werden auf die Saison verteilt.', 'rv.create': 'Video erstellen', 'rv.again': 'Nochmal erstellen', 'rv.preparing': 'Wird vorbereitet…', 'rv.rendering': 'Wird gerendert…', 'rv.download': 'Herunterladen', 'rv.error': 'Das Video konnte nicht erstellt werden.', 'search.label': 'Suche', 'search.short': 'Suche', 'search.placeholder': 'Spieler, Vereine, Turniere suchen…', 'search.players': 'Spieler', 'search.clubs': 'Vereine', 'search.tournaments': 'Turniere', 'search.none': 'Nichts gefunden.', 'appbar.label': 'App-Navigation', 'appbar.home': 'Start', 'appbar.me': 'Ich', 'install.title': 'League of Champions als App', 'install.text': 'Auf dem Homescreen, im Vollbild, einen Tipp entfernt.', 'install.ios': 'Tippe auf Teilen und dann „Zum Home-Bildschirm“.', 'install.btn': 'Installieren', 'install.dismiss': 'Später', 'install.footer': 'App installieren', 'profile.partners': 'Partner', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.follower': 'Follower', 'profile.followers': 'Follower', 'profile.followingHeading': 'Du folgst', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -7203,8 +7241,11 @@ var CLUBS = [
     var searchPlaceholder = rankingType === 'players' ? 'Search player or club…' : 'Search club…';
     el.innerHTML = controls +
       '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" aria-label="' + searchPlaceholder + '" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
-      (rankingType === 'players' ? '<div class="cmp-open-row"><button type="button" class="btn btn-outline btn-sm" id="compareToggleBtn" aria-expanded="' + compareOpen + '">' + esc(uiText(compareOpen ? 'compare.close' : 'compare.open')) + '</button></div>' +
-        (compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') : '') +
+      '<div class="cmp-open-row">' +
+        (isAdmin ? '<button type="button" class="btn btn-outline btn-sm" id="rankingVideoBtn"><span aria-hidden="true">▶</span> ' + esc(uiText('rv.button')) + '</button>' : '') +
+        (rankingType === 'players' ? '<button type="button" class="btn btn-outline btn-sm" id="compareToggleBtn" aria-expanded="' + compareOpen + '">' + esc(uiText(compareOpen ? 'compare.close' : 'compare.open')) + '</button>' : '') +
+      '</div>' +
+      (rankingType === 'players' && compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') +
       '<div id="rankingTable"></div>';
     var meta = document.getElementById('rankingBandMeta');
     if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
@@ -7232,6 +7273,8 @@ var CLUBS = [
       renderRanking();
     });
     wireRankingSwipe(document.getElementById('rankingTable'));
+    var rvBtn = document.getElementById('rankingVideoBtn');
+    if (rvBtn) rvBtn.addEventListener('click', openRankingVideo);
     var cmpBtn = document.getElementById('compareToggleBtn');
     if (cmpBtn) cmpBtn.addEventListener('click', function() { compareOpen = !compareOpen; renderRanking(); });
     if (compareOpen && rankingType === 'players') wireComparePanel(rows);
@@ -7580,6 +7623,183 @@ var CLUBS = [
           '<strong>' + esc(x.t.name) + '</strong><span class="club-tour-meta">' + esc(x.t.dateLabel) + ' · ' + x.teams + ' ' + esc(uiText(x.teams === 1 ? 'club.team' : 'club.teams')) + '</span>' +
           (x.best ? '<img class="club-tour-medal" src="' + esc(MEDAL_IMAGES[medal[x.best]]) + '" alt="' + esc(uiFormat('club.place', { n: x.best })) + '" width="34" height="34">' : '') + '</a>';
       }).join('') + '</div>';
+    });
+  }
+
+  /* ==================================================================
+     RANKING VIDEO (admins only): the season as an animated "ranking climb"
+     (players top 10/20 or clubs), rendered in the admin's own browser with
+     Remotion's web renderer (assets/ranking-video.js, built from the
+     Documents/loc-ranking-video project and only loaded on demand).
+     Real data: contentOverrides.rankingHistory[year][key] =
+       { tournaments: [names], rows: [{ name, points: [per tournament] }] }
+     (filled from the ranking sheet's tournament columns). Until that exists
+     the video is a DEMO: each current total is split across the season's
+     tournaments, so it ends exactly on today's ranking.
+     ================================================================== */
+  var rankingVideoScript = null;
+  function loadRankingVideoScript() {
+    if (window.LocRankingVideo) return Promise.resolve(window.LocRankingVideo);
+    if (rankingVideoScript) return rankingVideoScript;
+    rankingVideoScript = new Promise(function(res, rej) {
+      var s = document.createElement('script');
+      s.src = 'assets/ranking-video.js';
+      s.onload = function() { window.LocRankingVideo ? res(window.LocRankingVideo) : rej(new Error('Video renderer missing')); };
+      s.onerror = function() { rankingVideoScript = null; rej(new Error('Could not load the video renderer')); };
+      document.head.appendChild(s);
+    });
+    return rankingVideoScript;
+  }
+  function absUrl(path) { return new URL(path, location.href).href; }
+  // deterministic 0..1 random from a string + index (same demo every time)
+  function hashRand(str, i) {
+    var h = 2166136261 ^ i;
+    for (var c = 0; c < str.length; c++) { h ^= str.charCodeAt(c); h = Math.imul(h, 16777619); }
+    h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15;
+    return ((h >>> 0) % 10000) / 10000;
+  }
+  function rankingVideoSource(year, gender, type, topN) {
+    var key = gender === 'men' ? (type === 'players' ? 'menPlayers' : 'menClubs') : (type === 'players' ? 'womenPlayers' : 'womenClubs');
+    var hist = contentOverrides.rankingHistory && contentOverrides.rankingHistory[year] && contentOverrides.rankingHistory[year][key];
+    if (hist && hist.tournaments && hist.tournaments.length > 1 && hist.rows && hist.rows.length) {
+      return { demo: false, tournaments: hist.tournaments, rows: hist.rows.map(function(r) { return { name: r.name, club: r.club1 || r.club2 || r.club || '', points: r.points.map(Number) }; }) };
+    }
+    // DEMO: split today's totals over the season's tournaments so far
+    var today = new Date().toISOString().slice(0, 10);
+    var tours = allTournaments().filter(function(t) { return t.dateSort && t.dateSort.slice(0, 4) === String(year); })
+      .sort(function(a, b) { return a.dateSort.localeCompare(b.dateSort); });
+    var played = tours.filter(function(t) { return t.dateSort <= today; });
+    if (played.length < 2) played = tours;
+    var ranking = rankingRows(year, gender, type).slice(0, topN + 10);
+    var weightOf = function(t) { return t.tier === 'FINALS' ? 1200 : Number(t.tier) || 100; };
+    var rows = ranking.map(function(r) {
+      var w = played.map(function(t, i) {
+        var plays = hashRand(r.name, i) < (weightOf(t) >= 1000 ? 0.8 : weightOf(t) >= 500 ? 0.65 : 0.45);
+        return plays ? weightOf(t) * (0.3 + hashRand(r.name, i + 99)) : 0;
+      });
+      var sum = w.reduce(function(a, b) { return a + b; }, 0) || 1;
+      var pts = w.map(function(x) { return Math.round((Number(r.points) || 0) * x / sum / 5) * 5; });
+      var diff = (Number(r.points) || 0) - pts.reduce(function(a, b) { return a + b; }, 0);
+      pts[pts.length - 1] += diff;
+      return { name: r.name, club: type === 'clubs' ? r.name : (r.club1 || r.club2 || ''), points: pts };
+    });
+    return { demo: true, tournaments: played.map(function(t) { return t.name; }), rows: rows };
+  }
+  // A round head shot from a profile photo: cut-outs are scanned for the
+  // head (first solid run of rows below anything like a ball), normal
+  // photos use the framing the player set on the profile.
+  function faceCropAsync(player) {
+    if (!player || !player.photoUrl || player.videoUrl) return Promise.resolve(null);
+    return loadImageAsync(player.photoUrl).then(function(im) {
+      if (!im) return null;
+      var W = im.width, H = im.height, cx, cy, size;
+      try {
+        if (isCutoutPhoto(player)) {
+          var sw = 200, sh = Math.max(1, Math.round(200 * H / W)), t = document.createElement('canvas');
+          t.width = sw; t.height = sh; var tg = t.getContext('2d'); tg.drawImage(im, 0, 0, sw, sh);
+          var d = tg.getImageData(0, 0, sw, sh).data, rowOn = [];
+          for (var y = 0; y < sh; y++) { var c = 0; for (var x = 0; x < sw; x++) if (d[(y * sw + x) * 4 + 3] > 40) c++; rowOn.push(c); }
+          var run = Math.round(sh * 0.15), top = 0;
+          for (var y2 = 0; y2 < sh - run; y2++) {
+            var ok = true; for (var k2 = 0; k2 < run; k2++) if (rowOn[y2 + k2] < 3) { ok = false; break; }
+            if (ok) { top = y2; break; }
+          }
+          var headH = Math.round(sh * 0.12), sx = 0, n = 0;
+          for (var y3 = top; y3 < Math.min(sh, top + headH); y3++) for (var x3 = 0; x3 < sw; x3++) if (d[(y3 * sw + x3) * 4 + 3] > 40) { sx += x3; n++; }
+          var k = W / sw;
+          size = H * 0.19; cx = (n ? sx / n : sw / 2) * k; cy = top * k - H * 0.02 + size / 2;
+        } else {
+          var f = playerMediaFraming(player);
+          size = Math.min(W, H) * 0.55 / f.zoom; cx = W * f.x / 100; cy = H * f.y / 100;
+        }
+        var out = document.createElement('canvas'); out.width = 320; out.height = 320;
+        out.getContext('2d').drawImage(im, cx - size / 2, cy - size / 2, size, size, 0, 0, 320, 320);
+        return out.toDataURL('image/png');
+      } catch (e) { return null; }
+    });
+  }
+  function openRankingVideo() {
+    if (!isAdmin) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'pcard-modal rv-modal';
+    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', uiText('rv.title'));
+    var opt = function(name, val, label, on) { return '<label class="rv-opt"><input type="radio" name="' + name + '" value="' + val + '"' + (on ? ' checked' : '') + '><span>' + esc(label) + '</span></label>'; };
+    wrap.innerHTML = '<div class="pcard-sheet rv-sheet">' +
+      '<h2 class="rv-h">' + esc(uiText('rv.title')) + '</h2>' +
+      '<div class="rv-grid">' +
+        '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.what')) + '</span>' + opt('rvKind', 'players', uiText('search.players'), rankingType === 'players') + opt('rvKind', 'clubs', uiText('search.clubs'), rankingType === 'clubs') + '</div>' +
+        '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.division')) + '</span>' + opt('rvGender', 'men', "Men's", rankingGender === 'men') + opt('rvGender', 'women', "Women's", rankingGender === 'women') + '</div>' +
+        '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.places')) + '</span>' + opt('rvTop', '10', 'Top 10', true) + opt('rvTop', '20', 'Top 20', false) + '</div>' +
+        '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.quality')) + '</span>' + opt('rvFps', '30', '30 fps', false) + opt('rvFps', '60', '60 fps', true) + '</div>' +
+        '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.background')) + '</span>' + opt('rvBg', 'design', uiText('rv.bgDesign'), true) + opt('rvBg', 'photo', uiText('rv.bgPhoto'), false) + opt('rvBg', 'transparent', uiText('rv.bgTransparent'), false) + '</div>' +
+        '<input type="file" accept="image/*" class="rv-file" id="rvBgFile" hidden>' +
+      '</div>' +
+      '<p class="rv-note" id="rvNote"></p>' +
+      '<div class="rv-progress" hidden><div class="rv-bar"><span id="rvBar"></span></div><span id="rvPct">0%</span></div>' +
+      '<video class="rv-video" id="rvVideo" controls playsinline hidden></video>' +
+      '<div class="pcard-actions">' +
+        '<button type="button" class="btn btn-cyan btn-gradient" id="rvGo">' + esc(uiText('rv.create')) + '</button>' +
+        '<a class="btn btn-outline" id="rvDownload" hidden>' + esc(uiText('rv.download')) + '</a>' +
+        '<button type="button" class="btn btn-outline" id="rvClose">Close</button>' +
+      '</div></div>';
+    document.body.appendChild(wrap);
+    var $ = function(id) { return wrap.querySelector('#' + id); };
+    var val = function(name) { var el = wrap.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; };
+    var bgFile = null, abort = null, url = null;
+    var note = function() {
+      var src = rankingVideoSource(rankingYear, val('rvGender'), val('rvKind'), +val('rvTop'));
+      $('rvNote').textContent = (src.demo ? uiText('rv.demoNote') + ' ' : '') + src.tournaments.length + ' ' + uiText('compare.tournaments') +
+        (val('rvBg') === 'transparent' ? ' · ' + uiText('rv.webmNote') : '') + (val('rvBg') === 'photo' && !bgFile ? ' · ' + uiText('rv.pickPhoto') : '');
+    };
+    wrap.addEventListener('change', function(e) {
+      if (e.target.name === 'rvBg' && e.target.value === 'photo' && !bgFile) $('rvBgFile').click();
+      if (e.target.id === 'rvBgFile') bgFile = e.target.files[0] || null;
+      note();
+    });
+    note();
+    var close = function() { if (abort) abort.abort(); if (url) URL.revokeObjectURL(url); wrap.remove(); };
+    $('rvClose').addEventListener('click', close);
+    wrap.addEventListener('click', function(e) { if (e.target === wrap) close(); });
+    $('rvGo').addEventListener('click', function() {
+      if (!isAdmin) return;
+      var kind = val('rvKind'), gender = val('rvGender'), topN = +val('rvTop'), fps = +val('rvFps'), bg = val('rvBg');
+      if (bg === 'photo' && !bgFile) { $('rvBgFile').click(); return; }
+      var go = $('rvGo'); go.disabled = true; go.textContent = uiText('rv.preparing');
+      wrap.querySelector('.rv-progress').hidden = false; $('rvBar').style.width = '0%'; $('rvPct').textContent = '0%';
+      var src = rankingVideoSource(rankingYear, gender, kind, topN);
+      var bgPromise = bg === 'photo' && bgFile ? new Promise(function(res) { var r = new FileReader(); r.onload = function() { res(r.result); }; r.readAsDataURL(bgFile); }) : Promise.resolve(null);
+      var entries = src.rows.map(function(r) {
+        var club = findClub(r.club || '');
+        var acc = kind === 'players' ? findPlayerByName(r.name) : null;
+        return Promise.all([club.logo ? cleanLogoAsync(club.logo) : Promise.resolve(null), kind === 'players' ? faceCropAsync(acc) : Promise.resolve(null)]).then(function(x) {
+          return { name: kind === 'clubs' ? clubDisplayName(r.name) : r.name, logo: x[0] || undefined, face: x[1] || undefined, points: r.points };
+        });
+      });
+      Promise.all([loadRankingVideoScript(), bgPromise, Promise.all(entries)]).then(function(res) {
+        go.textContent = uiText('rv.rendering');
+        abort = new AbortController();
+        var props = {
+          title: 'RANKING ' + rankingYear, division: gender === 'men' ? "MEN'S" : "WOMEN'S", topN: topN, kind: kind,
+          data: { tournaments: src.tournaments, entries: res[2] },
+          badge: absUrl('assets/flc-logo-white.png'),
+          sfx: { whoosh: absUrl('assets/sfx/whoosh.wav'), whip: absUrl('assets/sfx/whip.wav'), ding: absUrl('assets/sfx/ding.wav') },
+          demo: src.demo, background: res[1], transparent: bg === 'transparent'
+        };
+        return res[0].render(props, { fps: fps, signal: abort.signal, onProgress: function(p) { var pc = Math.round(p * 100); $('rvBar').style.width = pc + '%'; $('rvPct').textContent = pc + '%'; } });
+      }).then(function(blob) {
+        if (!document.body.contains(wrap)) return;
+        url = URL.createObjectURL(blob);
+        var ext = bg === 'transparent' ? 'webm' : 'mp4';
+        var v = $('rvVideo'); v.src = url; v.hidden = false;
+        var dl = $('rvDownload'); dl.href = url; dl.download = 'loc-ranking-' + rankingYear + '-' + kind + '-' + gender + '-top' + topN + '.' + ext; dl.hidden = false;
+        go.disabled = false; go.textContent = uiText('rv.again');
+        wrap.querySelector('.rv-progress').hidden = true;
+      }).catch(function(err) {
+        if (!document.body.contains(wrap)) return;
+        go.disabled = false; go.textContent = uiText('rv.create');
+        wrap.querySelector('.rv-progress').hidden = true;
+        $('rvNote').textContent = uiText('rv.error') + ' ' + (err && err.message ? err.message : '');
+      });
     });
   }
 
