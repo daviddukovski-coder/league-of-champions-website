@@ -2554,6 +2554,23 @@
   .inbox-row.is-unread strong, .inbox-row.is-unread .inbox-preview { color:#fff; font-weight:700; }
   .inbox-row.is-unread::before { content:''; position:absolute; left:8px; top:50%; width:8px; height:8px; margin-top:-4px; border-radius:50%; background:var(--cyan); }
   .inbox-row { position:relative; }
+
+  /* Moving gradient button (after originkit's Moving Gradient Button, in the
+     LoC social colours): navy-to-lavender pill, a cyan/lavender/white light
+     runs around the border, soft glow behind. */
+  @property --gb-angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+  :root[data-design="ig"] .btn.btn-gradient { position:relative; isolation:isolate; color:#fff; border:0;
+    background:linear-gradient(112deg, #1a1d84 0%, #2c2f98 40%, #4a4cb0 62%, #23268c 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 26px rgba(3,4,40,0.4); }
+  :root[data-design="ig"] .btn.btn-gradient::before, :root[data-design="ig"] .btn.btn-gradient::after { content:''; position:absolute; border-radius:inherit; pointer-events:none;
+    background:conic-gradient(from var(--gb-angle), #00f2ff 0%, #6a68b0 18%, #ffffff 30%, #1b1e86 46%, #00f2ff 62%, #6a68b0 80%, #00f2ff 100%); animation:gbSpin 3.2s linear infinite; }
+  :root[data-design="ig"] .btn.btn-gradient::before { inset:0; padding:2px; z-index:1;
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+  :root[data-design="ig"] .btn.btn-gradient::after { inset:-3px; z-index:-1; filter:blur(12px); opacity:0.55; transition:opacity .3s; }
+  :root[data-design="ig"] .btn.btn-gradient:hover::after, :root[data-design="ig"] .btn.btn-gradient:focus-visible::after { opacity:0.9; }
+  :root[data-design="ig"] .btn.btn-gradient:hover::before, :root[data-design="ig"] .btn.btn-gradient:hover::after { animation-duration:1.6s; }
+  :root[data-design="ig"] .btn.btn-gradient:active { transform:scale(0.98); }
+  @keyframes gbSpin { to { --gb-angle:360deg; } }
+  @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .btn.btn-gradient::before, :root[data-design="ig"] .btn.btn-gradient::after { animation:none; } }
 </style>
 </head>
 <body>
@@ -5892,8 +5909,8 @@ var CLUBS = [
     renderHeroMedia();
 
     var actionsHtml = currentUser
-      ? '<button class="btn btn-cyan" data-route="tournaments">' + uiEdit('landing.browseBtnLoggedIn') + '</button>'
-      : '<button class="btn btn-cyan" data-route="register-account">' + uiEdit('landing.registerBtn') + '</button>' +
+      ? '<button class="btn btn-cyan btn-gradient" data-route="tournaments">' + uiEdit('landing.browseBtnLoggedIn') + '</button>'
+      : '<button class="btn btn-cyan btn-gradient" data-route="register-account">' + uiEdit('landing.registerBtn') + '</button>' +
         '<button class="btn btn-outline-light" data-route="login">' + uiEdit('landing.loginBtn') + '</button>';
 
     var blocks = {
@@ -8889,8 +8906,8 @@ var CLUBS = [
     return alreadyRegistered
       ? '<div class="closed-note">' + uiEdit('detail.alreadyRegisteredNote') + '</div>'
       : (t.competitions.length > 1
-        ? '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
-        : '<button class="btn btn-cyan" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>');
+        ? '<button class="btn btn-cyan btn-gradient" id="goRegisterBtn">' + uiText('detail.registerNow') + '</button>'
+        : '<button class="btn btn-cyan btn-gradient" id="goRegisterBtn">' + uiText('detail.registerNow') + ' – ' + esc(divisionLabel(t.competitions[0])) + '</button>');
   }
 
   function wireGoRegisterBtn(t) {
