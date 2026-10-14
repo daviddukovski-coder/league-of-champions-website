@@ -2420,6 +2420,36 @@
 
   .champ-ticket-btn span { color:#ffd34d; }
   .confetti-canvas { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:300; }
+
+  /* profile: follow + partners */
+  .follow-row { display:flex; align-items:center; gap:14px; margin-top:10px; flex-wrap:wrap; }
+  .follow-count { font-size:13px; color:rgba(255,255,255,0.75); }
+  .follow-count strong { color:#fff; font-size:16px; font-variant-numeric:tabular-nums; }
+  .following-list { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
+  .following-item { display:inline-flex; align-items:center; gap:8px; padding:5px 14px 5px 5px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; text-decoration:none; font-weight:600; font-size:14px; }
+  .following-item:hover { border-color:var(--cyan); }
+  .following-item .tw-face { width:32px; height:32px; box-shadow:none; }
+  .partner-stats { margin:26px 0 20px; }
+  .partner-stats > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px; }
+  .partner-stats > summary::-webkit-details-marker, .partner-row > summary::-webkit-details-marker { display:none; }
+  .partner-stats > summary .section-title { margin:0; }
+  .ps-num { font:700 12px 'Poppins', sans-serif; background:var(--cyan); color:#07083f; border-radius:999px; padding:2px 9px; }
+  .partner-chev { width:10px; height:10px; border-right:2px solid var(--cyan); border-bottom:2px solid var(--cyan); transform:rotate(45deg); margin-left:4px; transition:transform .25s; }
+  .partner-stats[open] > summary .partner-chev { transform:rotate(-135deg); }
+  .partner-list { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .partner-row { border-radius:var(--tk-radius, 14px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); }
+  .partner-row > summary { list-style:none; cursor:pointer; display:grid; grid-template-columns:auto 1fr auto auto 34px; gap:14px; align-items:center; padding:10px 14px; }
+  .partner-row .tw-face { width:40px; height:40px; box-shadow:none; }
+  .partner-name { font-weight:600; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .partner-fig { display:flex; flex-direction:column; align-items:flex-end; line-height:1.1; }
+  .partner-fig strong { font-family:'Bebas Neue', sans-serif; font-size:24px; font-weight:400; color:#fff; font-variant-numeric:tabular-nums; }
+  .partner-fig small { font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--cyan); }
+  .partner-medal { width:30px; height:30px; object-fit:contain; }
+  .partner-tours { list-style:none; margin:0; padding:4px 14px 12px 68px; display:flex; flex-direction:column; gap:6px; border-top:1px dashed rgba(255,255,255,0.18); }
+  .partner-tours li { display:flex; justify-content:space-between; gap:12px; font-size:13px; padding-top:6px; }
+  .partner-tours a { color:#fff; text-decoration:none; } .partner-tours a:hover { color:var(--cyan); }
+  .partner-tours span { color:rgba(255,255,255,0.7); font-variant-numeric:tabular-nums; }
+  @media (max-width:520px) { .partner-row > summary { grid-template-columns:auto 1fr auto 30px; } .partner-row > summary .partner-fig-t { display:none; } .partner-tours { padding-left:14px; } }
 </style>
 </head>
 <body>
@@ -4174,12 +4204,15 @@ var CLUBS = [
     var medals = { gold: 0, silver: 0, bronze: 0, referee: 0 };
     return Promise.all(allTournaments().map(function(t) {
       return loadBracket(t.id).then(function(bracket) {
+        // by account, and by name for teams entered without one
+        var myN = normalizeNameForMatch((findPlayer(uid) || {}).name);
         var teamIds = bracket.teams.filter(function(team) {
-          return team.uid === uid || team.partnerUid === uid;
+          return team.uid === uid || team.partnerUid === uid ||
+            (myN && teamPlayerNames(team).some(function(x) { return normalizeNameForMatch(x) === myN; }));
         }).map(function(team) { return team.id; });
         var refereed = (bracket.referees || []).indexOf(uid) !== -1;
         if (!teamIds.length && !refereed) return;
-        var entry = { tournamentId: t.id, tournamentName: t.name, played: !!teamIds.length, refereed: refereed, placement: null, partnerName: null, club: null, points: null };
+        var entry = { tournamentId: t.id, tournamentName: t.name, dateSort: t.dateSort, played: !!teamIds.length, refereed: refereed, placement: null, partnerName: null, club: null, points: null };
         if (teamIds.length) {
           tournamentsPlayed++;
           var team = bracket.teams.find(function(tm) { return teamIds.indexOf(tm.id) !== -1; });
@@ -4190,11 +4223,19 @@ var CLUBS = [
             var partnerUid = team.uid === uid ? team.partnerUid : (team.partnerUid === uid ? team.uid : null);
             var partner = partnerUid ? findPlayer(partnerUid) : null;
             entry.partnerName = partner ? partner.name : null;
+            entry.partnerUid = partner ? partner.uid : null;
+            // no partner account: take the other name from the team name
+            if (!entry.partnerName) {
+              var me = findPlayer(uid), myName = normalizeNameForMatch(me && me.name);
+              var other = teamPlayerNames(team).filter(function(n) { return normalizeNameForMatch(n) !== myName; })[0];
+              entry.partnerName = other || null;
+            }
           }
           bracket.teams.forEach(function(tm) {
             if (teamIds.indexOf(tm.id) !== -1 && tm.club) clubs[tm.club] = true;
           });
-          playerRecordInBracket(bracket, teamIds).forEach(function(r) { wins += r.w; losses += r.l; });
+          entry.w = 0; entry.l = 0;
+          playerRecordInBracket(bracket, teamIds).forEach(function(r) { wins += r.w; losses += r.l; entry.w += r.w; entry.l += r.l; });
           var placement = computeTournamentPlacement(bracket);
           if (placement.first && teamIds.indexOf(placement.first) !== -1) { entry.placement = 1; medals.gold++; }
           else if (placement.second && teamIds.indexOf(placement.second) !== -1) { entry.placement = 2; medals.silver++; }
@@ -4709,6 +4750,12 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'profile.partners': 'Partners',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.follower': 'follower',
+    'profile.followers': 'followers',
+    'profile.followingHeading': 'You follow',
     'holo.season': 'Season No. 1',
     'holo.kicker': 'Hall of Fame',
     'holo.ticketBtn': 'Champion ticket',
@@ -4899,7 +4946,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'profile.partners': 'Partner', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.follower': 'Follower', 'profile.followers': 'Follower', 'profile.followingHeading': 'Du folgst', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -9331,6 +9378,7 @@ var CLUBS = [
         nameEditHtml +
         editToggleHtml +
         '<div class="medal-row" id="playerMedalRow"></div>' +
+        '<div class="follow-row" id="playerFollowRow"></div>' +
       '</div>' +
         '<div class="detail-info-grid">' +
           playerAgeFieldHtml(canEdit, player.birthMonth || player.birthDate) +
@@ -9347,8 +9395,8 @@ var CLUBS = [
       '</div>' +
       '<h2 class="section-title">Clubs Represented</h2>' +
       '<p class="empty-note" id="playerClubsList">–</p>' +
-      '<h2 class="section-title">Tournament History</h2>' +
-      '<div id="playerHistoryBox"><p class="empty-note">Loading …</p></div>' +
+      '<div id="playerFollowingBox"></div>' +
+      '<div id="playerPartnersBox"></div>' +
       '<div class="share-row"><button type="button" class="btn btn-cyan btn-sm" id="playerCardBtn">Create player card</button><button type="button" class="btn btn-outline btn-sm" id="shareProfileBtn">Copy profile link</button></div>';
 
     var toggleBtn = document.getElementById('toggleProfileEditBtn');
@@ -9437,26 +9485,67 @@ var CLUBS = [
     });
   }
 
-  function playerHistoryTableHtml(history) {
-    var rows = history.filter(function(h) { return h.played || h.refereed; });
-    if (!rows.length) return '<p class="empty-note">No tournaments yet.</p>';
-    var placementLabel = { 1: '1st', 2: '2nd', 3: '3rd' };
-    var placementClass = { 1: 'p1', 2: 'p2', 3: 'p3' };
-    return '<table class="history-table"><thead><tr><th>Tournament</th><th>Role</th><th>Partner</th><th>Club</th><th>Placement</th><th>Points</th></tr></thead><tbody>' +
-      rows.map(function(h) {
-        var roles = [];
-        if (h.played) roles.push('Played');
-        if (h.refereed) roles.push('Refereed');
-        var placement = h.placement
-          ? '<span class="placement-badge ' + placementClass[h.placement] + '">' + placementLabel[h.placement] + '</span>'
-          : '–';
-        return '<tr><td>' + esc(h.tournamentName) + '</td><td>' + roles.join(' + ') + '</td>' +
-          '<td>' + (h.partnerName ? esc(h.partnerName) : '–') + '</td>' +
-          '<td>' + (h.club ? esc(h.club) : '–') + '</td>' +
-          '<td>' + placement + '</td>' +
-          '<td>' + (h.points != null ? esc(h.points) : '–') + '</td></tr>';
-      }).join('') +
-      '</tbody></table>';
+  // Partners, collapsed: one row per partner (tournaments together, won /
+  // lost, best place); opening it shows the tournaments with that partner.
+  function renderPartnerStats(history) {
+    var box = document.getElementById('playerPartnersBox');
+    if (!box) return;
+    var played = (history || []).filter(function(h) { return h.played; });
+    if (!played.length) { box.innerHTML = ''; return; }
+    var by = {};
+    played.forEach(function(h) {
+      var key = h.partnerName ? normalizeNameForMatch(h.partnerName) : '?';
+      var p = by[key] || (by[key] = { name: h.partnerName || '–', uid: h.partnerUid || null, list: [], w: 0, l: 0, best: null });
+      p.list.push(h); p.w += h.w || 0; p.l += h.l || 0;
+      if (h.placement && (!p.best || h.placement < p.best)) p.best = h.placement;
+      if (!p.uid && h.partnerUid) p.uid = h.partnerUid;
+    });
+    var partners = Object.keys(by).map(function(k) { return by[k]; }).sort(function(a, b) { return b.list.length - a.list.length || (b.w - a.w); });
+    var medal = { 1: 'gold', 2: 'silver', 3: 'bronze' }, place = { 1: '1st', 2: '2nd', 3: '3rd' };
+    box.innerHTML = '<details class="partner-stats"><summary><span class="section-title">' + esc(uiText('profile.partners')) + '</span><span class="ps-num">' + partners.length + '</span><span class="partner-chev" aria-hidden="true"></span></summary>' +
+      '<div class="partner-list">' + partners.map(function(p) {
+        var acc = p.uid ? findPlayer(p.uid) : findPlayerByName(p.name);
+        var pct = p.w + p.l ? Math.round(p.w / (p.w + p.l) * 100) + '%' : '–';
+        return '<details class="partner-row"><summary>' + playerFaceHtml(p.name, acc ? acc.uid : null) +
+          '<span class="partner-name">' + (acc ? '<span class="player-name-link" data-route="player/' + esc(acc.uid) + '">' + esc(p.name) + '</span>' : esc(p.name)) + '</span>' +
+          '<span class="partner-fig partner-fig-t"><strong>' + p.list.length + '</strong><small>' + esc(uiText('compare.tournaments')) + '</small></span>' +
+          '<span class="partner-fig"><strong>' + p.w + '–' + p.l + '</strong><small>W–L · ' + pct + '</small></span>' +
+          (p.best ? '<img class="partner-medal" src="' + esc(MEDAL_IMAGES[medal[p.best]]) + '" alt="' + place[p.best] + '" width="30" height="30">' : '<span class="partner-medal"></span>') +
+          '</summary><ul class="partner-tours">' + p.list.slice().sort(function(a, b) { return (b.dateSort || '').localeCompare(a.dateSort || ''); }).map(function(h) {
+            return '<li><a href="#/event/' + esc(h.tournamentId) + '/live">' + esc(h.tournamentName) + '</a><span>' + (h.w || 0) + '–' + (h.l || 0) + (h.placement ? ' · ' + place[h.placement] : '') + '</span></li>';
+          }).join('') + '</ul></details>';
+      }).join('') + '</div></details>';
+  }
+
+  // Follow: stored on the follower's own players/{uid} doc (following: [uid]).
+  // Follower count = players whose list contains this uid. Push alerts for
+  // followed players come once push is configured (CONFIG.FCM_VAPID_KEY).
+  function renderFollow(player) {
+    var row = document.getElementById('playerFollowRow');
+    if (!row) return;
+    var followers = playersDirectory.filter(function(p) { return (p.following || []).indexOf(player.uid) !== -1; }).length;
+    var isOwn = currentUser && currentUser.uid === player.uid;
+    var me = currentUser && findPlayer(currentUser.uid);
+    var following = !!(me && (me.following || []).indexOf(player.uid) !== -1);
+    row.innerHTML = '<span class="follow-count"><strong>' + followers + '</strong> ' + esc(uiText(followers === 1 ? 'profile.follower' : 'profile.followers')) + '</span>' +
+      (isOwn ? '' : '<button type="button" class="btn btn-sm ' + (following ? 'btn-outline' : 'btn-cyan') + ' follow-btn" id="followBtn" aria-pressed="' + following + '">' + esc(uiText(following ? 'profile.following' : 'profile.follow')) + '</button>');
+    var btn = document.getElementById('followBtn');
+    if (btn) btn.addEventListener('click', function() {
+      if (!currentUser) { pendingPath = 'player/' + player.uid; navigate('login'); return; }
+      var mine = findPlayer(currentUser.uid);
+      var list = ((mine && mine.following) || []).slice(), i = list.indexOf(player.uid);
+      if (i === -1) list.push(player.uid); else list.splice(i, 1);
+      savePlayerField(currentUser.uid, 'following', list);
+      if (!mine) playersDirectory.push({ uid: currentUser.uid, name: currentUser.name, following: list });
+      renderFollow(player);
+    });
+    // own profile: who I follow
+    var box = document.getElementById('playerFollowingBox');
+    if (!box) return;
+    var list = isOwn && me ? (me.following || []).map(findPlayer).filter(Boolean) : [];
+    box.innerHTML = list.length ? '<h2 class="section-title">' + esc(uiText('profile.followingHeading')) + '</h2><div class="following-list">' + list.map(function(p) {
+      return '<a class="following-item" href="#/player/' + esc(p.uid) + '">' + playerFaceHtml(p.name, p.uid) + '<span>' + esc(p.name) + '</span></a>';
+    }).join('') + '</div>' : '';
   }
 
   /* ==================================================================
@@ -9679,6 +9768,7 @@ var CLUBS = [
       var points = findRankingPointsForPlayer(player.name);
       rankingEl.textContent = points != null ? points : '–';
     }
+    renderFollow(player);
     computePlayerStats(uid).then(function(stats) {
       // Guard against a slow load resolving after the visitor has already
       // navigated elsewhere — only patch the DOM if we're still on this profile.
@@ -9692,8 +9782,7 @@ var CLUBS = [
         medalRow.innerHTML = ['gold', 'silver', 'bronze', 'referee'].filter(function(k) { return stats.medals[k] > 0; })
           .map(function(k) { return medalIconHtml(k, stats.medals[k]); }).join('');
       }
-      var historyBox = document.getElementById('playerHistoryBox');
-      if (historyBox) historyBox.innerHTML = playerHistoryTableHtml(stats.history);
+      renderPartnerStats(stats.history);
       renderChampionCard(player, stats);
     });
   }
