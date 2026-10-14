@@ -2347,6 +2347,13 @@
   .cd-next-label { grid-column:2; font-size:12px; color:rgba(255,255,255,0.55); }
   .court-display-link { display:inline-grid; place-items:center; width:28px; height:28px; margin-left:8px; border-radius:50%; vertical-align:middle; color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.2); transition:color .2s, border-color .2s; }
   .court-display-link:hover, .court-display-link:focus-visible { color:var(--cyan); border-color:var(--cyan); }
+
+  /* ranking: movement since the last tournament */
+  .rank-move { display:inline-block; margin-left:8px; font:700 11px 'Poppins', sans-serif; letter-spacing:0.02em; vertical-align:middle; font-variant-numeric:tabular-nums; }
+  .rank-move.is-up { color:#5fd38a; }
+  .rank-move.is-down { color:#ff5a76; }
+  .rank-move.is-same { color:rgba(255,255,255,0.35); }
+  .rank-move.is-new { color:#07083f; background:var(--cyan); border-radius:999px; padding:1px 6px; font-size:9.5px; letter-spacing:0.08em; }
 </style>
 </head>
 <body>
@@ -4027,10 +4034,25 @@ var CLUBS = [
         // source of truth; this is just a live cache of its computed output.
         var yearRankings = Object.assign({}, (contentOverrides.rankings && contentOverrides.rankings[year]) || {});
         var rankingChanged = false;
+        // Keep the ranking as it was before this tournament, for the ▲/▼
+        // arrows. Re-syncing the SAME tournament (a correction) keeps the
+        // earlier snapshot instead of overwriting it with a near-copy.
+        var prevYear = Object.assign({}, (contentOverrides.rankingsPrev && contentOverrides.rankingsPrev[year]) || {});
+        var prevFor = Object.assign({}, prevYear._for || {});
         mirrorResults.forEach(function(r, i) {
-          if (r && r.mirror) { yearRankings[requestKeys[i]] = r.mirror; rankingChanged = true; }
+          if (r && r.mirror) {
+            var k = requestKeys[i];
+            if (prevFor[k] !== tournament.id) {
+              prevYear[k] = yearRankings[k] || (RANKINGS[year] && RANKINGS[year][k]) || [];
+              prevFor[k] = tournament.id;
+            }
+            yearRankings[k] = r.mirror; rankingChanged = true;
+          }
         });
-        var savePromise = rankingChanged ? saveContentField('rankings', year, yearRankings) : Promise.resolve();
+        prevYear._for = prevFor;
+        var savePromise = rankingChanged
+          ? saveContentField('rankingsPrev', year, prevYear).then(function() { return saveContentField('rankings', year, yearRankings); })
+          : Promise.resolve();
 
         return savePromise.then(function() {
           if (rankingChanged) {
@@ -4581,6 +4603,9 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'ranking.moveNew': 'New in the ranking',
+    'ranking.moveSame': 'Same place as before',
+    'ranking.moveWas': 'Was #{n} before the last tournament',
     'court.open': 'Court display (for a screen at the court)',
     'court.upNext': 'Up next',
     'court.done': 'All matches played',
@@ -4743,7 +4768,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -6930,8 +6955,28 @@ var CLUBS = [
   // Filters by name, keeping each row's real rank. In the Players tab a club
   // name also matches, so searching a club lists all of its players. Same
   // diacritic-insensitive matching as findRankingPointsForPlayer.
+  // ▲/▼ since the last ranking update: compares with the snapshot taken
+  // before the most recent tournament sync. No snapshot yet = no arrows.
+  function rankingPrevMap(year, gender, type) {
+    var key = gender === 'men' ? (type === 'players' ? 'menPlayers' : 'menClubs') : (type === 'players' ? 'womenPlayers' : 'womenClubs');
+    var prev = contentOverrides.rankingsPrev && contentOverrides.rankingsPrev[year] && contentOverrides.rankingsPrev[year][key];
+    if (!prev || !prev.length) return null;
+    var m = {};
+    prev.forEach(function(r) { m[normalizeNameForMatch(r.name)] = r.rank; });
+    return m;
+  }
+  function rankMoveHtml(r, prevMap) {
+    if (!prevMap) return '';
+    var before = prevMap[normalizeNameForMatch(r.name)];
+    if (before == null) return '<span class="rank-move is-new" title="' + esc(uiText('ranking.moveNew')) + '">NEW</span>';
+    var d = before - r.rank;
+    if (!d) return '<span class="rank-move is-same" aria-label="' + esc(uiText('ranking.moveSame')) + '">–</span>';
+    return '<span class="rank-move ' + (d > 0 ? 'is-up' : 'is-down') + '" title="' + esc(uiFormat('ranking.moveWas', { n: before })) + '">' + (d > 0 ? '▲' : '▼') + Math.abs(d) + '</span>';
+  }
+
   function renderRankingTable(allRows) {
     var q = normalizeNameForMatch(rankingSearch);
+    var prevMap = rankingPrevMap(rankingYear, rankingGender, rankingType);
     var rows = !q ? allRows : allRows.filter(function(r) {
       var fields = rankingType === 'players' ? [r.name, r.club1, r.club2] : [r.name];
       return fields.some(function(f) { return normalizeNameForMatch(f).indexOf(q) !== -1; });
@@ -6962,13 +7007,13 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(name) + '</span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
       table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span></td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     }
