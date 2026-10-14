@@ -2667,6 +2667,47 @@
     :root[data-design="ig"] .ranking-table .rank-pts { font-size:24px; }
     :root[data-design="ig"] .ranking-table td:last-child { padding-right:18px; }
   }
+
+  /* Ranking list, refined: quieter bars, two-line names, metallic top 3 */
+  :root[data-design="ig"] .ranking-table tbody { gap:8px; }
+  :root[data-design="ig"] .ranking-table tbody tr { min-height:62px; border-radius:12px 999px 999px 12px;
+    background:linear-gradient(90deg, rgba(30,33,128,0.96) 0%, rgba(44,47,150,0.9) 55%, rgba(88,88,170,0.6) 100%) no-repeat 54px 0 / calc(100% - 54px) 100%;
+    box-shadow:0 6px 16px rgba(8,10,60,0.28); position:relative; }
+  :root[data-design="ig"] .ranking-table tbody tr::after { content:''; position:absolute; inset:0 0 0 54px; border-radius:0 999px 999px 0; border:1px solid rgba(255,255,255,0.10); border-left:none; pointer-events:none; transition:border-color .25s; }
+  :root[data-design="ig"] .ranking-table tbody tr:hover::after { border-color:rgba(0,242,255,0.45); }
+  :root[data-design="ig"] .ranking-table tbody tr.rank-top { min-height:74px; }
+  :root[data-design="ig"] .ranking-table tbody tr.rank-1::after { border-color:rgba(0,242,255,0.55); box-shadow:0 0 18px rgba(0,242,255,0.18); }
+  :root[data-design="ig"] .ranking-table tbody td:first-child { width:68px; border-radius:11px; background:#fff; }
+  :root[data-design="ig"] .ranking-table tr.rank-1 td:first-child { background:linear-gradient(140deg, #8ffaff 0%, #00e6f5 55%, #00bcd6 100%); }
+  :root[data-design="ig"] .ranking-table tr.rank-2 td:first-child { background:linear-gradient(140deg, #f4f6f9 0%, #c9d0d9 55%, #9aa4b1 100%); }
+  :root[data-design="ig"] .ranking-table tr.rank-3 td:first-child { background:linear-gradient(140deg, #f6c08d 0%, #d9914f 55%, #b06a2c 100%); }
+  :root[data-design="ig"] .ranking-table .rank-num, :root[data-design="ig"] .ranking-table .rank-1 .rank-num, :root[data-design="ig"] .ranking-table .rank-2 .rank-num, :root[data-design="ig"] .ranking-table .rank-3 .rank-num { color:#14166a; font-size:30px; }
+  :root[data-design="ig"] .ranking-table tr.rank-top .rank-num { font-size:36px; }
+  :root[data-design="ig"] .ranking-table tbody tr td.rank-player { padding-left:26px; font-size:inherit; text-transform:none; }
+  :root[data-design="ig"] .ranking-table .rk-name { display:flex; flex-direction:column; justify-content:center; line-height:1; min-width:0; color:#fff; }
+  :root[data-design="ig"] .ranking-table .rk-first { font:600 10.5px 'Poppins', sans-serif; letter-spacing:0.22em; text-transform:uppercase; color:#b9b8ec; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  :root[data-design="ig"] .ranking-table .rk-last { font-family:'Bebas Neue', sans-serif; font-size:27px; letter-spacing:0.04em; text-transform:uppercase; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  :root[data-design="ig"] .ranking-table tr.rank-top .rk-last { font-size:32px; }
+  :root[data-design="ig"] .ranking-table tr.rank-1 .rk-last { color:var(--cyan); }
+  :root[data-design="ig"] .ranking-table .player-name-link.rk-name:hover .rk-last { color:var(--cyan); }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar { width:32px; height:32px; }
+  :root[data-design="ig"] .ranking-table .rank-pts { font-size:30px; color:#fff; display:inline-flex; align-items:baseline; gap:5px; }
+  :root[data-design="ig"] .ranking-table .rank-pts small { display:inline; font:600 10px 'Poppins', sans-serif; letter-spacing:0.18em; color:#b9b8ec; margin:0; }
+  :root[data-design="ig"] .ranking-table tr.rank-top .rank-pts { font-size:34px; color:var(--cyan); }
+  :root[data-design="ig"] .ranking-table td:nth-child(2):not(.rank-player) .standings-team, :root[data-design="ig"] .ranking-table td .club-link { font-size:27px; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table tbody tr { min-height:54px; background-position:46px 0; background-size:calc(100% - 46px) 100%; }
+    :root[data-design="ig"] .ranking-table tbody tr::after { left:46px; }
+    :root[data-design="ig"] .ranking-table tbody tr.rank-top { min-height:62px; }
+    :root[data-design="ig"] .ranking-table tbody td:first-child { width:54px; }
+    :root[data-design="ig"] .ranking-table .rank-num, :root[data-design="ig"] .ranking-table tr.rank-top .rank-num { font-size:24px; }
+    :root[data-design="ig"] .ranking-table .rk-first { font-size:9px; letter-spacing:0.16em; }
+    :root[data-design="ig"] .ranking-table .rk-last { font-size:21px; }
+    :root[data-design="ig"] .ranking-table tr.rank-top .rk-last { font-size:24px; }
+    :root[data-design="ig"] .ranking-table .rank-pts, :root[data-design="ig"] .ranking-table tr.rank-top .rank-pts { font-size:23px; }
+    :root[data-design="ig"] .ranking-table .rank-pts small { display:none; }
+    :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar { width:24px; height:24px; }
+  }
 </style>
 </head>
 <body>
@@ -7900,6 +7941,13 @@ var CLUBS = [
     return '<span class="rank-move ' + (d > 0 ? 'is-up' : 'is-down') + '" title="' + esc(uiFormat('ranking.moveWas', { n: before })) + '">' + (d > 0 ? '▲' : '▼') + Math.abs(d) + '</span>';
   }
 
+  // first name small on top, the rest large below (ranking list)
+  function rankNameHtml(name, uid) {
+    var parts = String(name || '').trim().split(/\s+/), first = parts.length > 1 ? parts.shift() : '', rest = parts.join(' ');
+    var inner = (first ? '<span class="rk-first">' + esc(first) + '</span>' : '') + '<span class="rk-last">' + esc(rest) + '</span>';
+    return uid ? '<span class="player-name-link rk-name" data-route="player/' + esc(uid) + '">' + inner + '</span>' : '<span class="rk-name">' + inner + '</span>';
+  }
+
   function renderRankingTable(allRows) {
     var q = normalizeNameForMatch(rankingSearch);
     var prevMap = rankingPrevMap(rankingYear, rankingGender, rankingType);
@@ -7933,7 +7981,7 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + esc(clubDisplayName(name)) + '</span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + playerNameLinkHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + rankNameHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
