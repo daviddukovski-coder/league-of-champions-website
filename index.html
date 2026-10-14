@@ -6348,6 +6348,8 @@ var CLUBS = [
     function matchSize() {
       var hc = heroCard(), rc = ringCard();
       if (!hc || !rc || !rc.offsetWidth) return;
+      // driven every frame by us: a CSS transition would make it lag and stutter
+      hc.style.transition = 'none';
       hc.style.width = rc.offsetWidth + 'px';
       hc.style.height = rc.offsetHeight + 'px'; hc.style.minHeight = rc.offsetHeight + 'px';
       heroNat = heroNatural();
@@ -6358,14 +6360,14 @@ var CLUBS = [
       target.small = vw < 768 ? 1 : 0;
       var hero = document.querySelector('.landing-hero');
       target.hero = hero ? clamp(scrollY / Math.max(1, hero.offsetHeight * 0.9), 0, 1) : 0;
-      if (!heroNat) heroNat = heroNatural();
+      heroNat = heroNatural() || heroNat;
       var card = ringCard();
       if (card && heroNat && !target.small) {
         // where the ticket sits while it is in front (cached: once the ring
         // turns, the card moves away, but the landing spot must stay put)
         var cr = card.getBoundingClientRect(), y = cr.top + cr.height / 2 + scrollY;
         if (!landed && card.closest('.rc-item.is-front')) landY = y;
-        var D = (landY != null ? landY : y) - vh * 0.52;
+        var D = (landY != null ? landY : y) - vh * 0.66;
         target.fly = D > 1 ? clamp(scrollY / D, 0, 1) : 1;
         target.flyD = D;
       } else target.fly = 1;
@@ -6374,7 +6376,7 @@ var CLUBS = [
       if (lead) {
         var lr = lead.getBoundingClientRect();
         // approach while the leaders scroll in, kicks only once they are well on screen
-        target.ball = clamp((vh * 0.85 - lr.top) / (vh * 0.65), 0, 1);
+        target.ball = clamp((vh * 0.9 - lr.top) / (vh * 0.95), 0, 1);
       } else target.ball = 0;
       var max = document.documentElement.scrollHeight - vh;
       target.page = max > 0 ? clamp(scrollY / max, 0, 1) : 0;
@@ -6408,15 +6410,15 @@ var CLUBS = [
         // glides steadily toward the ring ticket, so even when the eased value
         // lags behind a fast scroll it ends exactly on the ticket, no jump
         var dx = f * (cardX - heroNat.cx), dy = f * (cardDocY - heroNat.cy);
-        var s = lerp(1, cr.width / heroNat.w, e), tilt = Math.sin(f * Math.PI) * -6;
-        hc.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px,0) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
+        var sx = lerp(1, cr.width / heroNat.w, f), sy = lerp(1, cr.height / heroNat.h, f), tilt = Math.sin(f * Math.PI) * -6;
+        hc.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px,0) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
         hc.style.willChange = 'transform';
         hc.style.visibility = ''; card.style.visibility = 'hidden';
       }
       // the ring holds still (on this ticket) until the landing, then turns
       if (ring && ring.api) {
-        if (f < 1) { if (landed || !ring.heldOnce) { ring.api.goTo(ring.start); ring.heldOnce = true; } ring.api.hold(60000); landed = false; }
-        else if (!landed) { landed = true; ring.api.hold(700); }
+        if (f < 1) { if (!ring.frozenOn) { ring.api.freeze(ring.start); ring.frozenOn = true; } landed = false; }
+        else if (!landed) { landed = true; ring.frozenOn = false; ring.api.freeze(null); }
       }
     }
     function kickRow(row) {
@@ -6480,7 +6482,7 @@ var CLUBS = [
       var moving = false;
       ['hero', 'fly', 'ball', 'page'].forEach(function(k) {
         var t = target[k] || 0, c = cur[k] == null ? t : cur[k];
-        var n = c + (t - c) * 0.16;
+        var n = c + (t - c) * (k === 'ball' ? 0.08 : 0.16);
         if (Math.abs(t - n) < 0.0005) n = t; else moving = true;
         cur[k] = n;
       });
@@ -6496,7 +6498,7 @@ var CLUBS = [
       reset: function() {
         if (reduce) { leaderRows().forEach(function(r) { r.classList.add('is-kicked'); }); return; }
         landed = false; ballHome = false; cur = {}; landY = null;
-        if (window.__landingRing) window.__landingRing.heldOnce = false;
+        if (window.__landingRing) window.__landingRing.frozenOn = false;
         matchSize();
         kick();
       }
@@ -7385,7 +7387,7 @@ var CLUBS = [
         else {
           vel = 0;
           // Auto-turn forward through the season (front index counts up).
-          if (!paused && performance.now() > resumeAt) rot -= autoSpeed * dt;
+          if (!paused && !frozen && performance.now() > resumeAt) rot -= autoSpeed * dt;
         }
       }
       paint();
@@ -7473,7 +7475,14 @@ var CLUBS = [
       window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
       document.removeEventListener('visibilitychange', onVis);
     }
-    var api = { host: host, root: root, goTo: goTo, destroy: destroy, hold: function(ms) { vel = 0; hold(ms); } };
+    // freeze: stand still on card i (no auto-turn; hovering can't restart it)
+    var frozen = false;
+    function freeze(i) {
+      if (i == null) { if (frozen) { frozen = false; hold(700); } return; }
+      frozen = true; vel = 0;
+      if (frontIndex() !== i || target != null) goTo(i);
+    }
+    var api = { host: host, root: root, goTo: goTo, destroy: destroy, freeze: freeze, hold: function(ms) { vel = 0; hold(ms); } };
     roundCarousels.push(api);
     return api;
   }
