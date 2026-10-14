@@ -1859,25 +1859,25 @@
   /* Overview: every ticket at a glance, dealt in one after another */
   :root[data-design="ig"] .tournament-grid.is-overview { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 228px), 1fr)); gap:14px; padding:30px 0 80px; }
   /* Compact tickets: an overview, so as many as possible at a glance */
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard { min-height:168px; padding:14px 70px 14px 16px; border-radius:12px; gap:4px;
     -webkit-mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
             mask:radial-gradient(circle 8px at calc(100% - 58px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 58px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub { width:58px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-loc { font-size:9px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-tier { font-size:26px; max-height:96px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard h3 { font-size:24px; margin-top:12px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-cat { font-size:11px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard .badge { font-size:9px; padding:3px 8px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard-count { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-stub { width:58px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-stub-loc { font-size:9px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-stub-tier { font-size:26px; max-height:96px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-stub-arrow { width:22px; height:22px; margin-top:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-stub-arrow::after { left:6px; top:7px; width:6px; height:6px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard h3 { font-size:24px; margin-top:12px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-meta { font-size:12px; flex-direction:column; gap:2px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-meta span:first-child { font-size:15px; letter-spacing:0.18em; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-cat { font-size:11px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard .badge { font-size:9px; padding:3px 8px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-soon { font-size:9px; padding:3px 8px; margin-top:4px; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard-count { font-size:11px; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot, :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { display:block; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot-in { height:100%; }
   :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:podRise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 45ms); }
-  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc) .tcard { width:100%; height:100%; }
+  :root[data-design="ig"] :is(.tournament-grid.is-overview, .tour-rail, .rc, .hero-next.is-ticket-host) .tcard { width:100%; height:100%; }
   @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .tournament-grid.is-overview .tslot { animation:none; } }
 
   /* ============ Cut-out player photos ============ */
@@ -1984,6 +1984,7 @@
   .ball-ad-pop::after { content:''; position:absolute; right:30px; bottom:-6px; width:12px; height:12px; background:var(--cyan); transform:rotate(45deg); border-radius:2px; }
   .ball-ad.is-popping .ball-ad-pop { opacity:1; transform:none; pointer-events:auto; cursor:pointer; }
   .ball-ad.is-popping .ball-ad-pop:hover { background:#fff; }
+  .ball-ad.is-traveling .ball-ad-pop, .ball-ad.is-traveling .ball-ad-label { opacity:0; pointer-events:none; }
   .ball-ad.is-popping .ball-ad-pop:hover::after { background:#fff; }
   @media (max-width:640px) { .ball-ad-pop { font-size:10px; padding:6px 11px; } .ball-ad-pop::after { right:20px; } }
   @media (prefers-reduced-motion: reduce) { .ball-ad-pop { transition:opacity .3s; transform:none; } }
@@ -1997,7 +1998,7 @@
   .rc-item { position:absolute; left:-150px; top:0; width:300px; transform-style:preserve-3d; filter:brightness(var(--rc-b, 1)); }
   .rc-item .tcard { width:100%; }
   .rc-item:not(.is-front) .tcard { cursor:pointer; }
-  .rc-item.is-front .tcard { border-color:var(--cyan); box-shadow:inset 0 0 0 1px var(--cyan), inset 0 0 26px rgba(0,242,255,0.2); }
+  .rc-item.is-front .tcard, .hero-next.is-ticket-host .hero-tcard { border-color:var(--cyan); box-shadow:inset 0 0 0 1px var(--cyan), inset 0 0 26px rgba(0,242,255,0.2); }
   .rc-controls { display:flex; justify-content:center; align-items:center; gap:18px; margin-top:8px; }
   .tournament-grid.is-round { display:block; padding:28px 0 70px; }
   .tour-round { margin:6px 0 0; }
@@ -2789,7 +2790,17 @@
 
   /* Match Day scroll story */
   :root[data-design="ig"] #heroMedia { transform-origin:50% 0; will-change:transform; }
-  :root[data-design="ig"] #heroNext { will-change:transform, opacity; position:relative; z-index:30; }
+  :root[data-design="ig"] #heroNext { position:relative; z-index:30; }
+  /* hero ticket host: no frame of its own, it carries the real ticket */
+  :root[data-design="ig"] .hero-next.is-ticket-host { overflow:visible; background:none; border:none; box-shadow:none; padding:0; -webkit-backdrop-filter:none; backdrop-filter:none; -webkit-mask:none; mask:none; display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
+  :root[data-design="ig"] .hero-next.is-ticket-host .hero-next-label { align-self:flex-end; }
+  :root[data-design="ig"] .hero-next.is-ticket-host .hero-tcard { will-change:transform; transform-origin:50% 50%; text-align:left; }
+  :root[data-design="ig"] .hero-next.is-ticket-host .countdown { width:100%; max-width:420px; }
+  /* leaders: every row comes in when the ball kicks it */
+  :root[data-design="ig"] .landing-leaders .leader-row { opacity:0; transform:translateX(-70px) rotate(-4deg); }
+  :root[data-design="ig"] .landing-leaders .leader-row.is-kicked { animation:leaderKick .6s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes leaderKick { 0% { opacity:0; transform:translateX(-70px) rotate(-4deg) scale(0.9); } 60% { opacity:1; transform:translateX(10px) rotate(1deg) scale(1.03); } 100% { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] .landing-leaders .leader-row { opacity:1; transform:none; } :root[data-design="ig"] .landing-leaders .leader-row.is-kicked { animation:none; } }
   :root[data-design="ig"] .landing-hero { z-index:5; }
   .ball-ad { will-change:translate; }
   :root[data-design="ig"] .landing-hero { overflow:visible; }
@@ -6233,6 +6244,14 @@ var CLUBS = [
     var t = pick.t;
     var start = new Date(t.dateSort + 'T09:00:00').getTime();
     var showCountdown = pick.upcoming && start > Date.now();
+    var igHero = document.documentElement.getAttribute('data-design') === 'ig';
+    el.classList.toggle('is-ticket-host', igHero);
+    if (igHero) {
+      // the very same ticket as in the tour ring, so it can fly into it
+      el.innerHTML = '<span class="hero-next-label">' + esc(uiText(pick.upcoming ? 'landing.nextEvent' : 'landing.lastEvent')) + '</span>' +
+        renderCard(t).replace('<button class="tcard"', '<button class="tcard hero-tcard' + (pick.upcoming ? ' is-next' : '') + (t.status === 'past' ? ' is-done' : '') + '" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '"') +
+        (showCountdown ? '<div class="countdown" id="heroCountdown" role="timer" aria-live="off"></div>' : '');
+    } else
     el.innerHTML =
       '<span class="hero-next-label">' + esc(uiText(pick.upcoming ? 'landing.nextEvent' : 'landing.lastEvent')) + '</span>' +
       '<span class="tier mono">LoC ' + esc(t.tier) + '</span>' +
@@ -6291,19 +6310,20 @@ var CLUBS = [
   /* ==================================================================
      "MATCH DAY" SCROLL STORY (landing, 'ig'): scrolling is the timeline.
      1. The hero video settles into a rounded screen, the headline drifts.
-     2. The hero ticket flies down and lands exactly on its own ticket in
-        the tour ring (that slot stays empty until it arrives); the ring
-        holds still until the landing and only then starts turning.
-     3. The Mikasa ball leaves its corner, rolls along a curve down the page
-        and "kicks" the ranking leaders up (they rise and count up), then
-        rolls back to its corner.
+     2. The hero ticket (the very same ticket as in the tour ring) flies
+        down and lands on its own slot in the ring, which stays empty until
+        then; at touchdown it simply becomes the ring ticket. The ring holds
+        still until the landing and only then turns.
+     3. The Mikasa ball leaves its corner, curves down the page and dribbles
+        through the ranking leaders: every row only flies in when the ball
+        hits it. Then it rolls back into its corner by itself.
      Values are eased toward their scroll targets every frame (soft, never
      hijacking the scroll). Phones get a lighter version; off for reduced
      motion.
      ================================================================== */
   var matchDay = (function() {
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var cur = {}, target = {}, raf = 0, counted = false, landed = false, heroNat = null;
+    var cur = {}, target = {}, raf = 0, landed = false, heroNat = null, ballHome = false, landY = null;
     var clamp = function(v, a, b) { return Math.max(a, Math.min(b, v)); };
     var ease = function(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
     var lerp = function(a, b, t) { return a + (b - a) * t; };
@@ -6314,39 +6334,47 @@ var CLUBS = [
       var item = ring.api.root.querySelector('.rc-item[data-orig="' + ring.start + '"]');
       return item ? item.querySelector('.tcard') || item : null;
     }
+    function heroCard() { return document.querySelector('#heroNext .hero-tcard'); }
     // the hero ticket's own place in the page (without our transform)
     function heroNatural() {
-      var next = document.getElementById('heroNext');
-      if (!next) return null;
-      var prevT = next.style.transform; next.style.transform = '';
-      var r = next.getBoundingClientRect();
-      next.style.transform = prevT;
-      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 + scrollY, w: r.width, h: r.height };
+      var hc = heroCard();
+      if (!hc) return null;
+      var prevT = hc.style.transform; hc.style.transform = '';
+      var r = hc.getBoundingClientRect();
+      hc.style.transform = prevT;
+      return r.width < 10 ? null : { cx: r.left + r.width / 2, cy: r.top + r.height / 2 + scrollY, w: r.width, h: r.height };
     }
+    // the hero ticket takes the ring ticket's exact size, so it can become it
+    function matchSize() {
+      var hc = heroCard(), rc = ringCard();
+      if (!hc || !rc || !rc.offsetWidth) return;
+      hc.style.width = rc.offsetWidth + 'px';
+      hc.style.height = rc.offsetHeight + 'px'; hc.style.minHeight = rc.offsetHeight + 'px';
+      heroNat = heroNatural();
+    }
+    function leaderRows() { return Array.prototype.slice.call(document.querySelectorAll('.landing-leaders .leader-row')); }
     function measure() {
       var vh = innerHeight, vw = innerWidth;
       target.small = vw < 768 ? 1 : 0;
       var hero = document.querySelector('.landing-hero');
       target.hero = hero ? clamp(scrollY / Math.max(1, hero.offsetHeight * 0.9), 0, 1) : 0;
-      // ticket flight: done when the ring ticket sits a bit above the middle of the screen
-      if (!heroNat || heroNat.w < 10) heroNat = heroNatural();
-      if (heroNat && heroNat.w < 10) heroNat = null;
+      if (!heroNat) heroNat = heroNatural();
       var card = ringCard();
       if (card && heroNat && !target.small) {
-        var cr = card.getBoundingClientRect();
-        var tDocCy = cr.top + cr.height / 2 + scrollY;
-        var D = tDocCy - vh * 0.52;
+        // where the ticket sits while it is in front (cached: once the ring
+        // turns, the card moves away, but the landing spot must stay put)
+        var cr = card.getBoundingClientRect(), y = cr.top + cr.height / 2 + scrollY;
+        if (!landed && card.closest('.rc-item.is-front')) landY = y;
+        var D = (landY != null ? landY : y) - vh * 0.52;
         target.fly = D > 1 ? clamp(scrollY / D, 0, 1) : 1;
         target.flyD = D;
       } else target.fly = 1;
-      // ball journey: from when the leaders come into view until they sit high on screen
+      // ball: from when the leaders come into view until they sit in the upper half
       var lead = document.querySelector('.landing-leaders');
       if (lead) {
         var lr = lead.getBoundingClientRect();
-        target.ball = clamp((vh * 1.15 - lr.top) / (vh * 0.85), 0, 1);
-        target.back = clamp((vh * 0.25 - lr.top) / (vh * 0.45), 0, 1);
-        target.leadTop = lr.top; target.leadLeft = lr.left; target.leadW = lr.width;
-      } else { target.ball = 0; target.back = 0; }
+        target.ball = clamp((vh * 1.1 - lr.top) / (vh * 0.75), 0, 1);
+      } else target.ball = 0;
       var max = document.documentElement.scrollHeight - vh;
       target.page = max > 0 ? clamp(scrollY / max, 0, 1) : 0;
     }
@@ -6358,108 +6386,114 @@ var CLUBS = [
       if (content) { content.style.transform = 'translateY(' + (-90 * h) + 'px)'; content.style.opacity = String(clamp(1 - 1.3 * h, 0, 1)); }
       var top = document.getElementById('heroTop');
       if (top) top.style.transform = 'translateY(' + (-50 * h) + 'px)';
+      // the label and countdown around the hero ticket stay behind
+      document.querySelectorAll('#heroNext .hero-next-label, #heroNext .countdown').forEach(function(el) { el.style.opacity = small ? '' : String(clamp(1 - 2.2 * h, 0, 1)); });
     }
     function applyFlight() {
-      var next = document.getElementById('heroNext'), card = ringCard(), ring = window.__landingRing;
-      if (!next) return;
+      var hc = heroCard(), card = ringCard(), ring = window.__landingRing;
+      if (!hc) return;
       if (target.small || !card || !heroNat) {
-        next.style.transform = ''; next.style.opacity = '';
-        if (card) card.style.opacity = '';
+        hc.style.transform = ''; hc.style.visibility = '';
+        if (card) card.style.visibility = '';
         return;
       }
       var f = cur.fly || 0, e = ease(f), cr = card.getBoundingClientRect();
-      // where the ticket should be on screen: from its hero spot (as seen at
-      // the top of the page) to where the ring ticket will be at touchdown;
-      // after landing it simply rides along with the ring ticket
-      var cardX = cr.left + cr.width / 2, cardDocY = cr.top + cr.height / 2 + scrollY;
-      var wantX, wantY;
-      if (f >= 1) { wantX = cardX; wantY = cr.top + cr.height / 2; }
-      else { wantX = lerp(heroNat.cx, cardX, e); wantY = lerp(heroNat.cy, cardDocY - (target.flyD || 0), e); }
-      var natX = heroNat.cx, natY = heroNat.cy - scrollY;
-      var s = lerp(1, cr.width / heroNat.w, e);
-      var tilt = Math.sin(e * Math.PI) * -7;
-      next.style.transform = 'translate(' + (wantX - natX).toFixed(1) + 'px,' + (wantY - natY).toFixed(1) + 'px) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
-      next.style.transformOrigin = '50% 50%';
-      // crossfade at touchdown: the flying ticket hands over to the ring's own
-      var hand = clamp((f - 0.9) / 0.1, 0, 1);
-      next.style.opacity = String(1 - hand);
-      next.style.pointerEvents = hand > 0.5 ? 'none' : '';
-      card.style.opacity = String(hand);
-      card.style.transition = 'none';
+      if (f >= 1) {
+        // touchdown: it IS the ring ticket now
+        hc.style.visibility = 'hidden'; card.style.visibility = '';
+      } else {
+        var cardX = cr.left + cr.width / 2, cardDocY = landY != null ? landY : cr.top + cr.height / 2 + scrollY;
+        var wantX = lerp(heroNat.cx, cardX, e), wantY = lerp(heroNat.cy, cardDocY - (target.flyD || 0), e);
+        var natX = heroNat.cx, natY = heroNat.cy - scrollY;
+        var s = lerp(1, cr.width / heroNat.w, e), tilt = Math.sin(e * Math.PI) * -7;
+        hc.style.transform = 'translate(' + (wantX - natX).toFixed(1) + 'px,' + (wantY - natY).toFixed(1) + 'px) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
+        hc.style.visibility = ''; card.style.visibility = 'hidden';
+      }
       // the ring holds still (on this ticket) until the landing, then turns
       if (ring && ring.api) {
         if (f < 1) { if (landed || !ring.heldOnce) { ring.api.goTo(ring.start); ring.heldOnce = true; } ring.api.hold(60000); landed = false; }
-        else if (!landed) { landed = true; ring.api.hold(900); }
+        else if (!landed) { landed = true; ring.api.hold(700); }
       }
     }
+    function kickRow(row) {
+      if (row.dataset.kicked) return;
+      row.dataset.kicked = '1';
+      row.classList.remove('is-kicked'); void row.offsetWidth; row.classList.add('is-kicked');
+      var pts = row.querySelector('.leader-pts'), end = pts ? parseInt(pts.dataset.end || pts.textContent.replace(/\D/g, ''), 10) : 0;
+      if (pts && end) {
+        pts.dataset.end = end;
+        var t0 = performance.now();
+        (function step(now) { var p = Math.min(1, (now - t0) / 900); pts.textContent = Math.round(end * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); })(t0);
+      }
+    }
+    function unkickRow(row) { if (!row.dataset.kicked) return; delete row.dataset.kicked; row.classList.remove('is-kicked'); }
     function applyBall() {
-      var ball = document.getElementById('ballAd');
+      var ball = document.getElementById('ballAd'), rows = leaderRows();
+      var b = cur.ball || 0, small = target.small;
+      if (small) {
+        // phones: no journey, the rows just come in as the leaders arrive
+        rows.forEach(function(r, i) { if ((target.ball || 0) > 0.35 + i * 0.04) kickRow(r); else if ((target.ball || 0) < 0.2) unkickRow(r); });
+        if (ball) { ball.style.translate = ''; ball.style.transition = ''; ball.classList.remove('is-traveling'); }
+        return;
+      }
       if (!ball) return;
-      var b = cur.ball || 0, back = cur.back || 0, small = target.small;
-      if (small || (b <= 0 && back <= 0)) { ball.style.translate = ''; return; }
       var vw = innerWidth, vh = innerHeight, size = ball.offsetWidth;
       var homeX = vw - 22 - size / 2, homeY = vh - 22 - size / 2;
-      // landing spot: just above the leaders, in the middle between the two columns
-      var landX = (target.leadLeft || 0) + (target.leadW || vw) / 2;
-      var landY = clamp((target.leadTop || vh) - 10, size, vh - size);
-      // a curve through the left part of the screen, with small hops
-      var e = ease(b);
-      var ctrlX = vw * 0.12, ctrlY = vh * 0.18;
-      var x = (1 - e) * (1 - e) * homeX + 2 * (1 - e) * e * ctrlX + e * e * landX;
-      var y = (1 - e) * (1 - e) * homeY + 2 * (1 - e) * e * ctrlY + e * e * landY;
-      y -= Math.abs(Math.sin(e * Math.PI * 3)) * 46 * (1 - e);
-      // and rolling home again once the leaders have been "kicked"
-      var r = ease(back);
-      x = lerp(x, homeX, r); y = lerp(y, homeY, r);
+      if (b >= 0.999) {
+        // done: everyone is in, the ball rolls back into its corner by itself
+        rows.forEach(kickRow);
+        if (!ballHome) { ballHome = true; ball.style.transition = 'translate 1s cubic-bezier(.3,1.25,.5,1)'; ball.style.translate = '0px 0px'; setTimeout(function() { if (ballHome) ball.classList.remove('is-traveling'); }, 1000); }
+        return;
+      }
+      if (ballHome) { ballHome = false; ball.style.transition = 'none'; }
+      if (b <= 0) { ball.style.translate = ''; ball.classList.remove('is-traveling'); rows.forEach(unkickRow); return; }
+      // waypoints: each leader row (a little left of its name), men first, then women
+      var pts = rows.map(function(r) { var rr = r.getBoundingClientRect(); return { x: rr.left + 34, y: rr.top + rr.height / 2 }; });
+      var x, y;
+      if (!pts.length) { x = homeX; y = homeY; }
+      else if (b < 0.4) {
+        // the approach: a curve through the left part of the screen, small hops
+        var e = ease(b / 0.4), p0 = pts[0];
+        var cx = vw * 0.22, cy = vh * 0.2;
+        x = (1 - e) * (1 - e) * homeX + 2 * (1 - e) * e * cx + e * e * (p0.x - 60);
+        y = (1 - e) * (1 - e) * homeY + 2 * (1 - e) * e * cy + e * e * p0.y;
+        y -= Math.abs(Math.sin(e * Math.PI * 3)) * 40 * (1 - e);
+      } else {
+        // the dribble: row to row, a hop between each
+        var u = (b - 0.4) / 0.6 * pts.length, i = Math.min(pts.length - 1, Math.floor(u)), t = u - i;
+        var from = i === 0 ? { x: pts[0].x - 60, y: pts[0].y } : pts[i - 1], to = pts[i];
+        var et = ease(clamp(t * 1.25, 0, 1));
+        x = lerp(from.x, to.x, et); y = lerp(from.y, to.y, et) - Math.sin(et * Math.PI) * 34;
+        rows.forEach(function(r, ri) { if (ri < i || (ri === i && et > 0.85)) kickRow(r); else unkickRow(r); });
+      }
+      if (b < 0.4) rows.forEach(unkickRow);
       ball.style.translate = (x - homeX).toFixed(1) + 'px ' + (y - homeY).toFixed(1) + 'px';
-    }
-    function applyLeaders() {
-      var b = cur.ball || 0;
-      var kick = target.small ? clamp(((target.ball || 0) - 0.2) / 0.5, 0, 1) : clamp((b - 0.82) / 0.18, 0, 1);
-      document.querySelectorAll('.landing-leaders .leader-col').forEach(function(col, ci) {
-        col.querySelectorAll('.leader-row').forEach(function(row, ri) {
-          var k = clamp(kick * 1.6 - (ri * 0.18 + ci * 0.1), 0, 1);
-          row.style.transform = 'translateY(' + ((1 - k) * 40) + 'px) scale(' + (0.96 + 0.04 * k) + ')';
-          row.style.opacity = String(k);
-        });
-      });
-      if (!counted && kick > 0.3) { counted = true; countLeaders(); }
-    }
-    function countLeaders() {
-      document.querySelectorAll('.landing-leaders .leader-pts').forEach(function(el) {
-        var end = parseInt(el.textContent.replace(/\D/g, ''), 10); if (!end) return;
-        var t0 = performance.now();
-        (function step(now) {
-          var p = Math.min(1, (now - t0) / 1100), e = 1 - Math.pow(1 - p, 3);
-          el.textContent = Math.round(end * e);
-          if (p < 1) requestAnimationFrame(step);
-        })(t0);
-      });
+      ball.classList.add('is-traveling');
     }
     function frame() {
       raf = 0;
-      if (!landingVisible()) { var ball = document.getElementById('ballAd'); if (ball) ball.style.translate = ''; return; }
+      if (!landingVisible()) { var ball = document.getElementById('ballAd'); if (ball) { ball.style.translate = ''; ball.style.transition = ''; ball.classList.remove('is-traveling'); } return; }
       var moving = false;
-      ['hero', 'fly', 'ball', 'back', 'page'].forEach(function(k) {
+      ['hero', 'fly', 'ball', 'page'].forEach(function(k) {
         var t = target[k] || 0, c = cur[k] == null ? t : cur[k];
         var n = c + (t - c) * 0.16;
         if (Math.abs(t - n) < 0.0005) n = t; else moving = true;
         cur[k] = n;
       });
-      applyHero(); applyFlight(); applyBall(); applyLeaders();
+      applyHero(); applyFlight(); applyBall();
       document.body.style.setProperty('--page-p', (cur.page || 0).toFixed(4));
       if (moving) raf = requestAnimationFrame(frame);
     }
     function kick() { if (reduce || !landingVisible()) return; measure(); if (!raf) raf = requestAnimationFrame(frame); }
     window.addEventListener('scroll', kick, { passive: true });
-    window.addEventListener('resize', function() { if (reduce) return; heroNat = heroNatural(); kick(); });
-    window.addEventListener('hashchange', function() { var ball = document.getElementById('ballAd'); if (ball) ball.style.translate = ''; });
+    window.addEventListener('resize', function() { if (reduce) return; landY = null; matchSize(); kick(); });
+    window.addEventListener('hashchange', function() { var ball = document.getElementById('ballAd'); if (ball) { ball.style.translate = ''; ball.style.transition = ''; ball.classList.remove('is-traveling'); } });
     return {
       reset: function() {
-        if (reduce) return;
-        counted = false; landed = false; cur = {};
+        if (reduce) { leaderRows().forEach(function(r) { r.classList.add('is-kicked'); }); return; }
+        landed = false; ballHome = false; cur = {}; landY = null;
         if (window.__landingRing) window.__landingRing.heldOnce = false;
-        heroNat = heroNatural();
+        matchSize();
         kick();
       }
     };
