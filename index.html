@@ -2354,6 +2354,37 @@
   .rank-move.is-down { color:#ff5a76; }
   .rank-move.is-same { color:rgba(255,255,255,0.35); }
   .rank-move.is-new { color:#07083f; background:var(--cyan); border-radius:999px; padding:1px 6px; font-size:9.5px; letter-spacing:0.08em; }
+
+  /* ranking: compare two players */
+  .cmp-open-row { display:flex; justify-content:flex-end; margin:10px 0 4px; }
+  .cmp-panel { margin:10px 0 22px; padding:16px; border-radius:var(--tk-radius, 14px); background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.25); }
+  .cmp-pickers { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; }
+  .cmp-combo { position:relative; }
+  .cmp-combo input { width:100%; }
+  .cmp-vs { font-family:'Bebas Neue', sans-serif; font-size:24px; color:var(--cyan); letter-spacing:0.06em; }
+  .cmp-vs.big { font-size:52px; text-shadow:0 0 22px rgba(0,242,255,0.5); align-self:center; }
+  .cmp-picked { display:flex; align-items:center; gap:10px; min-width:0; padding:6px 8px 6px 6px; border-radius:999px; background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); }
+  .cmp-picked .tw-face { width:34px; height:34px; box-shadow:none; }
+  .cmp-picked-name { flex:1; min-width:0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cmp-x { width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); background:none; color:rgba(255,255,255,0.7); cursor:pointer; flex-shrink:0; }
+  .cmp-dd-rank { font-variant-numeric:tabular-nums; color:var(--cyan); font-weight:700; min-width:3ch; }
+  .cmp-card { margin-top:16px; padding:22px 18px; border-radius:var(--tk-radius, 14px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); }
+  .cmp-head { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; margin-bottom:14px; }
+  .cmp-side { display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; min-width:0; }
+  .cmp-side .tw-face { width:84px; height:84px; }
+  .cmp-side .tw-face > span { font-size:26px; }
+  .cmp-side strong { font-family:'Bebas Neue', sans-serif; font-size:28px; font-weight:400; letter-spacing:0.02em; line-height:1; }
+  .cmp-club { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7); }
+  .cmp-club .club-avatar { width:20px; height:20px; }
+  .cmp-line { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:10px 6px; border-top:1px dashed rgba(255,255,255,0.18); }
+  .cmp-val { text-align:center; font-family:'Bebas Neue', sans-serif; font-size:30px; line-height:1; color:rgba(255,255,255,0.55); font-variant-numeric:tabular-nums; }
+  .cmp-val.is-lead { color:#fff; }
+  .cmp-label { font:700 11px 'Poppins', sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:var(--cyan); text-align:center; min-width:110px; }
+  .cmp-h2h { display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:8px; padding:14px; border-radius:12px; background:rgba(0,242,255,0.08); border:1px solid rgba(0,242,255,0.35); }
+  .cmp-kicker { font:700 11px 'Poppins', sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:var(--cyan); }
+  .cmp-h2h-score { font-family:'Bebas Neue', sans-serif; font-size:44px; line-height:1; letter-spacing:0.08em; }
+  .cmp-actions { display:flex; justify-content:center; margin-top:16px; }
+  @media (max-width:520px) { .cmp-pickers { grid-template-columns:1fr; } .cmp-pickers .cmp-vs { text-align:center; } .cmp-side .tw-face { width:64px; height:64px; } .cmp-side strong { font-size:22px; } .cmp-label { min-width:80px; font-size:10px; } }
 </style>
 </head>
 <body>
@@ -4137,6 +4168,39 @@ var CLUBS = [
     });
   }
 
+  // Same idea as computePlayerStats, but by NAME (ranking rows have no
+  // account), plus head-to-head against a second player.
+  function computeCompareStats(nameA, nameB) {
+    var na = normalizeNameForMatch(nameA), nb = normalizeNameForMatch(nameB);
+    var out = {}; out[na] = { tournaments: 0, wins: 0, losses: 0, titles: 0 }; out[nb] = { tournaments: 0, wins: 0, losses: 0, titles: 0 };
+    var h2h = { a: 0, b: 0 };
+    var has = function(team, n) { return teamPlayerNames(team).some(function(x) { return normalizeNameForMatch(x) === n; }); };
+    return Promise.all(allTournaments().map(function(t) {
+      return loadBracket(t.id).then(function(bracket) {
+        var placement = null;
+        [na, nb].forEach(function(n) {
+          var ids = bracket.teams.filter(function(tm) { return has(tm, n); }).map(function(tm) { return tm.id; });
+          if (!ids.length) return;
+          var st = out[n];
+          st.tournaments++;
+          playerRecordInBracket(bracket, ids).forEach(function(r) { st.wins += r.w; st.losses += r.l; });
+          placement = placement || computeTournamentPlacement(bracket);
+          if (placement.first && ids.indexOf(placement.first) !== -1) st.titles++;
+        });
+        allBracketMatchIds(bracket).forEach(function(id) {
+          var i = tickerMatchInfo(bracket, id);
+          if (!i || !i.winner) return;
+          var ta = findBracketTeam(bracket, i.a), tb = findBracketTeam(bracket, i.b);
+          if (!ta || !tb) return;
+          var aSide = has(ta, na) && has(tb, nb) ? 'a' : has(ta, nb) && has(tb, na) ? 'b' : null;
+          if (!aSide) return;
+          var aWon = (aSide === 'a') === (i.winner === i.a);
+          if (aWon) h2h.a++; else h2h.b++;
+        });
+      }).catch(function() {});
+    })).then(function() { return { a: out[na], b: out[nb], h2h: h2h }; });
+  }
+
   function stageAllMatches(stage) {
     if (stage.matches) return stage.matches;
     if (stage.rounds) {
@@ -4603,6 +4667,16 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'compare.open': 'Compare players',
+    'compare.close': 'Close comparison',
+    'compare.pick': 'Search a player…',
+    'compare.rank': 'Rank',
+    'compare.points': 'Points',
+    'compare.tournaments': 'Tournaments',
+    'compare.titles': 'Titles',
+    'compare.wins': 'Matches won',
+    'compare.winRate': 'Win rate',
+    'compare.h2h': 'Head to head',
     'ranking.moveNew': 'New in the ranking',
     'ranking.moveSame': 'Same place as before',
     'ranking.moveWas': 'Was #{n} before the last tournament',
@@ -4768,7 +4842,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -6856,6 +6930,8 @@ var CLUBS = [
     var searchPlaceholder = rankingType === 'players' ? 'Search player or club…' : 'Search club…';
     el.innerHTML = controls +
       '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" aria-label="' + searchPlaceholder + '" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
+      (rankingType === 'players' ? '<div class="cmp-open-row"><button type="button" class="btn btn-outline btn-sm" id="compareToggleBtn" aria-expanded="' + compareOpen + '">' + esc(uiText(compareOpen ? 'compare.close' : 'compare.open')) + '</button></div>' +
+        (compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') : '') +
       '<div id="rankingTable"></div>';
     var meta = document.getElementById('rankingBandMeta');
     if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
@@ -6883,6 +6959,9 @@ var CLUBS = [
       renderRanking();
     });
     wireRankingSwipe(document.getElementById('rankingTable'));
+    var cmpBtn = document.getElementById('compareToggleBtn');
+    if (cmpBtn) cmpBtn.addEventListener('click', function() { compareOpen = !compareOpen; renderRanking(); });
+    if (compareOpen && rankingType === 'players') wireComparePanel(rows);
     // Only the table re-renders while typing, so the input keeps its focus.
     document.getElementById('rankingSearchInput').addEventListener('input', function(e) {
       rankingSearch = e.target.value;
@@ -6955,6 +7034,202 @@ var CLUBS = [
   // Filters by name, keeping each row's real rank. In the Players tab a club
   // name also matches, so searching a club lists all of its players. Same
   // diacritic-insensitive matching as findRankingPointsForPlayer.
+  /* Compare two players (ranking page): pick two, see them side by side,
+     share as a story/post graphic. */
+  var compareOpen = false, compareNames = [null, null], compareStatsCache = {};
+  function compareRow(rows, name) {
+    var n = normalizeNameForMatch(name);
+    return rows.filter(function(r) { return normalizeNameForMatch(r.name) === n; })[0] || null;
+  }
+  function comparePickerHtml(k, rows) {
+    var r = compareNames[k] && compareRow(rows, compareNames[k]);
+    if (r) {
+      return '<div class="cmp-picked">' + playerFaceHtml(r.name) + '<span class="cmp-picked-name">' + esc(r.name) + '</span>' +
+        '<button type="button" class="cmp-x" data-cmp-clear="' + k + '" aria-label="' + esc(uiText('myteam.change')) + '">✕</button></div>';
+    }
+    return '<div class="combo-group cmp-combo"><label class="sr-only" for="cmpSearch' + k + '">' + esc(uiText('compare.pick')) + '</label>' +
+      '<input id="cmpSearch' + k + '" autocomplete="off" placeholder="' + esc(uiText('compare.pick')) + '" data-cmp-search="' + k + '">' +
+      '<div class="combo-dropdown" data-cmp-dd="' + k + '" hidden></div></div>';
+  }
+  function comparePanelHtml(rows) {
+    var a = compareNames[0] && compareRow(rows, compareNames[0]), b = compareNames[1] && compareRow(rows, compareNames[1]);
+    return '<div class="cmp-panel">' +
+      '<div class="cmp-pickers">' + comparePickerHtml(0, rows) + '<span class="cmp-vs">VS</span>' + comparePickerHtml(1, rows) + '</div>' +
+      (a && b ? '<div id="compareResult"><p class="empty-note">Loading …</p></div>' : '') +
+    '</div>';
+  }
+  function compareResultHtml(rows, a, b, st) {
+    var prev = rankingPrevMap(rankingYear, rankingGender, rankingType);
+    var pct = function(x) { var n = x.wins + x.losses; return n ? Math.round(x.wins / n * 100) + '%' : '–'; };
+    var club = function(r) { return r.club1 || r.club2 || ''; };
+    var line = function(label, va, vb, higherWins) {
+      var na = parseFloat(String(va).replace('#', '')), nb = parseFloat(String(vb).replace('#', '')), lead = isNaN(na) || isNaN(nb) || na === nb ? 0 : (higherWins ? (na > nb ? -1 : 1) : (na < nb ? -1 : 1));
+      return '<div class="cmp-line"><span class="cmp-val' + (lead < 0 ? ' is-lead' : '') + '">' + esc(String(va)) + '</span><span class="cmp-label">' + esc(label) + '</span><span class="cmp-val' + (lead > 0 ? ' is-lead' : '') + '">' + esc(String(vb)) + '</span></div>';
+    };
+    var side = function(r) {
+      var c = club(r);
+      return '<div class="cmp-side">' + playerFaceHtml(r.name) + '<strong>' + esc(r.name) + '</strong>' +
+        (c ? '<span class="cmp-club">' + clubAvatarHtml(findClub(c)) + esc(c) + '</span>' : '') + rankMoveHtml(r, prev) + '</div>';
+    };
+    return '<div class="cmp-card">' +
+      '<div class="cmp-head">' + side(a) + '<span class="cmp-vs big">VS</span>' + side(b) + '</div>' +
+      line(uiText('compare.rank'), '#' + a.rank, '#' + b.rank, false) +
+      line(uiText('compare.points'), a.points, b.points, true) +
+      line(uiText('compare.tournaments'), st.a.tournaments, st.b.tournaments, true) +
+      line(uiText('compare.titles'), st.a.titles, st.b.titles, true) +
+      line(uiText('compare.wins'), st.a.wins, st.b.wins, true) +
+      line(uiText('compare.winRate'), pct(st.a), pct(st.b), true) +
+      '<div class="cmp-h2h"><span class="cmp-kicker">' + esc(uiText('compare.h2h')) + '</span><span class="cmp-h2h-score">' + st.h2h.a + ' : ' + st.h2h.b + '</span></div>' +
+      '<div class="cmp-actions"><button type="button" class="btn btn-cyan btn-sm" id="compareGraphicBtn">' + esc(uiText('myteam.graphic')) + '</button></div>' +
+    '</div>';
+  }
+  function wireComparePanel(rows) {
+    var panel = document.getElementById('comparePanel');
+    if (!panel) return;
+    panel.querySelectorAll('[data-cmp-clear]').forEach(function(b) {
+      b.addEventListener('click', function() { compareNames[+b.dataset.cmpClear] = null; renderRanking(); });
+    });
+    panel.querySelectorAll('[data-cmp-search]').forEach(function(input) {
+      var k = +input.dataset.cmpSearch, dd = panel.querySelector('[data-cmp-dd="' + k + '"]');
+      input.addEventListener('input', function() {
+        var q = normalizeNameForMatch(input.value);
+        if (!q) { dd.hidden = true; return; }
+        var hits = rows.filter(function(r) { return normalizeNameForMatch(r.name).indexOf(q) !== -1 && r.name !== compareNames[1 - k]; }).slice(0, 8);
+        dd.innerHTML = hits.map(function(r) { return '<div class="combo-item" data-cmp-name="' + esc(r.name) + '"><span class="cmp-dd-rank">#' + r.rank + '</span><span>' + esc(r.name) + '</span></div>'; }).join('');
+        dd.hidden = !hits.length;
+      });
+      dd.addEventListener('click', function(e) {
+        var it = e.target.closest('[data-cmp-name]'); if (!it) return;
+        compareNames[k] = it.dataset.cmpName; renderRanking();
+      });
+    });
+    var a = compareNames[0] && compareRow(rows, compareNames[0]), b = compareNames[1] && compareRow(rows, compareNames[1]);
+    if (!a || !b) return;
+    var key = normalizeNameForMatch(a.name) + '|' + normalizeNameForMatch(b.name);
+    (compareStatsCache[key] ? Promise.resolve(compareStatsCache[key]) : computeCompareStats(a.name, b.name)).then(function(st) {
+      compareStatsCache[key] = st;
+      var box = document.getElementById('compareResult');
+      if (!box) return;
+      box.innerHTML = compareResultHtml(rows, a, b, st);
+      document.getElementById('compareGraphicBtn').addEventListener('click', function() { openCompareGraphic(a, b, st, this); });
+    });
+  }
+
+  function drawCompareCard(a, b, st, imgs, formatKey) {
+    var fmt = PLAYER_CARD_FORMATS[formatKey] || PLAYER_CARD_FORMATS.post;
+    var W = 1080, H = fmt.H, T = fmt.top, B = fmt.bottom, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    var CYAN = '#00f2ff', BEBAS = '"Bebas Neue", sans-serif', GEIST = '"Geist", "Poppins", sans-serif';
+    var bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#080a55'); bg.addColorStop(0.55, '#1b1e86'); bg.addColorStop(1, '#5a55a8');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // diagonal split light
+    g.save(); g.translate(W / 2, 0); g.transform(1, 0, -0.18, 1, 0, 0);
+    var band = g.createLinearGradient(-40, 0, 40, 0);
+    band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(0.5, 'rgba(0,242,255,0.22)'); band.addColorStop(1, 'rgba(0,242,255,0)');
+    g.fillStyle = band; g.fillRect(-40, T + 170, 80, H); g.restore();
+    // header
+    g.save(); g.translate(0, T);
+    if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
+    spacing(6); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('FOOTVOLLEY', 182, 142);
+    g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(4); g.font = '800 22px ' + GEIST; var chip = 'RANKING ' + rankingYear + ' · ' + (rankingGender === 'men' ? "MEN'S" : "WOMEN'S"), cw = g.measureText(chip).width + 40;
+    g.fillStyle = CYAN; g.fillRect(-cw, 0, cw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(chip, -20, 31); g.restore();
+    g.restore();
+    // two players
+    var footY = H - B - 22;
+    var rowsN = 6, rowH = formatKey === 'story' ? 90 : 74;
+    var statsH = rowsN * rowH, h2hH = 150;
+    var h2hY = footY - 50 - h2hH, statsY = h2hY - 30 - statsH;
+    // circle + rank chip + two name lines must end above the stats ticket
+    var top = T + 190, nameBlock = 200;
+    var R = Math.max(90, Math.min(190, (statsY - 36 - top - 10 - nameBlock) / 2));
+    [[a, imgs.a, W * 0.26], [b, imgs.b, W * 0.74]].forEach(function(p) {
+      var r = p[0], im = p[1], cx = p[2], cy = top + R + 10;
+      g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2);
+      var disc = g.createLinearGradient(cx - R, cy - R, cx + R, cy + R); disc.addColorStop(0, '#2c2f98'); disc.addColorStop(1, '#1a1d84');
+      g.fillStyle = disc; g.shadowColor = 'rgba(0,242,255,0.35)'; g.shadowBlur = 50; g.fill(); g.restore();
+      g.save(); g.beginPath(); g.arc(cx, cy, R - 4, 0, Math.PI * 2); g.clip();
+      if (im) {
+        var k = Math.max((2 * R) / im.width, (2 * R) / im.height) * (im.cutout ? 1.25 : 1), iw = im.width * k, ih = im.height * k;
+        g.drawImage(im, cx - iw / 2, cy - R + (im.cutout ? -ih * 0.02 : -(ih - 2 * R) * 0.2), iw, ih);
+      } else {
+        spacing(2); g.font = '400 ' + Math.round(R * 0.9) + 'px ' + BEBAS; g.fillStyle = 'rgba(255,255,255,0.9)'; g.textAlign = 'center';
+        g.fillText(initials(r.name), cx, cy + R * 0.32);
+      }
+      g.restore();
+      g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.lineWidth = 6; g.strokeStyle = CYAN; g.stroke(); g.restore();
+      // rank chip
+      g.save(); g.translate(cx, cy + R - 6); g.transform(1, 0, -0.21, 1, 0, 0);
+      spacing(2); g.font = '800 30px ' + GEIST; var rk = '#' + r.rank, rw = g.measureText(rk).width + 34;
+      g.fillStyle = CYAN; g.fillRect(-rw / 2, -4, rw, 48); g.fillStyle = '#07083f'; g.textAlign = 'center'; g.fillText(rk, 0, 32); g.restore();
+      // name
+      var parts = r.name.split(' '), last = parts.length > 1 ? parts.pop() : r.name, first = parts.join(' ');
+      g.textAlign = 'center'; g.fillStyle = 'rgba(255,255,255,0.85)'; spacing(2); g.font = '400 44px ' + BEBAS;
+      if (first && parts.length) g.fillText(first.toUpperCase(), cx, cy + R + 98);
+      g.fillStyle = '#fff'; spacing(1); pcFitText(g, last.toUpperCase(), W / 2 - 60, 84, '400 {s}px ' + BEBAS);
+      g.fillText(last.toUpperCase(), cx, cy + R + 98 + 72);
+    });
+    // VS
+    g.save(); g.textAlign = 'center'; spacing(2); g.font = '400 130px ' + BEBAS; g.fillStyle = CYAN;
+    g.shadowColor = 'rgba(0,242,255,0.6)'; g.shadowBlur = 40; g.fillText('VS', W / 2, top + R + 56); g.restore();
+    // stat rows
+    var pct = function(x) { var n = x.wins + x.losses; return n ? Math.round(x.wins / n * 100) + '%' : '–'; };
+    var lines = [
+      ['RANK', '#' + a.rank, '#' + b.rank, false], ['POINTS', String(a.points), String(b.points), true],
+      ['TOURNAMENTS', String(st.a.tournaments), String(st.b.tournaments), true], ['TITLES', String(st.a.titles), String(st.b.titles), true],
+      ['MATCHES WON', String(st.a.wins), String(st.b.wins), true], ['WIN RATE', pct(st.a), pct(st.b), true]
+    ];
+    var tx = 40, tw = W - 80;
+    var tk = g.createLinearGradient(tx, statsY, tx + tw, statsY + statsH);
+    tk.addColorStop(0, '#1a1d84'); tk.addColorStop(0.4, '#2c2f98'); tk.addColorStop(0.58, '#4a4cb0'); tk.addColorStop(1, '#23268c');
+    g.save(); pcRoundRect(g, tx, statsY, tw, statsH, 22); g.fillStyle = tk; g.fill(); g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 2; g.stroke(); g.restore();
+    lines.forEach(function(l, i) {
+      var y = statsY + rowH * i + rowH / 2;
+      if (i) { g.save(); g.setLineDash([8, 8]); g.strokeStyle = 'rgba(255,255,255,0.18)'; g.lineWidth = 2; g.beginPath(); g.moveTo(tx + 30, statsY + rowH * i); g.lineTo(tx + tw - 30, statsY + rowH * i); g.stroke(); g.restore(); }
+      var na = parseFloat(l[1].replace('#', '')), nb = parseFloat(l[2].replace('#', ''));
+      var lead = isNaN(na) || isNaN(nb) || na === nb ? 0 : (l[3] ? (na > nb ? -1 : 1) : (na < nb ? -1 : 1));
+      g.textAlign = 'center'; spacing(4); g.font = '700 ' + (formatKey === 'story' ? 22 : 19) + 'px ' + GEIST; g.fillStyle = CYAN; g.fillText(l[0], W / 2, y + 8);
+      spacing(1); g.font = '400 ' + (formatKey === 'story' ? 66 : 54) + 'px ' + BEBAS;
+      g.fillStyle = lead < 0 ? '#fff' : 'rgba(255,255,255,0.55)'; g.fillText(l[1], W * 0.2, y + 20);
+      g.fillStyle = lead > 0 ? '#fff' : 'rgba(255,255,255,0.55)'; g.fillText(l[2], W * 0.8, y + 20);
+      if (lead) { g.fillStyle = CYAN; g.beginPath(); var dxp = lead < 0 ? W * 0.2 - 90 : W * 0.8 + 90; g.arc(dxp, y, 7, 0, Math.PI * 2); g.fill(); }
+    });
+    // head to head
+    g.save(); pcRoundRect(g, tx, h2hY, tw, h2hH, 22); g.fillStyle = 'rgba(0,242,255,0.1)'; g.fill(); g.strokeStyle = 'rgba(0,242,255,0.55)'; g.lineWidth = 2; g.stroke(); g.restore();
+    g.textAlign = 'center'; spacing(5); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('HEAD TO HEAD', W / 2, h2hY + 48);
+    spacing(4); g.font = '400 84px ' + BEBAS; g.fillStyle = '#fff'; g.fillText(st.h2h.a + '  :  ' + st.h2h.b, W / 2, h2hY + 124);
+    spacing(4); g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, footY);
+    return c;
+  }
+  function openCompareGraphic(a, b, st, btn) {
+    var label = btn.textContent;
+    btn.disabled = true; btn.textContent = uiText('detail.creatingGraphic');
+    var pa = findPlayerByName(a.name), pb = findPlayerByName(b.name);
+    var photo = function(p) { return p && p.photoUrl && !p.videoUrl ? loadImageAsync(p.photoUrl).then(function(im) { if (im) im.cutout = isCutoutPhoto(p); return im; }) : Promise.resolve(null); };
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
+    ]).catch(function() {}) : Promise.resolve();
+    Promise.all([fonts, loadImageAsync(BADGE_URI), photo(pa), photo(pb)]).then(function(r) {
+      var imgs = { badge: r[1], a: r[2], b: r[3] };
+      return Promise.all(['post', 'story'].map(function(k) {
+        var canvas = drawCompareCard(a, b, st, imgs, k);
+        return new Promise(function(res) { canvas.toBlob(function(bl) { res({ key: k, blob: bl, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
+      }));
+    }).then(function(list) {
+      btn.disabled = false; btn.textContent = label;
+      var slug = function(n) { return n.toLowerCase().replace(/[^a-z0-9]+/g, '-'); };
+      showPlayerCardModal({ name: a.name + ' vs ' + b.name }, { formats: list }, btn, {
+        base: 'loc-' + slug(a.name) + '-vs-' + slug(b.name), label: a.name + ' vs ' + b.name, shareTitle: a.name + ' vs ' + b.name + ' · League of Champions'
+      });
+    }).catch(function() { btn.disabled = false; btn.textContent = label; window.alert('Could not create the graphic. Please try again.'); });
+  }
+
   // ▲/▼ since the last ranking update: compares with the snapshot taken
   // before the most recent tournament sync. No snapshot yet = no arrows.
   function rankingPrevMap(year, gender, type) {
