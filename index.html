@@ -10041,9 +10041,17 @@ var CLUBS = [
       maxSets = Math.max(maxSets, r.sets.length);
       r.sets.forEach(function(st) { maxL = Math.max(maxL, g.measureText(String(st[0])).width); maxR = Math.max(maxR, g.measureText(String(st[1])).width); });
     });
-    var setColW = maxL + colonW + maxR, setGap = 26 * sz0;
+    var setColW = maxL + colonW + maxR, setGap = 18 * sz0;
     var badgeSlot = rows.some(function(r) { return r.result === 'LIVE'; }) ? 74 * sz0 : rows.some(function(r) { return r.result; }) ? 44 * sz0 : 0;
-    var resultW = (badgeSlot ? badgeSlot + 22 : 0) + (maxSets ? maxSets * setColW + (maxSets - 1) * setGap : 0);
+    // time/court column: wide enough for the longest "SAT · SIDE COURT" label
+    var multiDayAll = !data.day && rows.some(function(o) { return rows[0].where && o.where && o.where.dayIndex !== rows[0].where.dayIndex; });
+    var courtLabel = function(r) { return ((r.where && multiDayAll ? r.where.dayLabel.slice(0, 3) + ' · ' : '') + (r.where ? r.where.court : '')).toUpperCase(); };
+    spacing(2); g.font = '700 ' + Math.round(16 * sz0) + 'px ' + GEIST;
+    var labelW = Math.max.apply(null, rows.map(function(r) { return g.measureText(courtLabel(r)).width; }).concat([0]));
+    g.font = '400 ' + Math.round(54 * sz0) + 'px ' + BEBAS;
+    var timeColW = Math.max(130, labelW, g.measureText('00:00').width) + 22;
+    spacing(0); g.font = '400 ' + Math.round(46 * sz0) + 'px ' + BEBAS;
+    var resultW = (badgeSlot ? badgeSlot + 16 : 0) + (maxSets ? maxSets * setColW + (maxSets - 1) * setGap : 0);
     rows.forEach(function(r, k) {
       var ry = listTop + k * (rowH + gapR), rx = 40, rw = W - 80;
       var tk = g.createLinearGradient(rx, ry, rx + rw, ry + rowH);
@@ -10055,15 +10063,14 @@ var CLUBS = [
       g.textAlign = 'left'; spacing(1); g.fillStyle = CYAN; g.font = '400 ' + Math.round(54 * sz) + 'px ' + BEBAS;
       g.fillText(r.where ? r.where.time : '–', rx + 28, mid + 6 * sz);
       spacing(2); g.font = '700 ' + Math.round(16 * sz) + 'px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.6)';
-      var multiDay = !data.day && rows.some(function(o) { return o.where && r.where && o.where.dayIndex !== r.where.dayIndex; });
-      g.fillText(((r.where && multiDay ? r.where.dayLabel.slice(0, 3) + ' · ' : '') + (r.where ? r.where.court : '')).toUpperCase(), rx + 28, mid + 32 * sz);
-      // dashed divider
-      var dx = rx + 190;
+      g.fillText(courtLabel(r), rx + 28, mid + 32 * sz);
+      // dashed divider, clear of the widest label
+      var dx = rx + 28 + timeColW;
       g.save(); g.setLineDash([6, 7]); g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2;
       g.beginPath(); g.moveTo(dx, ry + 16); g.lineTo(dx, ry + rowH - 16); g.stroke(); g.restore();
       // opponent
-      var ox = dx + 28, oppImg = imgs.opp[r.opp ? r.opp.id : ''];
-      if (oppImg) { var ks = 50 * sz / Math.max(oppImg.width, oppImg.height); g.drawImage(oppImg, ox, mid - oppImg.height * ks / 2, oppImg.width * ks, oppImg.height * ks); ox += 64 * sz; }
+      var ox = dx + 20, oppImg = imgs.opp[r.opp ? r.opp.id : ''];
+      if (oppImg) { var ks = 50 * sz / Math.max(oppImg.width, oppImg.height); g.drawImage(oppImg, ox, mid - oppImg.height * ks / 2, oppImg.width * ks, oppImg.height * ks); ox += 58 * sz; }
       spacing(2); g.font = '700 ' + Math.round(15 * sz) + 'px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.55)';
       g.fillText(('VS  ·  ' + (r.info.label || '')).toUpperCase(), ox, mid - 16 * sz);
       spacing(0.5); g.fillStyle = '#fff';
@@ -10071,7 +10078,7 @@ var CLUBS = [
       // the opponent name gets whatever the shared result columns leave
       var setsW = Math.max(resultW, 130 * sz);
       spacing(0.5); g.fillStyle = '#fff';
-      var nameMax = rx + rw - 26 - setsW - 30 - ox;
+      var nameMax = rx + rw - 26 - setsW - 20 - ox;
       pcFitText(g, oname, nameMax, Math.round(32 * sz), '600 {s}px ' + GEIST);
       // still too long at the smallest size: cut it with an ellipsis
       if (g.measureText(oname).width > nameMax) { while (oname.length > 4 && g.measureText(oname + '…').width > nameMax) oname = oname.slice(0, -1); oname = oname.trim() + '…'; }
@@ -10086,7 +10093,7 @@ var CLUBS = [
         spacing(1); g.font = '800 ' + Math.round(20 * sz) + 'px ' + GEIST; g.fillStyle = badge === 'W' ? '#07331a' : '#fff'; g.textAlign = 'center';
         g.fillText(badge, ex - badgeSlot / 2, mid + 7 * sz); g.textAlign = 'right';
       }
-      if (badgeSlot) ex -= badgeSlot + 22;
+      if (badgeSlot) ex -= badgeSlot + 16;
       // set columns from the right: column of set i (counted from the last
       // possible set) is fixed, so set 1 of every row lines up
       var firstColRight = ex - (maxSets - 1) * (setColW + setGap);
