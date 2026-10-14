@@ -7242,7 +7242,7 @@ var CLUBS = [
     el.innerHTML = controls +
       '<input type="search" id="rankingSearchInput" class="ranking-search" autocomplete="off" aria-label="' + searchPlaceholder + '" placeholder="' + searchPlaceholder + '" value="' + esc(rankingSearch) + '"></div>' +
       '<div class="cmp-open-row">' +
-        (isAdmin ? '<button type="button" class="btn btn-outline btn-sm" id="rankingVideoBtn"><span aria-hidden="true">▶</span> ' + esc(uiText('rv.button')) + '</button>' : '') +
+        (isAdmin ? '<button type="button" class="btn btn-outline btn-sm admin-only-inline" id="rankingVideoBtn"><span aria-hidden="true">▶</span> ' + esc(uiText('rv.button')) + '</button>' : '') +
         (rankingType === 'players' ? '<button type="button" class="btn btn-outline btn-sm" id="compareToggleBtn" aria-expanded="' + compareOpen + '">' + esc(uiText(compareOpen ? 'compare.close' : 'compare.open')) + '</button>' : '') +
       '</div>' +
       (rankingType === 'players' && compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') +
@@ -7719,7 +7719,7 @@ var CLUBS = [
     });
   }
   function openRankingVideo() {
-    if (!isAdmin) return;
+    if (!isAdmin || !document.body.classList.contains('admin-edit-mode')) return;
     var wrap = document.createElement('div');
     wrap.className = 'pcard-modal rv-modal';
     wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', uiText('rv.title'));
