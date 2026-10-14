@@ -2509,6 +2509,51 @@
   .install-banner span { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .install-banner strong { font-size:14px; } .install-banner small { font-size:12px; color:rgba(255,255,255,0.7); }
   .install-x { width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.25); background:none; color:rgba(255,255,255,0.7); cursor:pointer; flex-shrink:0; }
+
+  /* player exchange: filter, list, swipe */
+  .ex-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin:6px 0 16px; }
+  .ex-chips, .ex-view { display:flex; gap:6px; flex-wrap:wrap; }
+  .ex-chip { padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.05); color:#fff; font:600 12.5px 'Poppins', sans-serif; cursor:pointer; transition:background-color .2s, border-color .2s, color .2s; }
+  .ex-chip:hover, .ex-chip:focus-visible { border-color:var(--cyan); }
+  .ex-chip.is-on { background:var(--cyan); border-color:var(--cyan); color:#07083f; }
+  .ex-card-who { display:flex; align-items:center; gap:12px; min-width:0; }
+  .ex-card-who .tw-face { width:42px; height:42px; box-shadow:none; }
+  .ex-card-who span { display:flex; flex-direction:column; min-width:0; }
+  .ex-card-who small { font-size:12px; color:rgba(255,255,255,0.65); }
+  .ex-deck { position:relative; display:flex; flex-direction:column; align-items:center; gap:16px; padding-top:8px; }
+  .ex-swipe-card { --yes:0; --no:0; position:relative; width:min(340px, 100%); aspect-ratio:3/4; border-radius:22px; overflow:hidden; touch-action:pan-y; user-select:none; cursor:grab;
+    background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none), 0 20px 50px rgba(3,4,40,0.45); display:flex; flex-direction:column; }
+  .ex-swipe-card:active { cursor:grabbing; }
+  .ex-swipe-card.is-next { position:absolute; top:20px; transform:scale(0.94); opacity:0.5; pointer-events:none; }
+  .ex-swipe-photo { position:relative; flex:1; min-height:0; background:radial-gradient(circle at 50% 45%, rgba(0,242,255,0.3), rgba(0,242,255,0) 65%), #0d1070; display:grid; place-items:center; }
+  .ex-swipe-photo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; pointer-events:none; }
+  .ex-swipe-photo img.is-cutout { object-fit:contain; object-position:50% 100%; }
+  .ex-swipe-initials { font-family:'Bebas Neue', sans-serif; font-size:110px; color:rgba(255,255,255,0.85); }
+  .ex-swipe-info { padding:16px 18px 18px; display:flex; flex-direction:column; gap:6px; }
+  .ex-swipe-info strong { font-family:'Bebas Neue', sans-serif; font-size:34px; font-weight:400; line-height:1; letter-spacing:0.02em; }
+  .ex-swipe-club { display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(255,255,255,0.8); }
+  .ex-swipe-club .club-avatar { width:22px; height:22px; }
+  .ex-swipe-tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .ex-swipe-tags span { font:700 10.5px 'Poppins', sans-serif; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:rgba(0,242,255,0.12); color:var(--cyan); }
+  .ex-stamp { position:absolute; top:22px; z-index:2; padding:6px 14px; border-radius:10px; font:800 18px 'Poppins', sans-serif; letter-spacing:0.12em; text-transform:uppercase; border:3px solid; pointer-events:none; }
+  .ex-stamp-yes { left:18px; color:#5fd38a; border-color:#5fd38a; transform:rotate(-12deg); opacity:var(--yes); }
+  .ex-stamp-no { right:18px; color:#ff5a76; border-color:#ff5a76; transform:rotate(12deg); opacity:var(--no); }
+  .ex-swipe-actions { display:flex; align-items:center; gap:22px; }
+  .ex-round { width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; border:2px solid; background:rgba(255,255,255,0.05); transition:transform .15s, background-color .2s; }
+  .ex-round:active { transform:scale(0.92); }
+  .ex-no { color:#ff5a76; border-color:rgba(255,90,118,0.7); } .ex-no:hover { background:rgba(255,90,118,0.12); }
+  .ex-yes { color:#5fd38a; border-color:rgba(95,211,138,0.7); } .ex-yes:hover { background:rgba(95,211,138,0.12); }
+  .ex-count { font:700 13px 'Poppins', sans-serif; color:rgba(255,255,255,0.6); font-variant-numeric:tabular-nums; }
+  .ex-deck-done { text-align:center; padding:30px 0; display:flex; flex-direction:column; align-items:center; gap:12px; color:rgba(255,255,255,0.8); }
+
+  /* unread counter */
+  [data-route="inbox"], .app-bar-item { position:relative; }
+  .unread-badge { position:absolute; top:-6px; right:-12px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:#ff3b5c; color:#fff; font:800 10.5px/18px 'Poppins', sans-serif; text-align:center; box-shadow:0 0 0 2px #0b0d63; pointer-events:none; }
+  .app-bar-item .unread-badge { top:2px; right:calc(50% - 20px); }
+  .inbox-row.is-unread { border-color:rgba(0,242,255,0.55); }
+  .inbox-row.is-unread strong, .inbox-row.is-unread .inbox-preview { color:#fff; font-weight:700; }
+  .inbox-row.is-unread::before { content:''; position:absolute; left:8px; top:50%; width:8px; height:8px; margin-top:-4px; border-radius:50%; background:var(--cyan); }
+  .inbox-row { position:relative; }
 </style>
 </head>
 <body>
@@ -3309,6 +3354,7 @@ var CLUBS = [
     }
     document.getElementById('editModeBtn').hidden = !isAdmin;
     renderAppBar();
+    refreshUnreadBadge();
     document.getElementById('adminNavLink').hidden = !isAdmin;
     if (!isAdmin) setEditMode(false);
     document.body.classList.toggle('is-admin', isAdmin);
@@ -4917,6 +4963,16 @@ var CLUBS = [
     'exchange.myListingLabel': 'Your listing',
     'exchange.cancelListingBtn': 'Remove my listing',
     'exchange.contactBtn': 'Contact',
+    'exchange.filterAll': 'All',
+    'exchange.filterLeft': 'Plays left',
+    'exchange.filterRight': 'Plays right',
+    'exchange.filterEmpty': 'Nobody for this side yet.',
+    'exchange.viewSwipe': 'Swipe',
+    'exchange.viewList': 'List',
+    'exchange.skip': 'Next',
+    'exchange.deckDone': 'You have seen everyone.',
+    'exchange.deckAgain': 'Show again',
+    'inbox.unread': 'unread',
     'exchange.emptyNote': 'No one looking for a partner here yet.',
     'exchange.matchedNote': "You're already partnered up for this tournament.",
     'inbox.heading': 'Inbox',
@@ -5045,7 +5101,7 @@ var CLUBS = [
       'exchange.subheading': 'Suchst du einen Partner für dieses Turnier? Trag dich hier ein, damit andere Spieler dich finden und kontaktieren können.',
       'exchange.sideLabel': 'Bevorzugte Seite', 'exchange.sideLeft': 'Links', 'exchange.sideRight': 'Rechts', 'exchange.sideAny': 'Egal',
       'exchange.addListingBtn': 'Mich eintragen', 'exchange.myListingLabel': 'Deine Anzeige', 'exchange.cancelListingBtn': 'Anzeige entfernen',
-      'exchange.contactBtn': 'Kontaktieren', 'exchange.emptyNote': 'Hier sucht aktuell niemand einen Partner.',
+      'exchange.contactBtn': 'Kontaktieren', 'exchange.filterAll': 'Alle', 'exchange.filterLeft': 'Spielt links', 'exchange.filterRight': 'Spielt rechts', 'exchange.filterEmpty': 'Für diese Seite sucht noch niemand.', 'exchange.viewSwipe': 'Swipen', 'exchange.viewList': 'Liste', 'exchange.skip': 'Weiter', 'exchange.deckDone': 'Du hast alle gesehen.', 'exchange.deckAgain': 'Nochmal zeigen', 'inbox.unread': 'ungelesen', 'exchange.emptyNote': 'Hier sucht aktuell niemand einen Partner.',
       'exchange.matchedNote': 'Du bist für dieses Turnier schon verpartnert.',
       'inbox.heading': 'Postfach', 'inbox.emptyNote': 'Noch keine Unterhaltungen — kontaktiere jemanden über die Spielerbörse eines Turniers.',
       'inbox.pendingBadge': 'Anfrage offen', 'inbox.acceptedBadge': 'Angenommen', 'inbox.declinedBadge': 'Abgelehnt',
@@ -5749,7 +5805,7 @@ var CLUBS = [
     // page transition: the new page slides in softly
     var entering = document.getElementById('view-' + view);
     if (entering && !reduceMotion) { entering.classList.remove('view-enter'); void entering.offsetWidth; entering.classList.add('view-enter'); }
-    if (typeof renderAppBar === 'function') renderAppBar();
+    if (typeof renderAppBar === 'function') { renderAppBar(); if (typeof paintUnread === 'function') paintUnread(); }
     if (view !== 'court') { clearInterval(courtClockTimer); courtClockTimer = null; }
     document.querySelectorAll('.nav-link').forEach(function(l) {
       l.classList.toggle('active', !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
@@ -7920,7 +7976,7 @@ var CLUBS = [
     var sb = bar.querySelector('[data-appbar-search]');
     if (sb) sb.addEventListener('click', openQuickSearch);
   }
-  window.addEventListener('hashchange', renderAppBar);
+  window.addEventListener('hashchange', function() { renderAppBar(); paintUnread(); });
 
   /* ==================================================================
      INSTALL AS APP: Chrome/Android get the real install prompt; iPhone
@@ -8630,7 +8686,7 @@ var CLUBS = [
         var club = l.club ? findClub(l.club) : null;
         return '<div class="ps-card">' + playerFaceHtml(l.name, l.uid) +
           '<div class="ps-info"><strong>' + esc(l.name) + '</strong>' +
-            '<span class="ps-meta">' + (club && club.logo ? '<img src="' + esc(club.logo) + '" alt="" width="16" height="16">' : '') + esc(l.club || '–') + '</span>' +
+            '<span class="ps-meta">' + (club && club.logo ? '<img src="' + esc(club.logo) + '" alt="" width="16" height="16">' : '') + esc(clubDisplayName(l.club) || '–') + '</span>' +
             '<span class="ps-tags"><span>' + esc(divisionLabel(l.competition)) + '</span><span>' + esc(sideLabel(l.side)) + '</span></span></div>' +
           '<button type="button" class="btn btn-cyan btn-sm" data-ps-contact="' + esc(l.uid) + '" data-ps-name="' + esc(l.name) + '" data-ps-comp="' + esc(l.competition) + '">' + esc(uiText('exchange.contactBtn')) + '</button>' +
         '</div>';
@@ -14566,7 +14622,7 @@ var CLUBS = [
         id: id, tournamentId: tournamentId, tournamentName: tournamentName, competition: competition,
         participants: [currentUser.uid, otherUid], participantNames: participantNames,
         requestStatus: 'pending', requestedBy: currentUser.uid, requestFor: otherUid,
-        createdAt: Date.now(), lastMessageAt: Date.now(), lastMessageText: ''
+        createdAt: Date.now(), lastMessageAt: Date.now(), lastMessageText: '', lastSenderUid: currentUser.uid
       };
       if (AUTH_DEMO_MODE) {
         var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
@@ -14632,12 +14688,13 @@ var CLUBS = [
       list.push(msg);
       localStorage.setItem(key, JSON.stringify(list));
       var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
-      if (all[convo.id]) { all[convo.id].lastMessageAt = msg.createdAt; all[convo.id].lastMessageText = text; localStorage.setItem('loc_conversations', JSON.stringify(all)); }
+      if (all[convo.id]) { all[convo.id].lastMessageAt = msg.createdAt; all[convo.id].lastMessageText = text; all[convo.id].lastSenderUid = currentUser.uid; localStorage.setItem('loc_conversations', JSON.stringify(all)); }
       return Promise.resolve(msg);
     }
     var db = firebase.firestore();
     return db.collection('conversations').doc(convo.id).collection('messages').add(msg).then(function() {
-      return db.collection('conversations').doc(convo.id).set({ lastMessageAt: Date.now(), lastMessageText: text }, { merge: true });
+      var upd = { lastMessageAt: Date.now(), lastMessageText: text, lastSenderUid: currentUser.uid, lastRead: {} }; upd.lastRead[currentUser.uid] = Date.now();
+      return db.collection('conversations').doc(convo.id).set(upd, { merge: true });
     }).then(function() {
       var otherUid = convo.participants.filter(function(u) { return u !== currentUser.uid; })[0];
       notifyPlayer(otherUid, currentUser.name + ' (' + uiText('push.newMessageTitle') + ')', text.slice(0, 120), 'inbox/' + convo.id);
@@ -14683,7 +14740,7 @@ var CLUBS = [
       }
       if (listing) {
         wrap.innerHTML = '<div class="exchange-my-panel"><div class="exchange-card">' +
-          '<div><strong>' + esc(listing.name) + '</strong> · ' + esc(listing.club || '–') + ' · ' + sideLabel(listing.side) + '</div>' +
+          '<div><strong>' + esc(listing.name) + '</strong> · ' + esc(clubDisplayName(listing.club) || '–') + ' · ' + sideLabel(listing.side) + '</div>' +
           '<button type="button" class="btn btn-outline btn-sm" id="exCancelListing">' + uiEdit('exchange.cancelListingBtn') + '</button>' +
         '</div></div>';
         document.getElementById('exCancelListing').addEventListener('click', function() {
@@ -14715,28 +14772,147 @@ var CLUBS = [
     });
   }
 
+  // Side filter (all / plays left / plays right — "either" counts for both),
+  // list or swipe view, skipped cards remembered for this visit.
+  var exchangeSideFilter = 'all';
+  var exchangeView = window.matchMedia && matchMedia('(max-width:640px)').matches ? 'swipe' : 'list';
+  function exchangeSkipped() { try { return JSON.parse(sessionStorage.getItem('loc_ex_skip') || '[]'); } catch (e) { return []; } }
+  function exchangeSkip(uid) { var s = exchangeSkipped(); if (s.indexOf(uid) === -1) s.push(uid); try { sessionStorage.setItem('loc_ex_skip', JSON.stringify(s)); } catch (e) {} }
+  function exchangeContact(t, uid, name, btn) {
+    if (!currentUser) { navigate('login'); return; }
+    if (btn) btn.disabled = true;
+    findOrCreateConversation(t.id, t.name, exchangeCompetition, uid, name).then(function(convo) { navigate('inbox/' + convo.id); });
+  }
   function renderExchangeList(t) {
     var wrap = document.getElementById('exchangeList');
     loadExchangeListings(t.id, exchangeCompetition).then(function(listings) {
       var others = listings.filter(function(l) { return !currentUser || l.uid !== currentUser.uid; });
-      if (!others.length) { wrap.innerHTML = '<p class="empty-note">' + uiEdit('exchange.emptyNote') + '</p>'; return; }
-      wrap.innerHTML = others.map(function(l) {
-        var match = findPlayer(l.uid);
-        return '<div class="exchange-card">' +
-          '<div>' + playerNameLinkHtml(l.name, match ? match.uid : null) + ' · ' + esc(l.club || '–') + ' · ' + sideLabel(l.side) + '</div>' +
-          '<button type="button" class="btn btn-outline btn-sm" data-contact-uid="' + esc(l.uid) + '" data-contact-name="' + esc(l.name) + '">' + uiEdit('exchange.contactBtn') + '</button>' +
-        '</div>';
-      }).join('');
+      var shown = others.filter(function(l) { return exchangeSideFilter === 'all' || l.side === exchangeSideFilter || l.side === 'any' || !l.side; });
+      var chip = function(v, label) { return '<button type="button" class="ex-chip' + (exchangeSideFilter === v ? ' is-on' : '') + '" data-ex-side="' + v + '" aria-pressed="' + (exchangeSideFilter === v) + '">' + esc(label) + '</button>'; };
+      var bar = '<div class="ex-bar"><div class="ex-chips" role="group" aria-label="' + esc(uiText('exchange.sideLabel')) + '">' +
+          chip('all', uiText('exchange.filterAll')) + chip('left', uiText('exchange.filterLeft')) + chip('right', uiText('exchange.filterRight')) + '</div>' +
+        '<div class="ex-view" role="group" aria-label="View">' +
+          '<button type="button" class="ex-chip' + (exchangeView === 'swipe' ? ' is-on' : '') + '" data-ex-view="swipe" aria-pressed="' + (exchangeView === 'swipe') + '">' + esc(uiText('exchange.viewSwipe')) + '</button>' +
+          '<button type="button" class="ex-chip' + (exchangeView === 'list' ? ' is-on' : '') + '" data-ex-view="list" aria-pressed="' + (exchangeView === 'list') + '">' + esc(uiText('exchange.viewList')) + '</button>' +
+        '</div></div>';
+      var body;
+      if (!others.length) body = '<p class="empty-note">' + uiEdit('exchange.emptyNote') + '</p>';
+      else if (!shown.length) body = '<p class="empty-note">' + esc(uiText('exchange.filterEmpty')) + '</p>';
+      else if (exchangeView === 'list') {
+        body = shown.map(function(l) {
+          var match = findPlayer(l.uid);
+          return '<div class="exchange-card">' +
+            '<div class="ex-card-who">' + playerFaceHtml(l.name, match ? match.uid : null) + '<span>' + playerNameLinkHtml(l.name, match ? match.uid : null) + '<small>' + esc(clubDisplayName(l.club) || '–') + ' · ' + esc(sideLabel(l.side)) + '</small></span></div>' +
+            '<button type="button" class="btn btn-outline btn-sm" data-contact-uid="' + esc(l.uid) + '" data-contact-name="' + esc(l.name) + '">' + uiEdit('exchange.contactBtn') + '</button>' +
+          '</div>';
+        }).join('');
+      } else {
+        var skipped = exchangeSkipped();
+        var deck = shown.filter(function(l) { return skipped.indexOf(l.uid) === -1; });
+        if (!deck.length) {
+          body = '<div class="ex-deck-done"><p>' + esc(uiText('exchange.deckDone')) + '</p><button type="button" class="btn btn-outline btn-sm" data-ex-reset>' + esc(uiText('exchange.deckAgain')) + '</button></div>';
+        } else {
+          var l = deck[0], acc = findPlayer(l.uid), club = findClub(l.club || '');
+          body = '<div class="ex-deck">' +
+            (deck[1] ? '<div class="ex-swipe-card is-next" aria-hidden="true"></div>' : '') +
+            '<div class="ex-swipe-card" id="exSwipeCard" data-uid="' + esc(l.uid) + '" data-name="' + esc(l.name) + '">' +
+              '<span class="ex-stamp ex-stamp-yes" aria-hidden="true">' + esc(uiText('exchange.contactBtn')) + '</span><span class="ex-stamp ex-stamp-no" aria-hidden="true">' + esc(uiText('exchange.skip')) + '</span>' +
+              '<div class="ex-swipe-photo">' + (acc && acc.photoUrl && !acc.videoUrl ? '<img src="' + esc(acc.photoUrl) + '" alt="" class="' + (isCutoutPhoto(acc) ? 'is-cutout' : '') + '">' : '<span class="ex-swipe-initials">' + esc(initials(l.name)) + '</span>') + '</div>' +
+              '<div class="ex-swipe-info"><strong>' + esc(l.name) + '</strong>' +
+                '<span class="ex-swipe-club">' + (club.logo ? clubAvatarHtml(club) : '') + esc(clubDisplayName(l.club) || '–') + '</span>' +
+                '<span class="ex-swipe-tags"><span>' + esc(divisionLabel(exchangeCompetition)) + '</span><span>' + esc(sideLabel(l.side)) + '</span>' + (acc && acc.height ? '<span>' + esc(acc.height) + ' cm</span>' : '') + '</span></div>' +
+            '</div>' +
+            '<div class="ex-swipe-actions"><button type="button" class="ex-round ex-no" data-ex-skip aria-label="' + esc(uiText('exchange.skip')) + '">✕</button>' +
+              '<span class="ex-count">' + (shown.length - deck.length + 1) + ' / ' + shown.length + '</span>' +
+              '<button type="button" class="ex-round ex-yes" data-ex-yes aria-label="' + esc(uiText('exchange.contactBtn')) + '">✓</button></div>' +
+          '</div>';
+        }
+      }
+      wrap.innerHTML = bar + body;
+      wrap.querySelectorAll('[data-ex-side]').forEach(function(b) { b.addEventListener('click', function() { exchangeSideFilter = b.dataset.exSide; renderExchangeList(t); }); });
+      wrap.querySelectorAll('[data-ex-view]').forEach(function(b) { b.addEventListener('click', function() { exchangeView = b.dataset.exView; renderExchangeList(t); }); });
       wrap.querySelectorAll('[data-contact-uid]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          btn.disabled = true;
-          findOrCreateConversation(t.id, t.name, exchangeCompetition, btn.dataset.contactUid, btn.dataset.contactName).then(function(convo) {
-            navigate('inbox/' + convo.id);
-          });
-        });
+        btn.addEventListener('click', function() { exchangeContact(t, btn.dataset.contactUid, btn.dataset.contactName, btn); });
+      });
+      var reset = wrap.querySelector('[data-ex-reset]');
+      if (reset) reset.addEventListener('click', function() { try { sessionStorage.removeItem('loc_ex_skip'); } catch (e) {} renderExchangeList(t); });
+      var card = document.getElementById('exSwipeCard');
+      if (card) wireSwipeCard(card, function(dir) {
+        if (dir > 0) exchangeContact(t, card.dataset.uid, card.dataset.name);
+        else { exchangeSkip(card.dataset.uid); renderExchangeList(t); }
       });
     });
   }
+  // Drag a card sideways (finger or mouse); past a threshold it flies out.
+  function wireSwipeCard(card, done) {
+    var start = null, dx = 0;
+    var fly = function(dir) {
+      card.style.transition = reduceMotion ? 'none' : 'transform .32s ease-in, opacity .32s';
+      card.style.transform = 'translateX(' + (dir * 130) + '%) rotate(' + (dir * 18) + 'deg)'; card.style.opacity = '0';
+      setTimeout(function() { done(dir); }, reduceMotion ? 0 : 300);
+    };
+    card.addEventListener('pointerdown', function(e) { start = e.clientX; dx = 0; card.setPointerCapture(e.pointerId); card.style.transition = 'none'; });
+    card.addEventListener('pointermove', function(e) {
+      if (start == null) return;
+      dx = e.clientX - start;
+      card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 18) + 'deg)';
+      card.style.setProperty('--yes', Math.max(0, Math.min(1, dx / 110)));
+      card.style.setProperty('--no', Math.max(0, Math.min(1, -dx / 110)));
+    });
+    var end = function() {
+      if (start == null) return; start = null;
+      if (Math.abs(dx) > 110) { fly(dx > 0 ? 1 : -1); return; }
+      card.style.transition = 'transform .3s cubic-bezier(.16,1,.3,1)'; card.style.transform = ''; card.style.setProperty('--yes', 0); card.style.setProperty('--no', 0);
+    };
+    card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
+    var wrap = card.closest('.ex-deck');
+    wrap.querySelector('[data-ex-yes]').addEventListener('click', function() { card.style.setProperty('--yes', 1); fly(1); });
+    wrap.querySelector('[data-ex-skip]').addEventListener('click', function() { card.style.setProperty('--no', 1); fly(-1); });
+  }
+
+  /* Unread counter: a conversation is unread when its last message (or a
+     new request) came from the other person after I last opened it. */
+  function conversationUnread(c) {
+    if (!currentUser) return false;
+    var seen = (c.lastRead && c.lastRead[currentUser.uid]) || 0;
+    if (c.lastSenderUid) return c.lastSenderUid !== currentUser.uid && (c.lastMessageAt || 0) > seen;
+    // older threads without lastSenderUid: only an open request for me counts
+    return c.requestStatus === 'pending' && c.requestFor === currentUser.uid && !seen;
+  }
+  function markConversationRead(convo) {
+    if (!currentUser) return;
+    var upd = { lastRead: {} }; upd.lastRead[currentUser.uid] = Date.now();
+    convo.lastRead = Object.assign({}, convo.lastRead || {}, upd.lastRead);
+    if (AUTH_DEMO_MODE) {
+      var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+      if (all[convo.id]) { all[convo.id].lastRead = convo.lastRead; localStorage.setItem('loc_conversations', JSON.stringify(all)); }
+    } else {
+      firebase.firestore().collection('conversations').doc(convo.id).set(upd, { merge: true }).catch(function() {});
+    }
+    setTimeout(refreshUnreadBadge, 300);
+  }
+  var unreadCount = 0;
+  function refreshUnreadBadge() {
+    if (!currentUser) { unreadCount = 0; paintUnread(); return; }
+    loadMyConversations().then(function(list) { unreadCount = list.filter(conversationUnread).length; paintUnread(); }).catch(function() {});
+  }
+  function paintUnread() {
+    document.querySelectorAll('[data-route="inbox"]').forEach(function(el) {
+      var b = el.querySelector('.unread-badge');
+      if (!unreadCount) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('span'); b.className = 'unread-badge'; el.appendChild(b); }
+      b.textContent = unreadCount > 9 ? '9+' : unreadCount;
+      b.setAttribute('aria-label', unreadCount + ' ' + uiText('inbox.unread'));
+    });
+    var me = document.querySelector('#appBar .app-bar-item[href^="#/player/"]');
+    if (me) {
+      var mb = me.querySelector('.unread-badge');
+      if (!unreadCount) { if (mb) mb.remove(); }
+      else { if (!mb) { mb = document.createElement('span'); mb.className = 'unread-badge'; me.appendChild(mb); } mb.textContent = unreadCount > 9 ? '9+' : unreadCount; }
+    }
+  }
+  setInterval(function() { if (currentUser && !document.hidden) refreshUnreadBadge(); }, 60000);
+  document.addEventListener('visibilitychange', function() { if (!document.hidden) refreshUnreadBadge(); });
 
   function setupExchangeClubCombo() {
     var search = document.getElementById('exClubSearch');
@@ -14780,7 +14956,7 @@ var CLUBS = [
         var otherName = c.participantNames[otherUid] || '';
         var badgeKey = c.requestStatus === 'pending' ? 'inbox.pendingBadge' : c.requestStatus === 'accepted' ? 'inbox.acceptedBadge' : 'inbox.declinedBadge';
         var badgeClass = c.requestStatus === 'accepted' ? 'status-paid' : 'status-pending';
-        return '<div class="inbox-row" data-conversation-id="' + esc(c.id) + '">' +
+        return '<div class="inbox-row' + (conversationUnread(c) ? ' is-unread' : '') + '" data-conversation-id="' + esc(c.id) + '">' +
           '<div><strong>' + esc(otherName) + '</strong><span class="inbox-tournament">' + esc(c.tournamentName) + '</span></div>' +
           '<div class="inbox-preview">' + esc(c.lastMessageText || '') + '</div>' +
           '<span class="inbox-time">' + esc(formatMessageTime(c.lastMessageAt)) + '</span>' +
@@ -14800,6 +14976,7 @@ var CLUBS = [
     getConversation(id).then(function(convo) {
       if (!convo || convo.participants.indexOf(currentUser.uid) === -1) { navigate('inbox'); return; }
       renderConversation(convo);
+      markConversationRead(convo);
     });
   }
 
