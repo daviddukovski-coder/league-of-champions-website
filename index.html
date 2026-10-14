@@ -6376,7 +6376,11 @@ var CLUBS = [
       if (lead) {
         var lr = lead.getBoundingClientRect();
         // approach while the leaders scroll in, kicks only once they are well on screen
-        target.ball = clamp((vh * 0.9 - lr.top) / (vh * 0.95), 0, 1);
+        // the journey starts when they come up from the bottom and always
+        // finishes before the page ends (the leaders sit near the footer)
+        var maxS = document.documentElement.scrollHeight - vh;
+        var s0 = lr.top + scrollY - vh * 0.9, s1 = Math.min(s0 + vh * 0.95, maxS - 140);
+        target.ball = scrollY >= maxS - 4 || s1 <= s0 + 1 ? 1 : clamp((scrollY - s0) / (s1 - s0), 0, 1);
       } else target.ball = 0;
       var max = document.documentElement.scrollHeight - vh;
       target.page = max > 0 ? clamp(scrollY / max, 0, 1) : 0;
@@ -6487,7 +6491,9 @@ var CLUBS = [
         cur[k] = n;
       });
       applyHero(); applyFlight(); applyBall();
-      document.body.style.setProperty('--page-p', (cur.page || 0).toFixed(4));
+      // only on the nav: a variable on <body> would restyle the whole page every frame
+      var navIn = document.querySelector('.nav-inner');
+      if (navIn) navIn.style.setProperty('--page-p', (cur.page || 0).toFixed(4));
       if (moving) raf = requestAnimationFrame(frame);
     }
     function kick() { if (reduce || !landingVisible()) return; measure(); if (!raf) raf = requestAnimationFrame(frame); }
@@ -7280,6 +7286,9 @@ var CLUBS = [
         var hopIO = new IntersectionObserver(function(entries) {
           entries.forEach(function(en) {
             if (!en.isIntersecting) return;
+            // the landing's Match Day story drives the ball there itself
+            var lv = document.getElementById('view-landing');
+            if (lv && !lv.hidden && document.documentElement.getAttribute('data-design') === 'ig') return;
             box.classList.remove('is-hop'); void box.offsetWidth; box.classList.add('is-hop');
           });
         }, { rootMargin: '0px 0px -35% 0px' });
