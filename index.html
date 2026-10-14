@@ -2418,61 +2418,7 @@
   a.club-link:hover { color:var(--cyan); }
   @media (prefers-reduced-motion: reduce) { .club-tour { transition:none; } .club-tour:hover { transform:none; } }
 
-  /* champion golden tickets: same shape as the tournament tickets, in metal */
-  .gt-section { display:flex; flex-direction:column; align-items:center; gap:14px; margin:44px 0 10px; perspective:1200px; }
-  .gt { --mx:50%; --my:50%; --rx:0deg; --ry:0deg; --ink:#1b1606; --accent:#7a5200; --line:rgba(40,28,0,0.35);
-    position:relative; width:min(640px, 100%); transform:rotateX(var(--rx)) rotateY(var(--ry)); transform-style:preserve-3d; transition:transform .5s cubic-bezier(.16,1,.3,1); outline:none; }
-  .gt.is-active { transition:transform .08s linear; }
-  .gt:focus-visible .gt-body { box-shadow:0 0 0 3px var(--cyan), 0 22px 50px rgba(3,4,40,0.55); }
-  .gt-body { position:relative; min-height:236px; border-radius:14px; overflow:hidden; display:flex; color:var(--ink);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 22px 50px rgba(3,4,40,0.55);
-    -webkit-mask:radial-gradient(circle 12px at calc(100% - 118px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 12px at calc(100% - 118px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
-            mask:radial-gradient(circle 12px at calc(100% - 118px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 12px at calc(100% - 118px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
-  /* brushed metal: base gradient + fine horizontal grain */
-  .gt-body::before { content:''; position:absolute; inset:0; z-index:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, rgba(0,0,0,0.04) 1px 3px); pointer-events:none; }
-  .gt-finals .gt-body { background:linear-gradient(112deg, #9a6c12 0%, #f3d27a 30%, #fff1c4 44%, #d9a93c 60%, #8c5f0c 100%); }
-  .gt-champ .gt-body { --ink:#151b2c; background:linear-gradient(112deg, #7d889d 0%, #dfe5ef 32%, #ffffff 44%, #aab4c6 62%, #6c768b 100%); }
-  .gt-champ { --ink:#151b2c; --accent:#1d4f8a; --line:rgba(20,30,60,0.3); }
-  .gt-season { --ink:#ffffff; --accent:var(--cyan); --line:rgba(0,242,255,0.35); }
-  .gt-season .gt-body { background:linear-gradient(112deg, #05060f 0%, #1b1d33 34%, #3a3d5c 46%, #10122a 62%, #04050c 100%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), inset 0 0 0 1px rgba(0,242,255,0.45), 0 22px 50px rgba(3,4,40,0.6), 0 0 40px rgba(0,242,255,0.18); }
-  .gt-main { position:relative; z-index:1; flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:22px 20px 20px 38%; }
-  .gt-kicker { font:800 10.5px 'Poppins', sans-serif; letter-spacing:0.24em; text-transform:uppercase; color:var(--accent); }
-  .gt-title { font-family:'Bebas Neue', sans-serif; font-size:clamp(30px, 6vw, 44px); line-height:0.92; letter-spacing:0.02em; }
-  .gt-name { font:700 15px 'Poppins', sans-serif; margin-top:2px; }
-  .gt-wins { list-style:none; margin:8px 0 0; padding:8px 0 0; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:2px; font:600 11.5px 'Poppins', sans-serif; letter-spacing:0.04em; text-transform:uppercase; }
-  .gt-serial { margin-top:8px; font-size:10.5px; letter-spacing:0.14em; opacity:0.7; }
-  .gt-stub { position:relative; z-index:1; width:118px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-left:2px dashed var(--line); }
-  .gt-stub-loc { font:800 11px 'Poppins', sans-serif; letter-spacing:0.2em; color:var(--accent); }
-  .gt-stub-word { font-family:'Bebas Neue', sans-serif; font-size:40px; line-height:0.9; writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:1px; }
-  .gt-stub-year { font-family:'Bebas Neue', sans-serif; font-size:22px; color:var(--accent); }
-  .gt-sheen { position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:soft-light; opacity:0.55; transition:opacity .3s;
-    background:radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.25) 22%, transparent 55%),
-               linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.55) calc(var(--mx) - 10%), transparent calc(var(--mx) + 12%)); }
-  .gt.is-active .gt-sheen { opacity:1; }
-  .gt-season .gt-sheen { mix-blend-mode:screen; opacity:0.35;
-    background:radial-gradient(circle at var(--mx) var(--my), rgba(0,242,255,0.45) 0%, rgba(0,242,255,0.08) 30%, transparent 60%),
-               linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) calc(var(--mx) - 8%), transparent calc(var(--mx) + 10%)); }
-  .gt-season.is-active .gt-sheen { opacity:0.8; }
-  /* the player stands on the left and breaks out of the ticket at the top */
-  .gt-photo { position:absolute; left:2%; bottom:0; width:34%; height:118%; z-index:3; pointer-events:none; display:grid; place-items:end center; }
-  .gt-photo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; border-radius:14px 0 0 14px; }
-  .gt:not(.has-cutout) .gt-photo { height:100%; left:0; width:32%; }
-  .gt:not(.has-cutout) .gt-photo img { box-shadow:inset 0 0 0 1px rgba(0,0,0,0.2); }
-  .gt.has-cutout .gt-photo img { object-fit:contain; object-position:50% 100%; border-radius:0; filter:drop-shadow(0 12px 18px rgba(3,4,40,0.45)); }
-  .gt-initials { align-self:center; width:min(120px, 80%); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; font-family:'Bebas Neue', sans-serif; font-size:56px; color:var(--ink); border:2px solid var(--line); background:rgba(255,255,255,0.18); }
-  .gt-season .gt-initials { background:rgba(0,242,255,0.08); }
-  @media (max-width:560px) {
-    .gt-body { min-height:200px; -webkit-mask:radial-gradient(circle 10px at calc(100% - 78px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 78px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat;
-      mask:radial-gradient(circle 10px at calc(100% - 78px) 0, transparent 98%, #000 100%) top / 100% 51% no-repeat, radial-gradient(circle 10px at calc(100% - 78px) 100%, transparent 98%, #000 100%) bottom / 100% 51% no-repeat; }
-    .gt-stub { width:78px; } .gt-stub-word { font-size:30px; }
-    .gt-main { padding:16px 12px 14px 36%; } .gt-name { font-size:13px; } .gt-wins { font-size:10px; }
-  }
-  @media (prefers-reduced-motion: reduce) { .gt { transform:none; transition:none; } }
-  .holo-badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-  .holo-badge { font:700 11px 'Poppins', sans-serif; letter-spacing:0.08em; text-transform:uppercase; padding:5px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.3); color:#fff; background:rgba(255,255,255,0.06); }
-  .holo-badge-finals { border-color:rgba(255,211,77,0.7); color:#ffd34d; }
-  .holo-badge-champ { border-color:rgba(0,242,255,0.6); color:var(--cyan); }
+  .champ-ticket-btn span { color:#ffd34d; }
   .confetti-canvas { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:300; }
 </style>
 </head>
@@ -4765,6 +4711,7 @@ var CLUBS = [
     'schedule.now': 'Now',
     'holo.season': 'Season No. 1',
     'holo.kicker': 'Hall of Fame · Admit one',
+    'holo.ticketBtn': 'Champion ticket',
     'holo.finals': 'Finals Champion',
     'holo.champ': 'Champion',
     'holo.titleOne': '{n} tournament won',
@@ -4952,7 +4899,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame · Admit one', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame · Admit one', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -9398,7 +9345,6 @@ var CLUBS = [
       '</div>' +
         playerMediaHtml(player, canEdit) +
       '</div>' +
-      '<div id="playerHoloSlot"></div>' +
       '<h2 class="section-title">Clubs Represented</h2>' +
       '<p class="empty-note" id="playerClubsList">–</p>' +
       '<h2 class="section-title">Tournament History</h2>' +
@@ -9535,65 +9481,161 @@ var CLUBS = [
     if (wins.length) tiers.push({ key: 'champ', title: uiText('holo.champ'), sub: uiFormat(wins.length === 1 ? 'holo.titleOne' : 'holo.titles', { n: wins.length }) });
     return tiers.length ? { tiers: tiers, wins: wins } : null;
   }
+  // Champions get no card on the page (the medals sit at the top); instead
+  // a "Champion ticket" button next to the player card that makes the
+  // golden ticket as a post/story PNG. Confetti once per visit.
   function renderChampionCard(player, stats) {
-    var slot = document.getElementById('playerHoloSlot');
-    if (!slot) return;
     var info = championInfo(player, stats);
-    if (!info) { slot.innerHTML = ''; return; }
-    var top = info.tiers[0];
-    var pic = player.photoUrl && !player.videoUrl
-      ? '<img src="' + esc(player.photoUrl) + '" alt="" class="' + (isCutoutPhoto(player) ? 'is-cutout' : '') + '">'
-      : '<span class="holo-initials">' + esc(initials(player.name || '?')) + '</span>';
-    var cut = isCutoutPhoto(player);
-    var pic = player.photoUrl && !player.videoUrl
-      ? '<img src="' + esc(player.photoUrl) + '" alt="">'
-      : '<span class="gt-initials">' + esc(initials(player.name || '?')) + '</span>';
-    var year = top.key === 'champ' ? (info.wins[0] && info.wins[0].year) || '' : top.sub.split(' · ').pop();
-    // serial: stable per player, purely decorative
-    var serial = 0; (player.uid || player.name || '').split('').forEach(function(ch) { serial = (serial * 31 + ch.charCodeAt(0)) % 9973; });
-    slot.innerHTML = '<section class="gt-section" aria-label="' + esc(top.title) + '">' +
-      '<div class="gt gt-' + top.key + (cut && player.photoUrl && !player.videoUrl ? ' has-cutout' : '') + '" tabindex="0">' +
-        '<div class="gt-body">' +
-          '<div class="gt-main">' +
-            '<span class="gt-kicker">' + esc(uiText('holo.kicker')) + '</span>' +
-            '<span class="gt-title">' + esc(top.title) + '</span>' +
-            '<span class="gt-name">' + esc(player.name || '') + '</span>' +
-            '<ul class="gt-wins">' + info.wins.slice(0, 3).map(function(w) { return '<li>★ ' + esc(w.name) + (w.year ? ' ' + esc(w.year) : '') + '</li>'; }).join('') + '</ul>' +
-            '<span class="gt-serial mono">No. ' + String(serial).padStart(4, '0') + ' · ' + esc(top.sub) + '</span>' +
-          '</div>' +
-          '<div class="gt-stub" aria-hidden="true"><span class="gt-stub-loc">LoC</span><span class="gt-stub-word">' + esc(top.key === 'season' ? 'No. 1' : 'CHAMP') + '</span><span class="gt-stub-year">' + esc(year) + '</span></div>' +
-          '<span class="gt-sheen" aria-hidden="true"></span>' +
-        '</div>' +
-        '<div class="gt-photo">' + pic + '</div>' +
-      '</div>' +
-      (info.tiers.length > 1 ? '<div class="holo-badges">' + info.tiers.slice(1).map(function(t) { return '<span class="holo-badge holo-badge-' + t.key + '">' + esc(t.title) + ' · ' + esc(t.sub) + '</span>'; }).join('') + '</div>' : '') +
-    '</section>';
-    wireHoloCard(slot.querySelector('.gt'));
+    var old = document.getElementById('champTicketBtn');
+    if (old) old.remove();
+    if (!info) return;
+    var row = document.querySelector('#playerContent .share-row');
+    if (row) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn btn-outline btn-sm champ-ticket-btn'; btn.id = 'champTicketBtn';
+      btn.innerHTML = '<span aria-hidden="true">★</span> ' + esc(uiText('holo.ticketBtn'));
+      row.insertBefore(btn, row.children[1] || null);
+      btn.addEventListener('click', function() { openChampionTicket(player, info, btn); });
+    }
     var key = 'loc_confetti_' + player.uid;
     var seen = false; try { seen = sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (e) {}
-    if (!seen) launchConfetti(top.key);
+    if (!seen) launchConfetti(info.tiers[0].key);
   }
-  function wireHoloCard(card) {
-    if (!card || reduceMotion) return;
-    var raf = 0;
-    var move = function(x, y) {
-      var r = card.getBoundingClientRect(), px = Math.min(1, Math.max(0, (x - r.left) / r.width)), py = Math.min(1, Math.max(0, (y - r.top) / r.height));
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(function() {
-        card.style.setProperty('--mx', (px * 100).toFixed(1) + '%'); card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
-        card.style.setProperty('--rx', ((0.5 - py) * 18).toFixed(2) + 'deg'); card.style.setProperty('--ry', ((px - 0.5) * 22).toFixed(2) + 'deg');
-        card.classList.add('is-active');
-      });
-    };
-    card.addEventListener('pointermove', function(e) { move(e.clientX, e.clientY); });
-    card.addEventListener('pointerleave', function() { cancelAnimationFrame(raf); card.classList.remove('is-active'); ['--rx', '--ry'].forEach(function(p) { card.style.setProperty(p, '0deg'); }); });
-    // phones: tilt with the device
-    window.addEventListener('deviceorientation', function onTilt(e) {
-      if (!document.body.contains(card)) { window.removeEventListener('deviceorientation', onTilt); return; }
-      if (e.gamma == null) return;
-      var r = card.getBoundingClientRect();
-      move(r.left + r.width * (0.5 + Math.max(-30, Math.min(30, e.gamma)) / 60), r.top + r.height * (0.5 + Math.max(-30, Math.min(30, (e.beta || 45) - 45)) / 60));
+  // Golden ticket graphic: the tournament-ticket shape in metal (silver /
+  // gold / black chrome), the cut-out player breaking out at the top.
+  var TICKET_METALS = {
+    champ: { stops: ['#6c768b', '#aab4c6', '#ffffff', '#dfe5ef', '#7d889d'], ink: '#151b2c', accent: '#1d4f8a', line: 'rgba(20,30,60,0.35)', word: 'CHAMP' },
+    finals: { stops: ['#8c5f0c', '#d9a93c', '#fff1c4', '#f3d27a', '#9a6c12'], ink: '#1b1606', accent: '#7a5200', line: 'rgba(40,28,0,0.4)', word: 'CHAMP' },
+    season: { stops: ['#04050c', '#10122a', '#3a3d5c', '#1b1d33', '#05060f'], ink: '#ffffff', accent: '#00f2ff', line: 'rgba(0,242,255,0.45)', word: 'No. 1' }
+  };
+  function drawChampionTicket(player, info, imgs, formatKey) {
+    var fmt = PLAYER_CARD_FORMATS[formatKey] || PLAYER_CARD_FORMATS.post;
+    var W = 1080, H = fmt.H, T = fmt.top, B = fmt.bottom, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var spacing = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    var CYAN = '#00f2ff', BEBAS = '"Bebas Neue", sans-serif', GEIST = '"Geist", "Poppins", sans-serif';
+    var top = info.tiers[0], m = TICKET_METALS[top.key];
+    var bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#080a55'); bg.addColorStop(0.55, '#1b1e86'); bg.addColorStop(1, '#5a55a8');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.save(); g.translate(W * 0.62, 0); g.transform(1, 0, -0.42, 1, 0, 0);
+    var band = g.createLinearGradient(0, 0, 360, 0);
+    band.addColorStop(0, 'rgba(0,242,255,0)'); band.addColorStop(1, 'rgba(0,242,255,0.12)');
+    g.fillStyle = band; g.fillRect(0, 0, 360, H * 0.8); g.restore();
+    // header
+    g.save(); g.translate(0, T);
+    if (imgs.badge) g.drawImage(imgs.badge, 56, 50, 104, 104);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    spacing(2); g.font = '400 58px ' + BEBAS; g.fillText('LEAGUE OF CHAMPIONS', 180, 108);
+    spacing(6); g.font = '700 22px ' + GEIST; g.fillStyle = CYAN; g.fillText('FOOTVOLLEY', 182, 142);
+    g.save(); g.translate(W - 64, 74); g.transform(1, 0, -0.21, 1, 0, 0);
+    spacing(4); g.font = '800 22px ' + GEIST; var chip = 'HALL OF FAME', cw = g.measureText(chip).width + 40;
+    g.fillStyle = CYAN; g.fillRect(-cw, 0, cw, 46); g.fillStyle = '#07083f'; g.textAlign = 'right'; g.fillText(chip, -20, 31); g.restore();
+    g.restore();
+    // layout: headline, then the ticket in the lower middle (room above it
+    // for the player who breaks out of the ticket)
+    var tx = 40, tw = W - 80, th = 470, stub = 190;
+    var ty = Math.round(H - B - 120 - th - (formatKey === 'story' ? 160 : 40));
+    var year = top.key === 'champ' ? (info.wins[0] && info.wins[0].year) || '' : top.sub.split(' · ').pop();
+    g.save(); g.textAlign = 'left'; spacing(4); g.font = '700 26px ' + GEIST; g.fillStyle = CYAN;
+    var headY = T + 280;
+    g.fillText(('ADMIT ONE · ' + year).toUpperCase(), W * 0.44, headY);
+    spacing(2); g.fillStyle = '#fff'; g.shadowColor = 'rgba(3,4,40,0.6)'; g.shadowBlur = 30;
+    // headline: the champion's name (first name small line, surname big)
+    var nameParts = (player.name || '').trim().split(/\s+/), l2 = (nameParts.length > 1 ? nameParts.pop() : nameParts[0] || '').toUpperCase(), l1 = nameParts.join(' ').toUpperCase();
+    g.fillStyle = 'rgba(255,255,255,0.85)'; g.font = '400 72px ' + BEBAS;
+    if (l1) g.fillText(l1, W * 0.44, headY + 78);
+    g.fillStyle = '#fff'; var hs = pcFitText(g, l2, W * 0.52, 170, '400 {s}px ' + BEBAS);
+    g.fillText(l2, W * 0.44, headY + 78 + hs * 0.92);
+    g.restore();
+    // ticket body (metal) with punched holes at the stub line
+    var sx = tx + tw - stub;
+    g.save();
+    pcRoundRect(g, tx, ty, tw, th, 24); g.clip();
+    var metal = g.createLinearGradient(tx, ty, tx + tw, ty + th);
+    m.stops.forEach(function(col, i) { metal.addColorStop([0, 0.3, 0.44, 0.6, 1][i], col); });
+    g.fillStyle = metal; g.fillRect(tx, ty, tw, th);
+    g.globalAlpha = 0.07; g.fillStyle = '#fff';
+    for (var gy = ty; gy < ty + th; gy += 3) g.fillRect(tx, gy, tw, 1);
+    g.globalAlpha = 1;
+    var sheen = g.createLinearGradient(tx + tw * 0.25, ty, tx + tw * 0.55, ty + th);
+    sheen.addColorStop(0, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, top.key === 'season' ? 'rgba(0,242,255,0.16)' : 'rgba(255,255,255,0.35)'); sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = sheen; g.fillRect(tx, ty, tw, th);
+    g.restore();
+    g.save(); g.fillStyle = bg; [ty, ty + th].forEach(function(y) { g.beginPath(); g.arc(sx, y, 18, 0, Math.PI * 2); g.fill(); }); g.restore();
+    g.save(); pcRoundRect(g, tx, ty, tw, th, 24); g.strokeStyle = top.key === 'season' ? 'rgba(0,242,255,0.6)' : 'rgba(255,255,255,0.55)'; g.lineWidth = 3; g.stroke(); g.restore();
+    g.save(); g.setLineDash([12, 10]); g.strokeStyle = m.line; g.lineWidth = 3; g.beginPath(); g.moveTo(sx, ty + 26); g.lineTo(sx, ty + th - 26); g.stroke(); g.restore();
+    // stub
+    g.save(); g.textAlign = 'center'; spacing(5); g.font = '800 24px ' + GEIST; g.fillStyle = m.accent; g.fillText('LoC', sx + stub / 2, ty + 70);
+    g.translate(sx + stub / 2 + 30, ty + th / 2); g.rotate(-Math.PI / 2); spacing(3); g.fillStyle = m.ink; g.font = '400 92px ' + BEBAS; g.fillText(m.word, 0, 0); g.restore();
+    g.save(); g.textAlign = 'center'; spacing(2); g.font = '400 46px ' + BEBAS; g.fillStyle = m.accent; g.fillText(year, sx + stub / 2, ty + th - 44); g.restore();
+    // text block
+    var lx = tx + tw * 0.38, maxW = sx - 30 - lx;
+    g.save(); g.textAlign = 'left';
+    spacing(5); g.font = '800 20px ' + GEIST; g.fillStyle = m.accent; g.fillText('HALL OF FAME · ADMIT ONE', lx, ty + 74);
+    spacing(1); g.fillStyle = m.ink; pcFitText(g, top.title.toUpperCase(), maxW, 92, '400 {s}px ' + BEBAS); g.fillText(top.title.toUpperCase(), lx, ty + 160);
+    spacing(0.5); pcFitText(g, player.name || '', maxW, 36, '700 {s}px ' + GEIST); g.fillText(player.name || '', lx, ty + 208);
+    g.save(); g.setLineDash([8, 8]); g.strokeStyle = m.line; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, ty + 236); g.lineTo(sx - 30, ty + 236); g.stroke(); g.restore();
+    spacing(2);
+    info.wins.slice(0, 4).forEach(function(w, i) {
+      var txt = '★ ' + (w.name + (w.year ? ' ' + w.year : '')).toUpperCase();
+      pcFitText(g, txt, maxW, 26, '700 {s}px ' + GEIST); g.fillText(txt, lx, ty + 282 + i * 40);
     });
+    var serial = 0; (player.uid || player.name || '').split('').forEach(function(ch) { serial = (serial * 31 + ch.charCodeAt(0)) % 9973; });
+    spacing(3); g.font = '600 18px ' + GEIST; g.globalAlpha = 0.7; g.fillText('No. ' + String(serial).padStart(4, '0') + ' · ' + top.sub.toUpperCase(), lx, ty + th - 30);
+    g.restore();
+    // player: a cut-out breaks out above the ticket; a normal photo fills the left panel
+    var ph = imgs.photo, px0 = tx + 10, pw = tw * 0.38 - 30;
+    if (ph && ph.cutout) {
+      var src = { x: 0, y: 0, w: ph.width, h: ph.height };
+      try {
+        var tc = document.createElement('canvas'), tw0 = 160, th0 = Math.max(1, Math.round(160 * ph.height / ph.width));
+        tc.width = tw0; tc.height = th0; var tg = tc.getContext('2d'); tg.drawImage(ph, 0, 0, tw0, th0);
+        var dd = tg.getImageData(0, 0, tw0, th0).data, x0 = tw0, x1 = -1, y0 = th0, y1 = -1;
+        for (var yy = 0; yy < th0; yy++) for (var xx = 0; xx < tw0; xx++) if (dd[(yy * tw0 + xx) * 4 + 3] > 20) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        if (x1 > 0) { var kk = ph.width / tw0; src = { x: x0 * kk, y: y0 * kk, w: (x1 - x0 + 1) * kk, h: (y1 - y0 + 1) * kk }; }
+      } catch (e) {}
+      var maxH = Math.min(th * 1.55, ty + th - (T + 180)), k = Math.min(maxH / src.h, (pw + 80) / src.w), iw = src.w * k, ih = src.h * k;
+      g.save(); g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 30; g.shadowOffsetY = 14;
+      g.drawImage(ph, src.x, src.y, src.w, src.h, px0 + pw / 2 - iw / 2, ty + th - ih - 6, iw, ih); g.restore();
+    } else if (ph) {
+      var pwd = tw * 0.34;
+      g.save(); pcRoundRect(g, tx, ty, pwd, th, 24); g.clip();
+      var k2 = Math.max(pwd / ph.width, th / ph.height), iw2 = ph.width * k2, ih2 = ph.height * k2;
+      g.drawImage(ph, tx + (pwd - iw2) / 2, ty - (ih2 - th) * 0.2, iw2, ih2); g.restore();
+    } else {
+      var cx = px0 + pw / 2, cy = ty + th / 2, r = 120;
+      g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.lineWidth = 4; g.strokeStyle = m.line; g.stroke();
+      g.textAlign = 'center'; spacing(2); g.font = '400 120px ' + BEBAS; g.fillStyle = m.ink; g.fillText(initials(player.name || '?'), cx, cy + 42); g.restore();
+    }
+    // other titles under the ticket
+    var others = info.tiers.slice(1).map(function(t) { return (t.title + ' · ' + t.sub).toUpperCase(); }).join('     ');
+    if (others) { g.save(); g.textAlign = 'center'; spacing(4); g.font = '700 22px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillText(others, W / 2, ty + th + 64); g.restore(); }
+    spacing(4); g.textAlign = 'center'; g.font = '600 20px ' + GEIST; g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillText('FOOTVOLLEYLEAGUEOFCHAMPIONS.COM', W / 2, H - B - 22);
+    return c;
+  }
+  function openChampionTicket(player, info, btn) {
+    var label = btn.innerHTML;
+    btn.disabled = true; btn.textContent = uiText('detail.creatingGraphic');
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 100px "Bebas Neue"'), document.fonts.load('700 20px "Geist"'), document.fonts.load('600 20px "Geist"'), document.fonts.load('800 20px "Geist"')
+    ]).catch(function() {}) : Promise.resolve();
+    var photo = player.photoUrl && !player.videoUrl ? loadImageAsync(player.photoUrl).then(function(im) { if (im) im.cutout = isCutoutPhoto(player); return im; }) : Promise.resolve(null);
+    Promise.all([fonts, loadImageAsync(BADGE_URI), photo]).then(function(r) {
+      var imgs = { badge: r[1], photo: r[2] };
+      return Promise.all(['post', 'story'].map(function(k) {
+        var canvas = drawChampionTicket(player, info, imgs, k);
+        return new Promise(function(res) { canvas.toBlob(function(b) { res({ key: k, blob: b, url: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }); }, 'image/png'); });
+      })).then(function(list) { return { formats: list, photoMissing: !!player.photoUrl && !player.videoUrl && !r[2] }; });
+    }).then(function(out) {
+      btn.disabled = false; btn.innerHTML = label;
+      showPlayerCardModal(player, out, btn, {
+        base: 'loc-champion-ticket-' + (player.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-'), label: info.tiers[0].title,
+        shareTitle: (player.name || '') + ' · ' + info.tiers[0].title + ' · League of Champions'
+      });
+    }).catch(function() { btn.disabled = false; btn.innerHTML = label; window.alert('Could not create the graphic. Please try again.'); });
   }
   function launchConfetti(kind) {
     if (reduceMotion) return;
