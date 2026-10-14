@@ -2640,13 +2640,13 @@
   :root[data-design="ig"] .ranking-table td:first-child .rank-move.is-down { color:#c4153a; }
   :root[data-design="ig"] .ranking-table td:first-child .rank-move.is-same { color:rgba(13,15,58,0.4); }
   :root[data-design="ig"] .ranking-table td:first-child .rank-move.is-new { color:#fff; background:#0d0f3a; }
-  /* players: logos first, then the name */
-  :root[data-design="ig"] .ranking-table td.rank-player { order:2; flex:1; min-width:0; padding-left:6px; font-family:'Bebas Neue', sans-serif; font-size:26px; letter-spacing:0.03em; text-transform:uppercase; color:#fff; }
+  /* players: name, then the clubs in their own column on the right */
+  :root[data-design="ig"] .ranking-table tbody tr td.rank-player { order:1; flex:1; min-width:0; padding-left:28px; font-family:'Bebas Neue', sans-serif; font-size:26px; letter-spacing:0.03em; text-transform:uppercase; color:#fff; }
   :root[data-design="ig"] .ranking-table td.rank-player .player-name-link { color:#fff; }
   :root[data-design="ig"] .ranking-table td.rank-player { display:block; align-self:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  :root[data-design="ig"] .ranking-table td.rank-player + td { order:1; padding-left:22px; padding-right:4px; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td { order:2; width:110px; flex-shrink:0; justify-content:flex-start; padding:0 8px; font-size:0; }
   :root[data-design="ig"] .ranking-table td.rank-player + td .ranking-clubs { display:flex; flex-direction:row; flex-wrap:nowrap; gap:4px; }
-  :root[data-design="ig"] .ranking-table td.rank-player + td { color:rgba(255,255,255,0.4); }
+  :root[data-design="ig"] .ranking-table td.rank-player + td { color:transparent; }
   :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team { font-size:0; gap:0; }
   :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar { width:40px; height:40px; }
   :root[data-design="ig"] .ranking-table td:last-child { order:3; margin-left:auto; padding-right:30px; text-align:right; }
@@ -2661,7 +2661,8 @@
     :root[data-design="ig"] .ranking-table tbody td:first-child { width:64px; }
     :root[data-design="ig"] .ranking-table .rank-num { font-size:26px; }
     :root[data-design="ig"] .ranking-table td.rank-player, :root[data-design="ig"] .ranking-table td .club-link { font-size:20px; }
-    :root[data-design="ig"] .ranking-table td.rank-player + td { padding-left:14px; }
+    :root[data-design="ig"] .ranking-table td.rank-player + td { width:72px; padding:0 4px; }
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player { padding-left:14px; }
     :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar, :root[data-design="ig"] .ranking-table td:nth-child(2):not(.rank-player) .club-avatar { width:30px; height:30px; }
     :root[data-design="ig"] .ranking-table .rank-pts { font-size:24px; }
     :root[data-design="ig"] .ranking-table td:last-child { padding-right:18px; }
