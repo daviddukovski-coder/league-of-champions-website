@@ -2417,6 +2417,46 @@
   a.club-link { color:inherit; text-decoration:none; }
   a.club-link:hover { color:var(--cyan); }
   @media (prefers-reduced-motion: reduce) { .club-tour { transition:none; } .club-tour:hover { transform:none; } }
+
+  /* champion holo cards */
+  .holo-section { display:flex; flex-direction:column; align-items:center; gap:14px; margin:30px 0 10px; perspective:1100px; }
+  .holo-card { --mx:50%; --my:50%; --rx:0deg; --ry:0deg; position:relative; width:min(300px, 80vw); aspect-ratio:5/7; border-radius:20px; overflow:hidden; isolation:isolate;
+    transform:rotateX(var(--rx)) rotateY(var(--ry)); transform-style:preserve-3d; transition:transform .5s cubic-bezier(.16,1,.3,1), box-shadow .4s; outline:none;
+    background:linear-gradient(160deg, #2c2f98 0%, #1a1d84 45%, #0b0d63 100%); box-shadow:0 26px 60px rgba(3,4,40,0.55), 0 0 0 2px rgba(255,255,255,0.35) inset; }
+  .holo-card.is-active { transition:transform .08s linear, box-shadow .4s; }
+  .holo-card:focus-visible { box-shadow:0 26px 60px rgba(3,4,40,0.55), 0 0 0 3px var(--cyan); }
+  .holo-face { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; align-items:center; padding:14px 16px 16px; text-align:center; }
+  .holo-top { align-self:stretch; display:flex; align-items:center; gap:8px; font:800 10px 'Poppins', sans-serif; letter-spacing:0.16em; color:#fff; }
+  .holo-photo { position:relative; flex:1; width:100%; min-height:0; margin:8px 0 6px; border-radius:14px; overflow:hidden; display:grid; place-items:end center;
+    background:radial-gradient(circle at 50% 40%, rgba(0,242,255,0.35), rgba(0,242,255,0) 65%), #0d1070; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.3); }
+  .holo-info { align-self:stretch; display:flex; flex-direction:column; align-items:center; padding:10px 8px 8px; border-radius:12px; background:rgba(8,10,85,0.82); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18); }
+  .holo-photo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
+  .holo-photo img.is-cutout { object-fit:contain; object-position:50% 100%; }
+  .holo-initials { align-self:center; font-family:'Bebas Neue', sans-serif; font-size:96px; color:rgba(255,255,255,0.9); }
+  .holo-title { font:800 11px 'Poppins', sans-serif; letter-spacing:0.22em; text-transform:uppercase; padding:4px 12px; border-radius:999px; background:var(--cyan); color:#07083f; }
+  .holo-name { font-family:'Bebas Neue', sans-serif; font-size:32px; line-height:1; margin-top:8px; color:#fff; }
+  .holo-sub { font-size:12px; color:rgba(255,255,255,0.75); margin-top:2px; }
+  .holo-wins { list-style:none; margin:6px 0 0; padding:0; font-size:11px; color:rgba(255,255,255,0.8); display:flex; flex-direction:column; gap:1px; }
+  .holo-shine, .holo-glare { position:absolute; inset:0; pointer-events:none; border-radius:inherit; }
+  .holo-shine { z-index:1; mix-blend-mode:color-dodge; opacity:0.55; background-size:220% 220%; background-position:var(--mx) var(--my); transition:opacity .4s; }
+  .holo-glare { z-index:4; mix-blend-mode:soft-light; opacity:0.55; background:radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.15) 28%, rgba(0,0,0,0.25) 70%); }
+  .holo-card.is-active .holo-shine { opacity:0.9; }
+  /* Champion: cool silver + cyan foil */
+  .holo-champ .holo-shine { background-image:repeating-linear-gradient(115deg, #0ff 0%, #b6c4ff 6%, #fff 10%, #6af 15%, #0ff 20%), repeating-linear-gradient(25deg, rgba(255,255,255,0.15) 0 2px, transparent 2px 7px); }
+  /* Finals Champion: gold foil */
+  .holo-finals { background:linear-gradient(160deg, #6b4a00 0%, #2a1d5e 50%, #0b0d63 100%); box-shadow:0 26px 60px rgba(3,4,40,0.55), 0 0 0 2px rgba(255,211,77,0.75) inset; }
+  .holo-finals .holo-title { background:linear-gradient(90deg, #ffd34d, #fff3c4, #ffb800); }
+  .holo-finals .holo-shine { background-image:repeating-linear-gradient(115deg, #ffb800 0%, #fff3c4 7%, #ffd34d 12%, #c98a00 18%, #ffb800 24%), radial-gradient(circle, rgba(255,255,255,0.6) 0 1px, transparent 1.5px); background-size:220% 220%, 14px 14px; }
+  /* Season No. 1: full rainbow prism */
+  .holo-season { box-shadow:0 26px 60px rgba(3,4,40,0.55), 0 0 0 2px rgba(255,255,255,0.6) inset, 0 0 40px rgba(255,59,212,0.25); }
+  .holo-season .holo-title { background:linear-gradient(90deg, #00f2ff, #ff3bd4, #ffe14d, #7cff6b); }
+  .holo-season .holo-shine { opacity:0.75; background-image:repeating-linear-gradient(115deg, #ff3bd4 0%, #ffe14d 5%, #7cff6b 10%, #00f2ff 15%, #8a6bff 20%, #ff3bd4 25%), repeating-linear-gradient(45deg, rgba(255,255,255,0.12) 0 1px, transparent 1px 6px); }
+  .holo-badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .holo-badge { font:700 11px 'Poppins', sans-serif; letter-spacing:0.08em; text-transform:uppercase; padding:5px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.3); color:#fff; background:rgba(255,255,255,0.06); }
+  .holo-badge-finals { border-color:rgba(255,211,77,0.7); color:#ffd34d; }
+  .holo-badge-champ { border-color:rgba(0,242,255,0.6); color:var(--cyan); }
+  .confetti-canvas { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:300; }
+  @media (prefers-reduced-motion: reduce) { .holo-card { transform:none; transition:none; } }
 </style>
 </head>
 <body>
@@ -4706,6 +4746,11 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'holo.season': 'Season No. 1',
+    'holo.finals': 'Finals Champion',
+    'holo.champ': 'Champion',
+    'holo.titleOne': '{n} tournament won',
+    'holo.titles': '{n} tournaments won',
     'club.kicker': 'Club',
     'club.playersMen': 'Players · Men’s',
     'club.playersWomen': 'Players · Women’s',
@@ -4889,7 +4934,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'holo.season': 'Saison-Nr. 1', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -9335,6 +9380,7 @@ var CLUBS = [
       '</div>' +
         playerMediaHtml(player, canEdit) +
       '</div>' +
+      '<div id="playerHoloSlot"></div>' +
       '<h2 class="section-title">Clubs Represented</h2>' +
       '<p class="empty-note" id="playerClubsList">–</p>' +
       '<h2 class="section-title">Tournament History</h2>' +
@@ -9449,6 +9495,105 @@ var CLUBS = [
       '</tbody></table>';
   }
 
+  /* ==================================================================
+     CHAMPION HOLO CARDS on the profile, three kinds (highest one shown,
+     the others as badges): Season No. 1 (place 1 of a season's player
+     ranking) > Finals Champion (won a Finals) > Champion (won any LoC
+     tournament). Confetti once per visit of a champion's profile.
+     ================================================================== */
+  function championInfo(player, stats) {
+    var wins = (stats.history || []).filter(function(h) { return h.placement === 1; }).map(function(h) {
+      var t = tourById(h.tournamentId); return { name: h.tournamentName, finals: !!t && String(t.tier) === 'FINALS', year: t ? t.dateSort.slice(0, 4) : '' };
+    });
+    var n = normalizeNameForMatch(player.name);
+    var years = Object.keys(Object.assign({}, RANKINGS, contentOverrides.rankings || {}));
+    var seasons = years.filter(function(y) {
+      return ['men', 'women'].some(function(gd) { var top = rankingRows(y, gd, 'players')[0]; return top && top.rank === 1 && normalizeNameForMatch(top.name) === n; });
+    }).sort();
+    var finals = wins.filter(function(w) { return w.finals; });
+    var tiers = [];
+    if (seasons.length) tiers.push({ key: 'season', title: uiText('holo.season'), sub: seasons.join(' · ') });
+    if (finals.length) tiers.push({ key: 'finals', title: uiText('holo.finals'), sub: finals.map(function(w) { return w.year; }).join(' · ') });
+    if (wins.length) tiers.push({ key: 'champ', title: uiText('holo.champ'), sub: uiFormat(wins.length === 1 ? 'holo.titleOne' : 'holo.titles', { n: wins.length }) });
+    return tiers.length ? { tiers: tiers, wins: wins } : null;
+  }
+  function renderChampionCard(player, stats) {
+    var slot = document.getElementById('playerHoloSlot');
+    if (!slot) return;
+    var info = championInfo(player, stats);
+    if (!info) { slot.innerHTML = ''; return; }
+    var top = info.tiers[0];
+    var pic = player.photoUrl && !player.videoUrl
+      ? '<img src="' + esc(player.photoUrl) + '" alt="" class="' + (isCutoutPhoto(player) ? 'is-cutout' : '') + '">'
+      : '<span class="holo-initials">' + esc(initials(player.name || '?')) + '</span>';
+    slot.innerHTML = '<section class="holo-section" aria-label="' + esc(top.title) + '">' +
+      '<div class="holo-card holo-' + top.key + '" tabindex="0">' +
+        '<div class="holo-face">' +
+          '<div class="holo-top"><img src="' + esc(BADGE_URI) + '" alt="" width="34" height="34"><span>LEAGUE OF CHAMPIONS</span></div>' +
+          '<div class="holo-photo">' + pic + '</div>' +
+          '<div class="holo-info"><div class="holo-title">' + esc(top.title) + '</div>' +
+          '<div class="holo-name">' + esc(player.name || '') + '</div>' +
+          '<div class="holo-sub">' + esc(top.sub) + '</div>' +
+          '<ul class="holo-wins">' + info.wins.slice(0, 3).map(function(w) { return '<li>★ ' + esc(w.name) + '</li>'; }).join('') + '</ul></div>' +
+        '</div>' +
+        '<div class="holo-shine" aria-hidden="true"></div><div class="holo-glare" aria-hidden="true"></div>' +
+      '</div>' +
+      (info.tiers.length > 1 ? '<div class="holo-badges">' + info.tiers.slice(1).map(function(t) { return '<span class="holo-badge holo-badge-' + t.key + '">' + esc(t.title) + ' · ' + esc(t.sub) + '</span>'; }).join('') + '</div>' : '') +
+    '</section>';
+    wireHoloCard(slot.querySelector('.holo-card'));
+    var key = 'loc_confetti_' + player.uid;
+    var seen = false; try { seen = sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (e) {}
+    if (!seen) launchConfetti(top.key);
+  }
+  function wireHoloCard(card) {
+    if (!card || reduceMotion) return;
+    var raf = 0;
+    var move = function(x, y) {
+      var r = card.getBoundingClientRect(), px = Math.min(1, Math.max(0, (x - r.left) / r.width)), py = Math.min(1, Math.max(0, (y - r.top) / r.height));
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function() {
+        card.style.setProperty('--mx', (px * 100).toFixed(1) + '%'); card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+        card.style.setProperty('--rx', ((0.5 - py) * 18).toFixed(2) + 'deg'); card.style.setProperty('--ry', ((px - 0.5) * 22).toFixed(2) + 'deg');
+        card.classList.add('is-active');
+      });
+    };
+    card.addEventListener('pointermove', function(e) { move(e.clientX, e.clientY); });
+    card.addEventListener('pointerleave', function() { cancelAnimationFrame(raf); card.classList.remove('is-active'); ['--rx', '--ry'].forEach(function(p) { card.style.setProperty(p, '0deg'); }); });
+    // phones: tilt with the device
+    window.addEventListener('deviceorientation', function onTilt(e) {
+      if (!document.body.contains(card)) { window.removeEventListener('deviceorientation', onTilt); return; }
+      if (e.gamma == null) return;
+      var r = card.getBoundingClientRect();
+      move(r.left + r.width * (0.5 + Math.max(-30, Math.min(30, e.gamma)) / 60), r.top + r.height * (0.5 + Math.max(-30, Math.min(30, (e.beta || 45) - 45)) / 60));
+    });
+  }
+  function launchConfetti(kind) {
+    if (reduceMotion) return;
+    var colors = kind === 'season' ? ['#00f2ff', '#ff3bd4', '#ffe14d', '#7cff6b', '#ffffff'] : kind === 'finals' ? ['#ffd34d', '#ffb800', '#fff3c4', '#00f2ff', '#ffffff'] : ['#00f2ff', '#ffffff', '#9fb4ff', '#ffd34d'];
+    var c = document.createElement('canvas'), dpr = Math.min(2, window.devicePixelRatio || 1);
+    c.className = 'confetti-canvas'; c.setAttribute('aria-hidden', 'true');
+    c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+    document.body.appendChild(c);
+    var g = c.getContext('2d'); g.scale(dpr, dpr);
+    var parts = [];
+    for (var i = 0; i < 170; i++) {
+      var fromLeft = i % 2 === 0;
+      parts.push({ x: fromLeft ? -10 : innerWidth + 10, y: innerHeight * (0.55 + Math.random() * 0.3), vx: (fromLeft ? 1 : -1) * (6 + Math.random() * 9), vy: -(11 + Math.random() * 9),
+        w: 6 + Math.random() * 6, h: 10 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, color: colors[i % colors.length] });
+    }
+    var t0 = performance.now();
+    (function frame(now) {
+      var t = now - t0;
+      g.clearRect(0, 0, innerWidth, innerHeight);
+      parts.forEach(function(p) {
+        p.vy += 0.32; p.vx *= 0.985; p.vy *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.globalAlpha = Math.max(0, 1 - Math.max(0, t - 2600) / 900);
+        g.fillStyle = p.color; g.fillRect(-p.w / 2, -p.h / 2 * Math.abs(Math.cos(p.r * 2)), p.w, p.h * Math.abs(Math.cos(p.r * 2)) + 1); g.restore();
+      });
+      if (t < 3500) requestAnimationFrame(frame); else c.remove();
+    })(t0);
+  }
+
   function showPlayer(uid) {
     var el = document.getElementById('playerContent');
     var player = findPlayer(uid);
@@ -9479,6 +9624,7 @@ var CLUBS = [
       }
       var historyBox = document.getElementById('playerHistoryBox');
       if (historyBox) historyBox.innerHTML = playerHistoryTableHtml(stats.history);
+      renderChampionCard(player, stats);
     });
   }
 
