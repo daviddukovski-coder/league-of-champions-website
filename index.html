@@ -2385,6 +2385,38 @@
   .cmp-h2h-score { font-family:'Bebas Neue', sans-serif; font-size:44px; line-height:1; letter-spacing:0.08em; }
   .cmp-actions { display:flex; justify-content:center; margin-top:16px; }
   @media (max-width:520px) { .cmp-pickers { grid-template-columns:1fr; } .cmp-pickers .cmp-vs { text-align:center; } .cmp-side .tw-face { width:64px; height:64px; } .cmp-side strong { font-size:22px; } .cmp-label { min-width:80px; font-size:10px; } }
+
+  /* club page */
+  .club-hero { display:flex; align-items:center; gap:clamp(18px, 3vw, 36px); margin:10px 0 30px; flex-wrap:wrap; }
+  .club-hero-logo .club-avatar { width:clamp(110px, 16vw, 170px); height:clamp(110px, 16vw, 170px); background:none !important; box-shadow:none !important; border-radius:0 !important; filter:drop-shadow(0 14px 30px rgba(3,4,40,0.5)); }
+  .club-hero-logo .club-avatar img { width:100%; height:100%; object-fit:contain; }
+  .club-hero-text { min-width:0; flex:1; }
+  .club-kicker { font:800 12px 'Poppins', sans-serif; letter-spacing:0.18em; text-transform:uppercase; color:var(--cyan); }
+  .club-hero-text h1 { margin:4px 0 14px; overflow-wrap:anywhere; }
+  .club-ranks { display:flex; gap:12px; flex-wrap:wrap; }
+  .club-rank { display:flex; flex-direction:column; gap:2px; padding:12px 18px; border-radius:var(--tk-radius, 14px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); min-width:150px; }
+  .club-rank-k { font:700 10.5px 'Poppins', sans-serif; letter-spacing:0.14em; text-transform:uppercase; color:var(--cyan); }
+  .club-rank-v { font-family:'Bebas Neue', sans-serif; font-size:44px; line-height:1; color:#fff; }
+  .club-rank-v .rank-move { font-size:13px; }
+  .club-rank-p { font-size:12px; color:rgba(255,255,255,0.7); font-variant-numeric:tabular-nums; }
+  .club-count { font:700 12px 'Poppins', sans-serif; background:var(--cyan); color:#07083f; border-radius:999px; padding:2px 9px; vertical-align:middle; letter-spacing:0; }
+  .club-players { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:10px; margin-bottom:26px; }
+  .club-player { display:grid; grid-template-columns:auto 1fr auto; grid-template-rows:auto auto; column-gap:12px; align-items:center; padding:10px 14px; border-radius:var(--tk-radius, 14px); background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); }
+  .club-player[data-route] { cursor:pointer; }
+  .club-player[data-route]:hover { border-color:rgba(0,242,255,0.5); }
+  .club-player .tw-face { width:42px; height:42px; grid-row:1 / span 2; box-shadow:none; }
+  .club-player-name { font-weight:600; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .club-player-rank { font-family:'Bebas Neue', sans-serif; font-size:24px; color:var(--cyan); grid-row:1 / span 2; grid-column:3; }
+  .club-player-pts { font-size:12px; color:rgba(255,255,255,0.6); font-variant-numeric:tabular-nums; }
+  .club-tours { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; margin-bottom:30px; }
+  .club-tour { position:relative; display:flex; flex-direction:column; gap:4px; padding:16px 18px; border-radius:var(--tk-radius, 14px); background:var(--tk-bg, #1a1d84); border:1px solid var(--tk-border, rgba(255,255,255,0.3)); box-shadow:var(--tk-shadow, none); color:#fff; text-decoration:none; transition:transform .25s cubic-bezier(.16,1,.3,1); }
+  .club-tour:hover { transform:translateY(-2px); }
+  .club-tour strong { font-family:'Bebas Neue', sans-serif; font-size:26px; font-weight:400; letter-spacing:0.02em; line-height:1; padding-right:40px; }
+  .club-tour-meta { font-size:12px; color:rgba(255,255,255,0.7); }
+  .club-tour-medal { position:absolute; right:14px; top:50%; transform:translateY(-50%); object-fit:contain; }
+  a.club-link { color:inherit; text-decoration:none; }
+  a.club-link:hover { color:var(--cyan); }
+  @media (prefers-reduced-motion: reduce) { .club-tour { transition:none; } .club-tour:hover { transform:none; } }
 </style>
 </head>
 <body>
@@ -2462,6 +2494,13 @@
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
       <div class="trail-nav" id="tournamentRailNav" hidden></div>
+    </div>
+  </section>
+
+  <section id="view-club" class="view" hidden>
+    <div class="container">
+      <a class="back-btn" href="#/ranking?t=clubs">← Ranking</a>
+      <div id="clubContent"></div>
     </div>
   </section>
 
@@ -4667,6 +4706,14 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'club.kicker': 'Club',
+    'club.playersMen': 'Players · Men’s',
+    'club.playersWomen': 'Players · Women’s',
+    'club.tournaments': 'Tournaments',
+    'club.noTournaments': 'No tournaments with this club yet.',
+    'club.team': 'team',
+    'club.teams': 'teams',
+    'club.place': 'Place {n}',
     'compare.open': 'Compare players',
     'compare.close': 'Close comparison',
     'compare.pick': 'Search a player…',
@@ -4842,7 +4889,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -5553,7 +5600,7 @@ var CLUBS = [
   })();
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','court','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','court','club','player','ranking','admin','impressum','login','registeraccount','exchange','inbox'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.body.classList.toggle('court-mode', view === 'court');
@@ -5618,6 +5665,8 @@ var CLUBS = [
       showPlayer(p[1]);
     } else if (p[0] === 'ranking') {
       showRanking();
+    } else if (p[0] === 'club' && p[1]) {
+      showClub(decodeURIComponent(p[1]));
     } else if (p[0] === 'admin') {
       showAdmin();
     } else if (p[0] === 'impressum') {
@@ -5788,11 +5837,17 @@ var CLUBS = [
     // 'ig': the clubs of the tour as a logo wall instead of the city band. Any
     // club added to the list with a logo shows up here automatically.
     if (document.documentElement.getAttribute('data-design') === 'ig') {
-      var clubLogos = CLUBS.filter(function(c) { return c.logo; }).map(function(c) {
-        return '<span class="logo-wall-item" title="' + esc(c.name) + '">' + clubAvatarHtml(c) + '</span>';
-      }).join('');
-      ticker = clubLogos ? '<div class="logo-wall" role="img" aria-label="' + esc(CLUBS.filter(function(c) { return c.logo; }).length + ' clubs on the tour') + '">' +
-        '<div class="logo-wall-track" style="--n:' + CLUBS.filter(function(c) { return c.logo; }).length + '">' + clubLogos + clubLogos + '</div></div>' : '';
+      // each logo opens that club's page; the second (looping) copy is
+      // hidden from screen readers and the tab order
+      var logoItems = function(copy) {
+        return CLUBS.filter(function(c) { return c.logo; }).map(function(c) {
+          return '<a class="logo-wall-item" href="#/club/' + encodeURIComponent(c.name) + '" title="' + esc(c.name) + '"' +
+            (copy ? ' aria-hidden="true" tabindex="-1"' : ' aria-label="' + esc(c.name) + '"') + '>' + clubAvatarHtml(c) + '</a>';
+        }).join('');
+      };
+      var nLogos = CLUBS.filter(function(c) { return c.logo; }).length;
+      ticker = nLogos ? '<div class="logo-wall" aria-label="' + esc(nLogos + ' clubs on the tour') + '">' +
+        '<div class="logo-wall-track" style="--n:' + nLogos + '">' + logoItems(false) + logoItems(true) + '</div></div>' : '';
     }
 
     var igDesign = document.documentElement.getAttribute('data-design') === 'ig';
@@ -7153,16 +7208,37 @@ var CLUBS = [
       g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2);
       var disc = g.createLinearGradient(cx - R, cy - R, cx + R, cy + R); disc.addColorStop(0, '#2c2f98'); disc.addColorStop(1, '#1a1d84');
       g.fillStyle = disc; g.shadowColor = 'rgba(0,242,255,0.35)'; g.shadowBlur = 50; g.fill(); g.restore();
-      g.save(); g.beginPath(); g.arc(cx, cy, R - 4, 0, Math.PI * 2); g.clip();
-      if (im) {
-        var k = Math.max((2 * R) / im.width, (2 * R) / im.height) * (im.cutout ? 1.25 : 1), iw = im.width * k, ih = im.height * k;
-        g.drawImage(im, cx - iw / 2, cy - R + (im.cutout ? -ih * 0.02 : -(ih - 2 * R) * 0.2), iw, ih);
+      if (im && im.cutout) {
+        // ring first: the cut-out player then breaks out of it at the top
+        g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.lineWidth = 6; g.strokeStyle = CYAN; g.stroke(); g.restore();
+      }
+      g.save(); g.beginPath();
+      if (im && im.cutout) { g.arc(cx, cy, R - 4, 0, Math.PI); var clipTop = Math.max(cy - R * 2.4, T + 172); g.lineTo(cx - R + 4, clipTop); g.lineTo(cx + R - 4, clipTop); g.closePath(); }
+      else g.arc(cx, cy, R - 4, 0, Math.PI * 2);
+      g.clip();
+      if (im && im.cutout) {
+        // cut-out: crop to the visible person (alpha box), fit it whole into
+        // the circle, standing on its lower edge
+        var src = { x: 0, y: 0, w: im.width, h: im.height };
+        try {
+          var tc = document.createElement('canvas'), tw0 = 160, th0 = Math.max(1, Math.round(160 * im.height / im.width));
+          tc.width = tw0; tc.height = th0; var tg = tc.getContext('2d'); tg.drawImage(im, 0, 0, tw0, th0);
+          var dd = tg.getImageData(0, 0, tw0, th0).data, x0 = tw0, x1 = -1, y0 = th0, y1 = -1;
+          for (var yy = 0; yy < th0; yy++) for (var xx = 0; xx < tw0; xx++) if (dd[(yy * tw0 + xx) * 4 + 3] > 20) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+          if (x1 > 0) { var kk = im.width / tw0; src = { x: x0 * kk, y: y0 * kk, w: (x1 - x0 + 1) * kk, h: (y1 - y0 + 1) * kk }; }
+        } catch (e) {}
+        var k = Math.min((2 * R * 1.3) / src.h, (2 * R * 1.05) / src.w), iw = src.w * k, ih = src.h * k;
+        g.shadowColor = 'rgba(3,4,40,0.5)'; g.shadowBlur = 24; g.shadowOffsetY = 10;
+        g.drawImage(im, src.x, src.y, src.w, src.h, cx - iw / 2, cy + R - ih - R * 0.02, iw, ih);
+      } else if (im) {
+        var k2 = Math.max((2 * R) / im.width, (2 * R) / im.height), iw2 = im.width * k2, ih2 = im.height * k2;
+        g.drawImage(im, cx - iw2 / 2, cy - R - (ih2 - 2 * R) * 0.2, iw2, ih2);
       } else {
         spacing(2); g.font = '400 ' + Math.round(R * 0.9) + 'px ' + BEBAS; g.fillStyle = 'rgba(255,255,255,0.9)'; g.textAlign = 'center';
         g.fillText(initials(r.name), cx, cy + R * 0.32);
       }
       g.restore();
-      g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.lineWidth = 6; g.strokeStyle = CYAN; g.stroke(); g.restore();
+      if (!(im && im.cutout)) { g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.lineWidth = 6; g.strokeStyle = CYAN; g.stroke(); g.restore(); }
       // rank chip
       g.save(); g.translate(cx, cy + R - 6); g.transform(1, 0, -0.21, 1, 0, 0);
       spacing(2); g.font = '800 30px ' + GEIST; var rk = '#' + r.rank, rw = g.measureText(rk).width + 34;
@@ -7230,6 +7306,65 @@ var CLUBS = [
     }).catch(function() { btn.disabled = false; btn.textContent = label; window.alert('Could not create the graphic. Please try again.'); });
   }
 
+  /* ==================================================================
+     CLUB PAGE (#/club/:name): logo + name, the club's place in the club
+     ranking, its players from the player ranking (by their club columns)
+     and the tournaments its teams played, with medals.
+     ================================================================== */
+  function clubKeyOf(name) { var c = findClub(name || ''); return c.logo ? c.name : normalizeNameForMatch(name); }
+  function showClub(name) {
+    var el = document.getElementById('clubContent');
+    var club = findClub(name), key = clubKeyOf(name), year = rankingYear;
+    var line = function(gender) {
+      var rows = rankingRows(year, gender, 'clubs'), r = rows.filter(function(x) { return clubKeyOf(x.name) === key; })[0];
+      if (!r) return '';
+      return '<div class="club-rank"><span class="club-rank-k">' + esc(gender === 'men' ? 'Men’s' : 'Women’s') + ' · ' + esc(year) + '</span>' +
+        '<span class="club-rank-v">#' + r.rank + rankMoveHtml(r, rankingPrevMap(year, gender, 'clubs')) + '</span><span class="club-rank-p">' + r.points + ' PTS</span></div>';
+    };
+    var players = function(gender) {
+      return rankingRows(year, gender, 'players').filter(function(r) { return [r.club1, r.club2].some(function(c) { return c && clubKeyOf(c) === key; }); });
+    };
+    var men = players('men'), women = players('women');
+    var playerList = function(list, label) {
+      if (!list.length) return '';
+      return '<h2 class="section-title">' + esc(label) + ' <span class="club-count">' + list.length + '</span></h2><div class="club-players">' + list.map(function(r) {
+        var m = findPlayerByName(r.name);
+        return '<div class="club-player"' + (m ? ' data-route="player/' + esc(m.uid) + '"' : '') + '>' + playerFaceHtml(r.name, m ? m.uid : null) +
+          '<span class="club-player-name">' + esc(r.name) + '</span><span class="club-player-rank">#' + r.rank + '</span><span class="club-player-pts">' + r.points + ' PTS</span></div>';
+      }).join('') + '</div>';
+    };
+    var ranks = line('men') + line('women');
+    el.innerHTML =
+      '<div class="club-hero">' +
+        '<div class="club-hero-logo">' + clubAvatarHtml(club) + '</div>' +
+        '<div class="club-hero-text"><span class="club-kicker">' + esc(uiText('club.kicker')) + '</span><h1>' + esc(club.name || name) + '</h1>' +
+          (ranks ? '<div class="club-ranks">' + ranks + '</div>' : '') + '</div>' +
+      '</div>' +
+      playerList(men, uiText('club.playersMen')) + playerList(women, uiText('club.playersWomen')) +
+      '<h2 class="section-title">' + esc(uiText('club.tournaments')) + '</h2><div id="clubTournaments"><p class="empty-note">Loading …</p></div>';
+    setView('club');
+    Promise.all(allTournaments().map(function(t) {
+      return loadBracket(t.id).then(function(bracket) {
+        var teams = (bracket.teams || []).filter(function(tm) { return tm.club && clubKeyOf(tm.club) === key; });
+        if (!teams.length) return null;
+        var pl = computeTournamentPlacement(bracket), ids = teams.map(function(tm) { return tm.id; });
+        var best = pl.first && ids.indexOf(pl.first) !== -1 ? 1 : pl.second && ids.indexOf(pl.second) !== -1 ? 2 : pl.third && ids.indexOf(pl.third) !== -1 ? 3 : null;
+        return { t: t, teams: teams.length, best: best };
+      }).catch(function() { return null; });
+    })).then(function(list) {
+      var box = document.getElementById('clubTournaments');
+      if (!box) return;
+      list = list.filter(Boolean).sort(function(a, b) { return b.t.dateSort.localeCompare(a.t.dateSort); });
+      if (!list.length) { box.innerHTML = '<p class="empty-note">' + esc(uiText('club.noTournaments')) + '</p>'; return; }
+      var medal = { 1: 'gold', 2: 'silver', 3: 'bronze' };
+      box.innerHTML = '<div class="club-tours">' + list.map(function(x) {
+        return '<a class="club-tour" href="#/event/' + esc(x.t.id) + '/live"><span class="tier mono">LoC ' + esc(String(x.t.tier)) + '</span>' +
+          '<strong>' + esc(x.t.name) + '</strong><span class="club-tour-meta">' + esc(x.t.dateLabel) + ' · ' + x.teams + ' ' + esc(uiText(x.teams === 1 ? 'club.team' : 'club.teams')) + '</span>' +
+          (x.best ? '<img class="club-tour-medal" src="' + esc(MEDAL_IMAGES[medal[x.best]]) + '" alt="' + esc(uiFormat('club.place', { n: x.best })) + '" width="34" height="34">' : '') + '</a>';
+      }).join('') + '</div>';
+    });
+  }
+
   // ▲/▼ since the last ranking update: compares with the snapshot taken
   // before the most recent tournament sync. No snapshot yet = no arrows.
   function rankingPrevMap(year, gender, type) {
@@ -7288,7 +7423,7 @@ var CLUBS = [
     } else {
       table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
         rows.map(function(r) {
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td><span class="standings-team">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</span></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td><a class="standings-team club-link" href="#/club/' + encodeURIComponent(clubKeyOf(r.name) === normalizeNameForMatch(r.name) ? r.name : findClub(r.name).name) + '">' + clubAvatarHtml(findClub(r.name)) + esc(r.name) + '</a></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     }
