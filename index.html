@@ -2764,6 +2764,28 @@
   @media (max-width:640px) {
     :root[data-design="ig"] .ranking-table tbody tr td:last-child, :root[data-design="ig"] .ranking-table thead th:last-child { width:84px; }
   }
+
+  /* narrower, centered list; no slide on hover (it pushed past the edge) */
+  :root[data-design="ig"] .ranking-table { max-width:940px; margin:6px auto 0; }
+  :root[data-design="ig"] .ranking-table tbody tr:hover, :root[data-design="ig"] .ranking-table tbody tr { transform:none; }
+  :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:330px; }
+  /* one club gets the whole column, two share it */
+  :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team:only-child { max-width:100%; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .ranking-clubs { gap:14px; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team { max-width:calc(50% - 7px); gap:7px; letter-spacing:0.06em; }
+  @media (max-width:1000px) {
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:280px; }
+    :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team { font-size:9.5px; letter-spacing:0.04em; }
+  }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:auto; }
+  }
+
+  @media (max-width:1000px) and (min-width:641px) {
+    :root[data-design="ig"] .ranking-table tbody tr td:last-child, :root[data-design="ig"] .ranking-table thead th:last-child { width:104px; padding-right:24px; }
+    :root[data-design="ig"] .ranking-table .rank-pts small { display:none; }
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:330px; }
+  }
 </style>
 </head>
 <body>
