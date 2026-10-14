@@ -2744,6 +2744,26 @@
   :root[data-design="ig"] .ranking-table .rk-club-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   :root[data-design="ig"] .ranking-table tbody tr { box-shadow:0 14px 18px -6px rgba(0,0,0,0.6), 0 5px 8px rgba(0,0,0,0.3); }
   :root[data-design="ig"] .ranking-table tbody td:first-child { box-shadow:0 10px 14px -4px rgba(0,0,0,0.45); }
+
+  /* clubs side by side (logo + small name each), same start position on every row */
+  :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td { width:360px; justify-content:flex-start; padding:0 10px 0 6px; }
+  :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:360px; padding:0 10px 0 6px; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .ranking-clubs { flex-direction:row; align-items:center; justify-content:flex-start; gap:18px; width:100%; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team { flex:0 1 auto; max-width:calc(50% - 9px); margin:0; padding:0; }
+  :root[data-design="ig"] .ranking-table td.rank-player + td .ranking-clubs .standings-team:nth-child(2) .club-avatar { width:28px; height:28px; }
+  @media (max-width:1000px) {
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:260px; }
+  }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:auto; }
+    :root[data-design="ig"] .ranking-table td.rank-player + td .ranking-clubs { gap:4px; }
+  }
+
+  :root[data-design="ig"] .ranking-table tbody tr td:last-child { width:150px; flex-shrink:0; justify-content:flex-end; margin-left:0; }
+  :root[data-design="ig"] .ranking-table thead th:last-child { width:150px; flex-shrink:0; margin-left:0; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table tbody tr td:last-child, :root[data-design="ig"] .ranking-table thead th:last-child { width:84px; }
+  }
 </style>
 </head>
 <body>
