@@ -2789,15 +2789,15 @@
 
   /* Match Day scroll story */
   :root[data-design="ig"] #heroMedia { transform-origin:50% 0; will-change:transform; }
-  :root[data-design="ig"] #heroNext { will-change:transform, opacity; transform-origin:50% 0; }
+  :root[data-design="ig"] #heroNext { will-change:transform, opacity; position:relative; z-index:30; }
+  :root[data-design="ig"] .landing-hero { z-index:5; }
+  .ball-ad { will-change:translate; }
   :root[data-design="ig"] .landing-hero { overflow:visible; }
-  .md-season-line { height:3px; margin:10px auto 0; max-width:min(720px, 90%); border-radius:2px; background:rgba(255,255,255,0.12); overflow:hidden; }
-  .md-season-line > span { display:block; height:100%; transform:scaleX(0); transform-origin:0 50%; background:linear-gradient(90deg, rgba(0,242,255,0.4), var(--cyan)); box-shadow:0 0 12px rgba(0,242,255,0.6); }
   /* page progress: a fine cyan line along the bottom of the glass nav */
   :root[data-design="ig"] .nav-inner { position:relative; }
   :root[data-design="ig"] body:has(#view-landing:not([hidden])) .nav-inner::after { content:''; position:absolute; left:28px; right:28px; bottom:-1px; height:2px; border-radius:2px; pointer-events:none;
     background:linear-gradient(90deg, var(--cyan), rgba(0,242,255,0.5)); transform:scaleX(var(--page-p, 0)); transform-origin:0 50%; box-shadow:0 0 10px rgba(0,242,255,0.6); }
-  @media (prefers-reduced-motion: reduce) { .md-season-line { display:none; } :root[data-design="ig"] body .nav-inner::after { display:none; } }
+  @media (prefers-reduced-motion: reduce) { :root[data-design="ig"] body .nav-inner::after { display:none; } }
 </style>
 </head>
 <body>
@@ -6290,78 +6290,140 @@ var CLUBS = [
   }
   /* ==================================================================
      "MATCH DAY" SCROLL STORY (landing, 'ig'): scrolling is the timeline.
-     The hero video settles into a rounded screen, the next/last ticket
-     drops toward the tour ring, the ring turns with the scroll through the
-     season while a cyan line fills, the leaders rise and count up. All
-     values are eased toward their scroll targets every frame (soft, never
-     hijacking the scroll itself). Off for reduced motion.
+     1. The hero video settles into a rounded screen, the headline drifts.
+     2. The hero ticket flies down and lands exactly on its own ticket in
+        the tour ring (that slot stays empty until it arrives); the ring
+        holds still until the landing and only then starts turning.
+     3. The Mikasa ball leaves its corner, rolls along a curve down the page
+        and "kicks" the ranking leaders up (they rise and count up), then
+        rolls back to its corner.
+     Values are eased toward their scroll targets every frame (soft, never
+     hijacking the scroll). Phones get a lighter version; off for reduced
+     motion.
      ================================================================== */
   var matchDay = (function() {
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var cur = {}, target = {}, raf = 0, lastRing = -1, userScrolled = false, counted = false;
+    var cur = {}, target = {}, raf = 0, counted = false, landed = false, heroNat = null;
     var clamp = function(v, a, b) { return Math.max(a, Math.min(b, v)); };
+    var ease = function(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+    var lerp = function(a, b, t) { return a + (b - a) * t; };
     function landingVisible() { var v = document.getElementById('view-landing'); return v && !v.hidden && document.documentElement.getAttribute('data-design') === 'ig'; }
+    function ringCard() {
+      var ring = window.__landingRing;
+      if (!ring || !ring.api) return null;
+      var item = ring.api.root.querySelector('.rc-item[data-orig="' + ring.start + '"]');
+      return item ? item.querySelector('.tcard') || item : null;
+    }
+    // the hero ticket's own place in the page (without our transform)
+    function heroNatural() {
+      var next = document.getElementById('heroNext');
+      if (!next) return null;
+      var prevT = next.style.transform; next.style.transform = '';
+      var r = next.getBoundingClientRect();
+      next.style.transform = prevT;
+      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 + scrollY, w: r.width, h: r.height };
+    }
     function measure() {
-      var vh = innerHeight, small = innerWidth < 768;
+      var vh = innerHeight, vw = innerWidth;
+      target.small = vw < 768 ? 1 : 0;
       var hero = document.querySelector('.landing-hero');
-      var h = hero ? clamp(scrollY / Math.max(1, hero.offsetHeight * 0.9), 0, 1) : 0;
-      target.hero = h;
-      var tour = document.querySelector('#landingExtras .landing-section');
-      if (tour) {
-        var r = tour.getBoundingClientRect();
-        target.tourIn = clamp((vh - r.top) / (vh * 0.55), 0, 1);
-        // progress through the season while the tour section crosses the screen
-        target.tour = clamp((vh * 0.85 - r.top) / Math.max(1, r.height + vh * 0.55), 0, 1);
-      }
+      target.hero = hero ? clamp(scrollY / Math.max(1, hero.offsetHeight * 0.9), 0, 1) : 0;
+      // ticket flight: done when the ring ticket sits a bit above the middle of the screen
+      if (!heroNat || heroNat.w < 10) heroNat = heroNatural();
+      if (heroNat && heroNat.w < 10) heroNat = null;
+      var card = ringCard();
+      if (card && heroNat && !target.small) {
+        var cr = card.getBoundingClientRect();
+        var tDocCy = cr.top + cr.height / 2 + scrollY;
+        var D = tDocCy - vh * 0.52;
+        target.fly = D > 1 ? clamp(scrollY / D, 0, 1) : 1;
+        target.flyD = D;
+      } else target.fly = 1;
+      // ball journey: from when the leaders come into view until they sit high on screen
       var lead = document.querySelector('.landing-leaders');
-      if (lead) { var lr = lead.getBoundingClientRect(); target.lead = clamp((vh - lr.top) / (vh * 0.6), 0, 1); }
+      if (lead) {
+        var lr = lead.getBoundingClientRect();
+        target.ball = clamp((vh * 1.15 - lr.top) / (vh * 0.85), 0, 1);
+        target.back = clamp((vh * 0.25 - lr.top) / (vh * 0.45), 0, 1);
+        target.leadTop = lr.top; target.leadLeft = lr.left; target.leadW = lr.width;
+      } else { target.ball = 0; target.back = 0; }
       var max = document.documentElement.scrollHeight - vh;
       target.page = max > 0 ? clamp(scrollY / max, 0, 1) : 0;
-      target.small = small ? 1 : 0;
     }
-    function apply() {
+    function applyHero() {
       var h = cur.hero || 0, small = target.small;
       var media = document.getElementById('heroMedia');
-      if (media) {
-        media.style.transform = 'scale(' + (1 - (small ? 0.05 : 0.1) * h) + ')';
-        media.style.borderRadius = (32 * h) + 'px';
-        media.style.opacity = String(1 - 0.35 * h);
-      }
+      if (media) { media.style.transform = 'scale(' + (1 - (small ? 0.05 : 0.1) * h) + ')'; media.style.borderRadius = (32 * h) + 'px'; media.style.opacity = String(1 - 0.35 * h); }
       var content = document.getElementById('heroContentBlocks');
       if (content) { content.style.transform = 'translateY(' + (-90 * h) + 'px)'; content.style.opacity = String(clamp(1 - 1.3 * h, 0, 1)); }
       var top = document.getElementById('heroTop');
       if (top) top.style.transform = 'translateY(' + (-50 * h) + 'px)';
-      var next = document.getElementById('heroNext');
-      if (next && !small) {
-        // the ticket drops toward the ring, tilts and fades as it gets there
-        var hero = document.querySelector('.landing-hero');
-        var drop = (hero ? hero.offsetHeight : 800) * 0.5 * h;
-        next.style.transform = 'translateY(' + drop + 'px) scale(' + (1 - 0.12 * h) + ') rotate(' + (-5 * h) + 'deg)';
-        next.style.opacity = String(clamp(1.6 - 1.9 * h, 0, 1));
-      } else if (next) { next.style.transform = ''; next.style.opacity = ''; }
-      // tour: heading wipes open, line fills, the ring follows the scroll
-      var tIn = cur.tourIn || 0, tp = cur.tour || 0;
-      var head = document.querySelector('#landingExtras .landing-section .landing-section-head h2');
-      if (head) head.style.clipPath = 'inset(0 ' + ((1 - tIn) * 100).toFixed(1) + '% 0 0)';
-      var line = document.querySelector('.md-season-line > span');
-      if (line) line.style.transform = 'scaleX(' + tp.toFixed(4) + ')';
-      var ring = window.__landingRing;
-      if (ring && ring.api && userScrolled && (target.tourIn || 0) > 0.2 && (target.tour || 0) < 1) {
-        var idx = Math.round((target.tour || 0) * (ring.n - 1));
-        if (idx !== lastRing) { lastRing = idx; ring.api.goTo(idx); }
-        ring.api.hold(2500);
+    }
+    function applyFlight() {
+      var next = document.getElementById('heroNext'), card = ringCard(), ring = window.__landingRing;
+      if (!next) return;
+      if (target.small || !card || !heroNat) {
+        next.style.transform = ''; next.style.opacity = '';
+        if (card) card.style.opacity = '';
+        return;
       }
-      // leaders rise one after another
-      var l = cur.lead || 0;
+      var f = cur.fly || 0, e = ease(f), cr = card.getBoundingClientRect();
+      // where the ticket should be on screen: from its hero spot (as seen at
+      // the top of the page) to where the ring ticket will be at touchdown;
+      // after landing it simply rides along with the ring ticket
+      var cardX = cr.left + cr.width / 2, cardDocY = cr.top + cr.height / 2 + scrollY;
+      var wantX, wantY;
+      if (f >= 1) { wantX = cardX; wantY = cr.top + cr.height / 2; }
+      else { wantX = lerp(heroNat.cx, cardX, e); wantY = lerp(heroNat.cy, cardDocY - (target.flyD || 0), e); }
+      var natX = heroNat.cx, natY = heroNat.cy - scrollY;
+      var s = lerp(1, cr.width / heroNat.w, e);
+      var tilt = Math.sin(e * Math.PI) * -7;
+      next.style.transform = 'translate(' + (wantX - natX).toFixed(1) + 'px,' + (wantY - natY).toFixed(1) + 'px) scale(' + s.toFixed(4) + ') rotate(' + tilt.toFixed(2) + 'deg)';
+      next.style.transformOrigin = '50% 50%';
+      // crossfade at touchdown: the flying ticket hands over to the ring's own
+      var hand = clamp((f - 0.9) / 0.1, 0, 1);
+      next.style.opacity = String(1 - hand);
+      next.style.pointerEvents = hand > 0.5 ? 'none' : '';
+      card.style.opacity = String(hand);
+      card.style.transition = 'none';
+      // the ring holds still (on this ticket) until the landing, then turns
+      if (ring && ring.api) {
+        if (f < 1) { if (landed || !ring.heldOnce) { ring.api.goTo(ring.start); ring.heldOnce = true; } ring.api.hold(60000); landed = false; }
+        else if (!landed) { landed = true; ring.api.hold(900); }
+      }
+    }
+    function applyBall() {
+      var ball = document.getElementById('ballAd');
+      if (!ball) return;
+      var b = cur.ball || 0, back = cur.back || 0, small = target.small;
+      if (small || (b <= 0 && back <= 0)) { ball.style.translate = ''; return; }
+      var vw = innerWidth, vh = innerHeight, size = ball.offsetWidth;
+      var homeX = vw - 22 - size / 2, homeY = vh - 22 - size / 2;
+      // landing spot: just above the leaders, in the middle between the two columns
+      var landX = (target.leadLeft || 0) + (target.leadW || vw) / 2;
+      var landY = clamp((target.leadTop || vh) - 10, size, vh - size);
+      // a curve through the left part of the screen, with small hops
+      var e = ease(b);
+      var ctrlX = vw * 0.12, ctrlY = vh * 0.18;
+      var x = (1 - e) * (1 - e) * homeX + 2 * (1 - e) * e * ctrlX + e * e * landX;
+      var y = (1 - e) * (1 - e) * homeY + 2 * (1 - e) * e * ctrlY + e * e * landY;
+      y -= Math.abs(Math.sin(e * Math.PI * 3)) * 46 * (1 - e);
+      // and rolling home again once the leaders have been "kicked"
+      var r = ease(back);
+      x = lerp(x, homeX, r); y = lerp(y, homeY, r);
+      ball.style.translate = (x - homeX).toFixed(1) + 'px ' + (y - homeY).toFixed(1) + 'px';
+    }
+    function applyLeaders() {
+      var b = cur.ball || 0;
+      var kick = target.small ? clamp(((target.ball || 0) - 0.2) / 0.5, 0, 1) : clamp((b - 0.82) / 0.18, 0, 1);
       document.querySelectorAll('.landing-leaders .leader-col').forEach(function(col, ci) {
         col.querySelectorAll('.leader-row').forEach(function(row, ri) {
-          var k = clamp(l * 1.6 - (ri * 0.18 + ci * 0.1), 0, 1);
-          row.style.transform = 'translateY(' + ((1 - k) * 36) + 'px)';
+          var k = clamp(kick * 1.6 - (ri * 0.18 + ci * 0.1), 0, 1);
+          row.style.transform = 'translateY(' + ((1 - k) * 40) + 'px) scale(' + (0.96 + 0.04 * k) + ')';
           row.style.opacity = String(k);
         });
       });
-      if (!counted && (target.lead || 0) > 0.5) { counted = true; countLeaders(); }
-      document.body.style.setProperty('--page-p', (cur.page || 0).toFixed(4));
+      if (!counted && kick > 0.3) { counted = true; countLeaders(); }
     }
     function countLeaders() {
       document.querySelectorAll('.landing-leaders .leader-pts').forEach(function(el) {
@@ -6376,27 +6438,28 @@ var CLUBS = [
     }
     function frame() {
       raf = 0;
-      if (!landingVisible()) return;
+      if (!landingVisible()) { var ball = document.getElementById('ballAd'); if (ball) ball.style.translate = ''; return; }
       var moving = false;
-      ['hero', 'tourIn', 'tour', 'lead', 'page'].forEach(function(k) {
+      ['hero', 'fly', 'ball', 'back', 'page'].forEach(function(k) {
         var t = target[k] || 0, c = cur[k] == null ? t : cur[k];
-        var n = c + (t - c) * 0.14;
+        var n = c + (t - c) * 0.16;
         if (Math.abs(t - n) < 0.0005) n = t; else moving = true;
         cur[k] = n;
       });
-      apply();
+      applyHero(); applyFlight(); applyBall(); applyLeaders();
+      document.body.style.setProperty('--page-p', (cur.page || 0).toFixed(4));
       if (moving) raf = requestAnimationFrame(frame);
     }
     function kick() { if (reduce || !landingVisible()) return; measure(); if (!raf) raf = requestAnimationFrame(frame); }
-    window.addEventListener('scroll', function() { userScrolled = true; kick(); }, { passive: true });
-    window.addEventListener('resize', kick);
+    window.addEventListener('scroll', kick, { passive: true });
+    window.addEventListener('resize', function() { if (reduce) return; heroNat = heroNatural(); kick(); });
+    window.addEventListener('hashchange', function() { var ball = document.getElementById('ballAd'); if (ball) ball.style.translate = ''; });
     return {
-      // after the landing (re)renders: reset and draw the first frame
       reset: function() {
         if (reduce) return;
-        counted = false; lastRing = -1; userScrolled = scrollY > 10; cur = {};
-        var tl = document.querySelector('#landingExtras .fx-timeline');
-        if (tl && !tl.querySelector('.md-season-line')) tl.insertAdjacentHTML('beforeend', '<div class="md-season-line" aria-hidden="true"><span></span></div>');
+        counted = false; landed = false; cur = {};
+        if (window.__landingRing) window.__landingRing.heldOnce = false;
+        heroNat = heroNatural();
         kick();
       }
     };
@@ -6644,7 +6707,7 @@ var CLUBS = [
         var startIdx = nextCard ? Array.prototype.indexOf.call(railEl.children, nextCard) : 0;
         railEl.className = 'tour-round' + (tlEl ? ' has-tl' : '');
         ringApi = mountRoundCarousel(railEl, cards, { start: Math.max(0, startIdx), label: uiFormat('landing.tourTitle', { year: season }), onFront: markStop });
-        window.__landingRing = ringApi ? { api: ringApi, n: cards.length } : null;
+        window.__landingRing = ringApi ? { api: ringApi, n: cards.length, start: Math.max(0, startIdx) } : null;
       } else if (landingLayout === 'grid') {
         railEl.className = 'tournament-grid is-overview tour-overview';
         Array.prototype.forEach.call(railEl.children, function(c, i) { c.style.setProperty('--i', i); });
