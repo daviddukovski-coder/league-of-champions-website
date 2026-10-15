@@ -2167,8 +2167,9 @@
      blue background back. */
   :root[data-design="ig"] body.nav-over-hero .nav { background:linear-gradient(180deg, rgba(11,13,99,0.55), rgba(11,13,99,0)); border-bottom-color:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:none; }
   :root[data-design="ig"] .nav { transition:background-color .35s, border-color .35s; }
-  :root[data-design="ig"] body.nav-over-hero .landing-hero { margin-top:calc(-1 * var(--nav-h, 0px)); }
-  :root[data-design="ig"] body.nav-over-hero .hero-top { padding-top:calc(var(--nav-h, 0px) + 10px); }
+  /* always (not only while the nav is over the hero): toggling it mid-scroll shifted the whole page by the nav height */
+  :root[data-design="ig"] .landing-hero { margin-top:calc(-1 * var(--nav-h, 0px)); }
+  :root[data-design="ig"] .hero-top { padding-top:calc(var(--nav-h, 0px) + 10px); }
 
   /* ============ ig: floating glass pill nav ============ */
   :root[data-design="ig"] .nav, :root[data-design="ig"] body.nav-over-hero .nav { background:transparent; border-bottom-color:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:none; pointer-events:none; }
@@ -6449,34 +6450,44 @@ var CLUBS = [
       if (!ball) return;
       var vw = innerWidth, vh = innerHeight, size = ball.offsetWidth;
       var homeX = vw - 22 - size / 2, homeY = vh - 22 - size / 2;
-      if (b >= 0.999) {
-        // done: everyone is in, the ball rolls back into its corner by itself
-        rows.forEach(kickRow);
-        if (!ballHome) { ballHome = true; ball.style.transition = 'translate 1s cubic-bezier(.3,1.25,.5,1)'; ball.style.translate = '0px 0px'; setTimeout(function() { if (ballHome) ball.classList.remove('is-traveling'); }, 1000); }
-        return;
-      }
       if (ballHome) { ballHome = false; ball.style.transition = 'none'; }
       if (b <= 0) { ball.style.translate = ''; ball.classList.remove('is-traveling'); rows.forEach(unkickRow); return; }
-      // waypoints: the left edge of each leader row (kicks it in from the side), men first, then women
+      if (b >= 1) {
+        // back in its corner: plain resting ball again
+        rows.forEach(kickRow); ball.style.translate = ''; ball.classList.remove('is-traveling'); return;
+      }
+      // one continuous path, never stopping on the way: in from the corner,
+      // along the left edge of each leader row (each row flies in as the ball
+      // reaches it), then on in a curve back home. Only the very start and the
+      // very end are at rest.
       var pts = rows.map(function(r) { var rr = r.getBoundingClientRect(); return { x: rr.left - 6, y: rr.top + rr.height / 2 }; });
-      var x, y;
+      var x, y, A = 0.3, B = 0.8;
       if (!pts.length) { x = homeX; y = homeY; }
-      else if (b < 0.4) {
-        // the approach: a curve through the left part of the screen, small hops
-        var e = ease(b / 0.4), p0 = pts[0];
+      else if (b < A) {
+        // the approach: starts from rest, arrives at full pace
+        var e = Math.pow(b / A, 1.6), p0 = { x: pts[0].x - 60, y: pts[0].y };
         var cx = vw * 0.22, cy = vh * 0.2;
-        x = (1 - e) * (1 - e) * homeX + 2 * (1 - e) * e * cx + e * e * (p0.x - 60);
+        x = (1 - e) * (1 - e) * homeX + 2 * (1 - e) * e * cx + e * e * p0.x;
         y = (1 - e) * (1 - e) * homeY + 2 * (1 - e) * e * cy + e * e * p0.y;
         y -= Math.abs(Math.sin(e * Math.PI * 3)) * 40 * (1 - e);
-      } else {
-        // the dribble: row to row, a hop between each
-        var u = (b - 0.4) / 0.6 * pts.length, i = Math.min(pts.length - 1, Math.floor(u)), t = u - i;
+        rows.forEach(unkickRow);
+      } else if (b < B) {
+        // the dribble: row to row at an even pace, a hop between each
+        var u = (b - A) / (B - A) * pts.length, i = Math.min(pts.length - 1, Math.floor(u)), t = u - i;
         var from = i === 0 ? { x: pts[0].x - 60, y: pts[0].y } : pts[i - 1], to = pts[i];
-        var et = ease(clamp(t * 1.25, 0, 1));
-        x = lerp(from.x, to.x, et); y = lerp(from.y, to.y, et) - Math.sin(et * Math.PI) * 34;
-        rows.forEach(function(r, ri) { if (ri < i || (ri === i && et > 0.85)) kickRow(r); else unkickRow(r); });
+        x = lerp(from.x, to.x, t); y = lerp(from.y, to.y, t) - Math.sin(t * Math.PI) * 34;
+        rows.forEach(function(r, ri) { if (u >= ri + 0.92) kickRow(r); else unkickRow(r); });
+      } else {
+        // the way home: leaves at pace, glides into the corner
+        var r = (b - B) / (1 - B), e2 = 1 - Math.pow(1 - r, 2.2), pl = pts[pts.length - 1];
+        var c2x = lerp(pl.x, homeX, 0.6), c2y = Math.max(pl.y, homeY) + 60;
+        x = (1 - e2) * (1 - e2) * pl.x + 2 * (1 - e2) * e2 * c2x + e2 * e2 * homeX;
+        y = (1 - e2) * (1 - e2) * pl.y + 2 * (1 - e2) * e2 * c2y + e2 * e2 * homeY;
+        y -= Math.abs(Math.sin(e2 * Math.PI * 2)) * 28 * (1 - e2);
+        rows.forEach(kickRow);
       }
-      if (b < 0.4) rows.forEach(unkickRow);
+      // always fully on screen (narrow windows put the rows close to the edge)
+      x = clamp(x, size / 2 + 6, vw - size / 2 - 6);
       ball.style.translate = (x - homeX).toFixed(1) + 'px ' + (y - homeY).toFixed(1) + 'px';
       ball.classList.add('is-traveling');
     }
