@@ -10955,8 +10955,8 @@ var CLUBS = [
       '<div class="stage-list" id="stageList">' + (editMode ? visibleStages : stagesLatestFirst(visibleStages)).map(renderStageCard).join('') + '</div>' +
       (visibleStages.length ? '' : '<p class="empty-note">No stages set up yet.</p>') +
       renderAddStagePanel(bracket);
+    wireMyTeamBar(bracket, renderLive, el);
     wireLiveEvents();
-    wireMyTeamBar(bracket, renderLive);
     wireTurnierAppImport();
     scheduleBracketConnectors();
     highlightChangedScores(el);
@@ -11667,9 +11667,10 @@ var CLUBS = [
      ================================================================== */
   var myTeamOnlyFilter = false;
   function myTeamStoreKey() { return 'loc_myteam_' + (currentBracketTournament ? currentBracketTournament.id : ''); }
+  var myTeamMemory = {};
   function myTeamId(bracket) {
-    var stored = null;
-    try { stored = localStorage.getItem(myTeamStoreKey()); } catch (e) {}
+    var stored = myTeamMemory[myTeamStoreKey()] || null;
+    try { stored = localStorage.getItem(myTeamStoreKey()) || stored; } catch (e) {}
     if (stored === 'none') return null;
     if (stored && findBracketTeam(bracket, stored)) return stored;
     if (!currentUser) return null;
@@ -11680,7 +11681,10 @@ var CLUBS = [
     });
     return mine.length ? mine[mine.length - 1].id : null;
   }
-  function setMyTeam(id) { try { localStorage.setItem(myTeamStoreKey(), id || 'none'); } catch (e) {} }
+  function setMyTeam(id) {
+    myTeamMemory[myTeamStoreKey()] = id || 'none';
+    try { localStorage.setItem(myTeamStoreKey(), id || 'none'); } catch (e) {}
+  }
   function myTeamMatches(bracket, teamId) {
     return allBracketMatchIds(bracket).map(function(id) { return tickerMatchInfo(bracket, id); })
       .filter(function(i) { return i && (i.a === teamId || i.b === teamId); });
@@ -11738,14 +11742,24 @@ var CLUBS = [
       '</div>' +
     '</div>';
   }
-  function wireMyTeamBar(bracket, rerender) {
-    var clear = document.getElementById('myTeamClearBtn');
-    if (clear) clear.addEventListener('click', function() { setMyTeam(null); myTeamOnlyFilter = false; rerender(); });
-    var gfx = document.getElementById('myTeamGraphicBtn');
-    if (gfx) gfx.addEventListener('click', function() { openMyTeamGraphic(bracket, myTeamId(bracket), gfx); });
-    var only = document.getElementById('myTeamOnlyBtn');
-    if (only) only.addEventListener('click', function() { myTeamOnlyFilter = !myTeamOnlyFilter; rerender(); });
-    var input = document.getElementById('myTeamSearch'), dd = document.getElementById('myTeamDropdown');
+  // The bar's buttons are handled by one delegated listener, so they keep
+  // working even if wiring something else on the page went wrong.
+  var myTeamWired = { bracket: null, rerender: null };
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest && e.target.closest('#myTeamClearBtn, #myTeamGraphicBtn, #myTeamOnlyBtn');
+    if (!btn || !myTeamWired.rerender) return;
+    var bracket = myTeamWired.bracket;
+    if (btn.closest('#view-live')) myTeamWired.rerender = renderLive;
+    else if (btn.closest('#view-schedule')) myTeamWired.rerender = renderSchedule;
+    if (btn.id === 'myTeamClearBtn') { setMyTeam(null); myTeamOnlyFilter = false; myTeamWired.rerender(); }
+    else if (btn.id === 'myTeamOnlyBtn') { myTeamOnlyFilter = !myTeamOnlyFilter; myTeamWired.rerender(); }
+    else openMyTeamGraphic(bracket, myTeamId(bracket), btn);
+  });
+  // root: the page's own container (Live and Schedule each have a bar, so a
+  // document-wide id lookup could grab the hidden page's one)
+  function wireMyTeamBar(bracket, rerender, root) {
+    myTeamWired.bracket = bracket; myTeamWired.rerender = rerender;
+    var input = root.querySelector('#myTeamSearch'), dd = root.querySelector('#myTeamDropdown');
     if (!input) return;
     var show = function() {
       var q = input.value.trim().toLowerCase();
@@ -14841,8 +14855,8 @@ var CLUBS = [
       visibleDays.map(renderScheduleDayBlock).join('') +
       (bracket.schedule.days.length ? '' : '<p class="empty-note">' + uiText('schedule.noDays') + '</p>') +
       (visibleDays.length ? renderScheduleGraphicPanel(visibleDays[0]) : '');
+    wireMyTeamBar(bracket, renderSchedule, el);
     wireScheduleEvents();
-    wireMyTeamBar(bracket, renderSchedule);
     initScheduleSortable();
     highlightChangedScores(el);
   }
