@@ -1,0 +1,104 @@
+rules_version = '2';
+
+// League of Champions – Firestore security rules.
+// Paste into Firebase Console → Firestore Database → Rules → Publish
+// (or deploy with `firebase deploy --only firestore:rules`).
+//
+// Principle: everything public on the site is readable by everyone, but only
+// the admin may change site content, brackets and schedules. Players may only
+// change their own profile, their own player-exchange listing and the
+// conversations they take part in. Private data (contact, birth date, push
+// tokens) is readable only by its owner (and the admin).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers -------------------------------------------------------
+    function signedIn() { return request.auth != null; }
+    // Admin accounts by Firebase user id (Authentication → Users → User UID).
+    // Add more ids here to give someone admin rights.
+    function isAdmin() { return signedIn() && request.auth.uid in ['YZL9Fl2AF9WUKflyKpF8VhRCGW03']; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function str(v, max) { return v is string && v.size() <= max; }
+    // an optional text field: missing, empty (null) or a string up to max
+    function optStr(field, max) { return !(field in request.resource.data) || request.resource.data[field] == null || str(request.resource.data[field], max); }
+
+    // ---- site content: texts, images, rankings, branding, ad switches ----
+    match /content/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- live brackets + schedules (one doc per tournament) -------------
+    match /brackets/{tournamentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- public player profiles (the player directory) -------------------
+    match /players/{uid} {
+      allow read: if true;
+      // own profile only; the uid inside the doc must match, nobody can
+      // give themselves extra powers, and push tokens never go here (they
+      // live in the private sub-collection below)
+      allow create: if (isMe(uid) || isAdmin())
+        && request.resource.data.uid == uid
+        && optStr('name', 80)
+        && !request.resource.data.keys().hasAny(['role', 'admin', 'isAdmin', 'fcmTokens']);
+      allow update: if (isMe(uid) || isAdmin())
+        && request.resource.data.get('uid', uid) == uid
+        && optStr('name', 80)
+        && !request.resource.data.keys().hasAny(['role', 'admin', 'isAdmin'])
+        // old push tokens may only be removed from the public profile, never added
+        && (!('fcmTokens' in request.resource.data) || request.resource.data.fcmTokens == resource.data.get('fcmTokens', null));
+      allow delete: if isMe(uid) || isAdmin();
+
+      // private: contact details, full birth date, push tokens
+      match /private/{doc} {
+        allow read, write: if isMe(uid) || isAdmin();
+      }
+    }
+
+    // ---- player exchange: "looking for a partner" listings --------------
+    match /exchangeListings/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && optStr('name', 80);
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if (signedIn() && resource.data.uid == request.auth.uid) || isAdmin();
+    }
+
+    // ---- conversations between two players ------------------------------
+    match /conversations/{id} {
+      function participant() { return signedIn() && request.auth.uid in resource.data.participants; }
+      allow read: if participant() || isAdmin();
+      // the person starting it must be one of exactly two participants
+      allow create: if signedIn()
+        && request.resource.data.participants is list
+        && request.resource.data.participants.size() == 2
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.requestedBy == request.auth.uid;
+      // participants may update the conversation, but never who is in it or
+      // who asked whom; only the asked person accepts or declines
+      allow update: if participant()
+        && !changedKeys().hasAny(['participants', 'requestedBy', 'requestFor', 'tournamentId', 'competition', 'createdAt'])
+        && (!('requestStatus' in changedKeys()) || request.auth.uid == resource.data.requestFor);
+      allow delete: if isAdmin();
+
+      match /messages/{msgId} {
+        function inConvo() { return signedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(id)).data.participants; }
+        allow read: if inConvo() || isAdmin();
+        allow create: if inConvo()
+          && request.resource.data.senderId == request.auth.uid
+          && str(request.resource.data.text, 2000);
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // ---- everything else: closed ---------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

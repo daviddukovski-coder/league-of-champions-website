@@ -11,6 +11,15 @@
  *   FCM_SERVICE_ACCOUNT_JSON – full contents of a Firebase service account JSON key
  *                              (Firebase Console → Project settings → Service accounts
  *                              → Generate new private key), pasted as one value
+ *   FIREBASE_API_KEY        – the site's public Firebase web API key (used to verify
+ *                              the login token every signed-in request carries)
+ *   ADMIN_UIDS              – comma-separated Firebase user ids with admin rights
+ *                              (Firebase Console → Authentication → Users → User UID)
+ *
+ * Security: every write that needs a person comes with a Firebase ID token
+ * (body.idToken). It is verified with Google (verifyUser_); admin actions
+ * additionally require the user id to be in ADMIN_UIDS. Never trust a user id
+ * sent in the body.
  *
  * Required sheet tabs (exact header row spelling matters):
  *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId | UserId | PartnerId
@@ -41,16 +50,55 @@ function doGet(e) {
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
-    if (body.action === 'register') return jsonOut_(registerTeam_(body));
-    if (body.action === 'createCheckout') return jsonOut_(createCheckout_(body));
+    // confirmPayment needs no login: it only ever trusts Stripe's own answer
     if (body.action === 'confirmPayment') return jsonOut_(confirmPayment_(body));
-    if (body.action === 'markPaid') return jsonOut_(markPaid_(body));
-    if (body.action === 'deleteRegistration') return jsonOut_(deleteRegistration_(body));
-    if (body.action === 'sendPush') return jsonOut_(sendPush_(body));
+    var user = verifyUser_(body.idToken);
+    if (body.action === 'register') return jsonOut_(user ? registerTeam_(body, user) : { error: 'login required' });
+    if (body.action === 'createCheckout') return jsonOut_(user ? createCheckout_(body) : { error: 'login required' });
+    if (body.action === 'sendPush') return jsonOut_(user ? sendPush_(body, user) : { error: 'login required' });
+    if (body.action === 'markPaid') return jsonOut_(isAdmin_(user) ? markPaid_(body) : { error: 'not authorized' });
+    if (body.action === 'deleteRegistration') return jsonOut_(isAdmin_(user) ? deleteRegistration_(body) : { error: 'not authorized' });
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
     return jsonOut_({ error: String(err) });
   }
+}
+
+/* -------------------- Who is calling? -------------------- */
+
+// Verifies a Firebase ID token with Google and returns { uid, email } or null.
+// accounts:lookup only answers for a valid, unexpired token of this project.
+// Results are cached for 5 minutes per token to keep requests fast.
+function verifyUser_(idToken) {
+  if (!idToken || typeof idToken !== 'string' || idToken.length > 4000) return null;
+  var cache = CacheService.getScriptCache();
+  var key = 'tok_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, idToken));
+  var hit = cache.get(key);
+  if (hit) return hit === '-' ? null : JSON.parse(hit);
+  var apiKey = PropertiesService.getScriptProperties().getProperty('FIREBASE_API_KEY');
+  if (!apiKey) throw new Error('FIREBASE_API_KEY not configured (Script Properties).');
+  var res = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + encodeURIComponent(apiKey), {
+    method: 'post', contentType: 'application/json', payload: JSON.stringify({ idToken: idToken }), muteHttpExceptions: true
+  });
+  var data = {};
+  try { data = JSON.parse(res.getContentText()); } catch (e) {}
+  var u = data.users && data.users[0];
+  var user = u && u.localId ? { uid: u.localId, email: u.email || '' } : null;
+  cache.put(key, user ? JSON.stringify(user) : '-', 300);
+  return user;
+}
+
+function isAdmin_(user) {
+  if (!user) return false;
+  var ids = (PropertiesService.getScriptProperties().getProperty('ADMIN_UIDS') || '').split(',').map(function(s) { return s.trim(); });
+  return ids.indexOf(user.uid) !== -1;
+}
+
+// Text from the form goes into the sheet as plain text: a value starting
+// with = + - @ would otherwise run as a spreadsheet formula.
+function cell_(v, max) {
+  var s = v == null ? '' : String(v).slice(0, max || 200);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 
 function jsonOut_(obj) {
@@ -111,18 +159,18 @@ function getStatus_(id) {
   return { error: 'not found' };
 }
 
-function registerTeam_(body) {
+function registerTeam_(body, user) {
   if (!TOURNAMENTS[body.tournamentId]) return { error: 'unknown tournament' };
   var sh = getSheet_(REG_SHEET);
   var id = Utilities.getUuid();
   sh.appendRow([
-    id, new Date(), body.tournamentId, body.competition,
-    body.firstName, body.lastName, body.email, body.phone,
-    body.partner, body.club, 'pending', '',
-    body.uid || '', body.partnerUid || '',
-    body.companyName || '', body.vatNumber || '',
-    body.jerseyFit || '', body.jerseySize || '', body.jerseyName || '',
-    body.partnerJerseyFit || '', body.partnerJerseySize || '', body.partnerJerseyName || ''
+    id, new Date(), body.tournamentId, cell_(body.competition, 40),
+    cell_(body.firstName, 80), cell_(body.lastName, 80), cell_(body.email, 120), cell_(body.phone, 40),
+    cell_(body.partner, 120), cell_(body.club, 120), 'pending', '',
+    user.uid, cell_(body.partnerUid, 128),
+    cell_(body.companyName, 120), cell_(body.vatNumber, 40),
+    cell_(body.jerseyFit, 20), cell_(body.jerseySize, 10), cell_(body.jerseyName, 30),
+    cell_(body.partnerJerseyFit, 20), cell_(body.partnerJerseySize, 10), cell_(body.partnerJerseyName, 30)
   ]);
   return { ok: true, id: id };
 }
@@ -144,11 +192,8 @@ function updateRegistration_(id, fields) {
 }
 
 // Admin-only actions (manually confirm a cash payment, remove a duplicate/cancelled
-// registration). Gated client-side by CONFIG.ADMIN_EMAILS, same trust model as the
-// rest of this endpoint — there's no server-side identity check here, so anyone who
-// finds this Web App URL could in principle call these directly. Fine for a small,
-// single-operator tournament; add a shared-secret or token check here first if that's
-// not an acceptable risk once real payments are flowing.
+// registration). doPost only lets them through for a verified admin login
+// (isAdmin_ → Script Property ADMIN_UIDS).
 function markPaid_(body) {
   var ok = updateRegistration_(body.id, { Status: 'paid', PaymentMethod: body.paymentMethod || '' });
   if (ok) sendInvoiceIfNeeded_(body.id);
@@ -293,11 +338,14 @@ function confirmPayment_(body) {
 // service worker's notificationclick handler and the page's foreground
 // onMessage handler. A client can never call FCM directly (needs server
 // credentials), so this is the relay every push goes through.
-function sendPush_(body) {
-  var tokens = body.tokens || [];
-  if (!tokens.length) return { ok: true, sent: 0 };
+function sendPush_(body, user) {
   var projectId = PropertiesService.getScriptProperties().getProperty('FCM_PROJECT_ID');
   if (!projectId) return { error: 'FCM_PROJECT_ID not configured (Script Properties).' };
+  if (!body.toUid || typeof body.toUid !== 'string' || body.toUid === user.uid) return { error: 'bad recipient' };
+  // at most 30 pushes per sender per 10 minutes
+  var cache = CacheService.getScriptCache(), rk = 'push_' + user.uid, n = Number(cache.get(rk) || 0);
+  if (n >= 30) return { error: 'too many messages' };
+  cache.put(rk, String(n + 1), 600);
 
   var accessToken;
   try {
@@ -305,6 +353,8 @@ function sendPush_(body) {
   } catch (err) {
     return { error: String(err) };
   }
+  var tokens = recipientTokens_(projectId, body.toUid);
+  if (!tokens.length) return { ok: true, sent: 0 };
 
   var sent = 0;
   var errors = [];
@@ -312,8 +362,8 @@ function sendPush_(body) {
     var message = {
       message: {
         token: token,
-        notification: { title: body.title || '', body: body.body || '' },
-        data: { url: String(body.url || '') }
+        notification: { title: String(body.title || '').slice(0, 120), body: String(body.body || '').slice(0, 240) },
+        data: { url: String(body.url || '').replace(/[^\w\/-]/g, '').slice(0, 200) }
       }
     };
     var res = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send', {
@@ -328,8 +378,23 @@ function sendPush_(body) {
   return { ok: true, sent: sent, errors: errors };
 }
 
+// A player's push tokens: private doc players/{uid}/private/push, plus old
+// tokens still sitting in the public profile from before they moved.
+function recipientTokens_(projectId, uid) {
+  var base = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/players/' + encodeURIComponent(uid);
+  var headers = { Authorization: 'Bearer ' + getFcmAccessToken_() };
+  var read = function(url) {
+    var res = UrlFetchApp.fetch(url, { headers: headers, muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return [];
+    var f = (JSON.parse(res.getContentText()).fields || {}).fcmTokens;
+    return f && f.arrayValue && f.arrayValue.values ? f.arrayValue.values.map(function(v) { return v.stringValue; }).filter(Boolean) : [];
+  };
+  var all = read(base + '/private/push').concat(read(base));
+  return all.filter(function(t, i) { return all.indexOf(t) === i; }).slice(0, 10);
+}
+
 // Mints a short-lived OAuth2 access token for the Firebase service account,
-// scoped to Cloud Messaging only. Apps Script has no built-in service-account
+// for Cloud Messaging and for reading recipients' push tokens in Firestore. Apps Script has no built-in service-account
 // support, but Utilities.computeRsaSha256Signature can sign the JWT by hand —
 // avoids needing a third-party OAuth2 library for just this one call.
 function getFcmAccessToken_() {
@@ -342,7 +407,7 @@ function getFcmAccessToken_() {
   var header = { alg: 'RS256', typ: 'JWT' };
   var claimSet = {
     iss: sa.client_email,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    scope: 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/datastore',
     aud: 'https://oauth2.googleapis.com/token',
     iat: now,
     exp: now + 3600

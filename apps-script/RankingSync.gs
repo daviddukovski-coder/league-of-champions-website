@@ -20,20 +20,39 @@
  * request has nothing to wait on but the sheet's own (already-committed)
  * recalculation, so it stays fast even under that same concurrency.
  *
- * Trust model matches the registrations Code.gs: no server-side identity
- * check on who calls this endpoint. Fine for a small, single-operator site;
- * add a shared-secret check first if that stops being an acceptable risk.
+ * Security: syncRanking writes into the official ranking sheet, so it only
+ * runs for a verified admin login. The request carries the admin's Firebase
+ * ID token (body.idToken); Script Properties needed here:
+ *   FIREBASE_API_KEY – the site's public Firebase web API key
+ *   ADMIN_UIDS       – comma-separated Firebase user ids with admin rights
+ * Reading the mirror (getRankingMirror) stays open, it is public data.
  */
 
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
-    if (body.action === 'syncRanking') return jsonOut_(syncRanking_(body));
+    if (body.action === 'syncRanking') return jsonOut_(isAdminToken_(body.idToken) ? syncRanking_(body) : { error: 'not authorized' });
     if (body.action === 'getRankingMirror') return jsonOut_(getRankingMirror_(body));
     return jsonOut_({ error: 'unknown action' });
   } catch (err) {
     return jsonOut_({ error: String(err) });
   }
+}
+
+// true only for a valid Firebase login whose user id is in ADMIN_UIDS
+function isAdminToken_(idToken) {
+  if (!idToken || typeof idToken !== 'string' || idToken.length > 4000) return false;
+  var props = PropertiesService.getScriptProperties();
+  var apiKey = props.getProperty('FIREBASE_API_KEY');
+  if (!apiKey) throw new Error('FIREBASE_API_KEY not configured (Script Properties).');
+  var res = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + encodeURIComponent(apiKey), {
+    method: 'post', contentType: 'application/json', payload: JSON.stringify({ idToken: idToken }), muteHttpExceptions: true
+  });
+  var data = {};
+  try { data = JSON.parse(res.getContentText()); } catch (e) {}
+  var uid = data.users && data.users[0] && data.users[0].localId;
+  var admins = (props.getProperty('ADMIN_UIDS') || '').split(',').map(function(x) { return x.trim(); });
+  return !!uid && admins.indexOf(uid) !== -1;
 }
 
 function jsonOut_(obj) {
