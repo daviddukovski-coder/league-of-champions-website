@@ -3135,6 +3135,15 @@
   .tm-does p { margin:0 0 14px; color:rgba(255,255,255,0.8); font-size:14px; line-height:1.55; flex:1; }
   @media (max-width:900px) { .tm-does-grid { grid-template-columns:1fr; } .tm-photo-big { aspect-ratio:4 / 3; } }
   @media (max-width:640px) { .tm-hero-logo { justify-self:start; width:180px; } }
+  /* ===== BRACKET GRAPHIC ===== */
+  .bg-btn-row { margin:0 0 12px; }
+  .bg-sheet { max-width:880px; }
+  .bg-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:12px; }
+  .bg-fields .form-group { margin:0; }
+  .bg-preview { margin:14px 0; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.25); background:#1b1e86; }
+  .bg-preview.is-transparent { background:repeating-conic-gradient(#8f96e8 0 25%, #c9ccf7 0 50%) 0 0 / 22px 22px; }
+  .bg-preview img { display:block; width:100%; height:auto; }
+  @media (max-width:640px) { .bg-fields { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -5467,6 +5476,17 @@ var CLUBS = [
     'detail.share': 'Share',
     'detail.linkCopied': 'Link copied',
     'schedule.now': 'Now',
+    'bg.button': "Bracket graphic",
+    'bg.title': "Bracket graphic",
+    'bg.fTitle': "Title",
+    'bg.fSub': "Date / subtitle",
+    'bg.fTag': "Line at the bottom",
+    'bg.fHash': "Hashtag",
+    'bg.sponsors': "Show sponsor logos at the top",
+    'bg.note': "Transparent: soft fades top and bottom, the middle stays free for your own photo behind it.",
+    'bg.create': "Create graphic",
+    'bg.again': "Create again",
+    'bg.notReady': "This bracket needs a single final fed by two semifinals for the graphic.",
     'team.meet': "Meet the team",
     'team.footerLink': "The team",
     'team.edit': "Edit",
@@ -5943,7 +5963,7 @@ var CLUBS = [
       'landing.registerBtn': 'Registrieren', 'landing.loginBtn': 'Anmelden', 'landing.browseLink': 'Turniere ansehen →', 'landing.browseBtnLoggedIn': 'Turniere ansehen',
       'home.headline': 'Europas größte Footvolley-Tour', 'home.tabUpcoming': 'Kommende Turniere', 'home.tabPast': 'Vergangene Turniere',
       'detail.backLink': '← Alle Turniere', 'detail.formatLabel': 'Format', 'detail.feeLabel': 'Startgeld', 'detail.deadlineLabel': 'Anmeldeschluss', 'detail.divisionsLabel': 'Kategorien',
-      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'team.meet': "Das Team kennenlernen", 'team.footerLink': "Das Team", 'team.edit': "Bearbeiten", 'team.moveUp': "Nach oben", 'team.remove': "Entfernen", 'team.add': "+ Person hinzufügen", 'team.addHint': "Nur für dich sichtbar: Füge die Menschen hinter der Tour hinzu – Name, Rolle, Foto.", 'team.fName': "Name", 'team.fRole': "Rolle", 'team.fText': "Kurzer Text", 'team.fPhoto': "Foto", 'team.save': "Speichern", 'team.cancel': "Abbrechen", 'team.nameNeeded': "Bitte einen Namen eingeben.", 'team.removeConfirm': "{name} von der Team-Seite entfernen?", 'team.storyTitle': "Wer wir sind", 'team.storyText': "Bolao ist eine Footvolley-Marke von Spielern für Spieler. Wir spielen, organisieren Turniere und machen die Ausrüstung – und mit der League of Champions geben wir der europäischen Footvolley-Szene eine gemeinsame Bühne.", 'team.story1': "Selbst Spieler – wir wissen, was ein gutes Turnier ausmacht.", 'team.story2': "Alles aus einem Team: Tour, Ranking, Plattform und Ausrüstung.", 'team.story3': "Gemeinsam mit Vereinen in ganz Europa – für eine wachsende Community.", 'team.peopleTitle': "Die Menschen", 'team.doesTitle': "Was Bolao macht", 'team.do_tour': "League of Champions", 'team.do_tour_text': "Die Tour quer durch Europa – Stopps, Ranking und die Finals zum Saisonende.", 'team.do_tour_cta': "Über die Tour", 'team.do_shop': "bolao.shop", 'team.do_shop_text': "Bälle, Sungas, Shirts und mehr – die Ausrüstung der Tour.", 'team.do_shop_cta': "Zum Shop", 'team.do_ig': "@bolaosports", 'team.do_ig_text': "Hinter den Kulissen, Highlights und News aus der Footvolley-Welt.", 'team.do_ig_cta': "Folgen", 'team.ctaTitle': "Sprich mit uns", 'team.ctaText': "Vereine, Ausrichter, Partner oder Spieler mit Ideen – wir freuen uns, von dir zu hören.", 'landing.moreInfo': "Mehr Infos", 'about.footerLink': "Über die Tour", 'about.kicker': "Über die Tour", 'about.title': "Eine Tour. Europas beste Footvolley-Teams.", 'about.text': "Die League of Champions ist eine Footvolley-Tour quer durch Europa: eine Saison, viele Stopps, ein Ranking. Jedes Turnier zählt – vom LoC 100 in deiner Stadt bis zu den Finals am Saisonende.", 'about.howToJoin': "So machst du mit", 'about.ctaJoin': "Account erstellen", 'about.seasonStats': "Saison {year} in Zahlen", 'about.howTitle': "So funktioniert die Tour", 'about.p_tour': "Stopps in ganz Europa", 'about.p_tour_text': "Jede Saison reist die Tour durch Europa. Jeder Stopp ist ein eigenes Turnier, organisiert gemeinsam mit Vereinen vor Ort.", 'about.p_ranking': "Ein Ranking", 'about.p_ranking_text': "Ergebnisse bringen Ranking-Punkte – für Spieler und ihre Vereine, im Herren- und Damen-Ranking. Das Ranking zeigt, wer die Saison anführt.", 'about.p_format': "2 gegen 2 im Sand", 'about.p_format_text': "Zweierteams spielen Gruppenphasen, Swiss-Runden und K.-o.-Brackets. Kategorien für Herren und Damen, bei größeren Stopps mit Quali und Hauptbewerb.", 'about.p_live': "Live, überall", 'about.p_live_text': "Turnierbäume, Spielpläne und Ergebnisse aktualisieren sich live – am Handy und auf den Bildschirmen an den Courts. Folge deinem Team und verpasse kein Spiel.", 'about.tierTitle': "Die Kategorien", 'about.tierText': "Jedes Turnier hat eine Kategorie. Je höher die Kategorie, desto mehr Ranking-Punkte gibt es.", 'about.t_100': "Der Einstieg – lokale Turniere, perfekt für deinen ersten Tour-Stopp.", 'about.t_500': "Größere Felder, mehr Punkte – das Rückgrat der Saison.", 'about.t_1000': "Die großen Stopps mit den stärksten Teams Europas.", 'about.t_finals': "Das Saisonende: Die besten Teams des Jahres treffen sich bei den Finals.", 'about.tierCount': "{n} in {year}", 'about.tierCountOne': "{n} in {year}", 'about.whyTitle': "Warum die League of Champions", 'about.whyText': "Footvolley wächst in Europa rasant – aber Turniere waren verstreut und Ergebnisse gingen verloren. Die League of Champions verbindet sie: eine Bühne, ein Ranking, eine Community.", 'about.why1': "Eine echte Bühne für Spieler und Teams – mit Ergebnissen, die die ganze Saison zählen.", 'about.why2': "Vereine wachsen gemeinsam: Jeder Stopp entsteht mit Vereinen und ihrer Community vor Ort.", 'about.why3': "Footvolley sichtbar machen: Live-Ergebnisse, Grafiken und Videos für jeden Spieler zum Teilen.", 'about.joinTitle': "So machst du mit", 'about.s_account': "Account erstellen", 'about.s_account_text': "Dein Spielerprofil mit Verein, Foto und Statistiken – dauert eine Minute.", 'about.s_partner': "Partner finden", 'about.s_partner_text': "Spiel mit deinem Partner – oder finde einen in der Spielerbörse jedes Turniers.", 'about.s_register': "Für einen Stopp anmelden", 'about.s_register_text': "Turnier aussuchen, Kategorie wählen und dein Team online anmelden.", 'about.s_play': "Spielen und aufsteigen", 'about.s_play_text': "Jedes Spiel bringt Punkte für dich und deinen Verein. Verfolge den Live-Turnierbaum und sieh zu, wie du im Ranking steigst.", 'about.questions': "Fragen?", 'about.questionsText': "Schreib uns – wir helfen gern bei Anmeldungen, Vereinen oder wenn du einen Tour-Stopp ausrichten willst.", 'brand.presentedBy': "Präsentiert von", 'brand.previewing': "Vorschau: präsentiert von {name}", 'brand.endPreview': "Vorschau beenden", 'brand.panelTitle': "Präsentierende Marke", 'brand.fab': "Branding", 'brand.partner': "Partner", 'brand.uploadLogo': "Partner-Logo hochladen (PNG/SVG)", 'brand.partnerName': "Name des Partners", 'brand.partnerUrl': "Website des Partners", 'brand.invert': "Dunkles Logo – weiß anzeigen", 'brand.visitorsSee': "Besucher sehen: {name}", 'brand.onlyYou': "diese Vorschau siehst nur du", 'brand.publish': "{name} für alle veröffentlichen", 'brand.backToBolao': "Zurück zu Bolao", 'brand.allSpots': "Alle Marken- & Werbestellen", 'brand.partnerPage': "Partner-Seite", 'brand.saving': "Wird gespeichert…", 'brand.saveError': "Speichern fehlgeschlagen. Bitte nochmal versuchen.", 'brand.logoError': "Dieses Logo konnte nicht gelesen werden. Versuch es mit PNG oder SVG.", 'brand.becomePartner': "Partner werden", 'shop.officialBall': "Offizieller Ball", 'shop.catLoc': "LoC-Kollektion", 'shop.catSunga': "Footvolley-Sunga", 'shop.catApparel': "Bolao-Bekleidung", 'shop.catBag': "Bolao-Tasche", 'shop.ballLine': "Ball der Tour", 'shop.shopNow': "Jetzt shoppen", 'shop.ticketAria': "im bolao.shop", 'shop.campaignTitle': "Gespielt mit dem offiziellen Ball.", 'shop.campaignText': "Jedes Spiel der League of Champions wird mit dem Mikasa FT-5 gespielt. Hol dir den Ball der Tour im bolao.shop.", 'team.kicker': "Präsentiert von Bolao", 'team.title': "Das Team hinter der Tour", 'team.text': "Die League of Champions wird präsentiert von Bolao – einer Footvolley-Marke von Spielern für Spieler. Das Team hinter Bolao baut die Tour, das Ranking und diese Plattform, damit Europas beste Teams eine Bühne haben, die ihrem Spiel gerecht wird.", 'team.changePhoto': "Foto ändern", 'team.photoAlt': "Das Bolao-Team", 'kit.title': "Dein Trikot gestalten", 'kit.intro': "Dein Turnier-Trikot von Bolao: Design, Farben und Verein wählen – wir machen es für dich.", 'kit.front': "Vorne", 'kit.back': "Hinten", 'kit.design': "Design", 'kit.color1': "Hauptfarbe", 'kit.color2': "Zweitfarbe", 'kit.color3': "Akzent", 'kit.custom': "Eigene Farbe", 'kit.club': "Vereinslogo", 'kit.noClub': "Kein Verein", 'kit.name': "Name (hinten)", 'kit.number': "Nummer", 'kit.text': "Schriftzug vorne", 'kit.textPh': "z. B. dein Team oder deine Stadt", 'kit.showClub': "Vereinslogo auf der Brust", 'kit.showLoc': "League-of-Champions-Logo", 'kit.request': "Trikot anfragen", 'kit.download': "PNG herunterladen", 'kit.copyLink': "Link kopieren", 'kit.note': "Vereinslogos kommen aus der offiziellen Vereinsliste. Anfragen gehen ans Bolao-Team.", 'kit.linkCopied': "Link kopiert.", 'kit.downloaded': "PNG gespeichert.", 'kit.mailOpened': "Deine Mail-App ist mit allen Details geöffnet.", 'kit.mailSubject': "Trikot-Anfrage – League of Champions", 'kit.mailIntro': "Hallo Bolao-Team, ich möchte dieses Trikot bestellen:", 'kit.d_gradient': "Verlauf", 'kit.d_stripes': "Streifen", 'kit.d_pinstripe': "Linien", 'kit.d_chevron': "Chevron", 'kit.d_split': "Geteilt", 'kit.d_wave': "Welle", 'kit.d_dots': "Punkte", 'kit.playerKicker': "Spieler-Trikot · bolao.shop", 'kit.playerTitle': "Das Trikot von {name}", 'kit.playerText': "Die offiziellen Spieler-Trikots kommen bald in den bolao.shop. Bis dahin: gestalte dein eigenes im Stil des Spielers.", 'kit.designOwn': "Eigenes gestalten", 'kit.regTitle': "Bereit für {city}? Dein Turnier-Kit", 'kit.regKitKicker': "Dein Trikot", 'kit.regKitTitle': "Team-Trikot von Bolao", 'partner.kicker': "Partnerschaft", 'partner.title': "Deine Marke auf Europas Footvolley-Tour.", 'partner.text': "Werde präsentierender Partner der League of Champions: auf der Website, jeder Share-Grafik, den Ranking-Videos, den Court-Bildschirmen und den Trikots – bei jedem Stopp der Saison.", 'partner.contact': "Kontakt aufnehmen", 'partner.tryCta': "Mit eigenem Logo testen", 'partner.foundedBy': "Präsentiert von", 'partner.reach': "Reichweite", 'partner.tryTitle': "Sieh deine Marke auf der Tour", 'partner.tryText': "Lade dein Logo hoch – jede Vorschau unten zeigt es sofort. Nichts wird gespeichert oder veröffentlicht.", 'partner.wholeSite': "Ganze Seite ansehen", 'partner.reset': "Zurücksetzen", 'partner.tryDone': "Dein Logo ist jetzt in jeder Vorschau.", 'partner.prevWebsite': "Website", 'partner.prevWebsiteText': "„Präsentiert von“ im Hero, bei jedem Turnier, im Live-Ticker und im Spielplan.", 'partner.prevGraphics': "Share-Grafiken", 'partner.prevGraphicsText': "Spielerkarten, Turnier- und Team-Grafiken – von Spielern und Vereinen gepostet.", 'partner.prevStory': "Instagram-Story", 'partner.prevStoryText': "Jede Grafik gibt es auch als 9:16-Story.", 'partner.prevCourt': "Court-Bildschirme", 'partner.prevCourtText': "Live-Ergebnisse auf den Bildschirmen an jedem Court.", 'partner.prevKit': "Trikots", 'partner.prevKitText': "Dein Logo auf der Brust der Tour-Trikots.", 'partner.packages': "Partner-Pakete", 'partner.onRequest': "Preis auf Anfrage", 'partner.pkg_title': "Titelpartner", 'partner.pkg_title_kicker': "Präsentiert von", 'partner.pkg_tour': "Tour-Partner", 'partner.pkg_tour_kicker': "Alle Stopps", 'partner.pkg_event': "Event-Partner", 'partner.pkg_event_kicker': "Ein Stopp", 'partner.pkg_supplier': "Offizieller Ausrüster", 'partner.pkg_supplier_kicker': "Produkt", 'partner.inc_presented': "„Präsentiert von“ auf der ganzen Website", 'partner.inc_graphics': "Logo auf jeder Share-Grafik", 'partner.inc_video': "Logo in den Ranking-Videos", 'partner.inc_court': "Logo auf allen Court-Bildschirmen", 'partner.inc_jersey': "Logo auf den Tour-Trikots", 'partner.inc_ig': "Instagram-Features", 'partner.inc_allEvents': "Logo bei jedem Stopp der Saison", 'partner.inc_live': "Live-Ticker und Turnierbäume", 'partner.inc_schedule': "Spielplan-Grafiken", 'partner.inc_oneEvent': "Branding eines Turniers", 'partner.inc_onsite': "Präsenz vor Ort", 'partner.inc_eventPages': "Turnierseite und ihre Grafiken", 'partner.inc_product': "Dein Produkt als „offizielles“ Produkt", 'partner.inc_shopTicket': "Produkt-Ticket im Tour-Ring", 'partner.inc_kit': "Platz im Trikot-Designer", 'partner.ctaTitle': "Lass uns reden.", 'partner.ctaText': "Erzähl uns von deiner Marke – wir stellen ein Paket für die Saison zusammen.", 'partner.mailSubject': "Partnerschaft – League of Champions", 'bpv.title': "Marken- & Werbestellen", 'bpv.intro': "Alle Stellen, an denen Bolao (oder ein Hauptpartner) und der Bolao-Shop auftauchen – oben die präsentierende Marke wechseln, und jede Stelle zieht mit.", 'bpv.brandSpots': "„Präsentiert von“-Stellen", 'bpv.shopSpots': "Bolao-Shop-Stellen", 'bpv.live': "Aktiv", 'bpv.off': "Aus", 'bpv.showForAll': "Für alle Besucher zeigen", 'bpv.open': "Auf der Seite ansehen", 'bpv.hero': "Startseite (Hero)", 'bpv.heroText': "„Präsentiert von“ direkt im Hero, neben der Überschrift.", 'bpv.graphics': "Alle Share-Grafiken", 'bpv.graphicsText': "Spielerkarte, Champion-Ticket, Turnier-, Team-, Vergleichs- und Spielplan-Grafik tragen „presented by“ in der Fußzeile.", 'bpv.court': "Court-Bildschirme", 'bpv.courtText': "Die großen Bildschirme an jedem Court zeigen die Marke oben in der Leiste.", 'bpv.liveText': "Unter dem Titel jedes Live-Turnierbaums und Spielplans.", 'bpv.footer': "Footer", 'bpv.footerText': "„Präsentiert von“ mit Links zu Bolao, Shop, Instagram und Partner-Seite.", 'bpv.video': "Ranking-Videos", 'bpv.videoText': "„Presented by“ unten in jedem Ranking-Video.", 'bpv.team': "Das Team hinter der Tour", 'bpv.teamText': "Bereich auf der Startseite: das Team hinter der Tour (Foto und Text im Edit-Modus änderbar).", 'bpv.partnerPage': "Partner-Seite", 'bpv.partnerPageText': "Für Sponsoren: echte Reichweite, Pakete und Live-Vorschau mit eigenem Logo.", 'bpv.ticket': "Ticket im Tour-Ring", 'bpv.ticketText': "Der offizielle Ball fährt als eigenes Ticket im Tour-Ring mit.", 'bpv.reg': "Nach der Anmeldung", 'bpv.regText': "Auf der Bestätigung: das Turnier-Kit (mit Verein und Trikotname vorausgefüllt) und der Ball.", 'bpv.profile': "Spielerprofil", 'bpv.profileText': "Das Trikot des Spielers mit seinem Namen – „bald im bolao.shop“, bis die Trikots gelistet sind.", 'bpv.kit': "Trikot-Designer", 'bpv.kitText': "Vereinslogo, Name, Nummer, Schriftzug, Farben und Designs – Anfrage geht per Mail an Bolao.", 'bpv.rail': "Seitenbanner", 'bpv.railText': "Eine schmale Karte neben dem Inhalt auf großen Bildschirmen (Ranking, Turniere, Profile). Auf dem Handy ausgeblendet.", 'bpv.campaign': "Kampagne auf der Startseite", 'bpv.campaignText': "Ein großes Produkt-Band auf der Startseite zwischen Tour und Ranking Leaders.", 'kit.footerLink': "Trikot gestalten", 'rv.button': 'Ranking-Video', 'rv.title': 'Ranking-Video', 'rv.what': 'Ranking', 'rv.division': 'Kategorie', 'rv.places': 'Plätze', 'rv.quality': 'Qualität', 'rv.background': 'Hintergrund', 'rv.bgDesign': 'LoC-Design', 'rv.bgPhoto': 'Eigenes Foto', 'rv.bgTransparent': 'Transparent', 'rv.webmNote': 'transparente Videos sind WebM (für Videoschnitt-Apps, nicht zum direkten Posten)', 'rv.pickPhoto': 'Foto wählen', 'rv.demoNote': 'DEMO: noch keine Punkte pro Turnier, die heutigen Gesamtpunkte werden auf die Saison verteilt.', 'rv.create': 'Video erstellen', 'rv.again': 'Nochmal erstellen', 'rv.preparing': 'Wird vorbereitet…', 'rv.rendering': 'Wird gerendert…', 'rv.download': 'Herunterladen', 'rv.error': 'Das Video konnte nicht erstellt werden.', 'search.label': 'Suche', 'search.short': 'Suche', 'search.placeholder': 'Spieler, Vereine, Turniere suchen…', 'search.players': 'Spieler', 'search.clubs': 'Vereine', 'search.tournaments': 'Turniere', 'search.none': 'Nichts gefunden.', 'appbar.label': 'App-Navigation', 'appbar.home': 'Start', 'appbar.me': 'Ich', 'install.title': 'League of Champions als App', 'install.text': 'Auf dem Homescreen, im Vollbild, einen Tipp entfernt.', 'install.ios': 'Tippe auf Teilen und dann „Zum Home-Bildschirm“.', 'install.btn': 'Installieren', 'install.dismiss': 'Später', 'install.footer': 'App installieren', 'profile.partners': 'Partner', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.follower': 'Follower', 'profile.followers': 'Follower', 'profile.followingHeading': 'Du folgst', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
+      'detail.venueHeading': 'Veranstaltungsort', 'detail.venueAddressLabel': 'Adresse', 'detail.venueMapLabel': 'Karte', 'detail.venueMapLinkText': 'In Maps öffnen ↗', 'detail.venueParkingLabel': 'Parken', 'detail.venueChangingLabel': 'Umkleiden', 'detail.glanceHeading': 'Auf einen Blick', 'detail.whenLabel': 'Wann', 'detail.whereLabel': 'Wo', 'detail.teamsLabel': 'Angemeldete Teams', 'detail.daysLeft': 'Noch {n} Tage', 'detail.lastDay': 'Heute letzter Tag', 'detail.regClosed': 'Geschlossen', 'detail.directions': 'Route planen ↗', 'detail.share': 'Teilen', 'detail.linkCopied': 'Link kopiert', 'schedule.now': 'Jetzt', 'bg.button': "Turnierbaum-Grafik", 'bg.title': "Turnierbaum-Grafik", 'bg.fTitle': "Titel", 'bg.fSub': "Datum / Untertitel", 'bg.fTag': "Zeile unten", 'bg.fHash': "Hashtag", 'bg.sponsors': "Sponsor-Logos oben zeigen", 'bg.note': "Transparent: weiche Verläufe oben und unten, die Mitte bleibt frei für dein eigenes Foto dahinter.", 'bg.create': "Grafik erstellen", 'bg.again': "Nochmal erstellen", 'bg.notReady': "Für die Grafik braucht der Turnierbaum ein einzelnes Finale mit zwei Halbfinals davor.", 'team.meet': "Das Team kennenlernen", 'team.footerLink': "Das Team", 'team.edit': "Bearbeiten", 'team.moveUp': "Nach oben", 'team.remove': "Entfernen", 'team.add': "+ Person hinzufügen", 'team.addHint': "Nur für dich sichtbar: Füge die Menschen hinter der Tour hinzu – Name, Rolle, Foto.", 'team.fName': "Name", 'team.fRole': "Rolle", 'team.fText': "Kurzer Text", 'team.fPhoto': "Foto", 'team.save': "Speichern", 'team.cancel': "Abbrechen", 'team.nameNeeded': "Bitte einen Namen eingeben.", 'team.removeConfirm': "{name} von der Team-Seite entfernen?", 'team.storyTitle': "Wer wir sind", 'team.storyText': "Bolao ist eine Footvolley-Marke von Spielern für Spieler. Wir spielen, organisieren Turniere und machen die Ausrüstung – und mit der League of Champions geben wir der europäischen Footvolley-Szene eine gemeinsame Bühne.", 'team.story1': "Selbst Spieler – wir wissen, was ein gutes Turnier ausmacht.", 'team.story2': "Alles aus einem Team: Tour, Ranking, Plattform und Ausrüstung.", 'team.story3': "Gemeinsam mit Vereinen in ganz Europa – für eine wachsende Community.", 'team.peopleTitle': "Die Menschen", 'team.doesTitle': "Was Bolao macht", 'team.do_tour': "League of Champions", 'team.do_tour_text': "Die Tour quer durch Europa – Stopps, Ranking und die Finals zum Saisonende.", 'team.do_tour_cta': "Über die Tour", 'team.do_shop': "bolao.shop", 'team.do_shop_text': "Bälle, Sungas, Shirts und mehr – die Ausrüstung der Tour.", 'team.do_shop_cta': "Zum Shop", 'team.do_ig': "@bolaosports", 'team.do_ig_text': "Hinter den Kulissen, Highlights und News aus der Footvolley-Welt.", 'team.do_ig_cta': "Folgen", 'team.ctaTitle': "Sprich mit uns", 'team.ctaText': "Vereine, Ausrichter, Partner oder Spieler mit Ideen – wir freuen uns, von dir zu hören.", 'landing.moreInfo': "Mehr Infos", 'about.footerLink': "Über die Tour", 'about.kicker': "Über die Tour", 'about.title': "Eine Tour. Europas beste Footvolley-Teams.", 'about.text': "Die League of Champions ist eine Footvolley-Tour quer durch Europa: eine Saison, viele Stopps, ein Ranking. Jedes Turnier zählt – vom LoC 100 in deiner Stadt bis zu den Finals am Saisonende.", 'about.howToJoin': "So machst du mit", 'about.ctaJoin': "Account erstellen", 'about.seasonStats': "Saison {year} in Zahlen", 'about.howTitle': "So funktioniert die Tour", 'about.p_tour': "Stopps in ganz Europa", 'about.p_tour_text': "Jede Saison reist die Tour durch Europa. Jeder Stopp ist ein eigenes Turnier, organisiert gemeinsam mit Vereinen vor Ort.", 'about.p_ranking': "Ein Ranking", 'about.p_ranking_text': "Ergebnisse bringen Ranking-Punkte – für Spieler und ihre Vereine, im Herren- und Damen-Ranking. Das Ranking zeigt, wer die Saison anführt.", 'about.p_format': "2 gegen 2 im Sand", 'about.p_format_text': "Zweierteams spielen Gruppenphasen, Swiss-Runden und K.-o.-Brackets. Kategorien für Herren und Damen, bei größeren Stopps mit Quali und Hauptbewerb.", 'about.p_live': "Live, überall", 'about.p_live_text': "Turnierbäume, Spielpläne und Ergebnisse aktualisieren sich live – am Handy und auf den Bildschirmen an den Courts. Folge deinem Team und verpasse kein Spiel.", 'about.tierTitle': "Die Kategorien", 'about.tierText': "Jedes Turnier hat eine Kategorie. Je höher die Kategorie, desto mehr Ranking-Punkte gibt es.", 'about.t_100': "Der Einstieg – lokale Turniere, perfekt für deinen ersten Tour-Stopp.", 'about.t_500': "Größere Felder, mehr Punkte – das Rückgrat der Saison.", 'about.t_1000': "Die großen Stopps mit den stärksten Teams Europas.", 'about.t_finals': "Das Saisonende: Die besten Teams des Jahres treffen sich bei den Finals.", 'about.tierCount': "{n} in {year}", 'about.tierCountOne': "{n} in {year}", 'about.whyTitle': "Warum die League of Champions", 'about.whyText': "Footvolley wächst in Europa rasant – aber Turniere waren verstreut und Ergebnisse gingen verloren. Die League of Champions verbindet sie: eine Bühne, ein Ranking, eine Community.", 'about.why1': "Eine echte Bühne für Spieler und Teams – mit Ergebnissen, die die ganze Saison zählen.", 'about.why2': "Vereine wachsen gemeinsam: Jeder Stopp entsteht mit Vereinen und ihrer Community vor Ort.", 'about.why3': "Footvolley sichtbar machen: Live-Ergebnisse, Grafiken und Videos für jeden Spieler zum Teilen.", 'about.joinTitle': "So machst du mit", 'about.s_account': "Account erstellen", 'about.s_account_text': "Dein Spielerprofil mit Verein, Foto und Statistiken – dauert eine Minute.", 'about.s_partner': "Partner finden", 'about.s_partner_text': "Spiel mit deinem Partner – oder finde einen in der Spielerbörse jedes Turniers.", 'about.s_register': "Für einen Stopp anmelden", 'about.s_register_text': "Turnier aussuchen, Kategorie wählen und dein Team online anmelden.", 'about.s_play': "Spielen und aufsteigen", 'about.s_play_text': "Jedes Spiel bringt Punkte für dich und deinen Verein. Verfolge den Live-Turnierbaum und sieh zu, wie du im Ranking steigst.", 'about.questions': "Fragen?", 'about.questionsText': "Schreib uns – wir helfen gern bei Anmeldungen, Vereinen oder wenn du einen Tour-Stopp ausrichten willst.", 'brand.presentedBy': "Präsentiert von", 'brand.previewing': "Vorschau: präsentiert von {name}", 'brand.endPreview': "Vorschau beenden", 'brand.panelTitle': "Präsentierende Marke", 'brand.fab': "Branding", 'brand.partner': "Partner", 'brand.uploadLogo': "Partner-Logo hochladen (PNG/SVG)", 'brand.partnerName': "Name des Partners", 'brand.partnerUrl': "Website des Partners", 'brand.invert': "Dunkles Logo – weiß anzeigen", 'brand.visitorsSee': "Besucher sehen: {name}", 'brand.onlyYou': "diese Vorschau siehst nur du", 'brand.publish': "{name} für alle veröffentlichen", 'brand.backToBolao': "Zurück zu Bolao", 'brand.allSpots': "Alle Marken- & Werbestellen", 'brand.partnerPage': "Partner-Seite", 'brand.saving': "Wird gespeichert…", 'brand.saveError': "Speichern fehlgeschlagen. Bitte nochmal versuchen.", 'brand.logoError': "Dieses Logo konnte nicht gelesen werden. Versuch es mit PNG oder SVG.", 'brand.becomePartner': "Partner werden", 'shop.officialBall': "Offizieller Ball", 'shop.catLoc': "LoC-Kollektion", 'shop.catSunga': "Footvolley-Sunga", 'shop.catApparel': "Bolao-Bekleidung", 'shop.catBag': "Bolao-Tasche", 'shop.ballLine': "Ball der Tour", 'shop.shopNow': "Jetzt shoppen", 'shop.ticketAria': "im bolao.shop", 'shop.campaignTitle': "Gespielt mit dem offiziellen Ball.", 'shop.campaignText': "Jedes Spiel der League of Champions wird mit dem Mikasa FT-5 gespielt. Hol dir den Ball der Tour im bolao.shop.", 'team.kicker': "Präsentiert von Bolao", 'team.title': "Das Team hinter der Tour", 'team.text': "Die League of Champions wird präsentiert von Bolao – einer Footvolley-Marke von Spielern für Spieler. Das Team hinter Bolao baut die Tour, das Ranking und diese Plattform, damit Europas beste Teams eine Bühne haben, die ihrem Spiel gerecht wird.", 'team.changePhoto': "Foto ändern", 'team.photoAlt': "Das Bolao-Team", 'kit.title': "Dein Trikot gestalten", 'kit.intro': "Dein Turnier-Trikot von Bolao: Design, Farben und Verein wählen – wir machen es für dich.", 'kit.front': "Vorne", 'kit.back': "Hinten", 'kit.design': "Design", 'kit.color1': "Hauptfarbe", 'kit.color2': "Zweitfarbe", 'kit.color3': "Akzent", 'kit.custom': "Eigene Farbe", 'kit.club': "Vereinslogo", 'kit.noClub': "Kein Verein", 'kit.name': "Name (hinten)", 'kit.number': "Nummer", 'kit.text': "Schriftzug vorne", 'kit.textPh': "z. B. dein Team oder deine Stadt", 'kit.showClub': "Vereinslogo auf der Brust", 'kit.showLoc': "League-of-Champions-Logo", 'kit.request': "Trikot anfragen", 'kit.download': "PNG herunterladen", 'kit.copyLink': "Link kopieren", 'kit.note': "Vereinslogos kommen aus der offiziellen Vereinsliste. Anfragen gehen ans Bolao-Team.", 'kit.linkCopied': "Link kopiert.", 'kit.downloaded': "PNG gespeichert.", 'kit.mailOpened': "Deine Mail-App ist mit allen Details geöffnet.", 'kit.mailSubject': "Trikot-Anfrage – League of Champions", 'kit.mailIntro': "Hallo Bolao-Team, ich möchte dieses Trikot bestellen:", 'kit.d_gradient': "Verlauf", 'kit.d_stripes': "Streifen", 'kit.d_pinstripe': "Linien", 'kit.d_chevron': "Chevron", 'kit.d_split': "Geteilt", 'kit.d_wave': "Welle", 'kit.d_dots': "Punkte", 'kit.playerKicker': "Spieler-Trikot · bolao.shop", 'kit.playerTitle': "Das Trikot von {name}", 'kit.playerText': "Die offiziellen Spieler-Trikots kommen bald in den bolao.shop. Bis dahin: gestalte dein eigenes im Stil des Spielers.", 'kit.designOwn': "Eigenes gestalten", 'kit.regTitle': "Bereit für {city}? Dein Turnier-Kit", 'kit.regKitKicker': "Dein Trikot", 'kit.regKitTitle': "Team-Trikot von Bolao", 'partner.kicker': "Partnerschaft", 'partner.title': "Deine Marke auf Europas Footvolley-Tour.", 'partner.text': "Werde präsentierender Partner der League of Champions: auf der Website, jeder Share-Grafik, den Ranking-Videos, den Court-Bildschirmen und den Trikots – bei jedem Stopp der Saison.", 'partner.contact': "Kontakt aufnehmen", 'partner.tryCta': "Mit eigenem Logo testen", 'partner.foundedBy': "Präsentiert von", 'partner.reach': "Reichweite", 'partner.tryTitle': "Sieh deine Marke auf der Tour", 'partner.tryText': "Lade dein Logo hoch – jede Vorschau unten zeigt es sofort. Nichts wird gespeichert oder veröffentlicht.", 'partner.wholeSite': "Ganze Seite ansehen", 'partner.reset': "Zurücksetzen", 'partner.tryDone': "Dein Logo ist jetzt in jeder Vorschau.", 'partner.prevWebsite': "Website", 'partner.prevWebsiteText': "„Präsentiert von“ im Hero, bei jedem Turnier, im Live-Ticker und im Spielplan.", 'partner.prevGraphics': "Share-Grafiken", 'partner.prevGraphicsText': "Spielerkarten, Turnier- und Team-Grafiken – von Spielern und Vereinen gepostet.", 'partner.prevStory': "Instagram-Story", 'partner.prevStoryText': "Jede Grafik gibt es auch als 9:16-Story.", 'partner.prevCourt': "Court-Bildschirme", 'partner.prevCourtText': "Live-Ergebnisse auf den Bildschirmen an jedem Court.", 'partner.prevKit': "Trikots", 'partner.prevKitText': "Dein Logo auf der Brust der Tour-Trikots.", 'partner.packages': "Partner-Pakete", 'partner.onRequest': "Preis auf Anfrage", 'partner.pkg_title': "Titelpartner", 'partner.pkg_title_kicker': "Präsentiert von", 'partner.pkg_tour': "Tour-Partner", 'partner.pkg_tour_kicker': "Alle Stopps", 'partner.pkg_event': "Event-Partner", 'partner.pkg_event_kicker': "Ein Stopp", 'partner.pkg_supplier': "Offizieller Ausrüster", 'partner.pkg_supplier_kicker': "Produkt", 'partner.inc_presented': "„Präsentiert von“ auf der ganzen Website", 'partner.inc_graphics': "Logo auf jeder Share-Grafik", 'partner.inc_video': "Logo in den Ranking-Videos", 'partner.inc_court': "Logo auf allen Court-Bildschirmen", 'partner.inc_jersey': "Logo auf den Tour-Trikots", 'partner.inc_ig': "Instagram-Features", 'partner.inc_allEvents': "Logo bei jedem Stopp der Saison", 'partner.inc_live': "Live-Ticker und Turnierbäume", 'partner.inc_schedule': "Spielplan-Grafiken", 'partner.inc_oneEvent': "Branding eines Turniers", 'partner.inc_onsite': "Präsenz vor Ort", 'partner.inc_eventPages': "Turnierseite und ihre Grafiken", 'partner.inc_product': "Dein Produkt als „offizielles“ Produkt", 'partner.inc_shopTicket': "Produkt-Ticket im Tour-Ring", 'partner.inc_kit': "Platz im Trikot-Designer", 'partner.ctaTitle': "Lass uns reden.", 'partner.ctaText': "Erzähl uns von deiner Marke – wir stellen ein Paket für die Saison zusammen.", 'partner.mailSubject': "Partnerschaft – League of Champions", 'bpv.title': "Marken- & Werbestellen", 'bpv.intro': "Alle Stellen, an denen Bolao (oder ein Hauptpartner) und der Bolao-Shop auftauchen – oben die präsentierende Marke wechseln, und jede Stelle zieht mit.", 'bpv.brandSpots': "„Präsentiert von“-Stellen", 'bpv.shopSpots': "Bolao-Shop-Stellen", 'bpv.live': "Aktiv", 'bpv.off': "Aus", 'bpv.showForAll': "Für alle Besucher zeigen", 'bpv.open': "Auf der Seite ansehen", 'bpv.hero': "Startseite (Hero)", 'bpv.heroText': "„Präsentiert von“ direkt im Hero, neben der Überschrift.", 'bpv.graphics': "Alle Share-Grafiken", 'bpv.graphicsText': "Spielerkarte, Champion-Ticket, Turnier-, Team-, Vergleichs- und Spielplan-Grafik tragen „presented by“ in der Fußzeile.", 'bpv.court': "Court-Bildschirme", 'bpv.courtText': "Die großen Bildschirme an jedem Court zeigen die Marke oben in der Leiste.", 'bpv.liveText': "Unter dem Titel jedes Live-Turnierbaums und Spielplans.", 'bpv.footer': "Footer", 'bpv.footerText': "„Präsentiert von“ mit Links zu Bolao, Shop, Instagram und Partner-Seite.", 'bpv.video': "Ranking-Videos", 'bpv.videoText': "„Presented by“ unten in jedem Ranking-Video.", 'bpv.team': "Das Team hinter der Tour", 'bpv.teamText': "Bereich auf der Startseite: das Team hinter der Tour (Foto und Text im Edit-Modus änderbar).", 'bpv.partnerPage': "Partner-Seite", 'bpv.partnerPageText': "Für Sponsoren: echte Reichweite, Pakete und Live-Vorschau mit eigenem Logo.", 'bpv.ticket': "Ticket im Tour-Ring", 'bpv.ticketText': "Der offizielle Ball fährt als eigenes Ticket im Tour-Ring mit.", 'bpv.reg': "Nach der Anmeldung", 'bpv.regText': "Auf der Bestätigung: das Turnier-Kit (mit Verein und Trikotname vorausgefüllt) und der Ball.", 'bpv.profile': "Spielerprofil", 'bpv.profileText': "Das Trikot des Spielers mit seinem Namen – „bald im bolao.shop“, bis die Trikots gelistet sind.", 'bpv.kit': "Trikot-Designer", 'bpv.kitText': "Vereinslogo, Name, Nummer, Schriftzug, Farben und Designs – Anfrage geht per Mail an Bolao.", 'bpv.rail': "Seitenbanner", 'bpv.railText': "Eine schmale Karte neben dem Inhalt auf großen Bildschirmen (Ranking, Turniere, Profile). Auf dem Handy ausgeblendet.", 'bpv.campaign': "Kampagne auf der Startseite", 'bpv.campaignText': "Ein großes Produkt-Band auf der Startseite zwischen Tour und Ranking Leaders.", 'kit.footerLink': "Trikot gestalten", 'rv.button': 'Ranking-Video', 'rv.title': 'Ranking-Video', 'rv.what': 'Ranking', 'rv.division': 'Kategorie', 'rv.places': 'Plätze', 'rv.quality': 'Qualität', 'rv.background': 'Hintergrund', 'rv.bgDesign': 'LoC-Design', 'rv.bgPhoto': 'Eigenes Foto', 'rv.bgTransparent': 'Transparent', 'rv.webmNote': 'transparente Videos sind WebM (für Videoschnitt-Apps, nicht zum direkten Posten)', 'rv.pickPhoto': 'Foto wählen', 'rv.demoNote': 'DEMO: noch keine Punkte pro Turnier, die heutigen Gesamtpunkte werden auf die Saison verteilt.', 'rv.create': 'Video erstellen', 'rv.again': 'Nochmal erstellen', 'rv.preparing': 'Wird vorbereitet…', 'rv.rendering': 'Wird gerendert…', 'rv.download': 'Herunterladen', 'rv.error': 'Das Video konnte nicht erstellt werden.', 'search.label': 'Suche', 'search.short': 'Suche', 'search.placeholder': 'Spieler, Vereine, Turniere suchen…', 'search.players': 'Spieler', 'search.clubs': 'Vereine', 'search.tournaments': 'Turniere', 'search.none': 'Nichts gefunden.', 'appbar.label': 'App-Navigation', 'appbar.home': 'Start', 'appbar.me': 'Ich', 'install.title': 'League of Champions als App', 'install.text': 'Auf dem Homescreen, im Vollbild, einen Tipp entfernt.', 'install.ios': 'Tippe auf Teilen und dann „Zum Home-Bildschirm“.', 'install.btn': 'Installieren', 'install.dismiss': 'Später', 'install.footer': 'App installieren', 'profile.partners': 'Partner', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.follower': 'Follower', 'profile.followers': 'Follower', 'profile.followingHeading': 'Du folgst', 'holo.season': 'Saison-Nr. 1', 'holo.kicker': 'Hall of Fame', 'holo.ticketBtn': 'Champion-Ticket', 'holo.finals': 'Finals-Champion', 'holo.champ': 'Champion', 'holo.titleOne': '{n} Turnier gewonnen', 'holo.titles': '{n} Turniere gewonnen', 'club.kicker': 'Verein', 'club.playersMen': 'Spieler · Herren', 'club.playersWomen': 'Spielerinnen · Damen', 'club.tournaments': 'Turniere', 'club.noTournaments': 'Noch keine Turniere mit diesem Verein.', 'club.team': 'Team', 'club.teams': 'Teams', 'club.place': 'Platz {n}', 'compare.open': 'Spieler vergleichen', 'compare.close': 'Vergleich schließen', 'compare.pick': 'Spieler suchen…', 'compare.rank': 'Platz', 'compare.points': 'Punkte', 'compare.tournaments': 'Turniere', 'compare.titles': 'Titel', 'compare.wins': 'Gewonnene Spiele', 'compare.winRate': 'Siegquote', 'compare.h2h': 'Direkter Vergleich', 'ranking.moveNew': 'Neu im Ranking', 'ranking.moveSame': 'Gleicher Platz wie vorher', 'ranking.moveWas': 'Vor dem letzten Turnier Platz {n}', 'court.open': 'Court-Anzeige (für einen Bildschirm am Court)', 'court.upNext': 'Als Nächstes', 'court.done': 'Alle Spiele gespielt', 'court.nothing': 'Keine Spiele auf diesem Court', 'court.exit': 'Zurück zum Spielplan', 'myteam.follow': 'Deinem Team folgen…', 'myteam.liveNow': 'Läuft gerade', 'myteam.next': 'Nächstes Spiel', 'myteam.done': 'Alle Spiele gespielt', 'myteam.noMatches': 'Noch keine Spiele angesetzt', 'myteam.onlyMine': 'Nur meine Spiele', 'myteam.change': 'Anderes Team wählen', 'myteam.graphic': 'Grafik teilen', 'detail.copyLink': 'Link kopieren', 'detail.creatingGraphic': 'Grafik wird erstellt…', 'detail.partnersHeading': 'Partner gesucht', 'detail.partnersEmpty': 'Noch sucht niemand. Du brauchst einen Partner? Trag dich in der Spielerbörse ein.', 'detail.partnersAll': 'Zur Spielerbörse →',
       'detail.registerNow': 'Jetzt anmelden', 'detail.alreadyRegisteredNote': 'Du bist für dieses Turnier bereits angemeldet.', 'detail.registeredTeams': 'Angemeldete Teams',
       'detail.noRegistrations': 'Noch keine Anmeldungen – sei das erste Team!', 'detail.closedNote': 'Die Anmeldung für dieses Turnier ist geschlossen.',
       'detail.resumeText': 'Du hast eine ausstehende Anmeldung – bezahle jetzt das Startgeld, um dir deinen Platz zu sichern.', 'detail.resumeBtn': 'Jetzt bezahlen',
@@ -8045,6 +8065,350 @@ var CLUBS = [
     }); });
     setView('team');
   }
+
+  /* ==================================================================
+     BRACKET GRAPHIC (admins, edit mode): the knockout bracket as an
+     Instagram graphic in the tour's style – title + tier number, sponsor
+     row, two-sided tree with club logos and results, trophy + final in the
+     middle, champion, footer with the presenting brand. Background:
+     transparent with soft navy fades top and bottom (to put an own photo
+     behind it in an app), the LoC design, or an own photo right away.
+     Built from the same tree as the live page's two-sided bracket.
+     ================================================================== */
+  function bracketGraphicModel(stage) {
+    var bracket = currentBracket, finalIndex = -1, main = [];
+    stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') { finalIndex = ri; main.push(ri); } });
+    if (!bracketMirrorEligible(stage, finalIndex)) return null;
+    function matchState(ri, mi) {
+      var m = stage.rounds[ri].matches[mi];
+      var a = resolveSlotTeam(bracket, stage, ri, m.slotAIndex), b = resolveSlotTeam(bracket, stage, ri, m.slotBIndex);
+      var sets = m.sets || [];
+      var w = a && b ? matchWinner({ id: m.id, teamAId: a, teamBId: b, sets: sets, format: m.format }, bracket.defaultFormat) : null;
+      return { m: m, ri: ri, mi: mi, team: [a, b], winner: w, sets: sets.filter(function(x) { return (Number(x[0]) || 0) + (Number(x[1]) || 0) > 0; }) };
+    }
+    function feeder(ri, si) {
+      var src = stage.rounds[ri].slots[si] && stage.rounds[ri].slots[si].source, k = main.indexOf(ri);
+      if (!src || src.type !== 'matchWinner' || k < 1) return null;
+      var pri = main[k - 1], pmi = -1;
+      stage.rounds[pri].matches.forEach(function(x, i) { if (x.id === src.matchId) pmi = i; });
+      return pmi < 0 ? null : { ri: pri, mi: pmi };
+    }
+    var tiles = [], row = 0;
+    function place(ri, mi, depth, side) {
+      var st = matchState(ri, mi), ys = [], keys = [];
+      [st.m.slotAIndex, st.m.slotBIndex].forEach(function(si, k) {
+        var f = feeder(ri, si), y, key = st.m.id + ':' + k;
+        if (f) { var child = place(f.ri, f.mi, depth + 1, side); y = (child.ys[0] + child.ys[1]) / 2; child.tiles.forEach(function(t) { t.to = key; }); }
+        else y = row++;
+        ys.push(y); keys.push(key);
+      });
+      var made = [0, 1].map(function(k) { var t = { key: keys[k], side: side, depth: depth, y: ys[k], st: st, k: k }; tiles.push(t); return t; });
+      return { ys: ys, tiles: made };
+    }
+    var fr = stage.rounds[finalIndex], fm = fr.matches[0];
+    var fa = feeder(finalIndex, fm.slotAIndex), fb = feeder(finalIndex, fm.slotBIndex);
+    if (!fa || !fb) return null;
+    row = 0; var L = place(fa.ri, fa.mi, 0, 'left'), leftRows = row;
+    row = 0; var R = place(fb.ri, fb.mi, 0, 'right'), rightRows = row;
+    var rows = Math.max(leftRows, rightRows);
+    tiles.forEach(function(t) { t.y += (rows - (t.side === 'left' ? leftRows : rightRows)) / 2; });
+    var depthCount = 0;
+    tiles.forEach(function(t) { depthCount = Math.max(depthCount, t.depth + 1); });
+    var fst = matchState(finalIndex, 0);
+    L.tiles.forEach(function(t) { t.to = fm.id + ':0'; });
+    R.tiles.forEach(function(t) { t.to = fm.id + ':1'; });
+    var finals = [{ key: fm.id + ':0', side: 'center', depth: -1, st: fst, k: 0 }, { key: fm.id + ':1', side: 'center', depth: -2, st: fst, k: 1 }];
+    var third = null;
+    stage.rounds.forEach(function(r, ri) { if (r.side === 'thirdPlace' && r.matches.length === 1) third = { round: r, st: matchState(ri, 0) }; });
+    return { stage: stage, tiles: tiles, finals: finals, fst: fst, finalRound: fr, third: third, rows: rows, depthCount: depthCount };
+  }
+
+  var BG_TROPHY = new Path2D('M7 3h10v6a5 5 0 0 1-10 0V3z M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10M17 5h3v1.5A3.5 3.5 0 0 1 16.5 10 M12 14v3M8 21h8v-2.5a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 8 18.5V21z');
+  // opts: { title, sub, tagline, hashtag, bg: 'transparent'|'design'|'photo', photo, logos:{teamId:img}, sponsors:[img], badge, brand }
+  function drawBracketGraphic(model, opts) {
+    var W = 1500, H = 1000, S = 2, c = document.createElement('canvas');
+    c.width = W * S; c.height = H * S;
+    var g = c.getContext('2d'); g.scale(S, S); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    var BEBAS = '"Bebas Neue", sans-serif', SANS = '"Poppins", "Geist", sans-serif', CYAN = '#00f2ff', NAVY = '11,13,99';
+    var sp = function(px) { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
+    // ---- background
+    if (opts.bg === 'design') {
+      var bgd = g.createLinearGradient(0, 0, 0, H); bgd.addColorStop(0, '#0b0d63'); bgd.addColorStop(0.55, '#1b1e86'); bgd.addColorStop(1, '#5a55a8');
+      g.fillStyle = bgd; g.fillRect(0, 0, W, H);
+    } else if (opts.bg === 'photo' && opts.photo) {
+      var p = opts.photo, sc = Math.max(W / p.width, H / p.height);
+      g.drawImage(p, (W - p.width * sc) / 2, (H - p.height * sc) / 2, p.width * sc, p.height * sc);
+      g.fillStyle = 'rgba(' + NAVY + ',0.35)'; g.fillRect(0, 0, W, H);
+    }
+    // soft fades top and bottom (the middle stays clear for a photo)
+    var top = g.createLinearGradient(0, 0, 0, H * 0.4); top.addColorStop(0, 'rgba(' + NAVY + ',0.95)'); top.addColorStop(0.55, 'rgba(' + NAVY + ',0.55)'); top.addColorStop(1, 'rgba(' + NAVY + ',0)');
+    g.fillStyle = top; g.fillRect(0, 0, W, H * 0.4);
+    var bot = g.createLinearGradient(0, H * 0.6, 0, H); bot.addColorStop(0, 'rgba(' + NAVY + ',0)'); bot.addColorStop(0.45, 'rgba(' + NAVY + ',0.55)'); bot.addColorStop(1, 'rgba(' + NAVY + ',0.95)');
+    g.fillStyle = bot; g.fillRect(0, H * 0.6, W, H * 0.4);
+
+    // ---- sponsor row
+    var y0 = 34;
+    if (opts.sponsors.length) {
+      var sh = 38, gap = 46, ws = opts.sponsors.map(function(im) { return Math.min(150, sh * im.width / im.height); });
+      var tw = ws.reduce(function(a, b) { return a + b; }, 0) + gap * (ws.length - 1), sx = (W - tw) / 2;
+      opts.sponsors.forEach(function(im, i) { var hh = ws[i] * im.height / im.width; g.drawImage(im, sx, y0 + (sh - hh) / 2, ws[i], hh); sx += ws[i] + gap; });
+      y0 += sh + 22;
+    }
+    // ---- title: name + date on the left of a huge tier number (like the posts)
+    var m = /^(.*?)[\s-]*(\d{2,4})$/.exec((opts.title || '').trim()), name = (m ? m[1] : opts.title || '').toUpperCase(), num = m ? m[2] : '';
+    g.textBaseline = 'alphabetic'; g.fillStyle = '#fff';
+    g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 18;
+    sp(4); g.font = '400 92px ' + BEBAS; var nw = g.measureText(name).width;
+    sp(1); g.font = '400 132px ' + BEBAS; var numW = num ? g.measureText(num).width : 0;
+    sp(6); g.font = '400 34px ' + BEBAS; var subW = g.measureText(opts.sub || '').width;
+    var leftW = Math.max(nw, subW), tx = (W - (leftW + (num ? 24 + numW : 0))) / 2, ty = y0 + 86;
+    sp(4); g.font = '400 92px ' + BEBAS; g.fillText(name, tx + (leftW - nw) / 2 * (num ? 0 : 1), ty);
+    sp(6); g.font = '400 34px ' + BEBAS; g.fillText(opts.sub || '', tx + (num ? 0 : (leftW - subW) / 2), ty + 40);
+    if (num) { sp(1); g.font = '400 132px ' + BEBAS; g.fillText(num, tx + leftW + 24, ty + 38); }
+    g.shadowBlur = 0; sp(0);
+    var titleBottom = ty + 56;
+
+    // ---- geometry of the tree: drawn in its own space (fixed tile size)
+    // and scaled to fit, so a 16-team bracket keeps the same proportions as
+    // an 8-team one instead of squeezing the tiles
+    var D = model.depthCount, C = 2 * D + 2, M = 50, G = 18, TW = 232;
+    var BW = 2 * M + C * TW + (C - 1) * G, Y0 = titleBottom + 26, Y1 = H - 140;
+    var s = Math.min(1, W / BW), BH = (Y1 - Y0) / s;
+    var rows = Math.max(model.rows, 2), ROW = BH / rows, TH = Math.min(78, ROW * 0.66);
+    function colOf(t) { return t.side === 'left' ? D - 1 - t.depth : t.side === 'right' ? D + 2 + t.depth : t.depth === -1 ? D : D + 1; }
+    var colX = function(col) { return M + col * (TW + G); };
+    var yMid = BH / 2 + Math.min(70, ROW * 0.5);
+    model.tiles.forEach(function(t) { t.x = colX(colOf(t)); t.cy = t.y * ROW + ROW / 2; });
+    model.finals.forEach(function(t) { t.x = colX(colOf(t)); t.cy = yMid; });
+    var byKey = {};
+    model.tiles.concat(model.finals).forEach(function(t) { byKey[t.key] = t; });
+    g.save(); g.translate((W - BW * s) / 2, Y0); g.scale(s, s);
+
+    // ---- connectors: from each tile's inner edge to the tile it feeds
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    model.tiles.forEach(function(t) {
+      var to = byKey[t.to]; if (!to) return;
+      var teamId = t.st.team[t.k], won = t.st.winner && t.st.winner === teamId;
+      // left half runs left-to-right, right half right-to-left
+      var x1 = t.side === 'left' ? t.x + TW : t.x, x2 = t.side === 'left' ? to.x : to.x + TW;
+      var xm = (x1 + x2) / 2, r = 12, dir = t.cy < to.cy ? 1 : t.cy > to.cy ? -1 : 0, sx = x2 > x1 ? 1 : -1;
+      g.beginPath(); g.moveTo(x1, t.cy);
+      if (dir) {
+        g.lineTo(xm - sx * r, t.cy); g.quadraticCurveTo(xm, t.cy, xm, t.cy + dir * r);
+        g.lineTo(xm, to.cy - dir * r); g.quadraticCurveTo(xm, to.cy, xm + sx * r, to.cy);
+      }
+      g.lineTo(x2, to.cy);
+      g.strokeStyle = won ? CYAN : 'rgba(255,255,255,0.7)'; g.lineWidth = won ? 3.5 : 2.2;
+      g.shadowColor = won ? 'rgba(0,242,255,0.7)' : 'transparent'; g.shadowBlur = won ? 10 : 0;
+      g.stroke(); g.shadowBlur = 0;
+    });
+    var f0 = model.finals[0], f1 = model.finals[1];
+    g.beginPath(); g.moveTo(f0.x + TW, yMid); g.lineTo(f1.x, yMid); g.strokeStyle = 'rgba(255,255,255,0.8)'; g.lineWidth = 2.5; g.stroke();
+
+    // ---- tiles: names left, set scores, club logo on the right edge
+    function shortName(full) {
+      var words = (full || '').trim().split(/\s+/), last = words[words.length - 1] || full;
+      if (last.length > 12 && last.indexOf('-') > 0) last = last.charAt(0) + '.-' + last.split('-').slice(1).join('-');
+      return last;
+    }
+    function tile(t, x, cy, w) {
+      var teamId = t.st.team[t.k], team = teamId && findBracketTeam(currentBracket, teamId);
+      var win = t.st.winner, lost = win && win !== teamId, won = win && win === teamId;
+      var y = cy - TH / 2;
+      g.save();
+      g.globalAlpha = lost ? 0.55 : 1;
+      g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 16; g.shadowOffsetY = 6;
+      var fill = g.createLinearGradient(x, y, x + w, y + TH);
+      fill.addColorStop(0, '#2b2e93'); fill.addColorStop(0.45, '#4f51b4'); fill.addColorStop(0.55, '#6a6cc6'); fill.addColorStop(1, '#3a3da6');
+      pcRoundRect(g, x, y, w, TH, 9); g.fillStyle = fill; g.fill();
+      g.shadowBlur = 0; g.shadowOffsetY = 0;
+      g.save(); pcRoundRect(g, x, y, w, TH, 9); g.clip();
+      var streak = g.createLinearGradient(x, y, x + w, y + TH); streak.addColorStop(0.35, 'rgba(255,255,255,0)'); streak.addColorStop(0.5, 'rgba(255,255,255,0.14)'); streak.addColorStop(0.65, 'rgba(255,255,255,0)');
+      g.fillStyle = streak; g.fillRect(x, y, w, TH);
+      var logo = team && opts.logos[teamId], logoSpace = 12;
+      if (logo) {
+        var box = TH * 1.05, sc2 = box / Math.max(logo.width, logo.height), lw = logo.width * sc2, lh = logo.height * sc2;
+        g.drawImage(logo, x + w - lw * 0.88, cy - lh / 2, lw, lh); logoSpace = lw * 0.88 + 6;
+      }
+      g.restore();
+      pcRoundRect(g, x, y, w, TH, 9); g.lineWidth = won ? 2.4 : 1.4; g.strokeStyle = won ? CYAN : 'rgba(255,255,255,0.85)'; g.stroke();
+      if (team) {
+        var parts = (team.name || '').split(' & ');
+        var sets = t.st.sets.map(function(z) { return String(z[t.k]); });
+        var setFs = Math.round(TH * 0.34);
+        g.font = '400 ' + setFs + 'px ' + BEBAS; sp(1);
+        var setsW = sets.length ? g.measureText(sets.join('  ')).width + 12 : 0;
+        var maxW = w - 14 - logoSpace - setsW, fs = Math.round(Math.min(TH * 0.3, 23));
+        var fit = function(arr) { g.font = '400 ' + fs + 'px ' + BEBAS; sp(0.5); return arr.every(function(l) { return g.measureText(l).width <= maxW; }); };
+        var lines = parts.map(function(n) { return n.toUpperCase(); });
+        if (!fit(lines)) {
+          var sh2 = parts.map(shortName);
+          if (sh2.length === 2 && sh2[0] === sh2[1]) sh2 = parts.map(function(n) { return n.trim().split(/\s+/)[0]; });
+          lines = sh2.map(function(n) { return n.toUpperCase(); });
+        }
+        while (!fit(lines) && fs > 13) fs--;
+        g.fillStyle = '#fff'; g.textAlign = 'left';
+        var lh2 = fs * 1.08, ly = cy - (lines.length - 1) * lh2 / 2 + fs * 0.36;
+        lines.forEach(function(l, i) { g.fillText(l, x + 14, ly + i * lh2, maxW); });
+        if (sets.length) {
+          g.font = '400 ' + setFs + 'px ' + BEBAS; sp(1); g.textAlign = 'right';
+          g.fillStyle = won ? CYAN : 'rgba(255,255,255,0.85)';
+          g.fillText(sets.join('  '), x + w - logoSpace - 4, cy + setFs * 0.36);
+        }
+      }
+      g.restore(); sp(0); g.textAlign = 'left';
+    }
+    // match labels ("QUARTERFINAL 1") above the upper team of each pair,
+    // numbered in reading order: left half top to bottom, then the right half
+    var firsts = model.tiles.filter(function(t) { return t.k === 0; }).sort(function(a, b) {
+      return a.st.ri - b.st.ri || (a.side === b.side ? a.cy - b.cy : a.side === 'left' ? -1 : 1);
+    });
+    var counter = {};
+    g.font = '400 ' + Math.round(Math.min(24, ROW * 0.2)) + 'px ' + BEBAS; sp(1.5); g.fillStyle = CYAN;
+    firsts.forEach(function(t) {
+      var r = model.stage.rounds[t.st.ri], n = counter[t.st.ri] = (counter[t.st.ri] || 0) + 1;
+      // numbered: one match of the round, so "QUARTERFINALS" becomes "QUARTERFINAL 1"
+      var multi = r && r.matches.length > 1, label = ((r && r.name) || '').toUpperCase();
+      if (multi) label = label.replace(/FINALS$/, 'FINAL').replace(/^ROUNDS? OF/, 'ROUND OF') + ' ' + n;
+      g.textAlign = t.side === 'right' ? 'right' : 'left';
+      g.fillText(label, t.side === 'right' ? t.x + TW - 4 : t.x + 4, t.cy - TH / 2 - 9, TW);
+    });
+    g.textAlign = 'left'; sp(0);
+    model.tiles.forEach(function(t) { tile(t, t.x, t.cy, TW); });
+    model.finals.forEach(function(t) { tile(t, t.x, t.cy, TW); });
+
+    // ---- trophy + FINAL above the final
+    var cx = (f0.x + f1.x + TW) / 2, centerW = f1.x + TW - f0.x;
+    var finalTop = yMid - TH / 2, trophyH = Math.min(140, finalTop - 110);
+    if (trophyH > 50) {
+      var ts = trophyH / 24, tTop = finalTop - 100 - trophyH;
+      g.save(); g.translate(cx - 12 * ts, tTop); g.scale(ts, ts);
+      g.strokeStyle = CYAN; g.lineWidth = 1.6; g.lineJoin = 'round'; g.shadowColor = 'rgba(0,242,255,0.8)'; g.shadowBlur = 18 / ts; g.stroke(BG_TROPHY); g.restore();
+    }
+    g.textAlign = 'center'; sp(3); g.font = '400 86px ' + BEBAS; g.fillStyle = CYAN;
+    g.shadowColor = 'rgba(0,242,255,0.55)'; g.shadowBlur = 22;
+    g.fillText(((model.finalRound && model.finalRound.name) || 'Final').toUpperCase(), cx, finalTop - 24, centerW);
+    g.shadowBlur = 0;
+    // champion under the final
+    var by = yMid + TH / 2 + 46;
+    var champ = model.fst.winner && findBracketTeam(currentBracket, model.fst.winner);
+    if (champ) {
+      sp(6); g.font = '700 17px ' + SANS; g.fillStyle = CYAN; g.fillText('CHAMPION', cx, by);
+      var cfs = 42, cname = (champ.name || '').toUpperCase();
+      sp(2); g.font = '400 ' + cfs + 'px ' + BEBAS;
+      while (g.measureText(cname).width > centerW && cfs > 22) { cfs--; g.font = '400 ' + cfs + 'px ' + BEBAS; }
+      g.fillStyle = '#fff'; g.fillText(cname, cx, by + cfs + 4);
+      by += cfs + 40;
+    }
+    // third place, if there is room
+    if (model.third && by + 40 + TH < BH) {
+      var tst = model.third.st;
+      sp(3); g.font = '400 28px ' + BEBAS; g.fillStyle = '#ffb36b'; g.fillText((model.third.round.name || '3rd place').toUpperCase(), cx, by + 6, centerW);
+      var ty3 = by + 26 + TH / 2;
+      g.beginPath(); g.moveTo(f0.x + TW, ty3); g.lineTo(f1.x, ty3); g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 2; g.stroke();
+      tile({ st: tst, k: 0 }, f0.x, ty3, TW); tile({ st: tst, k: 1 }, f1.x, ty3, TW);
+    }
+    g.textAlign = 'left'; sp(0);
+    g.restore();
+
+    // ---- footer: presenting brand | LoC badge · tagline · hashtag
+    var fy = H - 70;
+    if (opts.brand) { var bw = Math.min(150, 40 * opts.brand.width / opts.brand.height), bh = bw * opts.brand.height / opts.brand.width; g.drawImage(opts.brand, 60, fy - bh / 2, bw, bh);
+      g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(60 + bw + 22, fy - 34); g.lineTo(60 + bw + 22, fy + 34); g.stroke();
+      if (opts.badge) g.drawImage(opts.badge, 60 + bw + 44, fy - 40, 80, 80);
+    } else if (opts.badge) g.drawImage(opts.badge, 60, fy - 40, 80, 80);
+    g.textAlign = 'center'; g.fillStyle = '#fff';
+    if (opts.tagline) { sp(2); g.font = '400 40px ' + BEBAS; g.fillText(opts.tagline.toUpperCase(), W / 2, fy - 6); }
+    if (opts.hashtag) { sp(0.5); g.font = '600 32px ' + SANS; g.fillStyle = CYAN; g.fillText(opts.hashtag, W / 2, fy + 40); }
+    g.textAlign = 'left'; sp(0);
+    return c;
+  }
+
+  function openBracketGraphic(stageId) {
+    if (!isAdmin || !document.body.classList.contains('admin-edit-mode')) return;
+    var stage = findStage(currentBracket, stageId), t = currentBracketTournament;
+    var model = stage && bracketGraphicModel(stage);
+    if (!model) { window.alert(uiText('bg.notReady')); return; }
+    var year = (t.dateSort || '').slice(0, 4), div = stage.competition ? divisionWord(stage.competition) : '';
+    var defTitle = t.name || '', defSub = [t.dateLabel ? t.dateLabel + ' ' + year : '', div].filter(Boolean).join(' · ');
+    var wrap = document.createElement('div');
+    wrap.className = 'pcard-modal rv-modal bg-modal';
+    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', uiText('bg.title'));
+    var opt = function(name, val, label, on) { return '<label class="rv-opt"><input type="radio" name="' + name + '" value="' + val + '"' + (on ? ' checked' : '') + '><span>' + esc(label) + '</span></label>'; };
+    wrap.innerHTML = '<div class="pcard-sheet rv-sheet bg-sheet">' +
+      '<h2 class="rv-h">' + esc(uiText('bg.title')) + '</h2>' +
+      '<div class="bg-fields">' +
+        '<div class="form-group"><label for="bgTitle">' + esc(uiText('bg.fTitle')) + '</label><input id="bgTitle" value="' + esc(defTitle) + '" maxlength="40"></div>' +
+        '<div class="form-group"><label for="bgSub">' + esc(uiText('bg.fSub')) + '</label><input id="bgSub" value="' + esc(defSub) + '" maxlength="60"></div>' +
+        '<div class="form-group"><label for="bgTag">' + esc(uiText('bg.fTag')) + '</label><input id="bgTag" value="All games live on bolao.tv" maxlength="60"></div>' +
+        '<div class="form-group"><label for="bgHash">' + esc(uiText('bg.fHash')) + '</label><input id="bgHash" value="#footvolleyeverywhere" maxlength="40"></div>' +
+      '</div>' +
+      '<div class="rv-row"><span class="rv-k">' + esc(uiText('rv.background')) + '</span>' + opt('bgBg', 'transparent', uiText('rv.bgTransparent'), true) + opt('bgBg', 'design', uiText('rv.bgDesign'), false) + opt('bgBg', 'photo', uiText('rv.bgPhoto'), false) + '</div>' +
+      '<input type="file" accept="image/*" id="bgPhotoFile" hidden>' +
+      '<label class="checkbox-row"><input type="checkbox" id="bgSponsors" checked><span>' + esc(uiText('bg.sponsors')) + '</span></label>' +
+      '<p class="rv-note" id="bgNote">' + esc(uiText('bg.note')) + '</p>' +
+      '<div class="bg-preview" id="bgPreview" hidden><img id="bgImg" alt=""></div>' +
+      '<div class="pcard-actions">' +
+        '<button type="button" class="btn btn-cyan btn-gradient" id="bgGo">' + esc(uiText('bg.create')) + '</button>' +
+        '<a class="btn btn-outline" id="bgDownload" hidden>' + esc(uiText('rv.download')) + '</a>' +
+        '<button type="button" class="btn btn-outline" id="bgShare" hidden>' + esc(uiText('detail.share')) + '</button>' +
+        '<button type="button" class="btn btn-outline" id="bgClose">Close</button>' +
+      '</div></div>';
+    document.body.appendChild(wrap);
+    var $ = function(id) { return wrap.querySelector('#' + id); };
+    var val = function(name) { var el = wrap.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; };
+    var photo = null, url = null, file = null;
+    var close = function() { if (url) URL.revokeObjectURL(url); wrap.remove(); };
+    $('bgClose').addEventListener('click', close);
+    wrap.addEventListener('click', function(e) { if (e.target === wrap) close(); });
+    wrap.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
+    wrap.addEventListener('change', function(e) {
+      if (e.target.name === 'bgBg' && e.target.value === 'photo' && !photo) $('bgPhotoFile').click();
+      if (e.target.id === 'bgPhotoFile' && e.target.files[0]) {
+        var r = new FileReader(); r.onload = function() { loadImageAsync(r.result).then(function(im) { photo = im; }); }; r.readAsDataURL(e.target.files[0]);
+      }
+    });
+    $('bgGo').addEventListener('click', function() {
+      if (!isAdmin) return;
+      if (val('bgBg') === 'photo' && !photo) { $('bgPhotoFile').click(); return; }
+      var go = $('bgGo'); go.disabled = true; go.textContent = uiText('detail.creatingGraphic');
+      var teamIds = {};
+      model.tiles.concat(model.finals).forEach(function(x) { x.st.team.forEach(function(id) { if (id) teamIds[id] = 1; }); });
+      if (model.third) model.third.st.team.forEach(function(id) { if (id) teamIds[id] = 1; });
+      var ids = Object.keys(teamIds);
+      var fonts = document.fonts ? Promise.all(['400 60px "Bebas Neue"', '600 20px "Poppins"', '700 16px "Poppins"'].map(function(f) { return document.fonts.load(f); })).catch(function() {}) : Promise.resolve();
+      Promise.all([
+        fonts,
+        Promise.all(ids.map(function(id) { var tm = findBracketTeam(currentBracket, id), cl = tm && findClub(tm.club); return cl && cl.logo ? cleanLogoAsync(cl.logo).then(loadImageAsync) : null; })),
+        $('bgSponsors').checked ? Promise.all(adminSponsorLogos().map(loadImageAsync)) : Promise.resolve([]),
+        loadImageAsync(BADGE_URI), ensureBrandImg()
+      ]).then(function(r) {
+        var logos = {}; ids.forEach(function(id, i) { if (r[1][i]) logos[id] = r[1][i]; });
+        var canvas = drawBracketGraphic(model, { title: $('bgTitle').value, sub: $('bgSub').value, tagline: $('bgTag').value, hashtag: $('bgHash').value,
+          bg: val('bgBg'), photo: photo, logos: logos, sponsors: (r[2] || []).filter(Boolean), badge: r[3], brand: r[4] });
+        return new Promise(function(res) { canvas.toBlob(res, 'image/png'); });
+      }).then(function(blob) {
+        if (!document.body.contains(wrap)) return;
+        if (url) URL.revokeObjectURL(url);
+        url = URL.createObjectURL(blob);
+        var base = 'loc-bracket-' + (t.id || 'tournament') + (stage.competition ? '-' + String(stage.competition).toLowerCase() : '');
+        file = new File([blob], base + '.png', { type: 'image/png' });
+        $('bgImg').src = url; $('bgPreview').hidden = false; $('bgPreview').classList.toggle('is-transparent', val('bgBg') === 'transparent');
+        var dl = $('bgDownload'); dl.href = url; dl.download = base + '.png'; dl.hidden = false;
+        $('bgShare').hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
+        go.disabled = false; go.textContent = uiText('bg.again');
+      }).catch(function(err) {
+        go.disabled = false; go.textContent = uiText('bg.create');
+        $('bgNote').textContent = uiText('rv.error') + ' ' + (err && err.message ? err.message : '');
+      });
+    });
+    $('bgShare').addEventListener('click', function() { if (file) navigator.share({ files: [file], title: $('bgTitle').value }).catch(function() {}); });
+    $('bgTitle').focus();
+  }
+  document.addEventListener('click', function(e) {
+    var b = e.target.closest && e.target.closest('[data-bracket-graphic]');
+    if (b) openBracketGraphic(b.dataset.bracketGraphic);
+  });
 
   function renderLandingExtras() {
     var el = document.getElementById('landingExtras');
@@ -14422,7 +14786,10 @@ var CLUBS = [
   });
 
   function renderBracketStageBody(stage) {
-    return (renderBracketRoundsHtml(stage) || '<p class="empty-note">No rounds yet.</p>') +
+    var fi = -1; stage.rounds.forEach(function(r, ri) { if (r.side !== 'thirdPlace') fi = ri; });
+    var gfx = bracketMirrorEligible(stage, fi)
+      ? '<div class="admin-only bg-btn-row"><button type="button" class="btn btn-cyan btn-gradient btn-sm" data-bracket-graphic="' + esc(stage.id) + '">' + esc(uiText('bg.button')) + '</button></div>' : '';
+    return gfx + (renderBracketRoundsHtml(stage) || '<p class="empty-note">No rounds yet.</p>') +
       renderThirdPlacePanel(stage) +
       renderAddRoundPanel(stage);
   }
