@@ -8171,7 +8171,8 @@ var CLUBS = [
     // ---- geometry of the tree: drawn in its own space (fixed tile size)
     // and scaled to fit, so a 16-team bracket keeps the same proportions as
     // an 8-team one instead of squeezing the tiles
-    var D = model.depthCount, C = 2 * D + 2, M = 50, G = 18, TW = 232;
+    // G: room between columns for the bracket lines (they need straight runs)
+    var D = model.depthCount, C = 2 * D + 2, M = 50, G = 46, TW = 228;
     var BW = 2 * M + C * TW + (C - 1) * G, Y0 = titleBottom + 26, Y1 = H - 140;
     var s = Math.min(1, W / BW), BH = (Y1 - Y0) / s;
     var rows = Math.max(model.rows, 2), ROW = BH / rows, TH = Math.min(78, ROW * 0.66);
@@ -8191,11 +8192,13 @@ var CLUBS = [
       var teamId = t.st.team[t.k], won = t.st.winner && t.st.winner === teamId;
       // left half runs left-to-right, right half right-to-left
       var x1 = t.side === 'left' ? t.x + TW : t.x, x2 = t.side === 'left' ? to.x : to.x + TW;
-      var xm = (x1 + x2) / 2, r = 12, dir = t.cy < to.cy ? 1 : t.cy > to.cy ? -1 : 0, sx = x2 > x1 ? 1 : -1;
+      // right angles with a small rounded corner that always fits the gap
+      var xm = Math.round((x1 + x2) / 2), dir = t.cy < to.cy ? 1 : t.cy > to.cy ? -1 : 0, sx = x2 > x1 ? 1 : -1;
+      var r = Math.max(0, Math.min(8, Math.abs(xm - x1) - 2, Math.abs(to.cy - t.cy) / 2));
       g.beginPath(); g.moveTo(x1, t.cy);
       if (dir) {
-        g.lineTo(xm - sx * r, t.cy); g.quadraticCurveTo(xm, t.cy, xm, t.cy + dir * r);
-        g.lineTo(xm, to.cy - dir * r); g.quadraticCurveTo(xm, to.cy, xm + sx * r, to.cy);
+        g.lineTo(xm - sx * r, t.cy); g.arcTo(xm, t.cy, xm, t.cy + dir * r, r);
+        g.lineTo(xm, to.cy - dir * r); g.arcTo(xm, to.cy, xm + sx * r, to.cy, r);
       }
       g.lineTo(x2, to.cy);
       g.strokeStyle = won ? CYAN : 'rgba(255,255,255,0.7)'; g.lineWidth = won ? 3.5 : 2.2;
