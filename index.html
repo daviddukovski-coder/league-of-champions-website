@@ -9133,7 +9133,10 @@ var CLUBS = [
       var r00 = cy * cz, r01 = -cy * sz, r02 = sy;
       var r10 = sx * sy * cz + cx * sz, r11 = -sx * sy * sz + cx * cz, r12 = -sx * cy;
       var r20 = -cx * sy * cz + sx * sz, r21 = cx * sy * sz + sx * cz, r22 = cx * cy;
-      var d = img.data, n = N, Hx = -0.25, Hy = -0.42, Hz = 0.87;
+      var d = img.data, n = N, Hx = -0.36, Hy = -0.5, Hz = 0.79;
+      // light from the upper left; flat palette (site navy instead of black)
+      var Lx = -0.45, Ly = -0.55, Lz = 0.7, OUTLINE = 5;
+      var YEL = [255, 214, 31], YEL_D = [232, 168, 8], NAV = [27, 30, 134], NAV_D = [14, 16, 92], INK = [7, 8, 63], HI = [255, 251, 224];
       for (var py = 0; py < n; py++) {
         var ny = (py + 0.5) / n * 2 - 1;
         for (var px = 0; px < n; px++) {
@@ -9144,11 +9147,20 @@ var CLUBS = [
           // The photo shows the front half; the hidden half reuses it mirrored
           // (only ever glimpsed at the rim while the ball leans).
           var u = Math.round(PC + ox * PR), v = Math.round(PC + oy * PR), q = (v * PW + u) * 4;
-          var spec = Math.pow(Math.max(0, nx * Hx + ny * Hy + nz * Hz), 30) * 60, shade = 0.78 + 0.22 * nz;
-          d[o]   = Math.min(255, photo[q] * shade + spec);
-          d[o+1] = Math.min(255, photo[q+1] * shade + spec);
-          d[o+2] = Math.min(255, photo[q+2] * shade + spec);
-          d[o+3] = Math.max(0, Math.min(1, (1 - Math.sqrt(r2)) * n * 0.5)) * 255;
+          // Illustrated (cel-shaded) instead of photo-real, to match the
+          // graphic style of the site: the photo only decides which panel a
+          // point belongs to (yellow or dark), then it gets a flat colour, a
+          // hard light/shadow split, a crisp highlight and an ink outline.
+          var R = photo[q], G = photo[q+1], B = photo[q+2], yel = (R + G) > 230 && B < (R + G) * 0.36;
+          var lit = nx * Lx + ny * Ly + nz * Lz, rr = Math.sqrt(r2), col;
+          if (rr > 1 - OUTLINE / n) col = INK;
+          else col = yel ? (lit > 0.2 ? YEL : YEL_D) : (lit > 0.2 ? NAV : NAV_D);
+          var hl = nx * Hx + ny * Hy + nz * Hz, mix = 0;
+          if (rr <= 1 - OUTLINE / n) {
+            if (hl > 0.988) mix = 0.85; else if (hl > 0.975) mix = 0.35;     // small crisp highlight
+          }
+          d[o] = col[0] + (HI[0] - col[0]) * mix; d[o+1] = col[1] + (HI[1] - col[1]) * mix; d[o+2] = col[2] + (HI[2] - col[2]) * mix;
+          d[o+3] = Math.max(0, Math.min(1, (1 - rr) * n * 0.5)) * 255;
         }
       }
       ctx.putImageData(img, 0, 0);
@@ -9529,8 +9541,9 @@ var CLUBS = [
   // Diacritic-insensitive ("João" matches "Joao") so a name typed/typo'd
   // without accents against the ranking sheet's spelling (or vice versa)
   // still matches — a real mismatch this exact-name lookup hit in practice.
+  // "Oberreßl" = "Oberressl" = "OBERRESSL", accents and extra spaces ignored
   function normalizeNameForMatch(s) {
-    return (s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return (s || '').toLowerCase().replace(/ß/g, 'ss').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s\-]+/g, ' ').trim();
   }
 
   function findRankingPointsForPlayer(name) {
@@ -9563,8 +9576,8 @@ var CLUBS = [
   // login): prefer the one with a photo/video, then any — never just the first.
   function findPlayerByName(name) {
     if (!name) return null;
-    var n = name.trim().toLowerCase();
-    var hits = playersDirectory.filter(function(p) { return (p.name || '').trim().toLowerCase() === n; });
+    var n = normalizeNameForMatch(name);
+    var hits = playersDirectory.filter(function(p) { return normalizeNameForMatch(p.name) === n; });
     return hits.filter(function(p) { return p.photoUrl || p.videoUrl; })[0] || hits[0] || null;
   }
 
@@ -13575,10 +13588,10 @@ var CLUBS = [
     if (stored === 'none') return null;
     if (stored && findBracketTeam(bracket, stored)) return stored;
     if (!currentUser) return null;
-    var nm = (currentUser.name || '').trim().toLowerCase();
+    var nm = normalizeNameForMatch(currentUser.name);
     var mine = (bracket.teams || []).filter(function(tm) {
       return tm.uid === currentUser.uid || tm.partnerUid === currentUser.uid ||
-        (nm && (tm.name || '').toLowerCase().split(/\s*&\s*/).indexOf(nm) !== -1);
+        (nm && (tm.name || '').split(/\s*&\s*/).map(normalizeNameForMatch).indexOf(nm) !== -1);
     });
     return mine.length ? mine[mine.length - 1].id : null;
   }
