@@ -15,6 +15,8 @@
  *                              the login token every signed-in request carries)
  *   ADMIN_UIDS              – comma-separated Firebase user ids with admin rights
  *                              (Firebase Console → Authentication → Users → User UID)
+ *   BUG_REPORT_EMAIL        – optional: where bug-report emails go (default: the
+ *                              Google account that owns this script)
  *
  * Security: every write that needs a person comes with a Firebase ID token
  * (body.idToken). It is verified with Google (verifyUser_); admin actions
@@ -52,6 +54,8 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents);
     // confirmPayment needs no login: it only ever trusts Stripe's own answer
     if (body.action === 'confirmPayment') return jsonOut_(confirmPayment_(body));
+    // bug reports may come from visitors without an account
+    if (body.action === 'bugReport') return jsonOut_(mailBugReport_(body));
     var user = verifyUser_(body.idToken);
     if (body.action === 'register') return jsonOut_(user ? registerTeam_(body, user) : { error: 'login required' });
     if (body.action === 'createCheckout') return jsonOut_(user ? createCheckout_(body) : { error: 'login required' });
@@ -62,6 +66,32 @@ function doPost(e) {
   } catch (err) {
     return jsonOut_({ error: String(err) });
   }
+}
+
+/* -------------------- Bug reports -------------------- */
+
+// The report itself is stored in Firestore by the site; this only emails a
+// short heads-up. Anyone can call it, so it only ever writes to the admin
+// (BUG_REPORT_EMAIL, else the account that owns this script), as plain
+// text, and at most 30 mails an hour.
+function mailBugReport_(body) {
+  var cache = CacheService.getScriptCache();
+  var sent = Number(cache.get('bugMails') || 0);
+  if (sent >= 30) return { ok: false, error: 'rate limited' };
+  cache.put('bugMails', String(sent + 1), 3600);
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('BUG_REPORT_EMAIL') || Session.getEffectiveUser().getEmail();
+  if (!to) return { ok: false, error: 'no recipient' };
+  var line = function(v, max) { return String(v || '').replace(/[\r\n]+/g, ' ').slice(0, max); };
+  var site = props.getProperty('SITE_BASE_URL') || '';
+  MailApp.sendEmail(to, 'Bug report: ' + line(body.text, 60),
+    'New bug report on the League of Champions website:\n\n' +
+    String(body.text || '').slice(0, 2000) + '\n\n' +
+    'Page: ' + line(body.page, 500) + '\n' +
+    'From: ' + line(body.who, 200) + '\n\n' +
+    'Review it under Admin → Bug reports' + (site ? ': ' + site + '#/admin' : '') + '\n' +
+    '(report ' + line(body.id, 60) + ')');
+  return { ok: true };
 }
 
 /* -------------------- Who is calling? -------------------- */

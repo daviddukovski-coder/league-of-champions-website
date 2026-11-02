@@ -96,6 +96,23 @@ service cloud.firestore {
       }
     }
 
+    // ---- bug reports (the "Report a bug" button) ------------------------
+    // Who may send one is the admin's switch in Admin → Bug reports
+    // (content/site.settings.bugReports: 'all' | 'admins' | 'off').
+    // Only the admin reads and works through them.
+    match /bugReports/{id} {
+      function bugMode() { return get(/databases/$(database)/documents/content/site).data.get('settings', {}).get('bugReports', 'all'); }
+      allow read, update, delete: if isAdmin();
+      allow create: if (isAdmin() || bugMode() == 'all')
+        && request.resource.data.keys().hasOnly(['text', 'status', 'createdAt', 'uid', 'name', 'email', 'page', 'element', 'device', 'errors', 'screenshot'])
+        && str(request.resource.data.text, 2000) && request.resource.data.text.size() > 0
+        && request.resource.data.status == 'new'
+        && optStr('name', 100) && optStr('email', 200)
+        && (!('uid' in request.resource.data) || request.resource.data.uid == null || isMe(request.resource.data.uid))
+        && (!('errors' in request.resource.data) || (request.resource.data.errors is list && request.resource.data.errors.size() <= 10))
+        && optStr('screenshot', 900000);
+    }
+
     // ---- everything else: closed ---------------------------------------
     match /{document=**} {
       allow read, write: if false;

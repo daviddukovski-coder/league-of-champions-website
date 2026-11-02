@@ -2858,6 +2858,63 @@
   .brand-panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .brand-panel-head h2 { margin:0; font:400 24px/1 'Bebas Neue', sans-serif; letter-spacing:0.06em; }
   .brand-panel-close { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); background:none; color:#fff; font-size:18px; cursor:pointer; }
+  /* bug reporter: button bottom left, point-at-it layer, report form */
+  .bug-fab { position:fixed; left:calc(18px + env(safe-area-inset-left, 0px)); bottom:calc(18px + env(safe-area-inset-bottom, 0px)); z-index:58; display:flex; align-items:center; gap:8px; min-height:44px; padding:0 16px 0 13px; border-radius:999px; border:1px solid rgba(255,255,255,0.4); background:rgba(11,13,99,0.86); color:#fff; font:700 11px/1 'Poppins', sans-serif; letter-spacing:0.14em; text-transform:uppercase; box-shadow:0 10px 30px rgba(3,4,40,0.5); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); cursor:pointer; touch-action:manipulation; }
+  .bug-fab[hidden] { display:none; }
+  .bug-fab svg { width:18px; height:18px; color:var(--cyan); flex-shrink:0; }
+  .bug-fab:hover { border-color:var(--cyan); color:var(--cyan); }
+  .bug-fab:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+  .bug-fab:active { transform:scale(0.97); }
+  body.admin-edit-mode .bug-fab { bottom:calc(74px + env(safe-area-inset-bottom, 0px)); }
+  body.court-mode .bug-fab { display:none; }
+  .bug-pick { position:fixed; inset:0; z-index:400; cursor:crosshair; }
+  .bug-pick-bar { position:fixed; left:50%; top:calc(14px + env(safe-area-inset-top, 0px)); transform:translateX(-50%); display:flex; align-items:center; gap:8px; width:max-content; max-width:calc(100vw - 24px); padding:6px 6px 6px 16px; border-radius:999px; background:rgba(11,13,99,0.96); border:1px solid rgba(0,242,255,0.5); box-shadow:0 16px 40px rgba(3,4,40,0.55); color:#fff; font:600 13px/1.3 'Poppins', sans-serif; cursor:default; }
+  .bug-pick-box { position:fixed; pointer-events:none; border:3px solid #ff3b5c; border-radius:6px; box-shadow:0 0 0 100vmax rgba(3,4,40,0.28); transition:left .12s ease-out, top .12s ease-out, width .12s ease-out, height .12s ease-out; }
+  .bug-pick.is-capturing .bug-pick-bar { visibility:hidden; }
+  .bug-btn { min-height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--cyan); background:var(--cyan); color:#05063a; font:700 12px/1 'Poppins', sans-serif; letter-spacing:0.04em; cursor:pointer; white-space:nowrap; }
+  .bug-btn-ghost { background:none; color:#fff; border-color:rgba(255,255,255,0.4); }
+  .bug-btn:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
+  .bug-modal { position:fixed; inset:0; z-index:400; display:grid; place-items:center; padding:16px; background:rgba(3,4,40,0.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); overscroll-behavior:contain; }
+  .bug-sheet { display:flex; flex-direction:column; gap:10px; width:min(460px, 100%); max-height:calc(100dvh - 32px); overflow:auto; padding:20px; border-radius:18px; background:rgba(11,13,99,0.97); border:1px solid rgba(255,255,255,0.3); box-shadow:0 24px 60px rgba(3,4,40,0.6); color:#fff; }
+  .bug-sheet-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .bug-sheet-head h2 { margin:0; font:400 26px/1 'Bebas Neue', sans-serif; letter-spacing:0.06em; }
+  .bug-close { flex-shrink:0; width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); background:none; color:#fff; font-size:18px; cursor:pointer; }
+  .bug-shot { display:block; width:100%; max-height:36vh; object-fit:contain; border-radius:10px; background:rgba(3,4,40,0.5); }
+  .bug-noshot, .bug-who { margin:0; font-size:13px; color:rgba(255,255,255,0.7); }
+  .bug-label { font:600 12px/1.3 'Poppins', sans-serif; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.85); }
+  .bug-label span { text-transform:none; letter-spacing:0; font-weight:400; color:rgba(255,255,255,0.6); }
+  .bug-sheet textarea, .bug-sheet input { width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); color:#fff; font:16px/1.4 'Poppins', sans-serif; resize:vertical; }
+  .bug-sheet textarea::placeholder, .bug-sheet input::placeholder { color:rgba(255,255,255,0.45); }
+  .bug-sheet textarea:focus-visible, .bug-sheet input:focus-visible { outline:2px solid var(--cyan); outline-offset:1px; }
+  .bug-status { min-height:1.3em; margin:0; font-size:13px; color:var(--cyan); }
+  .bug-zoom-img { max-width:100%; max-height:calc(100dvh - 32px); border-radius:12px; }
+  /* Admin → Bug reports */
+  .bug-mode { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .bug-mode .btn[aria-pressed="true"] { background:var(--cyan); border-color:var(--cyan); color:#05063a; }
+  .bug-list { display:grid; gap:14px; }
+  .bug-card { display:grid; grid-template-columns:minmax(0,240px) minmax(0,1fr); gap:18px; padding:16px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); }
+  .bug-card.is-new { border-color:var(--cyan); }
+  .bug-card.is-done, .bug-card.is-rejected { opacity:0.7; }
+  .bug-card-zoom { padding:0; border:0; background:none; cursor:zoom-in; align-self:start; }
+  .bug-card-zoom img { display:block; width:100%; border-radius:10px; }
+  .bug-card-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:12px; color:var(--text-muted); }
+  .bug-pill { padding:3px 9px; border-radius:999px; font-weight:700; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; background:rgba(0,242,255,0.14); color:var(--cyan); }
+  .bug-card-text { margin:8px 0; font-size:15px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .bug-card-page { font-size:13px; overflow-wrap:anywhere; }
+  .bug-card-tech { margin:10px 0; font-size:12px; color:var(--text-muted); }
+  .bug-card-tech summary { cursor:pointer; }
+  .bug-card-tech dl { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 10px; margin:8px 0 0; }
+  .bug-card-tech dt { font-weight:700; }
+  .bug-card-tech dd { margin:0; overflow-wrap:anywhere; }
+  .bug-card label { display:block; margin:10px 0 4px; font-size:12px; font-weight:600; }
+  .bug-card textarea { width:100%; min-height:64px; padding:10px; border-radius:10px; border:1px solid var(--border); background:transparent; color:inherit; font:inherit; font-size:14px; resize:vertical; }
+  .bug-card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; }
+  @media (max-width:640px) {
+    .bug-fab { width:44px; padding:0; justify-content:center; }
+    .bug-fab span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    body.has-app-bar .bug-fab { bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
+    .bug-card { grid-template-columns:1fr; }
+  }
   .brand-panel-close:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
   .bp-seg { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:5px; border-radius:999px; border:1px solid rgba(255,255,255,0.25); background:rgba(3,4,40,0.35); margin-bottom:14px; }
   .bp-seg button { min-height:44px; border-radius:999px; border:1px solid transparent; background:none; color:rgba(255,255,255,0.8); font:700 12px/1 'Poppins', sans-serif; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -3384,6 +3441,7 @@
   <canvas class="ball-ad-canvas" aria-hidden="true"></canvas>
 </a>
 
+<button type="button" class="bug-fab" id="bugFab" data-bug-ui hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 9V8a3 3 0 0 1 6 0v1"/><path d="M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1-10 0v-3a6 6 0 0 1 1-3"/><path d="M3 13h4M17 13h4M12 20v-6M4 19l3.35-2M20 19l-3.35-2M4 7l3.75 2.4M20 7l-3.75 2.4"/></svg><span>Report a bug</span></button>
 <button type="button" class="brand-fab admin-only" id="brandFab" aria-expanded="false" aria-controls="brandPanel"><span data-ui-key="brand.fab">Branding</span></button>
 <div class="brand-panel" id="brandPanel" role="dialog" aria-labelledby="brandPanelTitle" hidden>
   <div class="brand-panel-head"><h2 id="brandPanelTitle" data-ui-key="brand.panelTitle">Presenting brand</h2><button type="button" class="brand-panel-close" aria-label="Close">✕</button></div>
@@ -3404,6 +3462,20 @@
 
 <script>
 (function() {
+  // The last few script errors on this page; a bug report sends them along.
+  var recentErrors = [];
+  function noteError(msg) {
+    recentErrors.push(new Date().toISOString().slice(11, 19) + ' ' + String(msg).slice(0, 300));
+    if (recentErrors.length > 10) recentErrors.shift();
+  }
+  window.addEventListener('error', function(e) { noteError((e.message || 'Error') + (e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno : '')); });
+  window.addEventListener('unhandledrejection', function(e) { noteError('Promise: ' + ((e.reason && e.reason.message) || e.reason)); });
+  var consoleError = console.error;
+  console.error = function() {
+    try { noteError([].map.call(arguments, function(a) { return (a && a.message) || String(a); }).join(' ')); } catch (x) {}
+    return consoleError.apply(console, arguments);
+  };
+
   /* ==================================================================
      CONFIG – fill in before going live
      ================================================================== */
@@ -3967,6 +4039,7 @@ var CLUBS = [
     document.getElementById('adminNavLink').hidden = !isAdmin;
     if (!isAdmin) setEditMode(false);
     document.body.classList.toggle('is-admin', isAdmin);
+    paintBugFab();
   }
 
   function setEditMode(on) {
@@ -10682,9 +10755,11 @@ var CLUBS = [
       '<button class="tab' + (adminTab === 'tournaments' ? ' active' : '') + '" data-admin-tab="tournaments">Tournaments</button>' +
       '<button class="tab' + (adminTab === 'ranking-points' ? ' active' : '') + '" data-admin-tab="ranking-points">Ranking Points</button>' +
       '<button class="tab' + (adminTab === 'settings' ? ' active' : '') + '" data-admin-tab="settings">Site Settings</button>' +
+      '<button class="tab' + (adminTab === 'bugs' ? ' active' : '') + '" data-admin-tab="bugs">Bug reports</button>' +
     '</div>';
     var body = adminTab === 'tournaments' ? renderAdminTournaments()
       : adminTab === 'ranking-points' ? renderAdminRankingPoints()
+      : adminTab === 'bugs' ? renderAdminBugs()
       : renderAdminSettings();
     el.innerHTML = tabsHtml + body;
 
@@ -10699,6 +10774,7 @@ var CLUBS = [
 
     if (adminTab === 'tournaments') wireAdminTournaments(el);
     else if (adminTab === 'ranking-points') wireRankingPointsPanels(el);
+    else if (adminTab === 'bugs') wireAdminBugs(el);
     else wireAdminSettings(el);
   }
 
@@ -10973,6 +11049,387 @@ var CLUBS = [
       btn.addEventListener('click', function() {
         removeSponsorLogo(parseInt(btn.dataset.removeSponsorLogo, 10)).then(function() { renderAdmin(); });
       });
+    });
+  }
+
+  /* ==================================================================
+     BUG REPORTER — while the site is being tested, a button on every page:
+     point at what's wrong, describe it, send. The report (text, screenshot
+     with the spot marked, page, device, recent script errors) goes to the
+     Firestore 'bugReports' collection and the admin gets an email; it is
+     reviewed under Admin → Bug reports. Who may report (everyone / admins
+     only / off) is content/site.settings.bugReports — the Firestore rules
+     check the same field, so switching it there is enough.
+     ================================================================== */
+  function bugReportMode() {
+    var m = contentOverrides.settings && contentOverrides.settings.bugReports;
+    return m === 'admins' || m === 'off' ? m : 'all';
+  }
+  function paintBugFab() {
+    var fab = document.getElementById('bugFab');
+    var mode = bugReportMode();
+    if (fab) fab.hidden = !(mode === 'all' || (mode === 'admins' && isAdmin));
+  }
+  document.getElementById('bugFab').addEventListener('click', startBugReport);
+  // reports are written by visitors: only ever put a real JPEG data URL into src
+  function safeBugShot(s) { return typeof s === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(s) ? s : null; }
+
+  var bugState = null; // { element, shot } while a report is being made
+  var bugDraft = '';   // the text survives "pick another spot"
+
+  function startBugReport() {
+    if (bugState) return;
+    bugState = {};
+    var layer = document.createElement('div');
+    layer.className = 'bug-pick';
+    layer.setAttribute('data-bug-ui', '');
+    layer.innerHTML = '<div class="bug-pick-bar" role="dialog" aria-label="Report a bug"><span>Tap the spot that’s wrong</span>' +
+      '<button type="button" class="bug-btn" data-bug-skip>Skip</button>' +
+      '<button type="button" class="bug-btn bug-btn-ghost" data-bug-cancel aria-label="Cancel">✕</button></div>' +
+      '<div class="bug-pick-box" hidden></div>';
+    document.body.appendChild(layer);
+    var box = layer.querySelector('.bug-pick-box');
+    var under = function(e) {
+      layer.style.pointerEvents = 'none';
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      layer.style.pointerEvents = '';
+      return el && !el.closest('[data-bug-ui]') && el !== document.documentElement ? el : null;
+    };
+    var mark = function(el) {
+      if (!el) { box.hidden = true; return; }
+      var r = el.getBoundingClientRect();
+      box.hidden = false;
+      box.style.left = r.left + 'px'; box.style.top = r.top + 'px'; box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
+    };
+    layer.addEventListener('pointermove', function(e) { if (e.pointerType === 'mouse') mark(under(e)); });
+    layer.addEventListener('click', function(e) {
+      if (e.target.closest('[data-bug-cancel]')) { closeBugReport(); return; }
+      if (e.target.closest('[data-bug-skip]')) { captureBug(null); return; }
+      if (e.target.closest('.bug-pick-bar')) return;
+      var el = under(e);
+      if (!el) return;
+      mark(el);
+      captureBug(el);
+    });
+    layer.querySelector('[data-bug-skip]').focus();
+  }
+
+  function closeBugReport() {
+    document.querySelectorAll('.bug-pick, .bug-modal').forEach(function(n) { n.remove(); });
+    bugState = null;
+    var fab = document.getElementById('bugFab');
+    if (fab && !fab.hidden) fab.focus();
+  }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && bugState) closeBugReport(); });
+
+  function describeElement(el) {
+    var path = [], n = el;
+    while (n && n.nodeType === 1 && n !== document.body && path.length < 6) {
+      if (n.id) { path.unshift(n.tagName.toLowerCase() + '#' + n.id); break; }
+      var cls = [].slice.call(n.classList, 0, 2).join('.');
+      path.unshift(n.tagName.toLowerCase() + (cls ? '.' + cls : ''));
+      n = n.parentElement;
+    }
+    return {
+      selector: path.join(' > ').slice(0, 300),
+      text: (el.innerText || el.getAttribute('alt') || el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 200)
+    };
+  }
+
+  function captureBug(el) {
+    var layer = document.querySelector('.bug-pick');
+    var rect = el ? el.getBoundingClientRect() : null;
+    bugState.element = el ? describeElement(el) : null;
+    if (layer) layer.classList.add('is-capturing');
+    takeBugScreenshot(rect).catch(function() { return null; }).then(function(shot) {
+      if (!bugState) return;
+      bugState.shot = shot;
+      if (layer) layer.remove();
+      openBugForm();
+    });
+  }
+
+  // html2canvas is only loaded when someone actually reports something.
+  var html2canvasLoad = null;
+  function loadHtml2canvas() {
+    if (!html2canvasLoad) {
+      html2canvasLoad = new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload = function() { resolve(window.html2canvas); };
+        s.onerror = function() { html2canvasLoad = null; reject(new Error('html2canvas did not load')); };
+        document.head.appendChild(s);
+      });
+    }
+    return html2canvasLoad;
+  }
+
+  // What the visitor sees right now, with the marked spot outlined in red;
+  // a JPEG data URL small enough for one Firestore document (or null).
+  function takeBugScreenshot(rect) {
+    var w = window.innerWidth, h = window.innerHeight;
+    var scale = Math.min(window.devicePixelRatio || 1, 1280 / w, 1600 / h);
+    return loadHtml2canvas().then(function(html2canvas) {
+      return Promise.race([
+        html2canvas(document.body, {
+          x: window.scrollX, y: window.scrollY, width: w, height: h, windowWidth: document.documentElement.clientWidth, windowHeight: h,
+          scale: scale, useCORS: true, logging: false, backgroundColor: '#0b0d63',
+          ignoreElements: function(n) { return n.hasAttribute && n.hasAttribute('data-bug-ui'); }
+        }),
+        new Promise(function(resolve, reject) { setTimeout(function() { reject(new Error('screenshot timeout')); }, 12000); })
+      ]);
+    }).then(function(canvas) {
+      if (rect) {
+        var c = canvas.getContext('2d');
+        c.setTransform(1, 0, 0, 1, 0, 0); // html2canvas leaves its own scale set
+        c.lineWidth = Math.max(3, 4 * scale);
+        c.strokeStyle = '#ff3b5c';
+        c.strokeRect(rect.left * scale, rect.top * scale, rect.width * scale, rect.height * scale);
+      }
+      var url = canvas.toDataURL('image/jpeg', 0.72);
+      if (url.length > 850000) url = canvas.toDataURL('image/jpeg', 0.45);
+      return url.length > 850000 ? null : url;
+    });
+  }
+
+  function openBugForm() {
+    var wrap = document.createElement('div');
+    wrap.className = 'bug-modal';
+    wrap.setAttribute('data-bug-ui', '');
+    wrap.innerHTML = '<form class="bug-sheet" role="dialog" aria-modal="true" aria-labelledby="bugTitle" novalidate>' +
+      '<div class="bug-sheet-head"><h2 id="bugTitle">Report a bug</h2><button type="button" class="bug-close" data-bug-cancel aria-label="Close">✕</button></div>' +
+      (bugState.shot ? '<img class="bug-shot" src="' + bugState.shot + '" alt="Screenshot of the page' + (bugState.element ? ' with the marked spot' : '') + '">'
+        : '<p class="bug-noshot">No screenshot possible here — just describe what you see.</p>') +
+      '<div><button type="button" class="bug-btn bug-btn-ghost" data-bug-repick>' + (bugState.element ? 'Pick another spot' : 'Point at the spot') + '</button></div>' +
+      '<label class="bug-label" for="bugText">What’s wrong?</label>' +
+      '<textarea id="bugText" rows="4" maxlength="2000" placeholder="e.g. The score of the final is the wrong way round …"></textarea>' +
+      (currentUser ? '<p class="bug-who">Sent as ' + esc(currentUser.name || currentUser.email) + '</p>'
+        : '<label class="bug-label" for="bugEmail">Your email <span>(optional, if we have questions)</span></label>' +
+          '<input id="bugEmail" type="email" maxlength="200" autocomplete="email" spellcheck="false" placeholder="name@example.com">') +
+      '<p class="bug-status" role="status" aria-live="polite"></p>' +
+      '<button type="submit" class="btn btn-cyan">Send report</button>' +
+    '</form>';
+    document.body.appendChild(wrap);
+    var form = wrap.querySelector('form'), text = wrap.querySelector('#bugText'), status = wrap.querySelector('.bug-status'), send = form.querySelector('[type="submit"]');
+    text.value = bugDraft;
+    text.focus();
+    wrap.addEventListener('click', function(e) {
+      if (e.target === wrap || e.target.closest('[data-bug-cancel]')) { bugDraft = text.value; closeBugReport(); }
+      else if (e.target.closest('[data-bug-repick]')) { bugDraft = text.value; wrap.remove(); bugState = null; startBugReport(); }
+    });
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!text.value.trim()) { status.textContent = 'Please describe what’s wrong.'; text.focus(); return; }
+      if (!bugQuotaLeft()) { status.textContent = 'That’s a lot of reports for one day — thank you! Please send more tomorrow.'; return; }
+      var emailInput = wrap.querySelector('#bugEmail');
+      send.disabled = true;
+      status.textContent = 'Sending …';
+      submitBugReport(text.value.trim(), emailInput ? emailInput.value.trim() : '').then(function() {
+        bugQuotaUse();
+        bugDraft = '';
+        closeBugReport();
+        showToast('Thanks! Your report was sent.');
+      }).catch(function(err) {
+        send.disabled = false;
+        status.textContent = 'Could not send (' + ((err && err.code) || 'error') + '). Please try again.';
+      });
+    });
+  }
+
+  // a simple per-browser brake against accidental floods
+  function bugQuotaState() {
+    var today = new Date().toISOString().slice(0, 10);
+    try { var q = JSON.parse(localStorage.getItem('loc_bug_quota') || '{}'); return q.day === today ? q : { day: today, n: 0 }; }
+    catch (e) { return { day: today, n: 0 }; }
+  }
+  function bugQuotaLeft() { return bugQuotaState().n < 20; }
+  function bugQuotaUse() {
+    var q = bugQuotaState(); q.n++;
+    try { localStorage.setItem('loc_bug_quota', JSON.stringify(q)); } catch (e) {}
+  }
+
+  function pageHeading() {
+    var h = document.querySelector('.view:not([hidden]) h1');
+    return ((h && h.innerText) || document.title || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function submitBugReport(text, email) {
+    var report = {
+      text: text.slice(0, 2000),
+      status: 'new',
+      createdAt: Date.now(),
+      uid: currentUser ? currentUser.uid : null,
+      name: currentUser ? (currentUser.name || '').slice(0, 100) : null,
+      email: ((currentUser && currentUser.email) || email || '').slice(0, 200) || null,
+      page: { url: location.href.slice(0, 500), heading: pageHeading().slice(0, 200) },
+      element: bugState.element || null,
+      device: {
+        ua: navigator.userAgent.slice(0, 300), viewport: window.innerWidth + 'x' + window.innerHeight,
+        dpr: window.devicePixelRatio || 1, touch: (navigator.maxTouchPoints || 0) > 0, lang: navigator.language || ''
+      },
+      errors: recentErrors.slice(),
+      screenshot: bugState.shot || null
+    };
+    var saved;
+    if (AUTH_DEMO_MODE) {
+      var list = demoBugReports();
+      report.id = genId('bug');
+      list.unshift(report);
+      try { localStorage.setItem('loc_bug_reports', JSON.stringify(list)); } catch (e) { report.screenshot = null; localStorage.setItem('loc_bug_reports', JSON.stringify(list)); }
+      saved = Promise.resolve(report.id);
+    } else {
+      saved = firebase.firestore().collection('bugReports').add(report).then(function(ref) { return ref.id; });
+    }
+    return saved.then(function(id) {
+      // heads-up email to the admin; best-effort, never blocks the report
+      if (!DEMO_MODE) apiPost('bugReport', { id: id, text: report.text, page: report.page.url, who: report.name || report.email || 'anonymous' }).catch(function() {});
+    });
+  }
+
+  function demoBugReports() {
+    try { return JSON.parse(localStorage.getItem('loc_bug_reports') || '[]'); } catch (e) { return []; }
+  }
+  function loadBugReports() {
+    if (AUTH_DEMO_MODE) return Promise.resolve(demoBugReports());
+    return firebase.firestore().collection('bugReports').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
+      return snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    });
+  }
+  function updateBugReport(id, fields) {
+    if (!isAdmin) return Promise.reject(new Error('Not authorized.'));
+    if (AUTH_DEMO_MODE) {
+      var list = demoBugReports();
+      list.forEach(function(r) { if (r.id === id) Object.assign(r, fields); });
+      localStorage.setItem('loc_bug_reports', JSON.stringify(list));
+      return Promise.resolve();
+    }
+    return firebase.firestore().collection('bugReports').doc(id).update(fields);
+  }
+
+  // The admin's thread with a reporter (in both inboxes): questions about a
+  // report, and the "it's fixed" message once a report is marked done.
+  function bugThread(report) {
+    var id = 'bugs__' + currentUser.uid + '__' + report.uid;
+    return getConversation(id).then(function(existing) {
+      if (existing) return existing;
+      var names = {};
+      names[currentUser.uid] = 'League of Champions';
+      names[report.uid] = report.name || report.email || 'Player';
+      var data = {
+        id: id, kind: 'bug', tournamentId: 'bugs', tournamentName: 'Bug reports', competition: '',
+        participants: [currentUser.uid, report.uid], participantNames: names,
+        requestStatus: 'none', requestedBy: currentUser.uid, requestFor: report.uid,
+        createdAt: Date.now(), lastMessageAt: Date.now(), lastMessageText: '', lastSenderUid: currentUser.uid
+      };
+      if (AUTH_DEMO_MODE) {
+        var all = JSON.parse(localStorage.getItem('loc_conversations') || '{}');
+        all[id] = data;
+        localStorage.setItem('loc_conversations', JSON.stringify(all));
+        return data;
+      }
+      return firebase.firestore().collection('conversations').doc(id).set(data).then(function() { return data; });
+    });
+  }
+
+  var BUG_STATUSES = [['new', 'New'], ['approved', 'Fix it'], ['rejected', 'Won’t fix'], ['done', 'Done']];
+  var adminBugFilter = 'open';
+
+  function renderAdminBugs() {
+    var mode = bugReportMode();
+    var modeBtn = function(value, label) {
+      return '<button type="button" class="btn btn-outline btn-sm" data-bug-mode="' + value + '" aria-pressed="' + (mode === value) + '">' + label + '</button>';
+    };
+    return '<div class="live-panel">' +
+      '<h2>Who can report bugs</h2>' +
+      '<p class="empty-note">The “Report a bug” button bottom left. Switch to “Admins only” when the site really launches.</p>' +
+      '<div class="bug-mode">' + modeBtn('all', 'Everyone') + modeBtn('admins', 'Admins only') + modeBtn('off', 'Off') + '</div>' +
+    '</div>' +
+    '<div class="form-row" style="align-items:flex-end;"><div class="form-group"><label for="bugFilter">Show</label><select id="bugFilter">' +
+      [['open', 'Open (new + fix it)'], ['all', 'All']].concat(BUG_STATUSES).map(function(o) {
+        return '<option value="' + o[0] + '"' + (adminBugFilter === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('') +
+    '</select></div></div>' +
+    '<div class="bug-list" id="adminBugList"><p class="empty-note">Loading …</p></div>';
+  }
+
+  function bugCardHtml(r) {
+    var hash = (r.page && r.page.url || '').split('#')[1];
+    var who = r.name || r.email || 'Anonymous visitor';
+    var statusLabel = (BUG_STATUSES.find(function(s) { return s[0] === r.status; }) || BUG_STATUSES[0])[1];
+    var tech = [];
+    if (r.element) tech.push(['Spot', (r.element.text ? '“' + r.element.text + '” · ' : '') + r.element.selector]);
+    if (r.device) tech.push(['Device', r.device.viewport + ' @' + r.device.dpr + 'x' + (r.device.touch ? ' · touch' : '') + ' · ' + r.device.lang + ' · ' + r.device.ua]);
+    if (r.email && r.name) tech.push(['Email', r.email]);
+    (r.errors || []).forEach(function(e, i) { tech.push([i ? '' : 'Errors', e]); });
+    var shot = safeBugShot(r.screenshot);
+    return '<article class="bug-card is-' + esc(r.status || 'new') + '" data-bug-id="' + esc(r.id) + '">' +
+      (shot ? '<button type="button" class="bug-card-zoom" data-bug-zoom aria-label="Enlarge screenshot"><img src="' + shot + '" alt="Screenshot from the report" loading="lazy"></button>' : '<p class="empty-note">No screenshot</p>') +
+      '<div>' +
+        '<div class="bug-card-meta"><span class="bug-pill">' + esc(statusLabel) + '</span><span>' + esc(formatMessageTime(r.createdAt)) + '</span><span>' + esc(who) + '</span></div>' +
+        '<p class="bug-card-text">' + esc(r.text || '') + '</p>' +
+        (hash ? '<a class="bug-card-page" href="#' + esc(hash) + '">' + esc((r.page.heading ? r.page.heading + ' · ' : '') + '#' + hash) + '</a>' : '') +
+        (tech.length ? '<details class="bug-card-tech"><summary>Technical details</summary><dl>' + tech.map(function(t) { return '<dt>' + esc(t[0]) + '</dt><dd>' + esc(t[1]) + '</dd>'; }).join('') + '</dl></details>' : '') +
+        '<label for="bugNote-' + esc(r.id) + '">How should Claude fix it?</label>' +
+        '<textarea id="bugNote-' + esc(r.id) + '" data-bug-note maxlength="2000" placeholder="e.g. Swap the score, Faccini won">' + esc(r.note || '') + '</textarea>' +
+        '<div class="bug-card-actions">' +
+          '<select data-bug-status aria-label="Status">' + BUG_STATUSES.map(function(s) { return '<option value="' + s[0] + '"' + (r.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select>' +
+          '<button type="button" class="btn btn-cyan btn-sm" data-bug-save>Save</button>' +
+          (r.uid ? '<button type="button" class="btn btn-outline btn-sm" data-bug-message>Message reporter</button>' : '') +
+          '<span class="bug-status" role="status" aria-live="polite"></span>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function wireAdminBugs(el) {
+    el.querySelectorAll('[data-bug-mode]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        saveContentFields('settings', { bugReports: btn.dataset.bugMode }).then(function() { paintBugFab(); renderAdmin(); });
+      });
+    });
+    el.querySelector('#bugFilter').addEventListener('change', function(e) { adminBugFilter = e.target.value; renderAdmin(); });
+    var listEl = el.querySelector('#adminBugList');
+    loadBugReports().then(function(all) {
+      var reports = all.filter(function(r) {
+        return adminBugFilter === 'all' || (adminBugFilter === 'open' ? (r.status === 'new' || r.status === 'approved') : r.status === adminBugFilter);
+      });
+      listEl.innerHTML = reports.length ? reports.map(bugCardHtml).join('') : '<p class="empty-note">No bug reports here.</p>';
+      listEl.querySelectorAll('[data-bug-id]').forEach(function(card) {
+        var r = reports.find(function(x) { return x.id === card.dataset.bugId; });
+        var status = card.querySelector('.bug-status');
+        var zoom = card.querySelector('[data-bug-zoom]');
+        if (zoom) zoom.addEventListener('click', function() {
+          var wrap = document.createElement('div');
+          wrap.className = 'bug-modal';
+          wrap.innerHTML = '<img class="bug-zoom-img" src="' + safeBugShot(r.screenshot) + '" alt="Screenshot from the report">';
+          wrap.addEventListener('click', function() { wrap.remove(); });
+          document.body.appendChild(wrap);
+        });
+        card.querySelector('[data-bug-save]').addEventListener('click', function() {
+          var next = card.querySelector('[data-bug-status]').value;
+          var fields = { status: next, note: card.querySelector('[data-bug-note]').value.trim().slice(0, 2000), updatedAt: Date.now() };
+          var thank = next === 'done' && r.uid && !r.thankedAt;
+          if (thank) fields.thankedAt = Date.now();
+          status.textContent = 'Saving …';
+          updateBugReport(r.id, fields).then(function() {
+            Object.assign(r, fields);
+            if (!thank) return;
+            return bugThread(r).then(function(convo) {
+              return sendMessage(convo, 'Thanks for your bug report (“' + r.text.slice(0, 80) + (r.text.length > 80 ? '…' : '') + '”) — it’s fixed now.');
+            });
+          }).then(function() {
+            status.textContent = thank ? 'Saved · reporter thanked' : 'Saved';
+            card.className = 'bug-card is-' + next;
+            card.querySelector('.bug-pill').textContent = BUG_STATUSES.find(function(s) { return s[0] === next; })[1];
+          }).catch(function(err) { status.textContent = 'Error: ' + ((err && err.message) || err); });
+        });
+        var msg = card.querySelector('[data-bug-message]');
+        if (msg) msg.addEventListener('click', function() {
+          bugThread(r).then(function(convo) { navigate('inbox/' + convo.id); });
+        });
+      });
+    }).catch(function(err) {
+      listEl.innerHTML = '<p class="empty-note">Could not load bug reports (' + esc((err && err.code) || 'error') + '). Are the new Firestore rules published?</p>';
     });
   }
 
@@ -17592,12 +18049,12 @@ var CLUBS = [
         var otherUid = c.participants.filter(function(u) { return u !== currentUser.uid; })[0];
         var otherName = c.participantNames[otherUid] || '';
         var badgeKey = c.requestStatus === 'pending' ? 'inbox.pendingBadge' : c.requestStatus === 'accepted' ? 'inbox.acceptedBadge' : 'inbox.declinedBadge';
-        var badgeClass = c.requestStatus === 'accepted' ? 'status-paid' : 'status-pending';
+        var badgeClass = c.requestStatus === 'accepted' || c.kind === 'bug' ? 'status-paid' : 'status-pending';
         return '<div class="inbox-row' + (conversationUnread(c) ? ' is-unread' : '') + '" data-conversation-id="' + esc(c.id) + '">' +
           '<div><strong>' + esc(otherName) + '</strong><span class="inbox-tournament">' + esc(c.tournamentName) + '</span></div>' +
           '<div class="inbox-preview">' + esc(c.lastMessageText || '') + '</div>' +
           '<span class="inbox-time">' + esc(formatMessageTime(c.lastMessageAt)) + '</span>' +
-          '<span class="status ' + badgeClass + '">' + uiText(badgeKey) + '</span>' +
+          '<span class="status ' + badgeClass + '">' + (c.kind === 'bug' ? 'Bug report' : uiText(badgeKey)) + '</span>' +
         '</div>';
       }).join('') + '</div>';
       el.querySelectorAll('[data-conversation-id]').forEach(function(row) {
