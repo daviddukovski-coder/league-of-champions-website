@@ -11374,7 +11374,7 @@ var CLUBS = [
         '<div class="bug-card-actions">' +
           '<select data-bug-status aria-label="Status">' + BUG_STATUSES.map(function(s) { return '<option value="' + s[0] + '"' + (r.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select>' +
           '<button type="button" class="btn btn-cyan btn-sm" data-bug-save>Save</button>' +
-          (r.uid ? '<button type="button" class="btn btn-outline btn-sm" data-bug-message>Message reporter</button>' : '') +
+          (r.uid && r.uid !== currentUser.uid ? '<button type="button" class="btn btn-outline btn-sm" data-bug-message>Message reporter</button>' : '') +
           '<span class="bug-status" role="status" aria-live="polite"></span>' +
         '</div>' +
       '</div>' +
@@ -11408,7 +11408,7 @@ var CLUBS = [
         card.querySelector('[data-bug-save]').addEventListener('click', function() {
           var next = card.querySelector('[data-bug-status]').value;
           var fields = { status: next, note: card.querySelector('[data-bug-note]').value.trim().slice(0, 2000), updatedAt: Date.now() };
-          var thank = next === 'done' && r.uid && !r.thankedAt;
+          var thank = next === 'done' && r.uid && r.uid !== currentUser.uid && !r.thankedAt;
           if (thank) fields.thankedAt = Date.now();
           status.textContent = 'Saving …';
           updateBugReport(r.id, fields).then(function() {
