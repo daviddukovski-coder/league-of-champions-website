@@ -4768,6 +4768,22 @@ var CLUBS = [
         });
       });
     });
+    // The bracket that decides a division ends in one final. A stage
+    // labelled "5th Place" etc. only plays out lower places, and a
+    // qualification tree ends in several "finals": neither decides medals.
+    function isClassification(s) { return /^\d+(st|nd|rd|th)\s+place/i.test(s.label || ''); }
+    function endsInOneFinal(s) {
+      var main = (s.rounds || []).filter(function(r) { return r.side !== 'thirdPlace'; });
+      return main.length > 0 && main[main.length - 1].matches.length === 1;
+    }
+    var hasDecider = {};
+    (bracket.stages || []).forEach(function(s) {
+      if (s.type === 'bracket' && endsInOneFinal(s) && !isClassification(s)) hasDecider[s.competition] = true;
+    });
+    // pools are only the decider when no knockout bracket follows them
+    (bracket.stages || []).forEach(function(s) {
+      if (s.type === 'modifiedPool' && hasDecider[s.competition]) poolFeedsForward[s.id] = true;
+    });
 
     (bracket.teams || []).forEach(function(t) {
       if (t.category === 'quali') placements[t.id] = 'Participation';
@@ -4787,6 +4803,9 @@ var CLUBS = [
       if (stage.type === 'bracket' || (stage.type === 'modifiedPool' && !poolFeedsForward[stage.id])) {
         var mainRounds = stage.rounds.filter(function(r) { return r.side !== 'thirdPlace'; });
         var thirdRound = stage.rounds.find(function(r) { return r.side === 'thirdPlace'; });
+        // such brackets decide no placements: their teams are placed by the
+        // main draw, or count as qualifiers
+        if (stage.type === 'bracket' && (!endsInOneFinal(stage) || isClassification(stage))) return;
         mainRounds.forEach(function(round, ri) {
           var isFinal = ri === mainRounds.length - 1;
           round.matches.forEach(function(m) {
@@ -4800,7 +4819,10 @@ var CLUBS = [
               placements[winner] = '1st';
               if (loser) placements[loser] = '2nd';
             } else if (loser) {
-              placements[loser] = knockoutRoundLabel(round.matches.length);
+              // named by distance from the final, not by its own match count:
+              // a 2nd-vs-3rd round with only 4 games before the
+              // quarterfinals is still the round of 16
+              placements[loser] = knockoutRoundLabel(Math.pow(2, mainRounds.length - 1 - ri));
             }
           });
         });
@@ -4837,7 +4859,30 @@ var CLUBS = [
       });
     });
 
+    // set by hand where the matches aren't on record (e.g. "lost in the
+    // round of 16" when only the quarterfinals onwards were kept)
+    (bracket.teams || []).forEach(function(t) {
+      if (t.placement && PLACEMENT_TO_POINTS_KEY[t.placement]) placements[t.id] = t.placement;
+    });
+
     return placements;
+  }
+
+  // Each team's ranking tier: a team that played stages labelled "LoC 100 …"
+  // (a smaller tier run alongside the main event) scores at that tier.
+  function teamTiers(bracket, tournamentTier) {
+    var tiers = {};
+    (bracket.stages || []).forEach(function(stage) {
+      var m = /^LoC\s*(\d+)/i.exec(stage.label || '');
+      if (!m) return;
+      var ids = (stage.teamIds || []).slice();
+      (stage.rounds || []).forEach(function(r) {
+        (r.slots || []).forEach(function(slot) { if (slot.source && slot.source.type === 'manual') ids.push(slot.source.teamId); });
+      });
+      ids.forEach(function(id) { tiers[id] = parseInt(m[1], 10); });
+    });
+    (bracket.teams || []).forEach(function(t) { if (tiers[t.id] == null) tiers[t.id] = tournamentTier; });
+    return tiers;
   }
 
   // Exact tab names in the Ranking spreadsheet, per year/gender/type — must
@@ -4873,6 +4918,7 @@ var CLUBS = [
     if (!sheetNames) return Promise.reject(new Error('No ranking sheet configured for year ' + year + '.'));
 
     var placements = computeTeamPlacements(bracket);
+    var tiers = teamTiers(bracket, tournament.tier);
     var skipped = [];
     var byGenderType = { Men: { players: [], clubTotals: {} }, Women: { players: [], clubTotals: {} } };
 
@@ -4883,7 +4929,7 @@ var CLUBS = [
         skipped.push(team.name + ' (no Division set)');
         return;
       }
-      var points = pointsForPlacement(tournament.tier, label);
+      var points = pointsForPlacement(tiers[team.id], label);
       var bucket = byGenderType[team.competition];
       teamPlayerNames(team).forEach(function(playerName) {
         bucket.players.push({ name: playerName, club1: team.club || null, club2: null, points: points });
