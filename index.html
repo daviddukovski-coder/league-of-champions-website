@@ -11174,7 +11174,17 @@ var CLUBS = [
         html2canvas(document.body, {
           x: window.scrollX, y: window.scrollY, width: w, height: h, windowWidth: document.documentElement.clientWidth, windowHeight: h,
           scale: scale, useCORS: true, logging: false, backgroundColor: '#0b0d63',
-          ignoreElements: function(n) { return n.hasAttribute && n.hasAttribute('data-bug-ui'); }
+          ignoreElements: function(n) { return n.hasAttribute && n.hasAttribute('data-bug-ui'); },
+          onclone: function(doc) {
+            // the copy would replay every entrance animation from its first
+            // (invisible, shrunk) frame: jump them all to their end state
+            var st = doc.createElement('style');
+            st.textContent = '*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important;}';
+            doc.head.appendChild(st);
+            // a <video> would come out as some other frame: use the one on screen
+            var live = document.querySelectorAll('video'), copies = doc.querySelectorAll('video');
+            [].forEach.call(live, function(v, i) { if (copies[i]) videoFrameInto(v, copies[i], doc); });
+          }
         }),
         new Promise(function(resolve, reject) { setTimeout(function() { reject(new Error('screenshot timeout')); }, 12000); })
       ]);
@@ -11190,6 +11200,26 @@ var CLUBS = [
       if (url.length > 850000) url = canvas.toDataURL('image/jpeg', 0.45);
       return url.length > 850000 ? null : url;
     });
+  }
+
+  // Replaces a video in the screenshot copy with a canvas of its current
+  // frame, cropped like object-fit:cover. Skipped when the frame can't be read.
+  function videoFrameInto(video, copy, doc) {
+    var r = video.getBoundingClientRect();
+    if (video.readyState < 2 || !r.width || !r.height || !video.videoWidth) return;
+    var c = doc.createElement('canvas');
+    c.width = Math.round(r.width); c.height = Math.round(r.height);
+    var k = Math.max(c.width / video.videoWidth, c.height / video.videoHeight);
+    var w = video.videoWidth * k, h = video.videoHeight * k;
+    try {
+      var ctx = c.getContext('2d');
+      ctx.drawImage(video, (c.width - w) / 2, (c.height - h) / 2, w, h);
+      ctx.getImageData(0, 0, 1, 1); // throws for a cross-origin video
+    } catch (e) { return; }
+    c.className = copy.className;
+    c.style.cssText = copy.style.cssText;
+    c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+    copy.parentNode.replaceChild(c, copy);
   }
 
   function openBugForm() {
