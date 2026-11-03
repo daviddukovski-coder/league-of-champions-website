@@ -25,6 +25,9 @@
  *
  * Required sheet tabs (exact header row spelling matters):
  *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId | UserId | PartnerId
+ *   (then CompanyName | VatNumber | JerseyFit | JerseySize | JerseyName | PartnerJerseyFit | PartnerJerseySize | PartnerJerseyName | PartnerClub)
+ *   PartnerClub = partner 2's club when it differs — only offered at 100-tier
+ *   tournaments, where the two partners may play for different clubs.
  */
 
 var REG_SHEET = 'Registrations';
@@ -172,7 +175,8 @@ function listRegistrations_(tournamentId) {
       jerseyName: r[idx.JerseyName],
       partnerJerseyFit: r[idx.PartnerJerseyFit],
       partnerJerseySize: r[idx.PartnerJerseySize],
-      partnerJerseyName: r[idx.PartnerJerseyName]
+      partnerJerseyName: r[idx.PartnerJerseyName],
+      partnerClub: idx.PartnerClub != null ? r[idx.PartnerClub] : ''
     });
   });
   return out;
@@ -200,7 +204,8 @@ function registerTeam_(body, user) {
     user.uid, cell_(body.partnerUid, 128),
     cell_(body.companyName, 120), cell_(body.vatNumber, 40),
     cell_(body.jerseyFit, 20), cell_(body.jerseySize, 10), cell_(body.jerseyName, 30),
-    cell_(body.partnerJerseyFit, 20), cell_(body.partnerJerseySize, 10), cell_(body.partnerJerseyName, 30)
+    cell_(body.partnerJerseyFit, 20), cell_(body.partnerJerseySize, 10), cell_(body.partnerJerseyName, 30),
+    cell_(body.partnerClub, 120)
   ]);
   return { ok: true, id: id };
 }
