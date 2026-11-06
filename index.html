@@ -3190,6 +3190,31 @@
   .tm-admin { margin-top:12px; }
   .tm-admin .btn { margin:3px; }
   .tm-add-wrap { margin-top:16px; }
+  /* Rules & Regulations page */
+  .rl-meta { display:inline-block; margin-top:14px; font-size:13px; letter-spacing:0.04em; color:var(--cyan); }
+  .rl-toc { margin:0 0 40px; padding:20px 24px; border-radius:22px; border:1px solid rgba(255,255,255,0.28); background:rgba(27,30,134,0.5); }
+  .rl-toc h2 { font:400 24px/1 'Bebas Neue', sans-serif; letter-spacing:0.03em; margin:0 0 12px; }
+  .rl-toc ol { margin:0; padding-left:22px; columns:2; column-gap:32px; }
+  .rl-toc li { margin:0 0 6px; break-inside:avoid; }
+  .rl-toc a { color:rgba(255,255,255,0.88); text-decoration:none; }
+  .rl-toc a:hover { color:var(--cyan); }
+  .rl-section { position:relative; margin:0 0 20px; padding:24px 24px 24px 84px; border-radius:22px; border:1px solid rgba(255,255,255,0.28); background:rgba(11,13,99,0.45); scroll-margin-top:100px; }
+  .rl-num { position:absolute; left:22px; top:22px; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font:400 24px/1 'Bebas Neue', sans-serif; color:#07083f; background:var(--cyan); box-shadow:0 0 18px rgba(0,242,255,0.45); }
+  .rl-section h3 { font:400 28px/1.05 'Bebas Neue', sans-serif; letter-spacing:0.03em; margin:8px 0 12px; }
+  .rl-body { color:rgba(255,255,255,0.85); line-height:1.65; font-size:15px; max-width:72ch; }
+  .rl-body p { margin:0 0 12px; }
+  .rl-body ul { margin:0 0 12px; padding-left:20px; }
+  .rl-body li { margin:0 0 4px; }
+  .rl-admin { margin-top:12px; }
+  .rl-admin .btn { margin:0 6px 6px 0; }
+  .rl-empty { padding:32px 24px; border-radius:22px; border:1px dashed rgba(255,255,255,0.35); color:rgba(255,255,255,0.8); text-align:center; }
+  .rl-form textarea { min-height:220px; }
+  .rules-link { display:inline-block; margin:-16px 0 24px 25px; font-size:12.5px; color:var(--cyan); }
+  @media (max-width: 640px) {
+    .rl-toc ol { columns:1; }
+    .rl-section { padding:20px 18px 20px 18px; }
+    .rl-num { position:static; margin-bottom:10px; width:38px; height:38px; font-size:21px; }
+  }
   .tm-form { margin-top:16px; max-width:520px; padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.28); background:rgba(11,13,99,0.55); }
   .tm-form[hidden] { display:none; }
   .tm-form textarea { width:100%; font:inherit; }
@@ -3441,6 +3466,7 @@
   <section id="view-kit" class="view" hidden><div class="container"><div id="kitContent"></div></div></section>
   <section id="view-team" class="view" hidden><div class="container"><div id="teamContent"></div></div></section>
   <section id="view-about" class="view" hidden><div class="container"><div id="aboutContent"></div></div></section>
+  <section id="view-rules" class="view" hidden><div class="container"><div id="rulesContent"></div></div></section>
   <section id="view-partner" class="view" hidden><div class="container"><div id="partnerContent"></div></div></section>
   <section id="view-brandpreview" class="view" hidden><div class="container"><div id="brandPreviewContent"></div></div></section>
 </main>
@@ -5635,6 +5661,20 @@ var CLUBS = [
     'bg.notReady': "This bracket needs a single final fed by two semifinals for the graphic.",
     'team.meet': "Meet the team",
     'team.footerLink': "The team",
+    'rules.footerLink': "Rules",
+    'rules.kicker': "League of Champions",
+    'rules.title': "Rules & Regulations",
+    'rules.text': "The rules every team accepts when it registers for a League of Champions tournament.",
+    'rules.version': "Version {v} · updated {date}",
+    'rules.empty': "The rules and regulations will be published here soon.",
+    'rules.contents': "Contents",
+    'rules.add': "+ Add section",
+    'rules.addHint': "Each section gets a number and appears in the contents. Every save publishes a new version, and each registration stores the version the team accepted.",
+    'rules.fTitle': "Section title",
+    'rules.fText': "Text",
+    'rules.fTextHint': "Empty line = new paragraph. Lines starting with \"- \" become a list.",
+    'rules.titleNeeded': "Please enter a section title.",
+    'rules.removeConfirm': "Remove the section \"{name}\"?",
     'team.edit': "Edit",
     'team.moveUp': "Move up",
     'team.remove': "Remove",
@@ -6033,6 +6073,7 @@ var CLUBS = [
     'register.vatNumberLabel': 'VAT Number *',
     'register.vatNumberPlaceholder': 'e.g. ATU12345678',
     'register.consentLabel': 'I agree to the processing of my data for tournament registration. *',
+    'register.rulesLabel': "I have read and accept the rules and regulations of the League of Champions. *", 'register.rulesLink': "Read the rules and regulations",
     'register.submitBtn': 'Register',
     'register.tournamentLabel': 'Tournament',
     'register.divisionLabel': 'Division',
@@ -6138,7 +6179,9 @@ var CLUBS = [
       'register.clubLabel': 'Verein *', 'register.clubPlaceholder': 'Verein suchen …', 'register.partnerClubLabel': 'Verein des Partners (falls anders)',
       'register.businessToggle': 'Ich benötige eine Rechnung mit USt-IdNr. (Anmeldung als Unternehmen)',
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
-      'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *',
+      'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *', 'register.rulesLabel': "Ich habe die Regeln und Bestimmungen der League of Champions gelesen und akzeptiere sie. *", 'register.rulesLink': "Regeln und Bestimmungen lesen",
+      'rules.footerLink': 'Regeln', 'rules.title': 'Regeln & Bestimmungen', 'rules.text': 'Die Regeln, die jedes Team mit der Anmeldung zu einem League-of-Champions-Turnier akzeptiert.',
+      'rules.version': 'Version {v} · aktualisiert am {date}', 'rules.empty': 'Die Regeln und Bestimmungen werden hier bald veröffentlicht.', 'rules.contents': 'Inhalt',
       'register.submitBtn': 'Registrieren', 'register.tournamentLabel': 'Turnier', 'register.divisionLabel': 'Kategorie', 'register.teamLabel': 'Team', 'register.feeLabel': 'Startgeld',
       'register.payBtn': 'Startgeld jetzt bezahlen', 'register.payLaterBtn': 'Ich bezahle später',
       'register.payNote': 'Sichere Zahlung über Stripe. Die Anmeldung ist erst nach Zahlungseingang offiziell bestätigt.',
@@ -6178,7 +6221,7 @@ var CLUBS = [
       'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Buscar club …', 'register.partnerClubLabel': 'Club del compañero (si es otro)',
       'register.businessToggle': 'Necesito una factura con NIF/IVA (me registro como empresa)',
       'register.companyNameLabel': 'Nombre de la empresa *', 'register.vatNumberLabel': 'Número de IVA *', 'register.vatNumberPlaceholder': 'p. ej. ATU12345678',
-      'register.consentLabel': 'Acepto el tratamiento de mis datos para la inscripción al torneo. *',
+      'register.consentLabel': 'Acepto el tratamiento de mis datos para la inscripción al torneo. *', 'register.rulesLabel': "He leído y acepto el reglamento de la League of Champions. *", 'register.rulesLink': "Leer el reglamento",
       'register.submitBtn': 'Registrarse', 'register.tournamentLabel': 'Torneo', 'register.divisionLabel': 'Categoría', 'register.teamLabel': 'Equipo', 'register.feeLabel': 'Cuota de inscripción',
       'register.payBtn': 'Pagar la cuota ahora', 'register.payLaterBtn': 'Pagaré más tarde',
       'register.payNote': 'Pago seguro a través de Stripe. La inscripción solo se confirma oficialmente una vez recibido el pago.',
@@ -6218,7 +6261,7 @@ var CLUBS = [
       'register.clubLabel': 'Clube *', 'register.clubPlaceholder': 'Procurar clube …', 'register.partnerClubLabel': 'Clube do parceiro (se for outro)',
       'register.businessToggle': 'Preciso de fatura com NIF/IVA (registo como empresa)',
       'register.companyNameLabel': 'Nome da empresa *', 'register.vatNumberLabel': 'Número de IVA *', 'register.vatNumberPlaceholder': 'ex.: ATU12345678',
-      'register.consentLabel': 'Concordo com o tratamento dos meus dados para a inscrição no torneio. *',
+      'register.consentLabel': 'Concordo com o tratamento dos meus dados para a inscrição no torneio. *', 'register.rulesLabel': "Li e aceito o regulamento da League of Champions. *", 'register.rulesLink': "Ler o regulamento",
       'register.submitBtn': 'Registar', 'register.tournamentLabel': 'Torneio', 'register.divisionLabel': 'Categoria', 'register.teamLabel': 'Equipa', 'register.feeLabel': 'Taxa de inscrição',
       'register.payBtn': 'Pagar taxa de inscrição agora', 'register.payLaterBtn': 'Pagarei mais tarde',
       'register.payNote': 'Pagamento seguro através da Stripe. A inscrição só é oficialmente confirmada após a receção do pagamento.',
@@ -6258,7 +6301,7 @@ var CLUBS = [
       'register.clubLabel': 'Klub *', 'register.clubPlaceholder': 'Søg klub …', 'register.partnerClubLabel': 'Makkerens klub (hvis en anden)',
       'register.businessToggle': 'Jeg har brug for en faktura med moms-nr. (tilmelding som virksomhed)',
       'register.companyNameLabel': 'Firmanavn *', 'register.vatNumberLabel': 'Moms-nr. *', 'register.vatNumberPlaceholder': 'f.eks. ATU12345678',
-      'register.consentLabel': 'Jeg accepterer behandlingen af mine data i forbindelse med turneringstilmeldingen. *',
+      'register.consentLabel': 'Jeg accepterer behandlingen af mine data i forbindelse med turneringstilmeldingen. *', 'register.rulesLabel': "Jeg har læst og accepterer League of Champions' regler og bestemmelser. *", 'register.rulesLink': "Læs reglerne",
       'register.submitBtn': 'Tilmeld', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Hold', 'register.feeLabel': 'Deltagergebyr',
       'register.payBtn': 'Betal deltagergebyr nu', 'register.payLaterBtn': 'Jeg betaler senere',
       'register.payNote': 'Sikker betaling via Stripe. Tilmeldingen er først officielt bekræftet, når betalingen er modtaget.',
@@ -6298,7 +6341,7 @@ var CLUBS = [
       'register.clubLabel': 'Klubb *', 'register.clubPlaceholder': 'Sök klubb …', 'register.partnerClubLabel': 'Partnerns klubb (om annan)',
       'register.businessToggle': 'Jag behöver en faktura med momsnummer (anmälan som företag)',
       'register.companyNameLabel': 'Företagsnamn *', 'register.vatNumberLabel': 'Momsnummer *', 'register.vatNumberPlaceholder': 't.ex. ATU12345678',
-      'register.consentLabel': 'Jag godkänner behandlingen av mina uppgifter för turneringsanmälan. *',
+      'register.consentLabel': 'Jag godkänner behandlingen av mina uppgifter för turneringsanmälan. *', 'register.rulesLabel': "Jag har läst och godkänner League of Champions regler och bestämmelser. *", 'register.rulesLink': "Läs reglerna",
       'register.submitBtn': 'Registrera', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Lag', 'register.feeLabel': 'Anmälningsavgift',
       'register.payBtn': 'Betala anmälningsavgift nu', 'register.payLaterBtn': 'Jag betalar senare',
       'register.payNote': 'Säker betalning via Stripe. Anmälan är officiellt bekräftad först när betalningen har mottagits.',
@@ -6338,7 +6381,7 @@ var CLUBS = [
       'register.clubLabel': 'Seura *', 'register.clubPlaceholder': 'Hae seuraa …', 'register.partnerClubLabel': 'Parin seura (jos eri)',
       'register.businessToggle': 'Tarvitsen laskun ALV-numerolla (ilmoittautuminen yrityksenä)',
       'register.companyNameLabel': 'Yrityksen nimi *', 'register.vatNumberLabel': 'ALV-numero *', 'register.vatNumberPlaceholder': 'esim. ATU12345678',
-      'register.consentLabel': 'Hyväksyn tietojeni käsittelyn turnausilmoittautumista varten. *',
+      'register.consentLabel': 'Hyväksyn tietojeni käsittelyn turnausilmoittautumista varten. *', 'register.rulesLabel': "Olen lukenut ja hyväksyn League of Championsin säännöt ja määräykset. *", 'register.rulesLink': "Lue säännöt",
       'register.submitBtn': 'Rekisteröidy', 'register.tournamentLabel': 'Turnaus', 'register.divisionLabel': 'Sarja', 'register.teamLabel': 'Joukkue', 'register.feeLabel': 'Osallistumismaksu',
       'register.payBtn': 'Maksa osallistumismaksu nyt', 'register.payLaterBtn': 'Maksan myöhemmin',
       'register.payNote': 'Turvallinen maksaminen Stripen kautta. Ilmoittautuminen vahvistetaan virallisesti vasta maksun saavuttua.',
@@ -6378,7 +6421,7 @@ var CLUBS = [
       'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Cerca club …', 'register.partnerClubLabel': 'Club del compagno (se diverso)',
       'register.businessToggle': 'Ho bisogno di una fattura con Partita IVA (registrazione come azienda)',
       'register.companyNameLabel': 'Ragione sociale *', 'register.vatNumberLabel': 'Partita IVA *', 'register.vatNumberPlaceholder': 'es. ATU12345678',
-      'register.consentLabel': "Acconsento al trattamento dei miei dati per l'iscrizione al torneo. *",
+      'register.consentLabel': "Acconsento al trattamento dei miei dati per l'iscrizione al torneo. *", 'register.rulesLabel': "Ho letto e accetto il regolamento della League of Champions. *", 'register.rulesLink': "Leggi il regolamento",
       'register.submitBtn': 'Registrati', 'register.tournamentLabel': 'Torneo', 'register.divisionLabel': 'Categoria', 'register.teamLabel': 'Squadra', 'register.feeLabel': "Quota d'iscrizione",
       'register.payBtn': "Paga subito la quota d'iscrizione", 'register.payLaterBtn': 'Pagherò più tardi',
       'register.payNote': "Pagamento sicuro tramite Stripe. L'iscrizione è confermata ufficialmente solo dopo la ricezione del pagamento.",
@@ -6418,7 +6461,7 @@ var CLUBS = [
       'register.clubLabel': 'Club *', 'register.clubPlaceholder': 'Rechercher un club …', 'register.partnerClubLabel': 'Club du partenaire (si différent)',
       'register.businessToggle': "J'ai besoin d'une facture avec numéro de TVA (inscription en tant qu'entreprise)",
       'register.companyNameLabel': "Nom de l'entreprise *", 'register.vatNumberLabel': 'Numéro de TVA *', 'register.vatNumberPlaceholder': 'ex. ATU12345678',
-      'register.consentLabel': "J'accepte le traitement de mes données pour l'inscription au tournoi. *",
+      'register.consentLabel': "J'accepte le traitement de mes données pour l'inscription au tournoi. *", 'register.rulesLabel': "J'ai lu et j'accepte le règlement de la League of Champions. *", 'register.rulesLink': "Lire le règlement",
       'register.submitBtn': "S'inscrire", 'register.tournamentLabel': 'Tournoi', 'register.divisionLabel': 'Catégorie', 'register.teamLabel': 'Équipe', 'register.feeLabel': "Frais d'inscription",
       'register.payBtn': 'Payer les frais d’inscription maintenant', 'register.payLaterBtn': 'Je paierai plus tard',
       'register.payNote': "Paiement sécurisé via Stripe. L'inscription n'est officiellement confirmée qu'une fois le paiement reçu.",
@@ -6458,7 +6501,7 @@ var CLUBS = [
       'register.clubLabel': 'Klub *', 'register.clubPlaceholder': 'Pretraži klub …', 'register.partnerClubLabel': 'Klub partnera (ako je drugi)',
       'register.businessToggle': 'Trebam račun s OIB-om/PDV brojem (prijava kao tvrtka)',
       'register.companyNameLabel': 'Naziv tvrtke *', 'register.vatNumberLabel': 'PDV broj *', 'register.vatNumberPlaceholder': 'npr. ATU12345678',
-      'register.consentLabel': 'Suglasan/na sam s obradom mojih podataka radi prijave na turnir. *',
+      'register.consentLabel': 'Suglasan/na sam s obradom mojih podataka radi prijave na turnir. *', 'register.rulesLabel': "Pročitao/la sam i prihvaćam pravila i propise League of Champions. *", 'register.rulesLink': "Pročitaj pravila",
       'register.submitBtn': 'Registracija', 'register.tournamentLabel': 'Turnir', 'register.divisionLabel': 'Kategorija', 'register.teamLabel': 'Tim', 'register.feeLabel': 'Kotizacija',
       'register.payBtn': 'Plati kotizaciju sada', 'register.payLaterBtn': 'Platit ću kasnije',
       'register.payNote': 'Sigurno plaćanje putem Stripea. Prijava je službeno potvrđena tek nakon primitka uplate.',
@@ -6491,7 +6534,7 @@ var CLUBS = [
       'register.clubLabel': 'Σύλλογος *', 'register.clubPlaceholder': 'Αναζήτηση συλλόγου …', 'register.partnerClubLabel': 'Σύλλογος συμπαίκτη (αν διαφέρει)',
       'register.businessToggle': 'Χρειάζομαι τιμολόγιο με ΑΦΜ/VAT (εγγραφή ως επιχείρηση)',
       'register.companyNameLabel': 'Επωνυμία εταιρείας *', 'register.vatNumberLabel': 'Αριθμός ΦΠΑ *', 'register.vatNumberPlaceholder': 'π.χ. ATU12345678',
-      'register.consentLabel': 'Συμφωνώ με την επεξεργασία των δεδομένων μου για την εγγραφή στο τουρνουά. *',
+      'register.consentLabel': 'Συμφωνώ με την επεξεργασία των δεδομένων μου για την εγγραφή στο τουρνουά. *', 'register.rulesLabel': "Διάβασα και αποδέχομαι τους κανονισμούς της League of Champions. *", 'register.rulesLink': "Διάβασε τους κανονισμούς",
       'register.submitBtn': 'Εγγραφή', 'register.tournamentLabel': 'Τουρνουά', 'register.divisionLabel': 'Κατηγορία', 'register.teamLabel': 'Ομάδα', 'register.feeLabel': 'Κόστος συμμετοχής',
       'register.payBtn': 'Πλήρωσε το κόστος συμμετοχής τώρα', 'register.payLaterBtn': 'Θα πληρώσω αργότερα',
       'register.payNote': 'Ασφαλής πληρωμή μέσω Stripe. Η εγγραφή επιβεβαιώνεται επίσημα μόνο μετά την παραλαβή της πληρωμής.',
@@ -6524,7 +6567,7 @@ var CLUBS = [
       'register.clubLabel': 'Kulüp *', 'register.clubPlaceholder': 'Kulüp ara …', 'register.partnerClubLabel': 'Partnerin kulübü (farklıysa)',
       'register.businessToggle': 'VAT/vergi numaralı fatura istiyorum (şirket olarak kayıt)',
       'register.companyNameLabel': 'Şirket Adı *', 'register.vatNumberLabel': 'Vergi Numarası *', 'register.vatNumberPlaceholder': 'örn. ATU12345678',
-      'register.consentLabel': 'Turnuva kaydı için verilerimin işlenmesini kabul ediyorum. *',
+      'register.consentLabel': 'Turnuva kaydı için verilerimin işlenmesini kabul ediyorum. *', 'register.rulesLabel': "League of Champions kurallarını ve yönetmeliğini okudum ve kabul ediyorum. *", 'register.rulesLink': "Kuralları oku",
       'register.submitBtn': 'Kayıt Ol', 'register.tournamentLabel': 'Turnuva', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Takım', 'register.feeLabel': 'Katılım ücreti',
       'register.payBtn': 'Katılım ücretini şimdi öde', 'register.payLaterBtn': 'Daha sonra ödeyeceğim',
       'register.payNote': 'Stripe ile güvenli ödeme. Kayıt, yalnızca ödeme alındıktan sonra resmi olarak onaylanır.',
@@ -6557,7 +6600,7 @@ var CLUBS = [
       'register.clubLabel': 'Klubb *', 'register.clubPlaceholder': 'Søk klubb …', 'register.partnerClubLabel': 'Partnerens klubb (hvis en annen)',
       'register.businessToggle': 'Jeg trenger en faktura med MVA-nummer (påmelding som bedrift)',
       'register.companyNameLabel': 'Firmanavn *', 'register.vatNumberLabel': 'MVA-nummer *', 'register.vatNumberPlaceholder': 'f.eks. ATU12345678',
-      'register.consentLabel': 'Jeg godtar behandlingen av mine data for turneringspåmeldingen. *',
+      'register.consentLabel': 'Jeg godtar behandlingen av mine data for turneringspåmeldingen. *', 'register.rulesLabel': "Jeg har lest og godtar reglene og bestemmelsene til League of Champions. *", 'register.rulesLink': "Les reglene",
       'register.submitBtn': 'Registrer', 'register.tournamentLabel': 'Turnering', 'register.divisionLabel': 'Kategori', 'register.teamLabel': 'Lag', 'register.feeLabel': 'Deltakeravgift',
       'register.payBtn': 'Betal deltakeravgift nå', 'register.payLaterBtn': 'Jeg betaler senere',
       'register.payNote': 'Sikker betaling via Stripe. Påmeldingen er først offisielt bekreftet når betalingen er mottatt.',
@@ -6820,7 +6863,7 @@ var CLUBS = [
   })();
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','court','club','player','ranking','admin','impressum','login','registeraccount','exchange','inbox','kit','partner','brandpreview','about','team'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','court','club','player','ranking','admin','impressum','login','registeraccount','exchange','inbox','kit','partner','brandpreview','about','team','rules'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.body.classList.toggle('court-mode', view === 'court');
@@ -6911,6 +6954,8 @@ var CLUBS = [
       showAbout();
     } else if (p[0] === 'team') {
       showTeam();
+    } else if (p[0] === 'rules') {
+      showRules();
     } else if (p[0] === 'brand-preview') {
       showBrandPreview();
     } else {
@@ -8056,6 +8101,7 @@ var CLUBS = [
       '<a href="' + esc(BOLAO.shop) + '" target="_blank" rel="noopener">bolao.shop</a>' +
       '<a href="#/about">' + esc(uiText('about.footerLink')) + '</a>' +
       '<a href="#/team">' + esc(uiText('team.footerLink')) + '</a>' +
+      '<a href="#/rules">' + esc(uiText('rules.footerLink')) + '</a>' +
       '<a href="#/kit">' + esc(uiText('kit.footerLink')) + '</a>' +
       '<a class="foot-partner" href="#/partner">' + esc(uiText('brand.becomePartner')) + ' →</a></div>';
   }
@@ -8210,6 +8256,87 @@ var CLUBS = [
       var list = members.slice(); list.splice(i, 1); saveTeamMembers(list).then(showTeam);
     }); });
     setView('team');
+  }
+
+  /* RULES & REGULATIONS (#/rules): sections the admin writes, orders and
+     edits in edit mode. Every save publishes a new version number; a team
+     registration records which version it accepted (register form). */
+  function rulesDoc() { return contentOverrides.rules || {}; }
+  function rulesSections() { var l = rulesDoc().sections; return Array.isArray(l) ? l : []; }
+  function rulesVersion() { return rulesSections().length ? (rulesDoc().version || 1) : 0; }
+  function saveRulesSections(list) {
+    return saveContentFields('rules', { sections: list, version: (rulesDoc().version || 0) + 1, updatedAt: new Date().toISOString() });
+  }
+  // plain text → paragraphs (blank line) and lists (lines starting with "- ")
+  function rulesTextHtml(text) {
+    return String(text || '').trim().split(/\n\s*\n/).map(function(block) {
+      var lines = block.split('\n');
+      if (lines.every(function(l) { return /^\s*[-•]\s+/.test(l); })) {
+        return '<ul>' + lines.map(function(l) { return '<li>' + esc(l.replace(/^\s*[-•]\s+/, '')) + '</li>'; }).join('') + '</ul>';
+      }
+      return '<p>' + lines.map(esc).join('<br>') + '</p>';
+    }).join('');
+  }
+  function showRules() {
+    var el = document.getElementById('rulesContent'), sections = rulesSections(), doc = rulesDoc();
+    var updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString(currentLang === 'en' ? 'en-GB' : currentLang, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    var sectionHtml = function(sec, i) {
+      return '<article class="rl-section" id="rule-' + (i + 1) + '"><span class="rl-num" aria-hidden="true">' + (i + 1) + '</span>' +
+        '<h3>' + esc(sec.title || '') + '</h3><div class="rl-body">' + rulesTextHtml(sec.text) + '</div>' +
+        '<div class="rl-admin admin-only"><button type="button" class="btn btn-outline btn-sm" data-rl-edit="' + i + '">' + esc(uiText('team.edit')) + '</button>' +
+          '<button type="button" class="btn btn-outline btn-sm" data-rl-up="' + i + '" aria-label="' + esc(uiText('team.moveUp')) + '"' + (i ? '' : ' disabled') + '>↑</button>' +
+          '<button type="button" class="btn btn-outline btn-sm" data-rl-del="' + i + '">' + esc(uiText('team.remove')) + '</button></div>' +
+      '</article>';
+    };
+    el.innerHTML =
+      '<section class="pt-hero"><div class="pt-hero-copy"><span class="shop-kicker">' + uiEdit('rules.kicker') + '</span>' +
+        '<h1>' + uiEdit('rules.title') + '</h1><p>' + uiEdit('rules.text') + '</p>' +
+        (sections.length ? '<span class="rl-meta">' + esc(uiFormat('rules.version', { v: rulesVersion(), date: updated })) + '</span>' : '') +
+      '</div></section>' +
+      (sections.length > 2 ? '<nav class="rl-toc" aria-labelledby="rlTocTitle"><h2 id="rlTocTitle">' + esc(uiText('rules.contents')) + '</h2><ol>' +
+        sections.map(function(sec, i) { return '<li><a href="#rule-' + (i + 1) + '" data-rl-jump="' + (i + 1) + '">' + esc(sec.title || '') + '</a></li>'; }).join('') + '</ol></nav>' : '') +
+      (sections.length ? sections.map(sectionHtml).join('') : '<p class="rl-empty">' + esc(uiText('rules.empty')) + '</p>') +
+      '<div class="admin-only tm-add-wrap"><button type="button" class="btn btn-cyan btn-sm" id="rlAdd">' + esc(uiText('rules.add')) + '</button>' +
+        '<p class="kit-note">' + esc(uiText('rules.addHint')) + '</p></div>' +
+      '<div class="admin-only"><form class="tm-form rl-form" id="rlForm" hidden onsubmit="return false">' +
+        '<div class="form-group"><label for="rlTitle">' + esc(uiText('rules.fTitle')) + '</label><input id="rlTitle" maxlength="100" required></div>' +
+        '<div class="form-group"><label for="rlText">' + esc(uiText('rules.fText')) + '</label><textarea id="rlText" maxlength="8000" rows="10"></textarea>' +
+          '<p class="kit-note">' + esc(uiText('rules.fTextHint')) + '</p></div>' +
+        '<div class="kit-actions"><button type="button" class="btn btn-cyan btn-sm" id="rlSave">' + esc(uiText('team.save')) + '</button><button type="button" class="btn btn-outline btn-sm" id="rlCancel">' + esc(uiText('team.cancel')) + '</button></div>' +
+        '<p class="kit-note" id="rlNote" role="status"></p></form></div>';
+    // table of contents: scroll within the page (the hash is the router's)
+    el.querySelectorAll('[data-rl-jump]').forEach(function(a) { a.addEventListener('click', function(e) {
+      e.preventDefault(); document.getElementById('rule-' + a.dataset.rlJump).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    }); });
+    // sections: add / edit / move / remove (admin, edit mode)
+    var form = document.getElementById('rlForm'), editing = -1;
+    var open = function(i) {
+      editing = i; var sec = i >= 0 ? sections[i] : {};
+      document.getElementById('rlTitle').value = sec.title || ''; document.getElementById('rlText').value = sec.text || '';
+      document.getElementById('rlNote').textContent = '';
+      form.hidden = false; form.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' }); document.getElementById('rlTitle').focus();
+    };
+    document.getElementById('rlAdd').addEventListener('click', function() { open(-1); });
+    document.getElementById('rlCancel').addEventListener('click', function() { form.hidden = true; });
+    document.getElementById('rlSave').addEventListener('click', function() {
+      if (!isAdmin) return;
+      var title = document.getElementById('rlTitle').value.trim(), note = document.getElementById('rlNote');
+      if (!title) { note.textContent = uiText('rules.titleNeeded'); document.getElementById('rlTitle').focus(); return; }
+      var list = sections.slice(), sec = { title: title, text: document.getElementById('rlText').value.trim() };
+      if (editing >= 0) list[editing] = sec; else list.push(sec);
+      note.textContent = uiText('brand.saving');
+      saveRulesSections(list).then(showRules).catch(function(err) { note.textContent = (err && err.message) || String(err); });
+    });
+    el.querySelectorAll('[data-rl-edit]').forEach(function(b) { b.addEventListener('click', function() { open(+b.dataset.rlEdit); }); });
+    el.querySelectorAll('[data-rl-up]').forEach(function(b) { b.addEventListener('click', function() {
+      var i = +b.dataset.rlUp; if (!i || !isAdmin) return; var list = sections.slice(); var t = list[i - 1]; list[i - 1] = list[i]; list[i] = t;
+      saveRulesSections(list).then(showRules);
+    }); });
+    el.querySelectorAll('[data-rl-del]').forEach(function(b) { b.addEventListener('click', function() {
+      var i = +b.dataset.rlDel; if (!isAdmin || !window.confirm(uiFormat('rules.removeConfirm', { name: sections[i].title }))) return;
+      var list = sections.slice(); list.splice(i, 1); saveRulesSections(list).then(showRules);
+    }); });
+    setView('rules');
   }
 
   /* ==================================================================
@@ -18334,6 +18461,8 @@ var CLUBS = [
           '<div class="form-group"><label>' + uiEdit('register.vatNumberLabel') + '</label><input id="rVatNumber" placeholder="' + esc(uiText('register.vatNumberPlaceholder')) + '"></div>' +
         '</div>' +
         '<label class="checkbox-row"><input type="checkbox" id="rConsent" required><span>' + uiEdit('register.consentLabel') + '</span></label>' +
+        '<label class="checkbox-row"><input type="checkbox" id="rRules" required><span>' + uiEdit('register.rulesLabel') + '</span></label>' +
+        '<a class="rules-link" href="#/rules" target="_blank" rel="noopener">' + esc(uiText('register.rulesLink')) + ' ↗</a>' +
         '<button type="submit" class="btn btn-cyan btn-block">' + uiText('register.submitBtn') + '</button>' +
         '<p id="regError" class="form-error"></p>' +
       '</form>' +
@@ -18433,11 +18562,12 @@ var CLUBS = [
       var partnerClub = partnerClubEl ? (document.getElementById('rPartnerClub').value.trim() || partnerClubEl.value.trim()) : '';
       if (partnerClub && clubKeyOf(partnerClub) === clubKeyOf(club)) partnerClub = '';
       var consent = document.getElementById('rConsent').checked;
+      var rulesAccepted = document.getElementById('rRules').checked;
       var isBusiness = document.getElementById('rBusinessToggle').checked;
       var companyName = isBusiness ? document.getElementById('rCompanyName').value.trim() : '';
       var vatNumber = isBusiness ? document.getElementById('rVatNumber').value.trim() : '';
 
-      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || !jerseyName || !partnerJerseyName || (isBusiness && (!companyName || !vatNumber))) {
+      if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || !rulesAccepted || !jerseyName || !partnerJerseyName || (isBusiness && (!companyName || !vatNumber))) {
         err.textContent = 'Please fill in all required fields.';
         return;
       }
@@ -18446,7 +18576,7 @@ var CLUBS = [
       submitBtn.disabled = true;
       submitBtn.textContent = 'One moment …';
 
-      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, partnerClub:partnerClub, uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber, jerseyFit:jerseyFit, jerseySize:jerseySize, jerseyName:jerseyName, partnerJerseyFit:partnerJerseyFit, partnerJerseySize:partnerJerseySize, partnerJerseyName:partnerJerseyName };
+      var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, partnerClub:partnerClub, rulesVersion:rulesVersion(), uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber, jerseyFit:jerseyFit, jerseySize:jerseySize, jerseyName:jerseyName, partnerJerseyFit:partnerJerseyFit, partnerJerseySize:partnerJerseySize, partnerJerseyName:partnerJerseyName };
 
       backendRegister(payload).then(function(res) {
         if (!res || !res.ok) throw new Error('save failed');

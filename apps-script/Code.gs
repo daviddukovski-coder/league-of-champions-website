@@ -25,9 +25,12 @@
  *
  * Required sheet tabs (exact header row spelling matters):
  *   "Registrations": ID | Timestamp | TournamentId | Competition | FirstName | LastName | Email | Phone | Partner | Club | Status | StripeSessionId | UserId | PartnerId
- *   (then CompanyName | VatNumber | JerseyFit | JerseySize | JerseyName | PartnerJerseyFit | PartnerJerseySize | PartnerJerseyName | PartnerClub)
+ *   (then CompanyName | VatNumber | JerseyFit | JerseySize | JerseyName | PartnerJerseyFit | PartnerJerseySize | PartnerJerseyName | PartnerClub | RulesVersion)
  *   PartnerClub = partner 2's club when it differs — only offered at 100-tier
  *   tournaments, where the two partners may play for different clubs.
+ *   RulesVersion = the version of the website's Rules & Regulations page the
+ *   team accepted with the required tick box (0 = no rules published yet);
+ *   the Timestamp column is when they accepted it.
  */
 
 var REG_SHEET = 'Registrations';
@@ -176,7 +179,8 @@ function listRegistrations_(tournamentId) {
       partnerJerseyFit: r[idx.PartnerJerseyFit],
       partnerJerseySize: r[idx.PartnerJerseySize],
       partnerJerseyName: r[idx.PartnerJerseyName],
-      partnerClub: idx.PartnerClub != null ? r[idx.PartnerClub] : ''
+      partnerClub: idx.PartnerClub != null ? r[idx.PartnerClub] : '',
+      rulesVersion: idx.RulesVersion != null ? r[idx.RulesVersion] : ''
     });
   });
   return out;
@@ -205,7 +209,8 @@ function registerTeam_(body, user) {
     cell_(body.companyName, 120), cell_(body.vatNumber, 40),
     cell_(body.jerseyFit, 20), cell_(body.jerseySize, 10), cell_(body.jerseyName, 30),
     cell_(body.partnerJerseyFit, 20), cell_(body.partnerJerseySize, 10), cell_(body.partnerJerseyName, 30),
-    cell_(body.partnerClub, 120)
+    cell_(body.partnerClub, 120),
+    cell_(body.rulesVersion, 20)
   ]);
   return { ok: true, id: id };
 }
