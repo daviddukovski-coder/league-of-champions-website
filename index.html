@@ -202,6 +202,11 @@
   .auth-inner { max-width:440px; margin:56px auto 90px; }
   .auth-inner h1 { font-size:30px; margin-bottom:24px; text-align:center; }
   .auth-switch { text-align:center; font-size:13.5px; color:var(--text-muted); margin-top:18px; }
+  .auth-forgot-row { text-align:right; margin:-6px 0 16px; }
+  .auth-text { color:var(--text-muted); font-size:15px; line-height:1.6; margin:0 0 22px; }
+  .auth-msg { font-size:14px; line-height:1.55; margin-top:14px; min-height:16px; color:var(--cyan); }
+  .auth-msg.is-error { color:#ff8a70; }
+  .auth-actions { margin-top:8px; }
   .auth-demo-note { text-align:center; font-size:12px; color:var(--pending-text); background:var(--tint-pending); padding:8px 14px; border-radius:8px; margin-bottom:20px; }
 
   /* ============ ADMIN EDIT (only visible to admins with Edit Mode on) ============ */
@@ -3417,15 +3422,45 @@
   <section id="view-login" class="view" hidden>
     <div class="container">
       <div class="auth-inner">
+        <div id="loginPanel">
         <h1 data-ui-key="login.heading">Log In</h1>
         <div id="loginDemoNote" class="auth-demo-note" hidden><span data-ui-key="login.demoNote">Demo mode — accounts are only stored in this browser, not a real account service.</span></div>
         <form id="loginForm">
-          <div class="form-group"><label data-ui-key="login.emailLabel">Email *</label><input type="email" id="liEmail" required></div>
-          <div class="form-group"><label data-ui-key="login.passwordLabel">Password *</label><input type="password" id="liPassword" required></div>
+          <div class="form-group"><label data-ui-key="login.emailLabel">Email *</label><input type="email" id="liEmail" autocomplete="email" required></div>
+          <div class="form-group"><label data-ui-key="login.passwordLabel">Password *</label><input type="password" id="liPassword" autocomplete="current-password" required></div>
+          <p class="auth-forgot-row"><button type="button" class="btn-ghost" id="forgotOpen" data-ui-key="login.forgot">Forgot password?</button></p>
           <button type="submit" class="btn btn-cyan btn-block" data-ui-key="login.submitBtn">Log In</button>
           <p id="loginError" class="form-error"></p>
         </form>
         <p class="auth-switch"><span data-ui-key="login.switchText">Don't have an account yet?</span> <button class="btn-ghost" data-route="register-account" data-ui-key="login.switchBtn">Register</button></p>
+        </div>
+        <div id="forgotPanel" hidden>
+          <h1 data-ui-key="forgot.heading">Reset password</h1>
+          <p class="auth-text" data-ui-key="forgot.text">Enter your account's email address. We'll send you a link to choose a new password.</p>
+          <form id="forgotForm">
+            <div class="form-group"><label data-ui-key="login.emailLabel">Email *</label><input type="email" id="fpEmail" autocomplete="email" required></div>
+            <button type="submit" class="btn btn-cyan btn-block" data-ui-key="forgot.submit">Send link</button>
+            <p id="forgotStatus" class="auth-msg" role="status"></p>
+          </form>
+          <p class="auth-switch"><button type="button" class="btn-ghost" id="forgotBack" data-ui-key="forgot.back">Back to log in</button></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-resetpw" class="view" hidden>
+    <div class="container">
+      <div class="auth-inner">
+        <h1 id="rpHeading" data-ui-key="resetpw.heading">Choose a new password</h1>
+        <p id="rpInfo" class="auth-text" role="status"></p>
+        <form id="resetPwForm" hidden>
+          <input type="email" id="rpEmail" autocomplete="username" hidden>
+          <div class="form-group"><label data-ui-key="resetpw.newLabel">New password *</label><input type="password" id="rpPassword" minlength="6" autocomplete="new-password" required></div>
+          <div class="form-group"><label data-ui-key="resetpw.confirmLabel">Repeat new password *</label><input type="password" id="rpPasswordConfirm" minlength="6" autocomplete="new-password" required></div>
+          <button type="submit" class="btn btn-cyan btn-block" data-ui-key="resetpw.submit">Save new password</button>
+          <p id="rpError" class="form-error"></p>
+        </form>
+        <div id="rpActions" class="auth-actions" hidden></div>
       </div>
     </div>
   </section>
@@ -5576,6 +5611,12 @@ var CLUBS = [
     return SUPPORTED_LANGS.indexOf(nav) > -1 ? nav : 'en';
   }
   var currentLang = detectInitialLang();
+  var pendingAuthAction = (function() {
+    var q = new URLSearchParams(location.search), mode = q.get('mode'), code = q.get('oobCode');
+    if (!mode || !code) return null;
+    try { history.replaceState(null, '', location.pathname + '#/'); } catch (e) {}
+    return { mode: mode, code: code };
+  })();
 
   /* ==================================================================
      UI TEXT — every static label/heading/button/message on the site,
@@ -6094,6 +6135,29 @@ var CLUBS = [
     'login.emailLabel': 'Email *',
     'login.passwordLabel': 'Password *',
     'login.submitBtn': 'Log In',
+    'login.forgot': 'Forgot password?',
+    'forgot.heading': 'Reset password',
+    'forgot.text': "Enter your account's email address. We'll send you a link to choose a new password.",
+    'forgot.submit': 'Send link',
+    'forgot.back': 'Back to log in',
+    'forgot.sent': 'If an account exists for {email}, a link is on its way. Please check your spam folder too.',
+    'forgot.tooMany': 'Too many attempts. Please wait a few minutes and try again.',
+    'forgot.demo': 'Demo mode — password reset only works with real accounts.',
+    'resetpw.heading': 'Choose a new password',
+    'resetpw.for': 'For {email}',
+    'resetpw.newLabel': 'New password *',
+    'resetpw.confirmLabel': 'Repeat new password *',
+    'resetpw.submit': 'Save new password',
+    'resetpw.checking': 'Checking the link …',
+    'resetpw.mismatch': "The passwords don't match.",
+    'resetpw.weak': 'Please use at least 6 characters.',
+    'resetpw.done': 'Your password has been changed. You can log in now.',
+    'resetpw.loginBtn': 'Log in',
+    'resetpw.invalid': 'This link has expired or was already used. Please request a new one.',
+    'resetpw.newLink': 'Request a new link',
+    'resetpw.error': 'Something went wrong. Please try again.',
+    'authAction.heading': 'Email address',
+    'authAction.done': 'Done — your email address is confirmed.',
     'login.switchText': "Don't have an account yet?",
     'login.switchBtn': 'Register',
     'registerAccount.heading': 'Create Account',
@@ -6189,7 +6253,19 @@ var CLUBS = [
       'register.confirmedHeading': 'Anmeldung bestätigt!', 'register.confirmedText': 'Dein Team ist bestätigt. Wir sehen uns auf dem Feld!', 'register.backToTournament': 'Zurück zum Turnier',
       'register.paymentPendingHeading': 'Zahlung noch ausstehend', 'register.paymentPendingText': 'Wir konnten die Zahlung noch nicht bestätigen. Du kannst es von der Turnierseite aus erneut versuchen.',
       'login.heading': 'Anmelden', 'login.demoNote': 'Demo-Modus — Konten werden nur in diesem Browser gespeichert, nicht in einem echten Konto-Dienst.',
-      'login.emailLabel': 'E-Mail *', 'login.passwordLabel': 'Passwort *', 'login.submitBtn': 'Anmelden', 'login.switchText': 'Noch kein Konto?', 'login.switchBtn': 'Registrieren',
+      'login.emailLabel': 'E-Mail *', 'login.passwordLabel': 'Passwort *', 'login.submitBtn': 'Anmelden',
+      'login.forgot': 'Passwort vergessen?', 'forgot.heading': 'Passwort zurücksetzen',
+      'forgot.text': 'Gib die E-Mail-Adresse deines Kontos ein. Wir schicken dir einen Link, mit dem du ein neues Passwort wählst.',
+      'forgot.submit': 'Link senden', 'forgot.back': 'Zurück zur Anmeldung',
+      'forgot.sent': 'Falls es ein Konto für {email} gibt, ist ein Link unterwegs. Schau bitte auch im Spam-Ordner nach.',
+      'forgot.tooMany': 'Zu viele Versuche. Bitte warte ein paar Minuten und versuche es dann noch einmal.',
+      'forgot.demo': 'Demo-Modus – Passwort zurücksetzen funktioniert nur mit echten Konten.',
+      'resetpw.heading': 'Neues Passwort wählen', 'resetpw.for': 'Für {email}', 'resetpw.newLabel': 'Neues Passwort *',
+      'resetpw.confirmLabel': 'Neues Passwort wiederholen *', 'resetpw.submit': 'Neues Passwort speichern', 'resetpw.checking': 'Link wird geprüft …',
+      'resetpw.mismatch': 'Die Passwörter stimmen nicht überein.', 'resetpw.weak': 'Bitte mindestens 6 Zeichen verwenden.',
+      'resetpw.done': 'Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.', 'resetpw.loginBtn': 'Anmelden',
+      'resetpw.invalid': 'Dieser Link ist abgelaufen oder wurde schon benutzt. Bitte fordere einen neuen an.', 'resetpw.newLink': 'Neuen Link anfordern',
+      'resetpw.error': 'Etwas ist schiefgelaufen. Bitte versuche es noch einmal.', 'authAction.heading': 'E-Mail-Adresse', 'authAction.done': 'Erledigt – deine E-Mail-Adresse ist bestätigt.', 'login.switchText': 'Noch kein Konto?', 'login.switchBtn': 'Registrieren',
       'registerAccount.heading': 'Konto erstellen', 'registerAccount.demoNote': 'Demo-Modus — Konten werden nur in diesem Browser gespeichert, nicht in einem echten Konto-Dienst.',
       'registerAccount.firstNameLabel': 'Vorname *', 'registerAccount.lastNameLabel': 'Nachname *', 'registerAccount.emailLabel': 'E-Mail *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Passwort *', 'registerAccount.confirmPasswordLabel': 'Passwort bestätigen *',
@@ -6229,7 +6305,7 @@ var CLUBS = [
       'register.confirmedHeading': '¡Inscripción confirmada!', 'register.confirmedText': 'Tu equipo está confirmado para jugar. ¡Nos vemos en la cancha!', 'register.backToTournament': 'Volver al torneo',
       'register.paymentPendingHeading': 'Pago aún pendiente', 'register.paymentPendingText': 'Todavía no pudimos confirmar el pago. Puedes intentarlo de nuevo desde la página del torneo.',
       'login.heading': 'Iniciar sesión', 'login.demoNote': 'Modo demo: las cuentas solo se guardan en este navegador, no en un servicio de cuentas real.',
-      'login.emailLabel': 'Correo electrónico *', 'login.passwordLabel': 'Contraseña *', 'login.submitBtn': 'Iniciar sesión', 'login.switchText': '¿Aún no tienes una cuenta?', 'login.switchBtn': 'Registrarse',
+      'login.emailLabel': 'Correo electrónico *', 'login.passwordLabel': 'Contraseña *', 'login.submitBtn': 'Iniciar sesión', 'login.forgot': "¿Olvidaste tu contraseña?", 'login.switchText': '¿Aún no tienes una cuenta?', 'login.switchBtn': 'Registrarse',
       'registerAccount.heading': 'Crear cuenta', 'registerAccount.demoNote': 'Modo demo: las cuentas solo se guardan en este navegador, no en un servicio de cuentas real.',
       'registerAccount.firstNameLabel': 'Nombre *', 'registerAccount.lastNameLabel': 'Apellido *', 'registerAccount.emailLabel': 'Correo electrónico *', 'registerAccount.phoneLabel': 'Teléfono *',
       'registerAccount.passwordLabel': 'Contraseña *', 'registerAccount.confirmPasswordLabel': 'Confirmar contraseña *',
@@ -6269,7 +6345,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Inscrição Confirmada!', 'register.confirmedText': 'A tua equipa está confirmada para jogar. Vemo-nos na areia!', 'register.backToTournament': 'Voltar ao Torneio',
       'register.paymentPendingHeading': 'Pagamento Ainda Pendente', 'register.paymentPendingText': 'Ainda não conseguimos confirmar o pagamento. Podes tentar novamente a partir da página do torneio.',
       'login.heading': 'Iniciar Sessão', 'login.demoNote': 'Modo demo — as contas são guardadas apenas neste navegador, não num serviço de contas real.',
-      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Palavra-passe *', 'login.submitBtn': 'Iniciar Sessão', 'login.switchText': 'Ainda não tens conta?', 'login.switchBtn': 'Registar',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Palavra-passe *', 'login.submitBtn': 'Iniciar Sessão', 'login.forgot': "Esqueceste a palavra-passe?", 'login.switchText': 'Ainda não tens conta?', 'login.switchBtn': 'Registar',
       'registerAccount.heading': 'Criar Conta', 'registerAccount.demoNote': 'Modo demo — as contas são guardadas apenas neste navegador, não num serviço de contas real.',
       'registerAccount.firstNameLabel': 'Nome *', 'registerAccount.lastNameLabel': 'Apelido *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefone *',
       'registerAccount.passwordLabel': 'Palavra-passe *', 'registerAccount.confirmPasswordLabel': 'Confirmar Palavra-passe *',
@@ -6309,7 +6385,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Tilmelding bekræftet!', 'register.confirmedText': 'Dit hold er bekræftet til at spille. Vi ses på banen!', 'register.backToTournament': 'Tilbage til turneringen',
       'register.paymentPendingHeading': 'Betaling stadig afventende', 'register.paymentPendingText': 'Vi kunne endnu ikke bekræfte betalingen. Du kan prøve igen fra turneringssiden.',
       'login.heading': 'Log ind', 'login.demoNote': 'Demotilstand — konti gemmes kun i denne browser, ikke i en rigtig kontotjeneste.',
-      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Adgangskode *', 'login.submitBtn': 'Log ind', 'login.switchText': 'Har du ikke en konto endnu?', 'login.switchBtn': 'Tilmeld',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Adgangskode *', 'login.submitBtn': 'Log ind', 'login.forgot': "Glemt adgangskode?", 'login.switchText': 'Har du ikke en konto endnu?', 'login.switchBtn': 'Tilmeld',
       'registerAccount.heading': 'Opret konto', 'registerAccount.demoNote': 'Demotilstand — konti gemmes kun i denne browser, ikke i en rigtig kontotjeneste.',
       'registerAccount.firstNameLabel': 'Fornavn *', 'registerAccount.lastNameLabel': 'Efternavn *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Adgangskode *', 'registerAccount.confirmPasswordLabel': 'Bekræft adgangskode *',
@@ -6349,7 +6425,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Anmälan bekräftad!', 'register.confirmedText': 'Ditt lag är bekräftat att spela. Vi ses på planen!', 'register.backToTournament': 'Tillbaka till turneringen',
       'register.paymentPendingHeading': 'Betalning fortfarande väntande', 'register.paymentPendingText': 'Vi kunde inte bekräfta betalningen än. Du kan försöka igen från turneringssidan.',
       'login.heading': 'Logga in', 'login.demoNote': 'Demoläge — konton sparas endast i den här webbläsaren, inte i en riktig kontotjänst.',
-      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Lösenord *', 'login.submitBtn': 'Logga in', 'login.switchText': 'Har du inget konto än?', 'login.switchBtn': 'Registrera',
+      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Lösenord *', 'login.submitBtn': 'Logga in', 'login.forgot': "Glömt lösenordet?", 'login.switchText': 'Har du inget konto än?', 'login.switchBtn': 'Registrera',
       'registerAccount.heading': 'Skapa konto', 'registerAccount.demoNote': 'Demoläge — konton sparas endast i den här webbläsaren, inte i en riktig kontotjänst.',
       'registerAccount.firstNameLabel': 'Förnamn *', 'registerAccount.lastNameLabel': 'Efternamn *', 'registerAccount.emailLabel': 'E-post *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Lösenord *', 'registerAccount.confirmPasswordLabel': 'Bekräfta lösenord *',
@@ -6389,7 +6465,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Ilmoittautuminen vahvistettu!', 'register.confirmedText': 'Joukkueesi on vahvistettu pelaamaan. Nähdään kentällä!', 'register.backToTournament': 'Takaisin turnaukseen',
       'register.paymentPendingHeading': 'Maksu vielä kesken', 'register.paymentPendingText': 'Emme voineet vielä vahvistaa maksua. Voit yrittää uudelleen turnaussivulta.',
       'login.heading': 'Kirjaudu sisään', 'login.demoNote': 'Demotila — tilit tallennetaan vain tähän selaimeen, ei oikeaan tilipalveluun.',
-      'login.emailLabel': 'Sähköposti *', 'login.passwordLabel': 'Salasana *', 'login.submitBtn': 'Kirjaudu sisään', 'login.switchText': 'Eikö sinulla ole vielä tiliä?', 'login.switchBtn': 'Rekisteröidy',
+      'login.emailLabel': 'Sähköposti *', 'login.passwordLabel': 'Salasana *', 'login.submitBtn': 'Kirjaudu sisään', 'login.forgot': "Unohditko salasanan?", 'login.switchText': 'Eikö sinulla ole vielä tiliä?', 'login.switchBtn': 'Rekisteröidy',
       'registerAccount.heading': 'Luo tili', 'registerAccount.demoNote': 'Demotila — tilit tallennetaan vain tähän selaimeen, ei oikeaan tilipalveluun.',
       'registerAccount.firstNameLabel': 'Etunimi *', 'registerAccount.lastNameLabel': 'Sukunimi *', 'registerAccount.emailLabel': 'Sähköposti *', 'registerAccount.phoneLabel': 'Puhelin *',
       'registerAccount.passwordLabel': 'Salasana *', 'registerAccount.confirmPasswordLabel': 'Vahvista salasana *',
@@ -6429,7 +6505,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Iscrizione Confermata!', 'register.confirmedText': 'La tua squadra è confermata per giocare. Ci vediamo in campo!', 'register.backToTournament': 'Torna al Torneo',
       'register.paymentPendingHeading': 'Pagamento Ancora in Sospeso', 'register.paymentPendingText': 'Non siamo ancora riusciti a confermare il pagamento. Puoi riprovare dalla pagina del torneo.',
       'login.heading': 'Accedi', 'login.demoNote': 'Modalità demo — gli account vengono salvati solo in questo browser, non in un vero servizio account.',
-      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Password *', 'login.submitBtn': 'Accedi', 'login.switchText': 'Non hai ancora un account?', 'login.switchBtn': 'Registrati',
+      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Password *', 'login.submitBtn': 'Accedi', 'login.forgot': "Password dimenticata?", 'login.switchText': 'Non hai ancora un account?', 'login.switchBtn': 'Registrati',
       'registerAccount.heading': 'Crea Account', 'registerAccount.demoNote': 'Modalità demo — gli account vengono salvati solo in questo browser, non in un vero servizio account.',
       'registerAccount.firstNameLabel': 'Nome *', 'registerAccount.lastNameLabel': 'Cognome *', 'registerAccount.emailLabel': 'Email *', 'registerAccount.phoneLabel': 'Telefono *',
       'registerAccount.passwordLabel': 'Password *', 'registerAccount.confirmPasswordLabel': 'Conferma Password *',
@@ -6469,7 +6545,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Inscription Confirmée !', 'register.confirmedText': 'Votre équipe est confirmée pour jouer. Rendez-vous sur le terrain !', 'register.backToTournament': 'Retour au Tournoi',
       'register.paymentPendingHeading': 'Paiement Toujours en Attente', 'register.paymentPendingText': "Nous n'avons pas encore pu confirmer le paiement. Vous pouvez réessayer depuis la page du tournoi.",
       'login.heading': 'Se Connecter', 'login.demoNote': 'Mode démo — les comptes ne sont enregistrés que dans ce navigateur, pas dans un vrai service de comptes.',
-      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Mot de passe *', 'login.submitBtn': 'Se Connecter', 'login.switchText': "Vous n'avez pas encore de compte ?", 'login.switchBtn': "S'inscrire",
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Mot de passe *', 'login.submitBtn': 'Se Connecter', 'login.forgot': "Mot de passe oublié ?", 'login.switchText': "Vous n'avez pas encore de compte ?", 'login.switchBtn': "S'inscrire",
       'registerAccount.heading': 'Créer un Compte', 'registerAccount.demoNote': 'Mode démo — les comptes ne sont enregistrés que dans ce navigateur, pas dans un vrai service de comptes.',
       'registerAccount.firstNameLabel': 'Prénom *', 'registerAccount.lastNameLabel': 'Nom *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Téléphone *',
       'registerAccount.passwordLabel': 'Mot de passe *', 'registerAccount.confirmPasswordLabel': 'Confirmer le Mot de passe *',
@@ -6509,7 +6585,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Prijava Potvrđena!', 'register.confirmedText': 'Vaš je tim potvrđen za igru. Vidimo se na terenu!', 'register.backToTournament': 'Natrag na Turnir',
       'register.paymentPendingHeading': 'Plaćanje Još Uvijek na Čekanju', 'register.paymentPendingText': 'Uplatu još nismo mogli potvrditi. Možete pokušati ponovno sa stranice turnira.',
       'login.heading': 'Prijava', 'login.demoNote': 'Demo način — računi se pohranjuju samo u ovom pregledniku, a ne u stvarnoj usluzi računa.',
-      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Lozinka *', 'login.submitBtn': 'Prijava', 'login.switchText': 'Još nemate račun?', 'login.switchBtn': 'Registracija',
+      'login.emailLabel': 'E-mail *', 'login.passwordLabel': 'Lozinka *', 'login.submitBtn': 'Prijava', 'login.forgot': "Zaboravljena lozinka?", 'login.switchText': 'Još nemate račun?', 'login.switchBtn': 'Registracija',
       'registerAccount.heading': 'Otvori Račun', 'registerAccount.demoNote': 'Demo način — računi se pohranjuju samo u ovom pregledniku, a ne u stvarnoj usluzi računa.',
       'registerAccount.firstNameLabel': 'Ime *', 'registerAccount.lastNameLabel': 'Prezime *', 'registerAccount.emailLabel': 'E-mail *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Lozinka *', 'registerAccount.confirmPasswordLabel': 'Potvrdi Lozinku *',
@@ -6542,7 +6618,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Η Εγγραφή Επιβεβαιώθηκε!', 'register.confirmedText': 'Η ομάδα σου έχει επιβεβαιωθεί για συμμετοχή. Τα λέμε στο γήπεδο!', 'register.backToTournament': 'Πίσω στο Τουρνουά',
       'register.paymentPendingHeading': 'Η Πληρωμή Εκκρεμεί Ακόμη', 'register.paymentPendingText': 'Δεν μπορέσαμε ακόμη να επιβεβαιώσουμε την πληρωμή. Μπορείς να ξαναπροσπαθήσεις από τη σελίδα του τουρνουά.',
       'login.heading': 'Σύνδεση', 'login.demoNote': 'Λειτουργία demo — οι λογαριασμοί αποθηκεύονται μόνο σε αυτό το πρόγραμμα περιήγησης, όχι σε πραγματική υπηρεσία λογαριασμών.',
-      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Κωδικός πρόσβασης *', 'login.submitBtn': 'Σύνδεση', 'login.switchText': 'Δεν έχεις ακόμη λογαριασμό;', 'login.switchBtn': 'Εγγραφή',
+      'login.emailLabel': 'Email *', 'login.passwordLabel': 'Κωδικός πρόσβασης *', 'login.submitBtn': 'Σύνδεση', 'login.forgot': "Ξέχασες τον κωδικό;", 'login.switchText': 'Δεν έχεις ακόμη λογαριασμό;', 'login.switchBtn': 'Εγγραφή',
       'registerAccount.heading': 'Δημιουργία Λογαριασμού', 'registerAccount.demoNote': 'Λειτουργία demo — οι λογαριασμοί αποθηκεύονται μόνο σε αυτό το πρόγραμμα περιήγησης, όχι σε πραγματική υπηρεσία λογαριασμών.',
       'registerAccount.firstNameLabel': 'Όνομα *', 'registerAccount.lastNameLabel': 'Επώνυμο *', 'registerAccount.emailLabel': 'Email *', 'registerAccount.phoneLabel': 'Τηλέφωνο *',
       'registerAccount.passwordLabel': 'Κωδικός πρόσβασης *', 'registerAccount.confirmPasswordLabel': 'Επιβεβαίωση Κωδικού Πρόσβασης *',
@@ -6575,7 +6651,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Kayıt Onaylandı!', 'register.confirmedText': 'Takımın oynamak üzere onaylandı. Sahada görüşürüz!', 'register.backToTournament': 'Turnuvaya Dön',
       'register.paymentPendingHeading': 'Ödeme Hâlâ Beklemede', 'register.paymentPendingText': 'Ödemeyi henüz onaylayamadık. Turnuva sayfasından tekrar deneyebilirsin.',
       'login.heading': 'Giriş Yap', 'login.demoNote': 'Demo modu — hesaplar yalnızca bu tarayıcıda saklanır, gerçek bir hesap hizmetinde değil.',
-      'login.emailLabel': 'E-posta *', 'login.passwordLabel': 'Şifre *', 'login.submitBtn': 'Giriş Yap', 'login.switchText': 'Henüz bir hesabın yok mu?', 'login.switchBtn': 'Kayıt Ol',
+      'login.emailLabel': 'E-posta *', 'login.passwordLabel': 'Şifre *', 'login.submitBtn': 'Giriş Yap', 'login.forgot': "Şifreni mi unuttun?", 'login.switchText': 'Henüz bir hesabın yok mu?', 'login.switchBtn': 'Kayıt Ol',
       'registerAccount.heading': 'Hesap Oluştur', 'registerAccount.demoNote': 'Demo modu — hesaplar yalnızca bu tarayıcıda saklanır, gerçek bir hesap hizmetinde değil.',
       'registerAccount.firstNameLabel': 'Ad *', 'registerAccount.lastNameLabel': 'Soyad *', 'registerAccount.emailLabel': 'E-posta *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Şifre *', 'registerAccount.confirmPasswordLabel': 'Şifreyi Onayla *',
@@ -6608,7 +6684,7 @@ var CLUBS = [
       'register.confirmedHeading': 'Påmelding Bekreftet!', 'register.confirmedText': 'Laget ditt er bekreftet for å spille. Vi sees på banen!', 'register.backToTournament': 'Tilbake til Turneringen',
       'register.paymentPendingHeading': 'Betaling Fremdeles Avventende', 'register.paymentPendingText': 'Vi kunne ikke bekrefte betalingen ennå. Du kan prøve igjen fra turneringssiden.',
       'login.heading': 'Logg Inn', 'login.demoNote': 'Demomodus — kontoer lagres kun i denne nettleseren, ikke i en ekte kontotjeneste.',
-      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Passord *', 'login.submitBtn': 'Logg Inn', 'login.switchText': 'Har du ikke en konto ennå?', 'login.switchBtn': 'Registrer',
+      'login.emailLabel': 'E-post *', 'login.passwordLabel': 'Passord *', 'login.submitBtn': 'Logg Inn', 'login.forgot': "Glemt passord?", 'login.switchText': 'Har du ikke en konto ennå?', 'login.switchBtn': 'Registrer',
       'registerAccount.heading': 'Opprett Konto', 'registerAccount.demoNote': 'Demomodus — kontoer lagres kun i denne nettleseren, ikke i en ekte kontotjeneste.',
       'registerAccount.firstNameLabel': 'Fornavn *', 'registerAccount.lastNameLabel': 'Etternavn *', 'registerAccount.emailLabel': 'E-post *', 'registerAccount.phoneLabel': 'Telefon *',
       'registerAccount.passwordLabel': 'Passord *', 'registerAccount.confirmPasswordLabel': 'Bekreft Passord *',
@@ -6863,7 +6939,7 @@ var CLUBS = [
   })();
 
   function setView(view) {
-    ['landing','home','detail','compselect','register','live','schedule','court','club','player','ranking','admin','impressum','login','registeraccount','exchange','inbox','kit','partner','brandpreview','about','team','rules'].forEach(function(v) {
+    ['landing','home','detail','compselect','register','live','schedule','court','club','player','ranking','admin','impressum','login','registeraccount','exchange','inbox','kit','partner','brandpreview','about','team','rules','resetpw'].forEach(function(v) {
       document.getElementById('view-' + v).hidden = v !== view;
     });
     document.body.classList.toggle('court-mode', view === 'court');
@@ -6902,6 +6978,7 @@ var CLUBS = [
 
   function route() {
     unsubscribeBracketLive();
+    if (pendingAuthAction) { var act = pendingAuthAction; pendingAuthAction = null; showAuthAction(act); return; }
     var h = parseHash();
     var p = h.parts;
     if (p[0] === 'event' && p[1]) {
@@ -9027,9 +9104,11 @@ var CLUBS = [
   }
 
   function showLogin() {
+    showForgot(false);
     document.getElementById('loginDemoNote').hidden = !AUTH_DEMO_MODE;
-    var form = document.getElementById('loginForm');
+    var form = document.getElementById('loginForm'), keepEmail = document.getElementById('liEmail').value;
     form.reset();
+    if (keepEmail) document.getElementById('liEmail').value = keepEmail;
     document.getElementById('loginError').textContent = '';
     setView('login');
   }
@@ -9040,6 +9119,96 @@ var CLUBS = [
     form.reset();
     document.getElementById('registerAccountError').textContent = '';
     setView('registeraccount');
+  }
+
+  /* PASSWORD RESET. "Forgot password?" asks Firebase to email a reset link
+     to the account's address — only whoever reads that inbox can use it.
+     The link comes back to this site (Firebase console → Authentication →
+     Templates → custom action URL = the site's address) as
+     ?mode=resetPassword&oobCode=…, and is handled on our own page
+     (showAuthAction). The code is one-time and expires; Firebase checks it. */
+  function showForgot(open) {
+    document.getElementById('loginPanel').hidden = open;
+    document.getElementById('forgotPanel').hidden = !open;
+    if (open) {
+      var fp = document.getElementById('fpEmail'), st = document.getElementById('forgotStatus');
+      fp.value = document.getElementById('liEmail').value.trim();
+      st.textContent = ''; st.classList.remove('is-error');
+      fp.focus();
+    }
+  }
+  document.getElementById('forgotOpen').addEventListener('click', function() { showForgot(true); });
+  document.getElementById('forgotBack').addEventListener('click', function() { showForgot(false); });
+  document.getElementById('forgotForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var email = document.getElementById('fpEmail').value.trim(), status = document.getElementById('forgotStatus');
+    var btn = e.target.querySelector('button[type="submit"]');
+    status.classList.remove('is-error');
+    if (AUTH_DEMO_MODE) { status.textContent = uiText('forgot.demo'); return; }
+    btn.disabled = true;
+    firebase.auth().languageCode = currentLang;
+    firebase.auth().sendPasswordResetEmail(email).catch(function(err) {
+      // an unknown address gets the same answer: never reveal which emails have accounts
+      if (err && err.code === 'auth/user-not-found') return;
+      throw err;
+    }).then(function() {
+      status.textContent = uiFormat('forgot.sent', { email: email });
+    }).catch(function(err) {
+      status.classList.add('is-error');
+      status.textContent = err && err.code === 'auth/too-many-requests' ? uiText('forgot.tooMany') : friendlyAuthError(err);
+    }).then(function() { btn.disabled = false; });
+  });
+
+  function showAuthAction(act) {
+    var info = document.getElementById('rpInfo'), form = document.getElementById('resetPwForm'), actions = document.getElementById('rpActions');
+    var heading = document.getElementById('rpHeading');
+    var setHeading = function(t) { (heading.querySelector('.edit-text-value') || heading).textContent = t; };
+    form.hidden = true; actions.hidden = true; document.getElementById('rpError').textContent = '';
+    info.textContent = uiText('resetpw.checking');
+    setView('resetpw');
+    var showActions = function(html) { actions.innerHTML = html; actions.hidden = false; };
+    var loginBtn = '<button type="button" class="btn btn-cyan btn-block" data-route="login">' + esc(uiText('resetpw.loginBtn')) + '</button>';
+    var newLinkBtn = '<button type="button" class="btn btn-outline btn-block" id="rpNewLink">' + esc(uiText('resetpw.newLink')) + '</button>';
+    var failed = function(err) {
+      var code = err && err.code;
+      info.textContent = code === 'auth/expired-action-code' || code === 'auth/invalid-action-code' ? uiText('resetpw.invalid') : uiText('resetpw.error');
+      showActions(act.mode === 'resetPassword' ? newLinkBtn : loginBtn);
+      var nl = document.getElementById('rpNewLink');
+      if (nl) nl.addEventListener('click', function() { navigate('login'); setTimeout(function() { showForgot(true); }, 0); });
+    };
+    if (AUTH_DEMO_MODE || !window.firebase) { failed(null); return; }
+    var auth = firebase.auth();
+    if (act.mode !== 'resetPassword') {
+      // the custom action URL serves every Firebase email: confirm an email address / undo an email change
+      setHeading(uiText('authAction.heading'));
+      auth.applyActionCode(act.code).then(function() { info.textContent = uiText('authAction.done'); showActions(loginBtn); }).catch(failed);
+      return;
+    }
+    setHeading(uiText('resetpw.heading'));
+    auth.verifyPasswordResetCode(act.code).then(function(email) {
+      info.textContent = uiFormat('resetpw.for', { email: email });
+      document.getElementById('rpEmail').value = email;
+      form.hidden = false;
+      document.getElementById('rpPassword').focus();
+      form.onsubmit = function(e) {
+        e.preventDefault();
+        var pw = document.getElementById('rpPassword').value, pw2 = document.getElementById('rpPasswordConfirm').value, err = document.getElementById('rpError');
+        err.textContent = '';
+        if (pw.length < 6) { err.textContent = uiText('resetpw.weak'); return; }
+        if (pw !== pw2) { err.textContent = uiText('resetpw.mismatch'); return; }
+        var btn = form.querySelector('button[type="submit"]'); btn.disabled = true;
+        auth.confirmPasswordReset(act.code, pw).then(function() {
+          form.hidden = true; form.reset();
+          info.textContent = uiText('resetpw.done');
+          document.getElementById('liEmail').value = email;
+          showActions(loginBtn);
+        }).catch(function(e2) {
+          btn.disabled = false;
+          if (e2 && e2.code === 'auth/weak-password') err.textContent = uiText('resetpw.weak');
+          else { form.hidden = true; failed(e2); }
+        });
+      };
+    }).catch(failed);
   }
 
   document.getElementById('loginForm').addEventListener('submit', function(e) {
