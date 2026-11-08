@@ -9123,8 +9123,8 @@ var CLUBS = [
 
   /* PASSWORD RESET. "Forgot password?" asks Firebase to email a reset link
      to the account's address — only whoever reads that inbox can use it.
-     The link comes back to this site (Firebase console → Authentication →
-     Templates → custom action URL = the site's address) as
+     The link comes back to this site (handleCodeInApp in the request, or
+     the console's custom action URL for emails sent from the console) as
      ?mode=resetPassword&oobCode=…, and is handled on our own page
      (showAuthAction). The code is one-time and expires; Firebase checks it. */
   function showForgot(open) {
@@ -9147,7 +9147,10 @@ var CLUBS = [
     if (AUTH_DEMO_MODE) { status.textContent = uiText('forgot.demo'); return; }
     btn.disabled = true;
     firebase.auth().languageCode = currentLang;
-    firebase.auth().sendPasswordResetEmail(email).catch(function(err) {
+    // handleCodeInApp: the email link leads straight back to this site with
+    // ?mode=resetPassword&oobCode=… (our own page), without needing the
+    // console's custom action URL
+    firebase.auth().sendPasswordResetEmail(email, { url: location.origin + location.pathname, handleCodeInApp: true }).catch(function(err) {
       // an unknown address gets the same answer: never reveal which emails have accounts
       if (err && err.code === 'auth/user-not-found') return;
       throw err;
