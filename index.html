@@ -3848,7 +3848,11 @@ var CLUBS = [
     return CLUBS.indexOf(c) !== -1 ? c.name : (name || '');
   }
 
+  // Spellings in the ranking sheet that mean another club than they say
+  var CLUB_NAME_FIXES = { '12 esperancas': '11 Esperancas', '13 esperancas': '11 Esperancas' };
   function findClub(name) {
+    var fix = CLUB_NAME_FIXES[normalizeNameForMatch(name)];
+    if (fix) name = fix;
     var n = (name || '').trim().toLowerCase();
     return CLUBS.find(function(c){ return c.name.toLowerCase() === n; }) || findClubFuzzy(name) || { name: name || '' };
   }
@@ -11579,6 +11583,12 @@ var CLUBS = [
   function takeBugScreenshot(rect) {
     var w = window.innerWidth, h = window.innerHeight;
     var scale = Math.min(window.devicePixelRatio || 1, 1280 / w, 1600 / h);
+    // html2canvas scrolls its copy of the page to the current position; with
+    // the site's smooth scrolling that scroll only starts animating, so the
+    // copy was drawn from the top of the page. Jump instead while capturing.
+    var root = document.documentElement, prevBehavior = root.style.scrollBehavior;
+    var restore = function() { root.style.scrollBehavior = prevBehavior; };
+    root.style.scrollBehavior = 'auto';
     return loadHtml2canvas().then(function(html2canvas) {
       return Promise.race([
         html2canvas(document.body, {
@@ -11599,6 +11609,7 @@ var CLUBS = [
         new Promise(function(resolve, reject) { setTimeout(function() { reject(new Error('screenshot timeout')); }, 12000); })
       ]);
     }).then(function(canvas) {
+      restore();
       if (rect) {
         var c = canvas.getContext('2d');
         c.setTransform(1, 0, 0, 1, 0, 0); // html2canvas leaves its own scale set
@@ -11609,7 +11620,7 @@ var CLUBS = [
       var url = canvas.toDataURL('image/jpeg', 0.72);
       if (url.length > 850000) url = canvas.toDataURL('image/jpeg', 0.45);
       return url.length > 850000 ? null : url;
-    });
+    }, function(err) { restore(); throw err; });
   }
 
   // Replaces a video in the screenshot copy with a canvas of its current
