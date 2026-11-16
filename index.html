@@ -12312,12 +12312,18 @@ var CLUBS = [
     });
   }
 
+  function registrationPoints(p) {
+    return (findRankingPointsForPlayer(p.firstName + ' ' + p.lastName) || 0) + (findRankingPointsForPlayer(p.partner) || 0);
+  }
   function renderPlayerList(players) {
     if (!players.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
-    return '<div class="player-list">' + players.map(function(p) {
+    return '<div class="player-list">' + players.map(playerRowHtml).join('') + '</div>';
+  }
+  function playerRowHtml(p) {
+    {
       var statusClass = p.status === 'paid' ? 'status-paid' : 'status-pending';
       var statusLabel = p.status === 'paid' ? uiText('detail.paidLabel') : uiText('detail.pendingLabel');
-      var points = (findRankingPointsForPlayer(p.firstName + ' ' + p.lastName) || 0) + (findRankingPointsForPlayer(p.partner) || 0);
+      var points = registrationPoints(p);
       return (
         '<div class="player-row" data-reg-id="' + esc(p.id) + '">' +
           '<div class="player-info">' +
@@ -12339,7 +12345,7 @@ var CLUBS = [
           '</div>' +
         '</div>'
       );
-    }).join('') + '</div>';
+    }
   }
 
   function eventImageHtml(t) {
@@ -12909,8 +12915,11 @@ var CLUBS = [
         var regRows = comp ? all.filter(function(p) { return p.competition === comp; }) : all;
         var teamRows = comp ? extraTeams.filter(function(tm) { return tm.competition === comp; }) : extraTeams;
         if (!regRows.length && !teamRows.length) return '<p class="empty-note">' + uiEdit('detail.noRegistrations') + '</p>';
-        var extraHtml = teamRows.length ? '<div class="player-list">' + teamRows.map(teamPublicRowHtml).join('') + '</div>' : '';
-        return (regRows.length ? renderPlayerList(regRows) : '') + extraHtml;
+        // one list, seeded by ranking points: most points on top
+        var rows = regRows.map(function(p) { return { pts: registrationPoints(p), html: playerRowHtml(p) }; })
+          .concat(teamRows.map(function(tm) { return { pts: computeTeamRankingPoints(tm), html: teamPublicRowHtml(tm) }; }));
+        rows.sort(function(a, b) { return b.pts - a.pts; });
+        return '<div class="player-list">' + rows.map(function(r) { return r.html; }).join('') + '</div>';
       }
       var gt = document.getElementById('glanceTeams');
       if (gt) gt.textContent = divisionCount(null);
