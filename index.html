@@ -7056,6 +7056,9 @@ var CLUBS = [
   // deleted — texts and translations stay; set to true to show them again.
   var SHOW_LANDING_PRESENTED = false;
   var SHOW_LANDING_SUBTITLE = false;
+  // "The team behind the tour" card further down the landing page: hidden on
+  // request (2026-11-16); the /team page stays. Set to true to show it again.
+  var SHOW_LANDING_TEAM_BEHIND = false;
 
   function showLanding() {
     renderHeroMedia();
@@ -8919,7 +8922,7 @@ var CLUBS = [
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
         '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '') +
-      teamBehindHtml();
+      (SHOW_LANDING_TEAM_BEHIND ? teamBehindHtml() : '');
 
     wireCountUps(el);
     wireTeamBehind();
