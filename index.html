@@ -46,7 +46,7 @@
   :root[data-design="ig"] .ranking-table.is-insta tbody tr td.rank-player { order:2; display:flex; align-items:center; gap:14px; padding-left:10px; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-name { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-first, :root[data-design="ig"] .ranking-table.is-insta .rk-last { display:inline; font:400 28px/1 'Bebas Neue', sans-serif; letter-spacing:0.04em; color:#fff; margin:0; }
-  :root[data-design="ig"] .ranking-table.is-insta .rk-first { margin-right:0.28em; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-first { margin-right:0; }
   :root[data-design="ig"] .ranking-table.is-insta .player-name-link.rk-name:hover .rk-first { color:var(--cyan); }
   :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-first, :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-last { font-size:32px; }
   :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature td.rank-player + td .club-avatar { width:58px; height:58px; }
@@ -54,6 +54,20 @@
   :root[data-design="ig"] .ranking-table.is-insta .rk-photo { position:relative; flex:0 0 84px; height:74px; border-radius:8px; overflow:hidden; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-empty { height:1px; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  /* portrait: head and shoulders standing on the bottom edge of the row */
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-portrait { align-self:flex-end; height:84px; border-radius:0; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-portrait img { object-fit:cover; object-position:50% 12%; }
+  /* rows from 11 on: the same slot width (names stay in line), smaller pictures */
+  :root[data-design="ig"] .ranking-table.is-insta tbody tr:not(.rank-feature) td.rank-player { overflow:visible; }
+  :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo { height:56px; }
+  :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-portrait { height:62px; }
+  :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-cutout { height:82px; margin:-22px 0 -4px; }
+  :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-empty { height:1px; }
+  /* "Player" sits over the names (photo slot + gap in front of them) */
+  :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(2) { padding-left:82px; }
+  .profile-name-row { display:flex; align-items:center; gap:16px; }
+  .profile-portrait { width:64px; height:64px; border-radius:14px; object-fit:cover; object-position:50% 15%; flex-shrink:0; }
+  .profile-portrait-label { margin-top:6px; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout { flex-basis:84px; height:118px; margin:-38px 0 -6px; border-radius:0; overflow:visible; }
   :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout img { object-fit:contain; object-position:50% 100%; filter:drop-shadow(0 6px 10px rgba(3,4,40,0.45)); }
   @media (max-width:640px) {
@@ -68,7 +82,20 @@
     :root[data-design="ig"] .ranking-table.is-insta .rk-first, :root[data-design="ig"] .ranking-table.is-insta .rk-last { font-size:19px; }
     :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-first, :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-last { font-size:21px; }
     :root[data-design="ig"] .ranking-table.is-insta .rk-photo { flex-basis:44px; height:54px; }
-    :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-empty { height:1px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-empty, :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-empty { height:1px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-portrait { height:68px; }
+    :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo { height:44px; }
+    :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-portrait { height:54px; }
+    :root[data-design="ig"] .ranking-table.is-insta tr:not(.rank-feature) .rk-photo.is-cutout { height:60px; margin:-14px 0 -4px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(2) { padding-left:58px; }
+    /* phone: room for the names — narrow logo and points columns, names may wrap to two lines */
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(3):not(:last-child), :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td { width:44px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(3):not(:last-child) { font-size:0; }
+    :root[data-design="ig"] .ranking-table.is-insta tbody tr td:last-child, :root[data-design="ig"] .ranking-table.is-insta tbody tr.rank-top td:last-child, :root[data-design="ig"] .ranking-table.is-insta thead th:last-child { width:62px; padding-right:14px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-name { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.02; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-first, :root[data-design="ig"] .ranking-table.is-insta .rk-last { white-space:normal; overflow:visible; }
+    :root[data-design="ig"] .ranking-table.is-insta .rank-pts { font-size:22px; }
+    .profile-portrait { width:48px; height:48px; border-radius:10px; }
     :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout { flex-basis:44px; height:74px; margin:-18px 0 -4px; }
   }
 
@@ -5923,6 +5950,8 @@ var CLUBS = [
     'rules.footerLink': "Rules",
     'news.masthead': "The Champions Post",
     'ranking.homeClub': "Home Club",
+    'profile.portraitUpload': "Upload portrait (head & shoulders)",
+    'profile.portraitReplace': "Replace portrait",
     'news.edition': "Season {year} · {n} stories",
     'news.editionOne': "Season {year} · 1 story",
     'news.pageOf': "Page {n} of {total}",
@@ -6494,7 +6523,7 @@ var CLUBS = [
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
       'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *', 'register.rulesLabel': "Ich habe die Regeln und Bestimmungen der League of Champions gelesen und akzeptiere sie. *", 'register.rulesLink': "Regeln und Bestimmungen lesen",
       'rules.footerLink': 'Regeln',
-      'news.edition': 'Saison {year} · {n} Meldungen', 'ranking.homeClub': 'Heimverein', 'news.editionOne': 'Saison {year} · 1 Meldung', 'news.pageOf': 'Seite {n} von {total}', 'news.pageWord': 'Seite',
+      'news.edition': 'Saison {year} · {n} Meldungen', 'ranking.homeClub': 'Heimverein', 'profile.portraitUpload': 'Porträtfoto hochladen (Kopf & Schultern)', 'profile.portraitReplace': 'Porträtfoto ersetzen', 'news.editionOne': 'Saison {year} · 1 Meldung', 'news.pageOf': 'Seite {n} von {total}', 'news.pageWord': 'Seite',
       'news.prev': 'Vorherige Seite', 'news.next': 'Nächste Seite', 'news.hint': 'Wischen oder die Pfeile benutzen, um umzublättern', 'news.presentedBy': 'Präsentiert von',
       'news.sponsorSlot': 'Platz für einen Sponsor – über „Bearbeiten“ hinzufügen', 'news.photoSlot': 'Platz für ein Foto', 'news.add': '+ News hinzufügen',
       'news.empty': 'Noch keine News – leg die erste Seite an.', 'news.fKicker': 'Rubrik', 'news.fTour': 'Turnier (die News erscheint als Vorschau / Nachbericht auf der Turnierseite)', 'news.fTourNone': '– keines –',
@@ -11198,7 +11227,7 @@ var CLUBS = [
   // first name small on top, the rest large below (ranking list)
   function rankNameHtml(name, uid) {
     var parts = String(name || '').trim().split(/\s+/), first = parts.length > 1 ? parts.shift() : '', rest = parts.join(' ');
-    var inner = (first ? '<span class="rk-first">' + esc(first) + '</span>' : '') + '<span class="rk-last">' + esc(rest) + '</span>';
+    var inner = (first ? '<span class="rk-first">' + esc(first) + '</span> ' : '') + '<span class="rk-last">' + esc(rest) + '</span>';
     return uid ? '<span class="player-name-link rk-name" data-route="player/' + esc(uid) + '">' + inner + '</span>' : '<span class="rk-name">' + inner + '</span>';
   }
 
@@ -11231,7 +11260,7 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + '<span class="rk-club-name">' + esc(clubDisplayName(name)) + '</span></span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr class="' + rankRowClass(r.rank) + (feature ? ' rank-feature' : '') + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + (feature ? rankPhotoHtml(r.name) : '') + rankNameHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + (feature ? ' rank-feature' : '') + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + rankPhotoHtml(r.name) + rankNameHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
@@ -11349,9 +11378,12 @@ var CLUBS = [
   }).observe(document.body, { childList: true, subtree: true });
   cleanClubLogos(document);
 
-  // Places 4-10: the player's whole photo like on the podium — a cut-out
-  // figure stands in the row, a normal photo is a small portrait; no photo, nothing.
+  // Every row: the portrait photo; until a player has one, the action photo
+  // (a cut-out figure stands in the row like on the podium); no photo, an
+  // empty slot so all names stay in line.
   function rankPhotoHtml(name) {
+    var who = findPlayerByName(name);
+    if (who && who.portraitUrl) return '<span class="rk-photo is-portrait" aria-hidden="true"><img src="' + esc(who.portraitUrl) + '" alt="" loading="lazy" decoding="async"></span>';
     var p = podiumPhotoPlayer(name);
     if (!p) return '<span class="rk-photo is-empty" aria-hidden="true"></span>'; // keeps the names in line
     return isCutoutPhoto(p)
@@ -13206,6 +13238,27 @@ var CLUBS = [
     }
     return savePlayerMediaChecked(uid, file, onProgress, false);
   }
+  // The second profile photo: a head-and-shoulders portrait, shown in every
+  // ranking row and small next to the name on the profile. A transparent
+  // background is trimmed to the person.
+  function savePlayerPortrait(uid, file) {
+    if (!currentUser || currentUser.uid !== uid) return Promise.reject(new Error('Not authorized.'));
+    return hasTransparentBackground(file).then(function(cut) { return cut ? trimTransparent(file) : file; }).then(function(f) {
+      var store = AUTH_DEMO_MODE ? fileToDataUrl(f) : uploadToStorage('players/' + uid + '/portrait-' + Date.now() + '-' + f.name, f);
+      return store.then(function(url) {
+        var update = { portraitUrl: url };
+        if (AUTH_DEMO_MODE) {
+          var users = demoUsers(), user = users.find(function(u) { return u.uid === uid; });
+          if (user) { Object.assign(user, update); demoSaveUsers(users); }
+        } else {
+          firebase.firestore().collection('players').doc(uid).set(update, { merge: true });
+        }
+        var dirEntry = findPlayer(uid);
+        if (dirEntry) Object.assign(dirEntry, update);
+        return url;
+      });
+    });
+  }
   function savePlayerMediaChecked(uid, file, onProgress, cutout) {
     var isVideo = file.type.indexOf('video') === 0;
     function applyUpdate(fields) {
@@ -13447,6 +13500,9 @@ var CLUBS = [
       ? '<div class="profile-media-upload">' +
           (hasMedia && !isCutoutPhoto(player) ? '<button type="button" class="profile-media-adjust-btn" id="playerMediaAdjustBtn">Adjust framing</button>' : '') +
           '<label for="playerMediaInput">' + (hasMedia ? 'Replace photo / video' : 'Upload photo or video') + '</label><input type="file" id="playerMediaInput" accept="image/png,image/webp,video/*">' +
+          // second photo: a head-and-shoulders portrait (ranking rows, next to the name)
+          '<label for="playerPortraitInput" class="profile-portrait-label">' + esc(uiText(player.portraitUrl ? 'profile.portraitReplace' : 'profile.portraitUpload')) +
+            '</label><input type="file" id="playerPortraitInput" accept="image/png,image/webp,image/jpeg">' +
         '</div>' +
         (hasMedia ? '<div class="profile-media-adjust" hidden>' +
           '<span class="profile-media-adjust-hint">Drag or use arrow keys</span>' +
@@ -13793,7 +13849,8 @@ var CLUBS = [
       '<div class="profile-media-row">' +
       '<div class="profile-main">' +
       '<div class="detail-head">' +
-        '<h1>' + (player.name ? esc(player.name) : 'Unnamed player') + '</h1>' +
+        '<h1 class="profile-name-row">' + (player.portraitUrl ? '<img class="profile-portrait" src="' + esc(player.portraitUrl) + '" alt="">' : '') +
+          '<span>' + (player.name ? esc(player.name) : 'Unnamed player') + '</span></h1>' +
         nameEditHtml +
         editToggleHtml +
         '<div class="medal-row" id="playerMedalRow"></div>' +
@@ -13853,6 +13910,19 @@ var CLUBS = [
         });
       });
       wirePlayerMediaFraming(player);
+      var portraitInput = document.getElementById('playerPortraitInput');
+      if (portraitInput) portraitInput.addEventListener('change', function() {
+        var file = portraitInput.files[0];
+        if (!file) return;
+        var label = document.querySelector('label[for="playerPortraitInput"]');
+        if (label) label.textContent = 'Uploading …';
+        portraitInput.disabled = true;
+        savePlayerPortrait(player.uid, file).then(function() { showPlayer(player.uid); }).catch(function(err) {
+          portraitInput.disabled = false; portraitInput.value = '';
+          if (label) label.textContent = uiText('profile.portraitUpload');
+          window.alert(uploadErrorMessage(err));
+        });
+      });
       var mediaInput = document.getElementById('playerMediaInput');
       if (mediaInput) mediaInput.addEventListener('change', function() {
         var file = mediaInput.files[0];
