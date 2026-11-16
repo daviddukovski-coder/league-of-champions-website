@@ -7047,9 +7047,11 @@ var CLUBS = [
   /* ==================================================================
      LANDING
      ================================================================== */
-  // "Presented by bolao" above the landing headline: hidden on request
-  // (2026-11-16). Kept, not deleted — set to true to show it again.
+  // "Presented by bolao" above the landing headline and the subtitle below it
+  // ("17 stops, three formats …"): hidden on request (2026-11-16). Kept, not
+  // deleted — texts and translations stay; set to true to show them again.
   var SHOW_LANDING_PRESENTED = false;
+  var SHOW_LANDING_SUBTITLE = false;
 
   function showLanding() {
     renderHeroMedia();
@@ -7065,7 +7067,7 @@ var CLUBS = [
       presented: SHOW_LANDING_PRESENTED ? brandSlotHtml('hero') : '',
       eyebrow: '<span class="hero-eyebrow mono">' + uiEdit('landing.eyebrow') + '</span>',
       headline: '<h1>' + uiEdit('landing.headline') + '</h1>',
-      subtitle: '<p>' + uiEdit('landing.subtitle') + '</p>',
+      subtitle: SHOW_LANDING_SUBTITLE ? '<p>' + uiEdit('landing.subtitle') + '</p>' : '',
       actions: '<div class="hero-actions">' + actionsHtml + '</div>',
       browseLink: currentUser ? '' : '<button class="hero-browse" data-route="tournaments">' + uiEdit('landing.browseLink') + '</button>'
     };
