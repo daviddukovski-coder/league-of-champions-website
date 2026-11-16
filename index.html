@@ -784,25 +784,39 @@
   .cp-mast-sub { display:block; margin-top:10px; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
   .cp-book { position:relative; max-width:980px; margin:0 auto; outline:none; }
   .cp-book:focus-visible .cp-stage { box-shadow:0 0 0 3px var(--cyan); border-radius:8px; }
-  .cp-stage { position:relative; display:grid; perspective:2200px; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+  .cp-stage { position:relative; display:grid; perspective:2200px; touch-action:pan-y; user-select:none; -webkit-user-select:none; filter:drop-shadow(0 18px 28px rgba(3,4,40,0.55)); }
   /* a few sheets peeking out underneath: it reads as a stack of newspaper */
-  .cp-stage::before, .cp-stage::after { content:''; grid-area:1 / 1; border-radius:6px; background:#d9dde9; transform:translate(10px, 10px) rotate(0.6deg); box-shadow:0 18px 40px rgba(3,4,40,0.45); }
-  .cp-stage::after { background:#e6e9f2; transform:translate(5px, 5px) rotate(-0.4deg); }
-  .cp-page { grid-area:1 / 1; position:relative; z-index:1; visibility:hidden; background:#f1f3f9; background-image:radial-gradient(120% 90% at 20% 0%, rgba(255,255,255,0.75), rgba(255,255,255,0) 60%), repeating-linear-gradient(0deg, rgba(11,13,99,0.018) 0 1px, transparent 1px 3px);
-    color:#0b0d63; border-radius:6px; padding:30px 40px 26px; box-shadow:0 22px 50px rgba(3,4,40,0.5); transform-origin:left center; backface-visibility:hidden;
+  .cp-stage::before, .cp-stage::after { content:''; grid-area:1 / 1; background:#b9bcc6; clip-path:var(--cp-edge); transform:translate(10px, 9px) rotate(0.7deg); }
+  .cp-stage::after { background:#c8cad2; transform:translate(4px, 5px) rotate(-0.5deg); }
+  /* grey newsprint: soft light in the middle, darker edges, fibres, the two
+     folds of a newspaper and a slightly ragged outline */
+  .cp-section { --cp-edge:polygon(0.0% 0.00%, 4.5% 0.83%, 9.1% 0.26%, 13.6% 0.19%, 18.2% 0.66%, 22.7% 0.48%, 27.3% 0.30%, 31.8% 0.68%, 36.4% 0.68%, 40.9% 0.49%, 45.5% 0.62%, 50.0% 0.57%, 54.5% 0.74%, 59.1% 0.22%, 63.6% 0.34%, 68.2% 0.64%, 72.7% 0.63%, 77.3% 0.05%, 81.8% 0.62%, 86.4% 0.42%, 90.9% 0.83%, 95.5% 0.73%, 100.0% 0.11%, 99.64% 4.5%, 99.35% 9.1%, 99.52% 13.6%, 99.55% 18.2%, 99.60% 22.7%, 99.36% 27.3%, 99.36% 31.8%, 99.74% 36.4%, 99.77% 40.9%, 99.41% 45.5%, 99.77% 50.0%, 99.89% 54.5%, 99.79% 59.1%, 99.70% 63.6%, 99.79% 68.2%, 99.34% 72.7%, 99.61% 77.3%, 99.49% 81.8%, 99.39% 86.4%, 99.96% 90.9%, 99.81% 95.5%, 99.61% 100.0%, 95.5% 99.54%, 90.9% 99.62%, 86.4% 99.83%, 81.8% 99.18%, 77.3% 99.95%, 72.7% 99.67%, 68.2% 99.69%, 63.6% 99.40%, 59.1% 99.17%, 54.5% 99.54%, 50.0% 99.85%, 45.5% 99.63%, 40.9% 99.74%, 36.4% 99.67%, 31.8% 99.62%, 27.3% 99.70%, 22.7% 99.52%, 18.2% 99.45%, 13.6% 99.79%, 9.1% 99.18%, 4.5% 99.59%, 0.0% 99.22%, 0.44% 95.5%, 0.44% 90.9%, 0.36% 86.4%, 0.35% 81.8%, 0.48% 77.3%, 0.66% 72.7%, 0.28% 68.2%, 0.50% 63.6%, 0.18% 59.1%, 0.41% 54.5%, 0.25% 50.0%, 0.23% 45.5%, 0.27% 40.9%, 0.56% 36.4%, 0.61% 31.8%, 0.08% 27.3%, 0.57% 22.7%, 0.05% 18.2%, 0.28% 13.6%, 0.11% 9.1%, 0.05% 4.5%); }
+  .cp-page { grid-area:1 / 1; position:relative; z-index:1; visibility:hidden; background-color:#d8dae0;
+    background-image:
+      linear-gradient(90deg, transparent 49.7%, rgba(11,13,99,0.07) 50%, rgba(255,255,255,0.32) 50.25%, transparent 50.8%),
+      linear-gradient(0deg, transparent 49.6%, rgba(11,13,99,0.05) 50%, rgba(255,255,255,0.28) 50.3%, transparent 50.9%),
+      radial-gradient(130% 110% at 50% 40%, rgba(255,255,255,0.55), rgba(255,255,255,0) 62%),
+      radial-gradient(140% 120% at 50% 50%, transparent 60%, rgba(11,13,99,0.13) 100%),
+      repeating-linear-gradient(8deg, rgba(11,13,99,0.025) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(97deg, rgba(255,255,255,0.18) 0 1px, transparent 1px 6px);
+    color:#0b0d63; clip-path:var(--cp-edge); padding:34px 42px 28px; transform-origin:left center; backface-visibility:hidden;
     display:flex; flex-direction:column; }
   .cp-page > .cp-kicker { align-self:flex-start; }
+  /* only the open page sets the paper's height (short story, short page);
+     the others lie on top of it, out of the flow */
+  .cp-page:not(.is-current) { position:absolute; top:0; left:0; right:0; }
   .cp-page.is-current { visibility:visible; z-index:3; }
   .cp-page.is-under { visibility:visible; z-index:2; }
-  .cp-page-head { display:flex; justify-content:space-between; gap:12px; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(11,13,99,0.65); padding-bottom:10px; border-bottom:2px solid #0b0d63; margin-bottom:18px; }
+  .cp-page-head { position:relative; display:flex; justify-content:space-between; gap:12px; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(11,13,99,0.7); padding-bottom:10px; border-bottom:3px solid #0b0d63; margin-bottom:20px; }
+  .cp-page-head::after { content:''; position:absolute; left:0; bottom:-9px; width:120px; height:5px; background:var(--cyan); transform:skewX(-30deg); transform-origin:left; }
   .cp-page-head .cp-mast { font:400 15px/1 'Bebas Neue', sans-serif; letter-spacing:0.12em; color:#0b0d63; }
   .cp-kicker { display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#0b0d63; background:var(--cyan); padding:4px 10px; margin-bottom:12px; }
   .cp-title { font:400 clamp(34px,4.6vw,58px)/0.95 'Bebas Neue', sans-serif; letter-spacing:0.01em; margin:0 0 20px; color:#0b0d63; }
-  .cp-body { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(0, 1fr); gap:26px; align-items:start; }
-  .cp-body.no-photo { grid-template-columns:1fr; }
-  .cp-photo { margin:0; aspect-ratio:4 / 3; overflow:hidden; border-radius:3px; background:#dfe3ee; }
-  .cp-photo img { width:100%; height:100%; object-fit:cover; display:block; }
-  .cp-photo.is-empty { display:grid; place-items:center; border:2px dashed rgba(11,13,99,0.3); background:transparent; color:rgba(11,13,99,0.55); font-size:13px; letter-spacing:0.08em; text-transform:uppercase; }
+  .cp-body { display:flow-root; }
+  .cp-photo { float:left; width:min(48%, 440px); margin:4px 26px 12px 0; }
+  .cp-photo img { width:100%; aspect-ratio:4 / 3; object-fit:cover; display:block; border-radius:2px; filter:saturate(0.92) contrast(1.03); }
+  .cp-photo figcaption { margin-top:6px; font-size:11.5px; font-style:italic; line-height:1.4; color:rgba(11,13,99,0.7); }
+  .cp-photo.is-empty { float:none; width:auto; margin:0 0 14px; aspect-ratio:16 / 5; display:grid; place-items:center; border:2px dashed rgba(11,13,99,0.3); background:transparent; color:rgba(11,13,99,0.55); font-size:13px; letter-spacing:0.08em; text-transform:uppercase; }
   .cp-text { font-size:15.5px; line-height:1.65; color:#1b1f5e; }
   .cp-body.no-photo .cp-text { columns:2; column-gap:34px; column-rule:1px solid rgba(11,13,99,0.18); }
   .cp-text p { margin:0 0 12px; }
@@ -846,7 +860,7 @@
   }
   @media (max-width:720px) {
     .cp-page { padding:20px 18px 18px; }
-    .cp-body, .cp-body.no-photo { grid-template-columns:1fr; gap:16px; }
+    .cp-photo { float:none; width:100%; margin:0 0 14px; }
     .cp-body.no-photo .cp-text { columns:1; }
     .cp-arrow { width:42px; height:42px; margin-top:-21px; font-size:24px; top:auto; bottom:-62px; }
     .cp-prev { left:0; }
@@ -5842,6 +5856,7 @@ var CLUBS = [
     'news.fDate': "Date",
     'news.fText': "Text",
     'news.fPhoto': "Photo",
+    'news.fCaption': "Photo caption / credit (e.g. Photo: Murman Media)",
     'news.fPhotoDrop': "Remove the current photo",
     'news.fSpName': "Sponsor name",
     'news.fSpLogo': "Sponsor logo",
@@ -6395,7 +6410,7 @@ var CLUBS = [
       'news.sponsorSlot': 'Platz für einen Sponsor – über „Bearbeiten“ hinzufügen', 'news.photoSlot': 'Platz für ein Foto', 'news.add': '+ News hinzufügen',
       'news.empty': 'Noch keine News – leg die erste Seite an.', 'news.fKicker': 'Rubrik', 'news.fTour': 'Turnier (die News erscheint als Vorschau / Nachbericht auf der Turnierseite)', 'news.fTourNone': '– keines –',
       'news.readPreview': 'Zur Vorschau', 'news.readRecap': 'Zum Nachbericht', 'news.back': '← Startseite', 'news.fTitle': 'Schlagzeile', 'news.fDate': 'Datum',
-      'news.fText': 'Text', 'news.fPhoto': 'Foto', 'news.fPhotoDrop': 'Aktuelles Foto entfernen', 'news.fSpName': 'Name des Sponsors', 'news.fSpLogo': 'Logo des Sponsors',
+      'news.fText': 'Text', 'news.fPhoto': 'Foto', 'news.fCaption': 'Bildunterschrift / Fotograf (z. B. Foto: Murman Media)', 'news.fPhotoDrop': 'Aktuelles Foto entfernen', 'news.fSpName': 'Name des Sponsors', 'news.fSpLogo': 'Logo des Sponsors',
       'news.fSpUrl': 'Link des Sponsors', 'news.titleNeeded': 'Bitte gib eine Schlagzeile ein.', 'news.removeConfirm': 'Die News „{name}“ entfernen?', 'rules.title': 'Regeln & Bestimmungen', 'rules.text': 'Die Regeln, die jedes Team mit der Anmeldung zu einem League-of-Champions-Turnier akzeptiert.',
       'rules.version': 'Version {v} · aktualisiert am {date}', 'rules.empty': 'Die Regeln und Bestimmungen werden hier bald veröffentlicht.', 'rules.contents': 'Inhalt',
       'register.submitBtn': 'Registrieren', 'register.tournamentLabel': 'Turnier', 'register.divisionLabel': 'Kategorie', 'register.teamLabel': 'Team', 'register.feeLabel': 'Startgeld',
@@ -8160,7 +8175,8 @@ var CLUBS = [
     var sponsor = sp.logo || sp.name
       ? (sp.url ? '<a class="cp-sponsor" href="' + esc(sp.url) + '" target="_blank" rel="noopener">' + sponsorInner + '</a>' : '<div class="cp-sponsor">' + sponsorInner + '</div>')
       : '';
-    var photo = n.image ? '<figure class="cp-photo"><img src="' + esc(n.image) + '" alt="" loading="lazy" draggable="false"></figure>'
+    var photo = n.image ? '<figure class="cp-photo"><img src="' + esc(n.image) + '" alt="' + esc(stripFlags(n.caption || '')) + '" loading="lazy" draggable="false">' +
+        (n.caption ? '<figcaption>' + esc(stripFlags(n.caption)) + '</figcaption>' : '') + '</figure>'
       : '<div class="admin-only"><figure class="cp-photo is-empty">' + esc(uiText('news.photoSlot')) + '</figure></div>';
     return '<article class="cp-page' + (i === newsPage ? ' is-current' : '') + '" data-cp-page="' + i + '" aria-roledescription="' + esc(uiText('news.pageWord')) + '" aria-label="' + esc(pageOf) + '"' + (i === newsPage ? '' : ' aria-hidden="true"') + '>' +
       '<div class="cp-page-head"><span class="cp-mast">' + esc(uiText('news.masthead')) + '</span><span>' + esc(newsDateLabel(n.date)) + '</span><span>' + esc(pageOf) + '</span></div>' +
@@ -8204,6 +8220,7 @@ var CLUBS = [
         field('cpHeadline', 'news.fTitle', '<input id="cpHeadline" maxlength="120" required>') +
         field('cpDate', 'news.fDate', '<input id="cpDate" type="date">') +
         field('cpText', 'news.fText', '<textarea id="cpText" rows="8" maxlength="6000"></textarea><p class="kit-note">' + esc(uiText('rules.fTextHint')) + '</p>') +
+        field('cpCaption', 'news.fCaption', '<input id="cpCaption" maxlength="160">') +
         field('cpPhoto', 'news.fPhoto', '<input type="file" id="cpPhoto" accept="image/*"><label class="checkbox-row" id="cpPhotoDropRow" hidden><input type="checkbox" id="cpPhotoDrop"><span>' + esc(uiText('news.fPhotoDrop')) + '</span></label>') +
         '<div class="kit-actions"><button type="button" class="btn btn-cyan btn-sm" id="cpSave">' + esc(uiText('team.save')) + '</button><button type="button" class="btn btn-outline btn-sm" id="cpCancel">' + esc(uiText('team.cancel')) + '</button></div>' +
         '<p class="kit-note" id="cpNote" role="status"></p></form></div>' +
@@ -8233,9 +8250,12 @@ var CLUBS = [
         if (reduceMotion || !next.animate) { done(); return; }
         busy = true;
         var flip = [{ transform: 'rotateY(0deg)', filter: 'brightness(1)' }, { transform: 'rotateY(-100deg)', filter: 'brightness(0.62)' }];
-        var anim, finished = false;
+        var anim, finished = false, stage = book.querySelector('.cp-stage'), grow = null;
+        // the paper grows or shrinks to the next story while the page turns
+        stage.getAnimations && stage.getAnimations().forEach(function(a) { a.cancel(); });
+        if (stage.animate) grow = stage.animate([{ height: stage.offsetHeight + 'px' }, { height: next.offsetHeight + 'px' }], { duration: 720, easing: 'cubic-bezier(.55,.05,.45,.95)' });
         // also finish by timer: a hidden tab may never report the animation end
-        var finish = function() { if (finished) return; finished = true; if (anim) anim.cancel(); done(); };
+        var finish = function() { if (finished) return; finished = true; if (anim) anim.cancel(); if (grow) grow.cancel(); done(); };
         if (forward) {
           next.classList.add('is-under');
           anim = from.animate(flip, { duration: 720, easing: 'cubic-bezier(.55,.05,.45,.95)' });
@@ -8284,7 +8304,7 @@ var CLUBS = [
       $('cpKicker').value = NEWS_KINDS.some(function(k) { return k[0] === n.kicker; }) ? n.kicker : 'Updates';
       $('cpTour').value = (n.tournamentIds || [])[0] || '';
       $('cpHeadline').value = n.title || '';
-      $('cpDate').value = n.date || new Date().toISOString().slice(0, 10); $('cpText').value = n.text || '';
+      $('cpDate').value = n.date || new Date().toISOString().slice(0, 10); $('cpText').value = n.text || ''; $('cpCaption').value = n.caption || '';
       $('cpPhoto').value = ''; $('cpPhotoDrop').checked = false; $('cpPhotoDropRow').hidden = !n.image;
       $('cpNote').textContent = '';
       form.hidden = false; form.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' }); $('cpHeadline').focus();
@@ -8299,7 +8319,7 @@ var CLUBS = [
       var tour = $('cpTour').value, oldTours = old.tournamentIds || [];
       var story = { id: old.id || 'news-' + Date.now().toString(36), kicker: $('cpKicker').value, title: title,
         tournamentIds: !tour ? [] : oldTours[0] === tour ? oldTours : [tour],
-        date: $('cpDate').value || new Date().toISOString().slice(0, 10), text: $('cpText').value.trim(),
+        date: $('cpDate').value || new Date().toISOString().slice(0, 10), text: $('cpText').value.trim(), caption: $('cpCaption').value.trim(),
         image: $('cpPhotoDrop').checked ? '' : (old.image || ''),
         sponsor: old.sponsor || {} };
       note.textContent = uiText('brand.saving');
