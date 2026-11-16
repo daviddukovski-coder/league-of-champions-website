@@ -44,6 +44,40 @@ var TOURNAMENTS = {
   'faro-finals':     { name: 'Faro Finals', feeCents: 8000 }
 };
 
+// Tournaments created later in the site's admin page are not in the list
+// above: look them up in the site's Firestore content (content/site), where
+// the admin page stores them (customTournaments + per-tournament edits).
+// The fee still comes from the server side, never from the browser.
+function tournamentConfig_(id) {
+  if (TOURNAMENTS[id]) return TOURNAMENTS[id];
+  var props = PropertiesService.getScriptProperties();
+  var key = props.getProperty('FIREBASE_API_KEY');
+  var project = props.getProperty('FCM_PROJECT_ID') || 'league-of-champions-website';
+  if (!key || !id) return null;
+  var res = UrlFetchApp.fetch('https://firestore.googleapis.com/v1/projects/' + project + '/databases/(default)/documents/content/site?key=' + key, { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) return null;
+  var site = fsValue_({ mapValue: JSON.parse(res.getContentText()) }) || {};
+  var base = (site.customTournaments || []).filter(function(t) { return t && t.id === id; })[0];
+  var edit = site[id];
+  if (!base && !edit) return null;
+  var t = {};
+  [base, edit].forEach(function(o) { if (o) for (var k in o) t[k] = o[k]; });
+  var fee = Number(t.fee);
+  return { name: t.name || id, feeCents: fee > 0 ? Math.round(fee * 100) : 0 };
+}
+// Firestore REST value -> plain value
+function fsValue_(v) {
+  if (!v) return null;
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('nullValue' in v) return null;
+  if ('arrayValue' in v) return (v.arrayValue.values || []).map(fsValue_);
+  if ('mapValue' in v) { var o = {}, f = v.mapValue.fields || {}; for (var k in f) o[k] = fsValue_(f[k]); return o; }
+  return null;
+}
+
 function doGet(e) {
   try {
     var action = e.parameter.action;
@@ -198,7 +232,7 @@ function getStatus_(id) {
 }
 
 function registerTeam_(body, user) {
-  if (!TOURNAMENTS[body.tournamentId]) return { error: 'unknown tournament' };
+  if (!tournamentConfig_(body.tournamentId)) return { error: 'unknown tournament' };
   var sh = getSheet_(REG_SHEET);
   var id = Utilities.getUuid();
   sh.appendRow([
@@ -293,8 +327,9 @@ function deleteRegistration_(body) {
 /* -------------------- Stripe -------------------- */
 
 function createCheckout_(body) {
-  var cfg = TOURNAMENTS[body.tournamentId];
+  var cfg = tournamentConfig_(body.tournamentId);
   if (!cfg) return { error: 'unknown tournament' };
+  if (!cfg.feeCents) return { error: 'no entry fee set for this tournament' };
 
   var props = PropertiesService.getScriptProperties();
   var base = props.getProperty('SITE_BASE_URL');

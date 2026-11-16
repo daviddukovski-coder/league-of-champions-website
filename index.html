@@ -873,6 +873,12 @@
      Newsprint pages (cool, blue-tinted paper, navy ink, cyan accents) on the
      dark page; a 3D page turn between them. */
   .cp-section { padding-bottom:72px; }
+  .club-fixed, .club-pick { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius); }
+  .club-pick { flex-direction:column; align-items:flex-start; }
+  .club-pick-opt { margin:0; align-items:center; }
+  .club-fixed .standings-team, .club-pick .standings-team { display:inline-flex; align-items:center; gap:8px; }
+  .club-sep { opacity:0.5; }
+  .profile-tours { margin-top:12px; }
   .cp-masthead { text-align:center; margin:0 auto 34px; max-width:980px; }
   .cp-masthead h2 { font:400 clamp(46px,7vw,92px)/0.9 'Bebas Neue', sans-serif; letter-spacing:0.04em; margin:0; padding:14px 0 10px; border-top:3px solid #fff; border-bottom:1px solid rgba(255,255,255,0.55); box-shadow:0 -7px 0 -6px rgba(255,255,255,0.55); }
   .cp-mast-sub { display:block; margin-top:10px; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
@@ -3482,8 +3488,8 @@
         <div class="nav-about-menu">
           <button type="button" class="nav-link nav-about-btn" id="navAboutBtn" data-nav-views="about rules" aria-haspopup="true" aria-expanded="false" aria-controls="navAboutDropdown"><span data-ui-key="nav.about">About</span><svg class="nav-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="nav-user-dropdown nav-about-dropdown" id="navAboutDropdown" hidden>
-            <button type="button" data-route="rules" data-ui-key="rules.title">Rules &amp; Regulations</button>
             <button type="button" data-route="about" data-ui-key="about.footerLink">About the tour</button>
+            <button type="button" data-route="rules" data-ui-key="rules.title">Rules &amp; Regulations</button>
           </div>
         </div>
       </div>
@@ -5950,6 +5956,18 @@ var CLUBS = [
     'rules.footerLink': "Rules",
     'news.masthead': "The Champions Post",
     'ranking.homeClub': "Home Club",
+    'about.allTimeStats': "League of Champions in numbers",
+    'about.statSignups': "Total sign-ups",
+    'profile.tournamentsPlayed': "Tournaments played",
+    'profile.withPartner': "with {name}",
+    'register.noHomeClub': "Please set your home club in your profile first — a team always plays for a home club.",
+    'register.toProfile': "Go to my profile →",
+    'register.clubs100': "At 100 tournaments each of you plays for your own home club.",
+    'register.clubsOne': "At 500 and 1000 tournaments a team plays for one club: choose yours or your partner's.",
+    'register.errNotOpen': "Online registration for this tournament isn't open on our server yet. Please write to office@bolao-sports.com.",
+    'register.errLogin': "Your login has expired. Please log out, log in again and send the form once more.",
+    'register.errNetwork': "No connection to our server. Please check your internet and try again.",
+    'register.errOther': "The registration could not be saved ({why}). Please try again or write to office@bolao-sports.com.",
     'profile.portraitUpload': "Upload portrait (head & shoulders)",
     'profile.portraitReplace': "Replace portrait",
     'news.edition': "Season {year} · {n} stories",
@@ -6312,8 +6330,8 @@ var CLUBS = [
     'detail.copyLink': 'Copy link',
     'detail.creatingGraphic': 'Creating graphic…',
     'detail.partnersHeading': 'Looking for a partner',
-    'detail.partnersEmpty': 'Nobody is looking yet. Need a partner? Post yourself in the Player Exchange.',
-    'detail.partnersAll': 'Open Player Exchange →',
+    'detail.partnersEmpty': 'Nobody is looking yet. Need a partner? Post yourself in Find a partner.',
+    'detail.partnersAll': 'Open Find a partner →',
     'detail.registerNow': 'Register now',
     'detail.alreadyRegisteredNote': "You're already registered for this tournament.",
     'detail.registeredTeams': 'Registered Teams',
@@ -6333,8 +6351,8 @@ var CLUBS = [
     'register.emailLabel': 'Email *',
     'register.phoneLabel': 'Phone *',
     'nav.inbox': 'Inbox',
-    'exchange.navLabel': 'Player Exchange',
-    'exchange.heading': 'Player Exchange',
+    'exchange.navLabel': 'Find a partner',
+    'exchange.heading': 'Find a partner',
     'exchange.subheading': "Looking for a partner for this tournament, or someone else's partner? List yourself here so other players can find and contact you.",
     'exchange.sideLabel': 'Preferred side',
     'exchange.sideLeft': 'Left',
@@ -6357,7 +6375,7 @@ var CLUBS = [
     'exchange.emptyNote': 'No one looking for a partner here yet.',
     'exchange.matchedNote': "You're already partnered up for this tournament.",
     'inbox.heading': 'Inbox',
-    'inbox.emptyNote': "No conversations yet — contact someone from a tournament's Player Exchange to get started.",
+    'inbox.emptyNote': "No conversations yet — contact someone from a tournament's Find a partner to get started.",
     'inbox.pendingBadge': 'Request pending',
     'inbox.acceptedBadge': 'Accepted',
     'inbox.declinedBadge': 'Declined',
@@ -6502,7 +6520,7 @@ var CLUBS = [
       'register.emailLabel': 'E-Mail *', 'register.phoneLabel': 'Telefon *', 'register.partnerLabel': 'Partner (2. Spieler) *', 'register.partnerPlaceholder': 'Vor- und Nachname',
       'register.jerseyFitLabel': 'Trikot-Schnitt *', 'register.jerseySizeLabel': 'Trikot-Größe *', 'register.jerseyNameLabel': 'Trikot-Name *', 'register.jerseyNamePlaceholder': 'Name für den Trikot-Rücken',
       'register.partnerJerseyFitLabel': 'Trikot-Schnitt Partner *', 'register.partnerJerseySizeLabel': 'Trikot-Größe Partner *', 'register.partnerJerseyNameLabel': 'Trikot-Name Partner *',
-      'nav.inbox': 'Postfach', 'exchange.navLabel': 'Spielerbörse', 'exchange.heading': 'Spielerbörse',
+      'nav.inbox': 'Postfach', 'exchange.navLabel': 'Partner finden', 'exchange.heading': 'Partner finden',
       'exchange.subheading': 'Suchst du einen Partner für dieses Turnier? Trag dich hier ein, damit andere Spieler dich finden und kontaktieren können.',
       'exchange.sideLabel': 'Bevorzugte Seite', 'exchange.sideLeft': 'Links', 'exchange.sideRight': 'Rechts', 'exchange.sideAny': 'Egal',
       'exchange.addListingBtn': 'Mich eintragen', 'exchange.myListingLabel': 'Deine Anzeige', 'exchange.cancelListingBtn': 'Anzeige entfernen',
@@ -6523,7 +6541,14 @@ var CLUBS = [
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
       'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *', 'register.rulesLabel': "Ich habe die Regeln und Bestimmungen der League of Champions gelesen und akzeptiere sie. *", 'register.rulesLink': "Regeln und Bestimmungen lesen",
       'rules.footerLink': 'Regeln',
-      'news.edition': 'Saison {year} · {n} Meldungen', 'ranking.homeClub': 'Heimverein', 'profile.portraitUpload': 'Porträtfoto hochladen (Kopf & Schultern)', 'profile.portraitReplace': 'Porträtfoto ersetzen', 'news.editionOne': 'Saison {year} · 1 Meldung', 'news.pageOf': 'Seite {n} von {total}', 'news.pageWord': 'Seite',
+      'news.edition': 'Saison {year} · {n} Meldungen', 'ranking.homeClub': 'Heimverein', 'about.allTimeStats': 'League of Champions in Zahlen', 'about.statSignups': 'Anmeldungen gesamt',
+      'profile.tournamentsPlayed': 'Gespielte Turniere', 'profile.withPartner': 'mit {name}',
+      'register.noHomeClub': 'Bitte trag zuerst in deinem Profil deinen Heimverein ein – ein Team spielt immer für einen Heimverein.', 'register.toProfile': 'Zu meinem Profil →',
+      'register.clubs100': 'Bei 100er-Turnieren spielt ihr beide für euren eigenen Heimverein.', 'register.clubsOne': 'Bei 500er- und 1000er-Turnieren spielt ein Team für einen Verein: deinen oder den deines Partners.',
+      'register.errNotOpen': 'Die Online-Anmeldung für dieses Turnier ist auf unserem Server noch nicht freigeschaltet. Bitte schreib an office@bolao-sports.com.',
+      'register.errLogin': 'Deine Anmeldung ist abgelaufen. Bitte ab- und wieder anmelden und das Formular noch einmal senden.',
+      'register.errNetwork': 'Keine Verbindung zu unserem Server. Bitte prüf dein Internet und versuch es noch einmal.',
+      'register.errOther': 'Die Anmeldung konnte nicht gespeichert werden ({why}). Bitte versuch es noch einmal oder schreib an office@bolao-sports.com.', 'profile.portraitUpload': 'Porträtfoto hochladen (Kopf & Schultern)', 'profile.portraitReplace': 'Porträtfoto ersetzen', 'news.editionOne': 'Saison {year} · 1 Meldung', 'news.pageOf': 'Seite {n} von {total}', 'news.pageWord': 'Seite',
       'news.prev': 'Vorherige Seite', 'news.next': 'Nächste Seite', 'news.hint': 'Wischen oder die Pfeile benutzen, um umzublättern', 'news.presentedBy': 'Präsentiert von',
       'news.sponsorSlot': 'Platz für einen Sponsor – über „Bearbeiten“ hinzufügen', 'news.photoSlot': 'Platz für ein Foto', 'news.add': '+ News hinzufügen',
       'news.empty': 'Noch keine News – leg die erste Seite an.', 'news.fKicker': 'Rubrik', 'news.fTour': 'Turnier (die News erscheint als Vorschau / Nachbericht auf der Turnierseite)', 'news.fTourNone': '– keines –',
@@ -7733,6 +7758,7 @@ var CLUBS = [
   }
   // "Presented by <logo>"; kind: hero | footer | strip | court
   function presentedHtml(kind, b) {
+    if (kind !== 'footer') return ''; // on request: only in the footer
     b = b || activeBrand();
     var inner = '<span class="presented-label">' + esc(uiText('brand.presentedBy')) + '</span>' + brandLogoHtml(b);
     return b.url ? '<a class="presented-by presented-' + kind + '" href="' + esc(b.url) + '" target="_blank" rel="noopener">' + inner + '</a>'
@@ -8525,6 +8551,42 @@ var CLUBS = [
     var countries = Object.keys(season.reduce(function(m, t) { m[t.country] = 1; return m; }, {})).length;
     return { year: year, tournaments: season.length, players: players, clubs: CLUBS.length, countries: countries };
   }
+  // All-time numbers for the About page. Earlier seasons that are not set up
+  // as tournaments on this site (2025, from the old site's results page) are
+  // listed here; their sign-ups are not known yet (fill in when available).
+  var EARLIER_TOURNAMENTS = [
+    { name: 'Graz 1000', year: 2025, country: 'Austria' }, { name: 'Nordic Footvolley 100', year: 2025, country: 'Norway' },
+    { name: 'Copenhagen 1000', year: 2025, country: 'Denmark' }, { name: 'Coco Beach Footvolley 500', year: 2025, country: 'Germany' },
+    { name: 'Croatia 500', year: 2025, country: 'Croatia' }, { name: 'Hartberg 500', year: 2025, country: 'Austria' },
+    { name: 'Ibiza Footvolley Open 500', year: 2025, country: 'Spain' }, { name: 'Tenerife Finals', year: 2025, country: 'Spain' }
+  ];
+  var cachedTourTotals = null;
+  // tournaments: every tournament so far; sign-ups: players per tournament
+  // (two per team — a player in three tournaments counts three times);
+  // clubs: every club a team played for; countries: where tournaments were.
+  function tourTotals() {
+    var list = allTournaments().filter(function(t) { return t.status === 'past' || new Date(t.dateSort) <= new Date(); });
+    return Promise.all(list.map(function(t) { return loadBracket(t.id).catch(function() { return null; }); })).then(function(brackets) {
+      var signups = 0, clubs = {}, countries = {};
+      brackets.forEach(function(b) {
+        (b && b.teams || []).forEach(function(tm) {
+          signups += 2;
+          [tm.club, tm.club2].forEach(function(c) { if (c) clubs[clubKeyOf(c)] = 1; });
+        });
+      });
+      ['2025', '2026'].forEach(function(y) {
+        ['men', 'women'].forEach(function(g) { rankingRows(y, g, 'clubs').forEach(function(r) { if (r.name) clubs[clubKeyOf(r.name)] = 1; }); });
+      });
+      list.concat(EARLIER_TOURNAMENTS).forEach(function(t) { if (t.country) countries[t.country] = 1; });
+      cachedTourTotals = { tournaments: list.length + EARLIER_TOURNAMENTS.length, signups: signups, clubs: Object.keys(clubs).length, countries: Object.keys(countries).length };
+      return cachedTourTotals;
+    });
+  }
+  function tourTotalsHtml(tt) {
+    var stat = function(n, label) { return '<div class="pt-stat"><span class="pt-stat-num"' + (n ? ' data-count-to="' + n + '"' : '') + '>' + (n || '–') + '</span><span class="pt-stat-label">' + esc(label) + '</span></div>'; };
+    tt = tt || {};
+    return stat(tt.tournaments, uiText('fx.statTournaments')) + stat(tt.signups, uiText('about.statSignups')) + stat(tt.clubs, uiText('fx.statClubs')) + stat(tt.countries, uiText('fx.statCountries'));
+  }
   function samplePlayerForCard() {
     var r = tourReach(), rows = [];
     try { rows = rankingRows(r.year, 'men', 'players'); } catch (e) {}
@@ -8723,12 +8785,9 @@ var CLUBS = [
     var step = function(n, k) { return '<li class="ab-step"><span class="ab-step-num" aria-hidden="true">' + n + '</span><div><h3>' + uiEdit('about.s_' + k) + '</h3><p>' + uiEdit('about.s_' + k + '_text') + '</p></div></li>'; };
     el.innerHTML =
       '<section class="pt-hero ab-hero"><div class="pt-hero-copy"><span class="shop-kicker">' + uiEdit('about.kicker') + '</span>' +
-        '<h1>' + uiEdit('about.title') + '</h1><p>' + uiEdit('about.text') + '</p>' +
-        '<div class="pt-hero-actions"><button class="btn btn-cyan btn-gradient" data-route="' + (currentUser ? 'tournaments' : 'register-account') + '">' + esc(uiText(currentUser ? 'landing.browseBtnLoggedIn' : 'about.ctaJoin')) + '</button>' +
-          '<a class="btn btn-outline" href="#abJoin" data-ab-jump>' + esc(uiText('about.howToJoin')) + '</a></div></div>' +
+        '<h1>' + uiEdit('about.title') + '</h1></div>' +
         '<div class="pt-founded">' + presentedHtml('hero') + '</div></section>' +
-      '<section class="pt-stats" aria-label="' + esc(uiFormat('about.seasonStats', { year: r.year })) + '">' +
-        stat(r.tournaments, uiText('fx.statTournaments')) + stat(r.players, uiText('fx.statPlayers')) + stat(r.clubs, uiText('fx.statClubs')) + stat(r.countries, uiText('fx.statCountries')) + '</section>' +
+      '<section class="pt-stats" id="abStats" aria-label="' + esc(uiText('about.allTimeStats')) + '">' + tourTotalsHtml(cachedTourTotals) + '</section>' +
       '<section class="ab-block" aria-labelledby="abHowTitle"><h2 id="abHowTitle">' + uiEdit('about.howTitle') + '</h2>' +
         '<div class="ab-pillars">' + pillar('tour', ICON.tour) + pillar('ranking', ICON.ranking) + pillar('format', ICON.format) + pillar('live', ICON.live) + '</div></section>' +
       '<section class="ab-block" aria-labelledby="abTierTitle"><h2 id="abTierTitle">' + uiEdit('about.tierTitle') + '</h2><p class="ab-lead">' + uiEdit('about.tierText') + '</p>' +
@@ -8742,12 +8801,14 @@ var CLUBS = [
         '<ol class="ab-steps">' + step(1, 'account') + step(2, 'partner') + step(3, 'register') + step(4, 'play') + '</ol>' +
         '<div class="pt-hero-actions ab-join-actions">' +
           (currentUser ? '' : '<button class="btn btn-cyan btn-gradient" data-route="register-account">' + esc(uiText('about.ctaJoin')) + '</button>') +
-          '<button class="btn btn-outline" data-route="tournaments">' + esc(uiText('landing.browseBtnLoggedIn')) + '</button>' +
-          '<button class="btn btn-outline" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div></section>' +
+          '<button class="btn btn-outline" data-route="tournaments">' + esc(uiText('landing.browseBtnLoggedIn')) + '</button></div></section>' +
       '<section class="pt-cta"><h2>' + uiEdit('about.questions') + '</h2><p>' + uiEdit('about.questionsText') + '</p><a class="btn btn-cyan btn-gradient" href="mailto:' + BOLAO.mail + '">' + esc(BOLAO.mail) + '</a></section>';
     wireCountUps(el);
-    el.querySelector('[data-ab-jump]').addEventListener('click', function(e) { e.preventDefault(); document.getElementById('abJoin').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); });
     setView('about');
+    if (!cachedTourTotals) tourTotals().then(function(tt) {
+      var box = document.getElementById('abStats');
+      if (box) { box.innerHTML = tourTotalsHtml(tt); wireCountUps(box); }
+    });
   }
 
   // The team page (#/team) and its footer link: taken off the site on request
@@ -9846,6 +9907,9 @@ var CLUBS = [
     if (!e.target.closest('#navAboutBtn')) setAboutMenu(false);
   });
   // "About" menu in the nav; picking an item routes via its data-route
+  // moved to <body>: inside the nav (blurred backdrop) a fixed menu is placed
+  // relative to the nav instead of the screen and opened in the wrong spot
+  document.body.appendChild(document.getElementById('navAboutDropdown'));
   function setAboutMenu(open) {
     var dd = document.getElementById('navAboutDropdown'), btn = document.getElementById('navAboutBtn');
     if (open) {
@@ -9858,6 +9922,12 @@ var CLUBS = [
   }
   window.addEventListener('scroll', function() { if (!document.getElementById('navAboutDropdown').hidden) setAboutMenu(false); }, { passive: true });
   window.addEventListener('resize', function() { setAboutMenu(false); });
+  window.addEventListener('hashchange', function() { setAboutMenu(false); });
+  document.addEventListener('click', function(e) {
+    if (document.getElementById('navAboutDropdown').hidden) return;
+    if (e.target.closest('#navAboutBtn')) return;
+    if (!e.target.closest('#navAboutDropdown') || e.target.closest('[data-route]')) setAboutMenu(false);
+  });
   document.getElementById('navAboutBtn').addEventListener('click', function() {
     setAboutMenu(document.getElementById('navAboutDropdown').hidden);
   });
@@ -10649,7 +10719,7 @@ var CLUBS = [
       (rankingType === 'players' && compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') +
       '<div id="rankingTable"></div>';
     var meta = document.getElementById('rankingBandMeta');
-    if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span>';
+    if (meta) { meta.innerHTML = ''; meta.hidden = true; } // the filters below already show year and division
     renderRankingTable(rows);
     syncRankingUrl();
 
@@ -13633,8 +13703,8 @@ var CLUBS = [
     var spot = g.createRadialGradient(720, boxY + boxH * 0.42, 20, 720, boxY + boxH * 0.42, 480);
     spot.addColorStop(0, 'rgba(0,242,255,0.30)'); spot.addColorStop(0.5, 'rgba(0,242,255,0.08)'); spot.addColorStop(1, 'rgba(0,242,255,0)');
     g.fillStyle = spot; g.fillRect(0, 0, W, H);
-    // Club crest, big and see-through behind everything
-    if (imgs.clubBg && imgs.photo) {
+    // (the big see-through club crest was removed on request)
+    if (false) {
       var cb = imgs.clubBg, cs = 980 / Math.max(cb.width, cb.height), cbw = cb.width * cs, cbh = cb.height * cs;
       g.save(); g.globalAlpha = 0.14; g.translate(W * 0.56, boxY + boxH * 0.46); g.rotate(-0.12);
       g.drawImage(cb, -cbw / 2, -cbh / 2, cbw, cbh); g.restore();
@@ -13642,7 +13712,7 @@ var CLUBS = [
     // Giant outlined surname behind the player
     var parts = (player.name || '').trim().split(/\s+/), last = parts.length > 1 ? parts.pop() : (parts[0] || ''), first = parts.join(' ');
     // (only without a club crest; both together get too busy)
-    if (!(imgs.clubBg && imgs.photo)) {
+    if (true) {
       g.save(); spacing(4); g.font = '400 300px ' + BEBAS; g.textBaseline = 'alphabetic';
       g.strokeStyle = 'rgba(0,242,255,0.16)'; g.lineWidth = 2.5; g.textAlign = 'center';
       g.strokeText(last.toUpperCase(), W / 2 + 60, boxY + boxH * 0.66); g.restore();
@@ -13669,13 +13739,13 @@ var CLUBS = [
       var o = off.getContext('2d');
       o.drawImage(p, src.x, src.y, src.w, src.h, Math.min(W * 0.6 - pw / 2, W - pw * 0.85), pY + pH - ph, pw, ph);
       o.globalCompositeOperation = 'destination-in';
-      var fade = o.createLinearGradient(0, pY + pH * 0.6, 0, pY + pH * 0.94);
+      var fade = o.createLinearGradient(0, pY + pH * 0.5, 0, pY + pH * 0.94); // fades out from the bottom up, like on the profile
       fade.addColorStop(0, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
       o.fillStyle = fade; o.fillRect(0, 0, W, H);
       g.save(); g.shadowColor = 'rgba(3,4,40,0.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18; g.drawImage(off, 0, 0); g.restore();
     }
-    // No photo: the club crest (or the LoC badge) as a glowing medallion instead
-    if (!imgs.photo) {
+    // No photo: no medallion any more (on request) — the outlined surname stays
+    if (false) {
       var mx = W * 0.6, my = boxY + boxH * 0.42, mr = Math.min(290, boxH * 0.36);
       var crest = imgs.clubBg || imgs.club || imgs.badge;
       g.save();
@@ -13871,9 +13941,9 @@ var CLUBS = [
       '</div>' +
       '<h2 class="section-title">Clubs Represented</h2>' +
       '<p class="empty-note" id="playerClubsList">–</p>' +
+      '<div id="playerToursBox"></div>' +
       '<div id="playerFollowingBox"></div>' +
       '<div id="playerPartnersBox"></div>' +
-      '<div id="playerKitBox"></div>' +
       '<div class="share-row"><button type="button" class="btn btn-cyan btn-gradient btn-sm" id="playerCardBtn">Create player card</button><button type="button" class="btn btn-outline btn-sm" id="shareProfileBtn">Copy profile link</button></div>';
 
     var toggleBtn = document.getElementById('toggleProfileEditBtn');
@@ -13975,6 +14045,21 @@ var CLUBS = [
     });
   }
 
+  // Tournaments played, open by default (can be folded): every tournament
+  // with partner, won–lost and place, newest first.
+  function renderTournamentList(history) {
+    var box = document.getElementById('playerToursBox');
+    if (!box) return;
+    var played = (history || []).filter(function(h) { return h.played; }).sort(function(a, b) { return (b.dateSort || '').localeCompare(a.dateSort || ''); });
+    if (!played.length) { box.innerHTML = ''; return; }
+    var place = { 1: '1st', 2: '2nd', 3: '3rd' };
+    box.innerHTML = '<details class="partner-stats" open><summary><span class="section-title">' + esc(uiText('profile.tournamentsPlayed')) + '</span><span class="ps-num">' + played.length + '</span><span class="partner-chev" aria-hidden="true"></span></summary>' +
+      '<ul class="partner-tours profile-tours">' + played.map(function(h) {
+        return '<li><a href="#/event/' + esc(h.tournamentId) + '">' + esc(h.tournamentName) + '</a>' +
+          '<span>' + (h.partnerName ? esc(uiFormat('profile.withPartner', { name: h.partnerName })) + ' · ' : '') + (h.w || 0) + '–' + (h.l || 0) + (h.placement ? ' · ' + place[h.placement] : '') + '</span></li>';
+      }).join('') + '</ul></details>';
+  }
+
   // Partners, collapsed: one row per partner (tournaments together, won /
   // lost, best place); opening it shows the tournaments with that partner.
   function renderPartnerStats(history) {
@@ -13992,7 +14077,7 @@ var CLUBS = [
     });
     var partners = Object.keys(by).map(function(k) { return by[k]; }).sort(function(a, b) { return b.list.length - a.list.length || (b.w - a.w); });
     var medal = { 1: 'gold', 2: 'silver', 3: 'bronze' }, place = { 1: '1st', 2: '2nd', 3: '3rd' };
-    box.innerHTML = '<details class="partner-stats"><summary><span class="section-title">' + esc(uiText('profile.partners')) + '</span><span class="ps-num">' + partners.length + '</span><span class="partner-chev" aria-hidden="true"></span></summary>' +
+    box.innerHTML = '<details class="partner-stats" open><summary><span class="section-title">' + esc(uiText('profile.partners')) + '</span><span class="ps-num">' + partners.length + '</span><span class="partner-chev" aria-hidden="true"></span></summary>' +
       '<div class="partner-list">' + partners.map(function(p) {
         var acc = p.uid ? findPlayer(p.uid) : findPlayerByName(p.name);
         var pct = p.w + p.l ? Math.round(p.w / (p.w + p.l) * 100) + '%' : '–';
@@ -14261,7 +14346,6 @@ var CLUBS = [
       return;
     }
     renderPlayerProfile(player);
-    renderPlayerKit(player);
     setView('player');
     var rankingEl = document.getElementById('playerStatRanking');
     if (rankingEl) {
@@ -14284,6 +14368,7 @@ var CLUBS = [
         medalRow.innerHTML = ['gold', 'silver', 'bronze', 'referee'].filter(function(k) { return stats.medals[k] > 0; })
           .map(function(k) { return medalIconHtml(k, stats.medals[k]); }).join('');
       }
+      renderTournamentList(stats.history);
       renderPartnerStats(stats.history);
       renderChampionCard(player, stats);
     });
@@ -19297,19 +19382,9 @@ var CLUBS = [
           '</select></div>' +
         '</div>' +
         '<div class="form-group"><label>' + uiEdit('register.partnerJerseyNameLabel') + '</label><input id="rPartnerJerseyName" required placeholder="' + esc(uiText('register.jerseyNamePlaceholder')) + '"></div>' +
-        '<div class="form-group combo-group">' +
-          '<label>' + uiEdit('register.clubLabel') + '</label>' +
-          '<input id="rClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '" required>' +
-          '<div id="clubDropdown" class="combo-dropdown" hidden></div>' +
-          '<input type="hidden" id="rClub">' +
-        '</div>' +
-        // at 100-tier events partners may play for two different clubs
-        (t.tier === 100 ? '<div class="form-group combo-group">' +
-          '<label>' + uiEdit('register.partnerClubLabel') + '</label>' +
-          '<input id="rPartnerClubSearch" autocomplete="off" placeholder="' + esc(uiText('register.clubPlaceholder')) + '">' +
-          '<div id="partnerClubDropdown" class="combo-dropdown" hidden></div>' +
-          '<input type="hidden" id="rPartnerClub">' +
-        '</div>' : '') +
+        // clubs come from the home clubs (profiles): at 500/1000 the team picks
+        // one of the two, at 100 each player plays for their own
+        '<div class="form-group" id="rClubChoice"></div>' +
         '<label class="checkbox-row"><input type="checkbox" id="rBusinessToggle"><span>' + uiEdit('register.businessToggle') + '</span></label>' +
         '<div id="rBusinessFields" class="form-row" hidden>' +
           '<div class="form-group"><label>' + uiEdit('register.companyNameLabel') + '</label><input id="rCompanyName"></div>' +
@@ -19335,9 +19410,31 @@ var CLUBS = [
       '</div>' +
       '<div id="regConfirm" class="confirmation" hidden></div>';
 
-    setupClubCombo();
-    if (t.tier === 100) setupClubCombo('rPartnerClubSearch', 'rPartnerClub', 'partnerClubDropdown');
     setupPartnerCombo();
+    function homeClubOf(uid) { var p = uid && findPlayer(uid); return p && p.homeClub ? p.homeClub : ''; }
+    function renderClubChoice() {
+      var box = document.getElementById('rClubChoice');
+      if (!box) return;
+      var mine = homeClubOf(currentUser && currentUser.uid), theirs = homeClubOf(document.getElementById('rPartnerUid').value.trim());
+      var differ = theirs && mine && clubKeyOf(theirs) !== clubKeyOf(mine);
+      var line = function(name) { var c = findClub(name); return '<span class="standings-team">' + clubAvatarHtml(c) + '<span>' + esc(clubDisplayName(name)) + '</span></span>'; };
+      var html = '<label>' + esc(uiText('register.clubLabel')) + '</label>';
+      if (!mine) {
+        html += '<p class="form-error" style="text-align:left">' + esc(uiText('register.noHomeClub')) + ' <a href="#/player/' + esc(currentUser.uid) + '">' + esc(uiText('register.toProfile')) + '</a></p>';
+      } else if (t.tier === 100 && differ) {
+        html += '<div class="club-fixed">' + line(mine) + '<span class="club-sep">/</span>' + line(theirs) + '</div><p class="kit-note">' + esc(uiText('register.clubs100')) + '</p>';
+      } else if (differ) {
+        html += '<div class="club-pick">' + [mine, theirs].map(function(c, i) {
+          return '<label class="checkbox-row club-pick-opt"><input type="radio" name="rClubPick" value="' + esc(c) + '"' + (i ? '' : ' checked') + '>' + line(c) + '</label>';
+        }).join('') + '</div><p class="kit-note">' + esc(uiText('register.clubsOne')) + '</p>';
+      } else {
+        html += '<div class="club-fixed">' + line(mine) + '</div>';
+      }
+      box.innerHTML = html;
+    }
+    renderClubChoice();
+    document.getElementById('rPartner').addEventListener('input', function() { setTimeout(renderClubChoice, 0); });
+    document.getElementById('partnerDropdown').addEventListener('click', function() { setTimeout(renderClubChoice, 0); });
 
     document.getElementById('rBusinessToggle').addEventListener('change', function() {
       var fields = document.getElementById('rBusinessFields');
@@ -19361,6 +19458,7 @@ var CLUBS = [
       document.getElementById('rPartner').value = query.partnerName || '';
       document.getElementById('rPartnerUid').value = query.partnerUid;
     }
+    renderClubChoice();
 
     var pendingEntry = null;
 
@@ -19410,12 +19508,11 @@ var CLUBS = [
       var partnerJerseyFit = document.getElementById('rPartnerJerseyFit').value;
       var partnerJerseySize = document.getElementById('rPartnerJerseySize').value;
       var partnerJerseyName = document.getElementById('rPartnerJerseyName').value.trim();
-      var clubHidden = document.getElementById('rClub').value.trim();
-      var clubTyped = document.getElementById('rClubSearch').value.trim();
-      var club = clubHidden || clubTyped;
-      var partnerClubEl = document.getElementById('rPartnerClubSearch');
-      var partnerClub = partnerClubEl ? (document.getElementById('rPartnerClub').value.trim() || partnerClubEl.value.trim()) : '';
-      if (partnerClub && clubKeyOf(partnerClub) === clubKeyOf(club)) partnerClub = '';
+      var myClub = homeClubOf(currentUser.uid), partnerHome = homeClubOf(document.getElementById('rPartnerUid').value.trim());
+      var picked = document.querySelector('input[name="rClubPick"]:checked');
+      var club = picked ? picked.value : myClub;
+      // at 100-tier events the partner plays for their own home club
+      var partnerClub = t.tier === 100 && partnerHome && clubKeyOf(partnerHome) !== clubKeyOf(myClub) ? partnerHome : '';
       var consent = document.getElementById('rConsent').checked;
       var rulesAccepted = document.getElementById('rRules').checked;
       var isBusiness = document.getElementById('rBusinessToggle').checked;
@@ -19423,7 +19520,7 @@ var CLUBS = [
       var vatNumber = isBusiness ? document.getElementById('rVatNumber').value.trim() : '';
 
       if (!firstName || !lastName || !email || !phone || !partner || !club || !consent || !rulesAccepted || !jerseyName || !partnerJerseyName || (isBusiness && (!companyName || !vatNumber))) {
-        err.textContent = 'Please fill in all required fields.';
+        err.textContent = !club ? uiText('register.noHomeClub') : 'Please fill in all required fields.';
         return;
       }
 
@@ -19434,12 +19531,17 @@ var CLUBS = [
       var payload = { tournamentId:t.id, competition:competition, firstName:firstName, lastName:lastName, email:email, phone:phone, partner:partner, club:club, partnerClub:partnerClub, rulesVersion:rulesVersion(), uid:currentUser.uid, partnerUid:partnerUid, companyName:companyName, vatNumber:vatNumber, jerseyFit:jerseyFit, jerseySize:jerseySize, jerseyName:jerseyName, partnerJerseyFit:partnerJerseyFit, partnerJerseySize:partnerJerseySize, partnerJerseyName:partnerJerseyName };
 
       backendRegister(payload).then(function(res) {
-        if (!res || !res.ok) throw new Error('save failed');
+        if (!res || !res.ok) throw new Error((res && res.error) || 'no answer from the server');
         localStorage.setItem('loc_pending_' + t.id, res.id);
         localStorage.setItem('loc_registered_' + t.id, res.id);
         showPendingStep(Object.assign({ id:res.id }, payload));
-      }).catch(function() {
-        err.textContent = 'Something went wrong. Please try again.';
+      }).catch(function(e2) {
+        // say what went wrong instead of a generic message
+        var why = String((e2 && e2.message) || e2 || '');
+        err.textContent = /unknown tournament/i.test(why) ? uiText('register.errNotOpen')
+          : /auth|token|sign/i.test(why) ? uiText('register.errLogin')
+          : /fetch|network|load/i.test(why) ? uiText('register.errNetwork')
+          : uiFormat('register.errOther', { why: why });
         submitBtn.disabled = false;
         submitBtn.textContent = 'Register';
       });
