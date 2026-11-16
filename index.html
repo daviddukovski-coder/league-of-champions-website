@@ -772,6 +772,75 @@
 
   /* Ranking leaders on the landing page */
   .landing-leaders { padding-bottom:40px; }
+
+  /* THE CHAMPIONS POST — tour news as a newspaper to leaf through.
+     Newsprint pages (cool, blue-tinted paper, navy ink, cyan accents) on the
+     dark page; a 3D page turn between them. */
+  .cp-section { padding-bottom:72px; }
+  .cp-masthead { text-align:center; margin:0 auto 34px; max-width:980px; }
+  .cp-masthead h2 { font:400 clamp(46px,7vw,92px)/0.9 'Bebas Neue', sans-serif; letter-spacing:0.04em; margin:0; padding:14px 0 10px; border-top:3px solid #fff; border-bottom:1px solid rgba(255,255,255,0.55); box-shadow:0 -7px 0 -6px rgba(255,255,255,0.55); }
+  .cp-mast-sub { display:block; margin-top:10px; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
+  .cp-book { position:relative; max-width:980px; margin:0 auto; outline:none; }
+  .cp-book:focus-visible .cp-stage { box-shadow:0 0 0 3px var(--cyan); border-radius:8px; }
+  .cp-stage { position:relative; display:grid; perspective:2200px; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+  /* a few sheets peeking out underneath: it reads as a stack of newspaper */
+  .cp-stage::before, .cp-stage::after { content:''; grid-area:1 / 1; border-radius:6px; background:#d9dde9; transform:translate(10px, 10px) rotate(0.6deg); box-shadow:0 18px 40px rgba(3,4,40,0.45); }
+  .cp-stage::after { background:#e6e9f2; transform:translate(5px, 5px) rotate(-0.4deg); }
+  .cp-page { grid-area:1 / 1; position:relative; z-index:1; visibility:hidden; background:#f1f3f9; background-image:radial-gradient(120% 90% at 20% 0%, rgba(255,255,255,0.75), rgba(255,255,255,0) 60%), repeating-linear-gradient(0deg, rgba(11,13,99,0.018) 0 1px, transparent 1px 3px);
+    color:#0b0d63; border-radius:6px; padding:30px 40px 26px; box-shadow:0 22px 50px rgba(3,4,40,0.5); transform-origin:left center; backface-visibility:hidden;
+    display:flex; flex-direction:column; }
+  .cp-page > .cp-kicker { align-self:flex-start; }
+  .cp-page.is-current { visibility:visible; z-index:3; }
+  .cp-page.is-under { visibility:visible; z-index:2; }
+  .cp-page-head { display:flex; justify-content:space-between; gap:12px; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(11,13,99,0.65); padding-bottom:10px; border-bottom:2px solid #0b0d63; margin-bottom:18px; }
+  .cp-page-head .cp-mast { font:400 15px/1 'Bebas Neue', sans-serif; letter-spacing:0.12em; color:#0b0d63; }
+  .cp-kicker { display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#0b0d63; background:var(--cyan); padding:4px 10px; margin-bottom:12px; }
+  .cp-title { font:400 clamp(34px,4.6vw,58px)/0.95 'Bebas Neue', sans-serif; letter-spacing:0.01em; margin:0 0 20px; color:#0b0d63; }
+  .cp-body { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(0, 1fr); gap:26px; align-items:start; }
+  .cp-body.no-photo { grid-template-columns:1fr; }
+  .cp-photo { margin:0; aspect-ratio:4 / 3; overflow:hidden; border-radius:3px; background:#dfe3ee; }
+  .cp-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .cp-photo.is-empty { display:grid; place-items:center; border:2px dashed rgba(11,13,99,0.3); background:transparent; color:rgba(11,13,99,0.55); font-size:13px; letter-spacing:0.08em; text-transform:uppercase; }
+  .cp-text { font-size:15.5px; line-height:1.65; color:#1b1f5e; }
+  .cp-body.no-photo .cp-text { columns:2; column-gap:34px; column-rule:1px solid rgba(11,13,99,0.18); }
+  .cp-text p { margin:0 0 12px; }
+  .cp-text ul { margin:0 0 12px; padding-left:18px; }
+  .cp-text > p:first-child::first-letter { float:left; font:400 64px/0.82 'Bebas Neue', sans-serif; color:#0b0d63; margin:6px 10px 0 0; }
+  .cp-page-foot { margin-top:auto; padding-top:12px; border-top:1px solid rgba(11,13,99,0.25); min-height:20px; }
+  .cp-sponsor { display:inline-flex; align-items:center; gap:12px; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(11,13,99,0.7); text-decoration:none; }
+  .cp-sponsor img { height:30px; width:auto; max-width:160px; object-fit:contain; }
+  .cp-sponsor strong { font-size:15px; letter-spacing:0.04em; color:#0b0d63; text-transform:none; }
+  .cp-sponsor-empty { border:2px dashed rgba(11,13,99,0.3); padding:8px 14px; border-radius:4px; }
+  .cp-body { margin-bottom:22px; }
+  .cp-admin { margin-top:14px; }
+  .cp-admin .btn { margin:0 6px 0 0; color:#0b0d63; border-color:#0b0d63; }
+  .cp-arrow { position:absolute; top:50%; z-index:5; width:52px; height:52px; margin-top:-26px; border-radius:50%; border:1px solid rgba(255,255,255,0.45); background:rgba(11,13,99,0.82); color:#fff; font-size:30px; line-height:1; cursor:pointer;
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); transition:background .2s, border-color .2s, opacity .2s, transform .2s; }
+  .cp-arrow:hover:not(:disabled), .cp-arrow:focus-visible { background:var(--cyan); color:#0b0d63; border-color:var(--cyan); }
+  .cp-arrow:active:not(:disabled) { transform:scale(0.95); }
+  .cp-arrow:disabled { opacity:0.25; cursor:default; }
+  .cp-prev { left:-76px; }
+  .cp-next { right:-76px; }
+  .cp-dots { display:flex; justify-content:center; gap:8px; margin-top:26px; }
+  .cp-dot { width:9px; height:9px; padding:0; border-radius:50%; border:1px solid rgba(255,255,255,0.6); background:transparent; cursor:pointer; transition:background .2s, width .2s; }
+  .cp-dot.is-current { width:26px; border-radius:6px; background:var(--cyan); border-color:var(--cyan); }
+  .cp-hint { text-align:center; font-size:12px; color:rgba(255,255,255,0.6); margin-top:10px; letter-spacing:0.04em; }
+  .cp-add-wrap { max-width:980px; margin:22px auto 0; }
+  .cp-form { margin:16px auto 0; max-width:620px; }
+  @media (max-width:1140px) {
+    .cp-prev { left:-14px; }
+    .cp-next { right:-14px; }
+  }
+  @media (max-width:720px) {
+    .cp-page { padding:20px 18px 18px; }
+    .cp-body, .cp-body.no-photo { grid-template-columns:1fr; gap:16px; }
+    .cp-body.no-photo .cp-text { columns:1; }
+    .cp-arrow { width:42px; height:42px; margin-top:-21px; font-size:24px; top:auto; bottom:-62px; }
+    .cp-prev { left:0; }
+    .cp-next { right:0; }
+    .cp-dots { margin-top:24px; min-height:42px; align-items:center; }
+    .cp-page-head span:nth-child(2) { display:none; }
+  }
   .leader-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
   .leader-col { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:8px 22px 14px; box-shadow:0 1px 2px var(--shadow); }
   .leader-col h3 { font-size:22px; padding:14px 0 6px; }
@@ -2240,6 +2309,14 @@
   :root[data-design="ig"] .nav-user-dropdown { left:auto; right:0; top:calc(100% + 12px); min-width:230px; padding:8px; display:flex; flex-direction:column; gap:2px;
     background:rgba(11,13,99,0.92); border:1px solid rgba(255,255,255,0.16); border-radius:18px; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:0 20px 50px rgba(3,4,40,0.55); }
   :root[data-design="ig"] .nav-user-dropdown[hidden] { display:none; }
+  /* "About" in the nav opens a small menu (rules, about the tour) */
+  .nav-about-menu { position:relative; }
+  .nav-about-btn .nav-caret { margin-left:5px; vertical-align:middle; transition:transform .2s; }
+  .nav-about-btn[aria-expanded="true"] .nav-caret { transform:rotate(180deg); }
+  /* fixed to the screen (placed under the button by setAboutMenu): the
+     wrapped mobile nav scrolls sideways and would clip an absolute menu */
+  .nav-about-dropdown { position:fixed; z-index:300; }
+  :root[data-design="ig"] .nav-about-dropdown { right:auto; min-width:220px; }
   @media (max-width:640px) {
     :root[data-design="ig"] .nav-inner { padding:6px 8px 6px 12px; margin-top:8px; }
     :root[data-design="ig"] .nav-right { gap:12px; }
@@ -3257,7 +3334,13 @@
       <div class="nav-links">
         <button class="nav-link" data-route="tournaments" data-ui-key="nav.tournaments">Tournaments</button>
         <button class="nav-link" data-route="ranking" data-ui-key="nav.ranking">Ranking</button>
-        <button class="nav-link" data-route="about" data-ui-key="nav.about">About</button>
+        <div class="nav-about-menu">
+          <button type="button" class="nav-link nav-about-btn" id="navAboutBtn" data-nav-views="about rules" aria-haspopup="true" aria-expanded="false" aria-controls="navAboutDropdown"><span data-ui-key="nav.about">About</span><svg class="nav-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="nav-user-dropdown nav-about-dropdown" id="navAboutDropdown" hidden>
+            <button type="button" data-route="rules" data-ui-key="rules.title">Rules &amp; Regulations</button>
+            <button type="button" data-route="about" data-ui-key="about.footerLink">About the tour</button>
+          </div>
+        </div>
       </div>
       <div class="auth-nav" id="authNavLoggedOut">
         <button class="nav-link" data-route="login" data-ui-key="nav.login">Log In</button>
@@ -5711,6 +5794,30 @@ var CLUBS = [
     'team.meet': "Meet the team",
     'team.footerLink': "The team",
     'rules.footerLink': "Rules",
+    'news.masthead': "The Champions Post",
+    'news.edition': "Season {year} · {n} stories",
+    'news.editionOne': "Season {year} · 1 story",
+    'news.pageOf': "Page {n} of {total}",
+    'news.pageWord': "page",
+    'news.prev': "Previous page",
+    'news.next': "Next page",
+    'news.hint': "Swipe or use the arrows to turn the page",
+    'news.presentedBy': "Presented by",
+    'news.sponsorSlot': "Space for a sponsor — add one with Edit",
+    'news.photoSlot': "Space for a photo",
+    'news.add': "+ Add news",
+    'news.empty': "No news yet — add the first page.",
+    'news.fKicker': "Category (e.g. Results, Tour, Partners)",
+    'news.fTitle': "Headline",
+    'news.fDate': "Date",
+    'news.fText': "Text",
+    'news.fPhoto': "Photo",
+    'news.fPhotoDrop': "Remove the current photo",
+    'news.fSpName': "Sponsor name",
+    'news.fSpLogo': "Sponsor logo",
+    'news.fSpUrl': "Sponsor link",
+    'news.titleNeeded': "Please enter a headline.",
+    'news.removeConfirm': "Remove the news \"{name}\"?",
     'rules.kicker': "League of Champions",
     'rules.title': "Rules & Regulations",
     'rules.text': "The rules every team accepts when it registers for a League of Champions tournament.",
@@ -6252,7 +6359,13 @@ var CLUBS = [
       'register.businessToggle': 'Ich benötige eine Rechnung mit USt-IdNr. (Anmeldung als Unternehmen)',
       'register.companyNameLabel': 'Firmenname *', 'register.vatNumberLabel': 'USt-IdNr. *', 'register.vatNumberPlaceholder': 'z. B. ATU12345678',
       'register.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Turnieranmeldung zu. *', 'register.rulesLabel': "Ich habe die Regeln und Bestimmungen der League of Champions gelesen und akzeptiere sie. *", 'register.rulesLink': "Regeln und Bestimmungen lesen",
-      'rules.footerLink': 'Regeln', 'rules.title': 'Regeln & Bestimmungen', 'rules.text': 'Die Regeln, die jedes Team mit der Anmeldung zu einem League-of-Champions-Turnier akzeptiert.',
+      'rules.footerLink': 'Regeln',
+      'news.edition': 'Saison {year} · {n} Meldungen', 'news.editionOne': 'Saison {year} · 1 Meldung', 'news.pageOf': 'Seite {n} von {total}', 'news.pageWord': 'Seite',
+      'news.prev': 'Vorherige Seite', 'news.next': 'Nächste Seite', 'news.hint': 'Wischen oder die Pfeile benutzen, um umzublättern', 'news.presentedBy': 'Präsentiert von',
+      'news.sponsorSlot': 'Platz für einen Sponsor – über „Bearbeiten“ hinzufügen', 'news.photoSlot': 'Platz für ein Foto', 'news.add': '+ News hinzufügen',
+      'news.empty': 'Noch keine News – leg die erste Seite an.', 'news.fKicker': 'Rubrik (z. B. Ergebnisse, Tour, Partner)', 'news.fTitle': 'Schlagzeile', 'news.fDate': 'Datum',
+      'news.fText': 'Text', 'news.fPhoto': 'Foto', 'news.fPhotoDrop': 'Aktuelles Foto entfernen', 'news.fSpName': 'Name des Sponsors', 'news.fSpLogo': 'Logo des Sponsors',
+      'news.fSpUrl': 'Link des Sponsors', 'news.titleNeeded': 'Bitte gib eine Schlagzeile ein.', 'news.removeConfirm': 'Die News „{name}“ entfernen?', 'rules.title': 'Regeln & Bestimmungen', 'rules.text': 'Die Regeln, die jedes Team mit der Anmeldung zu einem League-of-Champions-Turnier akzeptiert.',
       'rules.version': 'Version {v} · aktualisiert am {date}', 'rules.empty': 'Die Regeln und Bestimmungen werden hier bald veröffentlicht.', 'rules.contents': 'Inhalt',
       'register.submitBtn': 'Registrieren', 'register.tournamentLabel': 'Turnier', 'register.divisionLabel': 'Kategorie', 'register.teamLabel': 'Team', 'register.feeLabel': 'Startgeld',
       'register.payBtn': 'Startgeld jetzt bezahlen', 'register.payLaterBtn': 'Ich bezahle später',
@@ -6958,7 +7071,8 @@ var CLUBS = [
     if (typeof renderAppBar === 'function') { renderAppBar(); if (typeof paintUnread === 'function') paintUnread(); }
     if (view !== 'court') { clearInterval(courtClockTimer); courtClockTimer = null; }
     document.querySelectorAll('.nav-link').forEach(function(l) {
-      l.classList.toggle('active', !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
+      var views = l.dataset.navViews;
+      l.classList.toggle('active', views ? views.split(' ').indexOf(view) !== -1 : !!l.dataset.route && l.dataset.route === VIEW_TO_ROUTE[view]);
     });
     navIndicatorRest();
     if (window.navOverHeroUpdate) window.navOverHeroUpdate();
@@ -7037,7 +7151,7 @@ var CLUBS = [
       showPartner();
     } else if (p[0] === 'about') {
       showAbout();
-    } else if (p[0] === 'team') {
+    } else if (p[0] === 'team' && SHOW_TEAM_PAGE) {
       showTeam();
     } else if (p[0] === 'rules') {
       showRules();
@@ -7977,6 +8091,194 @@ var CLUBS = [
     card.querySelector('.reg-kit-art').appendChild(kitPreviewCanvas(k, 'back', 1));
   }
 
+  /* THE CHAMPIONS POST (landing): tour news as a newspaper to leaf through —
+     one story per page, turned with a 3D page flip by swiping, the side
+     arrows or the arrow keys. Each page has room for a photo and a sponsor.
+     Admins add, edit and remove stories in edit mode (content/site
+     news.items); the newest date comes first. */
+  function newsItems() {
+    var l = contentOverrides.news && contentOverrides.news.items;
+    return (Array.isArray(l) ? l.slice() : []).sort(function(a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  }
+  function saveNewsItems(list) { return saveContentFields('news', { items: list }); }
+  function uploadNewsImage(file, name) {
+    return AUTH_DEMO_MODE ? shrinkImage(file).then(fileToDataUrl) : uploadToStorage('content/news/' + name + '-' + Date.now() + '.jpg', file);
+  }
+  var newsPage = 0;
+  function newsDateLabel(d) {
+    var dt = d ? new Date(d + 'T12:00:00') : null;
+    return !dt || isNaN(dt) ? (d || '') : dt.toLocaleDateString(currentLang === 'en' ? 'en-GB' : currentLang, { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function newsPageHtml(n, i, total) {
+    var sp = n.sponsor || {}, pageOf = uiFormat('news.pageOf', { n: i + 1, total: total });
+    var sponsorInner = '<span>' + esc(uiText('news.presentedBy')) + '</span>' + (sp.logo ? '<img src="' + esc(sp.logo) + '" alt="' + esc(sp.name || '') + '">' : '<strong>' + esc(sp.name || '') + '</strong>');
+    var sponsor = sp.logo || sp.name
+      ? (sp.url ? '<a class="cp-sponsor" href="' + esc(sp.url) + '" target="_blank" rel="noopener">' + sponsorInner + '</a>' : '<div class="cp-sponsor">' + sponsorInner + '</div>')
+      : '<div class="admin-only"><div class="cp-sponsor cp-sponsor-empty">' + esc(uiText('news.sponsorSlot')) + '</div></div>';
+    var photo = n.image ? '<figure class="cp-photo"><img src="' + esc(n.image) + '" alt="" loading="lazy" draggable="false"></figure>'
+      : '<div class="admin-only"><figure class="cp-photo is-empty">' + esc(uiText('news.photoSlot')) + '</figure></div>';
+    return '<article class="cp-page' + (i === newsPage ? ' is-current' : '') + '" data-cp-page="' + i + '" aria-roledescription="' + esc(uiText('news.pageWord')) + '" aria-label="' + esc(pageOf) + '"' + (i === newsPage ? '' : ' aria-hidden="true"') + '>' +
+      '<div class="cp-page-head"><span class="cp-mast">' + esc(uiText('news.masthead')) + '</span><span>' + esc(newsDateLabel(n.date)) + '</span><span>' + esc(pageOf) + '</span></div>' +
+      (n.kicker ? '<span class="cp-kicker">' + esc(n.kicker) + '</span>' : '') +
+      '<h3 class="cp-title">' + esc(n.title || '') + '</h3>' +
+      '<div class="cp-body' + (n.image ? '' : ' no-photo') + '">' + photo + '<div class="cp-text">' + rulesTextHtml(n.text) + '</div></div>' +
+      '<div class="cp-page-foot">' + sponsor + '</div>' +
+      '<div class="cp-admin admin-only"><button type="button" class="btn btn-outline btn-sm" data-cp-edit="' + esc(n.id) + '">' + esc(uiText('team.edit')) + '</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-cp-del="' + esc(n.id) + '">' + esc(uiText('team.remove')) + '</button></div>' +
+    '</article>';
+  }
+  function newsSectionHtml() {
+    var items = newsItems();
+    if (!items.length && !isAdmin) return '';
+    if (newsPage >= items.length) newsPage = 0;
+    var field = function(id, key, input) { return '<div class="form-group"><label for="' + id + '">' + esc(uiText(key)) + '</label>' + input + '</div>'; };
+    return '<section class="landing-section cp-section" aria-labelledby="cpTitle"><div class="container">' +
+      '<div class="cp-masthead"><h2 id="cpTitle">' + esc(uiText('news.masthead')) + '</h2>' +
+        '<span class="cp-mast-sub">' + esc(uiFormat(items.length === 1 ? 'news.editionOne' : 'news.edition', { year: new Date().getFullYear(), n: items.length })) + '</span></div>' +
+      (items.length
+        ? '<div class="cp-book" tabindex="0" role="region" aria-roledescription="carousel" aria-label="' + esc(uiText('news.masthead')) + '">' +
+            '<button type="button" class="cp-arrow cp-prev" data-cp-prev aria-label="' + esc(uiText('news.prev')) + '">‹</button>' +
+            '<div class="cp-stage" aria-live="polite">' + items.map(function(n, i) { return newsPageHtml(n, i, items.length); }).join('') + '</div>' +
+            '<button type="button" class="cp-arrow cp-next" data-cp-next aria-label="' + esc(uiText('news.next')) + '">›</button>' +
+          '</div>' +
+          (items.length > 1 ? '<div class="cp-dots">' + items.map(function(n, i) { return '<button type="button" class="cp-dot' + (i === newsPage ? ' is-current' : '') + '" data-cp-go="' + i + '" aria-label="' + esc(uiFormat('news.pageOf', { n: i + 1, total: items.length })) + '"></button>'; }).join('') + '</div>' +
+            '<p class="cp-hint">' + esc(uiText('news.hint')) + '</p>' : '')
+        : '<p class="empty-note admin-only">' + esc(uiText('news.empty')) + '</p>') +
+      '<div class="admin-only cp-add-wrap"><button type="button" class="btn btn-cyan btn-sm" id="cpAdd">' + esc(uiText('news.add')) + '</button></div>' +
+      '<div class="admin-only"><form class="tm-form cp-form" id="cpForm" hidden onsubmit="return false">' +
+        field('cpKicker', 'news.fKicker', '<input id="cpKicker" maxlength="40">') +
+        field('cpHeadline', 'news.fTitle', '<input id="cpHeadline" maxlength="120" required>') +
+        field('cpDate', 'news.fDate', '<input id="cpDate" type="date">') +
+        field('cpText', 'news.fText', '<textarea id="cpText" rows="8" maxlength="6000"></textarea><p class="kit-note">' + esc(uiText('rules.fTextHint')) + '</p>') +
+        field('cpPhoto', 'news.fPhoto', '<input type="file" id="cpPhoto" accept="image/*"><label class="checkbox-row" id="cpPhotoDropRow" hidden><input type="checkbox" id="cpPhotoDrop"><span>' + esc(uiText('news.fPhotoDrop')) + '</span></label>') +
+        field('cpSpName', 'news.fSpName', '<input id="cpSpName" maxlength="60">') +
+        field('cpSpLogo', 'news.fSpLogo', '<input type="file" id="cpSpLogo" accept="image/*">') +
+        field('cpSpUrl', 'news.fSpUrl', '<input id="cpSpUrl" type="url" maxlength="300" placeholder="https://">') +
+        '<div class="kit-actions"><button type="button" class="btn btn-cyan btn-sm" id="cpSave">' + esc(uiText('team.save')) + '</button><button type="button" class="btn btn-outline btn-sm" id="cpCancel">' + esc(uiText('team.cancel')) + '</button></div>' +
+        '<p class="kit-note" id="cpNote" role="status"></p></form></div>' +
+    '</div></section>';
+  }
+  function wireNews(root) {
+    var section = root.querySelector('.cp-section');
+    if (!section) return;
+    var items = newsItems(), book = section.querySelector('.cp-book');
+    if (book) {
+      var pages = book.querySelectorAll('.cp-page'), busy = false;
+      var prevBtn = book.querySelector('[data-cp-prev]'), nextBtn = book.querySelector('[data-cp-next]');
+      var paint = function() {
+        prevBtn.disabled = newsPage <= 0; nextBtn.disabled = newsPage >= pages.length - 1;
+        section.querySelectorAll('.cp-dot').forEach(function(d, i) { d.classList.toggle('is-current', i === newsPage); });
+      };
+      // Turn to page `to`: forward, the current sheet swings away around its
+      // left edge and uncovers the next; back, the earlier sheet swings in.
+      var turn = function(to) {
+        if (busy || to === newsPage || to < 0 || to >= pages.length) return;
+        var from = pages[newsPage], next = pages[to], forward = to > newsPage;
+        var done = function() {
+          [].forEach.call(pages, function(p) { p.classList.remove('is-current', 'is-under'); p.setAttribute('aria-hidden', 'true'); p.style.transform = ''; p.style.filter = ''; });
+          next.classList.add('is-current'); next.removeAttribute('aria-hidden');
+          newsPage = to; busy = false; paint();
+        };
+        if (reduceMotion || !next.animate) { done(); return; }
+        busy = true;
+        var flip = [{ transform: 'rotateY(0deg)', filter: 'brightness(1)' }, { transform: 'rotateY(-100deg)', filter: 'brightness(0.62)' }];
+        var anim, finished = false;
+        // also finish by timer: a hidden tab may never report the animation end
+        var finish = function() { if (finished) return; finished = true; if (anim) anim.cancel(); done(); };
+        if (forward) {
+          next.classList.add('is-under');
+          anim = from.animate(flip, { duration: 720, easing: 'cubic-bezier(.55,.05,.45,.95)' });
+        } else {
+          from.classList.remove('is-current'); from.classList.add('is-under');
+          next.classList.add('is-current');
+          anim = next.animate(flip.slice().reverse(), { duration: 720, easing: 'cubic-bezier(.55,.05,.45,.95)' });
+        }
+        anim.onfinish = finish;
+        setTimeout(finish, 900);
+      };
+      prevBtn.addEventListener('click', function() { turn(newsPage - 1); });
+      nextBtn.addEventListener('click', function() { turn(newsPage + 1); });
+      section.querySelectorAll('[data-cp-go]').forEach(function(d) { d.addEventListener('click', function() { turn(+d.dataset.cpGo); }); });
+      book.addEventListener('keydown', function(e) {
+        if (e.target.closest('input, textarea')) return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); turn(newsPage + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); turn(newsPage - 1); }
+      });
+      // swipe (finger or mouse drag) and sideways trackpad scrolling
+      var stage = book.querySelector('.cp-stage'), startX = null, startY = 0;
+      stage.addEventListener('pointerdown', function(e) { if (e.target.closest('a, button')) return; startX = e.clientX; startY = e.clientY; });
+      stage.addEventListener('pointerup', function(e) {
+        if (startX == null) return;
+        var dx = e.clientX - startX, dy = e.clientY - startY; startX = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) turn(newsPage + (dx < 0 ? 1 : -1));
+      });
+      stage.addEventListener('pointercancel', function() { startX = null; });
+      var wheelLock = 0;
+      stage.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaX) < 25 || Math.abs(e.deltaX) < Math.abs(e.deltaY)) return;
+        e.preventDefault();
+        if (Date.now() < wheelLock) return;
+        wheelLock = Date.now() + 900;
+        turn(newsPage + (e.deltaX > 0 ? 1 : -1));
+      }, { passive: false });
+      paint();
+    }
+    // stories: add / edit / remove (admin, edit mode)
+    var form = section.querySelector('#cpForm');
+    if (!form) return;
+    var editing = null, $ = function(id) { return section.querySelector('#' + id); };
+    var open = function(n) {
+      editing = n;
+      n = n || {};
+      $('cpKicker').value = n.kicker || ''; $('cpHeadline').value = n.title || '';
+      $('cpDate').value = n.date || new Date().toISOString().slice(0, 10); $('cpText').value = n.text || '';
+      $('cpPhoto').value = ''; $('cpPhotoDrop').checked = false; $('cpPhotoDropRow').hidden = !n.image;
+      var sp = n.sponsor || {};
+      $('cpSpName').value = sp.name || ''; $('cpSpLogo').value = ''; $('cpSpUrl').value = sp.url || '';
+      $('cpNote').textContent = '';
+      form.hidden = false; form.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' }); $('cpHeadline').focus();
+    };
+    $('cpAdd').addEventListener('click', function() { open(null); });
+    $('cpCancel').addEventListener('click', function() { form.hidden = true; });
+    $('cpSave').addEventListener('click', function() {
+      if (!isAdmin) return;
+      var title = $('cpHeadline').value.trim(), note = $('cpNote');
+      if (!title) { note.textContent = uiText('news.titleNeeded'); $('cpHeadline').focus(); return; }
+      var old = editing || {}, photo = $('cpPhoto').files[0], logo = $('cpSpLogo').files[0];
+      var story = { id: old.id || 'news-' + Date.now().toString(36), kicker: $('cpKicker').value.trim(), title: title,
+        date: $('cpDate').value || new Date().toISOString().slice(0, 10), text: $('cpText').value.trim(),
+        image: $('cpPhotoDrop').checked ? '' : (old.image || ''),
+        sponsor: { name: $('cpSpName').value.trim(), url: $('cpSpUrl').value.trim(), logo: (old.sponsor && old.sponsor.logo) || '' } };
+      note.textContent = uiText('brand.saving');
+      Promise.all([photo ? uploadNewsImage(photo, 'photo') : null, logo ? uploadNewsImage(logo, 'sponsor') : null]).then(function(urls) {
+        if (urls[0]) story.image = urls[0];
+        if (urls[1]) story.sponsor.logo = urls[1];
+        var list = (contentOverrides.news && contentOverrides.news.items || []).filter(function(x) { return x.id !== story.id; });
+        list.push(story);
+        newsPage = 0;
+        return saveNewsItems(list);
+      }).then(function() { rerenderNews(section); }).catch(function(err) { note.textContent = uploadErrorMessage(err); });
+    });
+    section.querySelectorAll('[data-cp-edit]').forEach(function(b) { b.addEventListener('click', function() {
+      open(items.find(function(x) { return x.id === b.dataset.cpEdit; }));
+    }); });
+    section.querySelectorAll('[data-cp-del]').forEach(function(b) { b.addEventListener('click', function() {
+      var n = items.find(function(x) { return x.id === b.dataset.cpDel; });
+      if (!isAdmin || !n || !window.confirm(uiFormat('news.removeConfirm', { name: n.title }))) return;
+      var list = (contentOverrides.news.items || []).filter(function(x) { return x.id !== n.id; });
+      saveNewsItems(list).then(function() { rerenderNews(section); });
+    }); });
+  }
+  function rerenderNews(section) {
+    var holder = document.createElement('div');
+    holder.innerHTML = newsSectionHtml();
+    var fresh = holder.firstChild;
+    if (!fresh) { section.remove(); return; }
+    section.replaceWith(fresh);
+    instrumentUIText(fresh);
+    wireNews(fresh.parentNode);
+  }
+
   /* Landing: the team behind the tour (Bolao). Photo and text
      are editable in edit mode; without a photo a branded panel stands in. */
   function teamBehindHtml() {
@@ -8192,10 +8494,7 @@ var CLUBS = [
       '<div class="foot-brand-links"><a href="' + esc(BOLAO.url) + '" target="_blank" rel="noopener">bolao-sports.com</a>' +
       '<a href="' + esc(BOLAO.shop) + '" target="_blank" rel="noopener">bolao.shop</a>' +
       '<a href="https://bolao.tv" target="_blank" rel="noopener">bolao.tv</a>' +
-      '<a href="#/about">' + esc(uiText('about.footerLink')) + '</a>' +
-      '<a href="#/team">' + esc(uiText('team.footerLink')) + '</a>' +
-      '<a href="#/rules">' + esc(uiText('rules.footerLink')) + '</a>' +
-      '<a href="#/kit">' + esc(uiText('kit.footerLink')) + '</a>' +
+      (SHOW_TEAM_PAGE ? '<a href="#/team">' + esc(uiText('team.footerLink')) + '</a>' : '') +
       '<a class="foot-partner" href="#/partner">' + esc(uiText('brand.becomePartner')) + ' →</a></div>';
   }
 
@@ -8251,6 +8550,11 @@ var CLUBS = [
     el.querySelector('[data-ab-jump]').addEventListener('click', function(e) { e.preventDefault(); document.getElementById('abJoin').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); });
     setView('about');
   }
+
+  // The team page (#/team) and its footer link: taken off the site on request
+  // (2026-11-16). Everything below stays (texts, people, photos in
+  // content/site.bolaoTeam) — set to true to bring the page back.
+  var SHOW_TEAM_PAGE = false;
 
   /* THE TEAM BEHIND THE TOUR (#/team): who Bolao is, the people behind the
      tour (admin adds/edits them in edit mode), what Bolao does, contact. */
@@ -8923,10 +9227,12 @@ var CLUBS = [
         '<div class="landing-section-head"><h2>' + esc(uiFormat('landing.leadersTitle', { year: rYear })) + '</h2>' +
         '<button class="btn btn-outline btn-sm" data-route="ranking">' + esc(uiText('landing.fullRanking')) + '</button></div>' +
         '<div class="leader-grid">' + leadersHtml + '</div></div></section>' : '') +
-      (SHOW_LANDING_TEAM_BEHIND ? teamBehindHtml() : '');
+      (SHOW_LANDING_TEAM_BEHIND ? teamBehindHtml() : '') +
+      newsSectionHtml();
 
     wireCountUps(el);
     wireTeamBehind();
+    wireNews(el);
     // Draw the season line once it scrolls into view.
     var tl = el.querySelector('.fx-tl');
     if (tl && 'IntersectionObserver' in window) {
@@ -9338,6 +9644,26 @@ var CLUBS = [
   });
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.nav-user-menu')) document.getElementById('navUserDropdown').hidden = true;
+    if (!e.target.closest('#navAboutBtn')) setAboutMenu(false);
+  });
+  // "About" menu in the nav; picking an item routes via its data-route
+  function setAboutMenu(open) {
+    var dd = document.getElementById('navAboutDropdown'), btn = document.getElementById('navAboutBtn');
+    if (open) {
+      var r = btn.getBoundingClientRect();
+      dd.style.top = Math.round(r.bottom + 10) + 'px';
+      dd.style.left = Math.round(Math.max(8, Math.min(r.left - 8, window.innerWidth - 236))) + 'px';
+    }
+    dd.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  window.addEventListener('scroll', function() { if (!document.getElementById('navAboutDropdown').hidden) setAboutMenu(false); }, { passive: true });
+  window.addEventListener('resize', function() { setAboutMenu(false); });
+  document.getElementById('navAboutBtn').addEventListener('click', function() {
+    setAboutMenu(document.getElementById('navAboutDropdown').hidden);
+  });
+  document.getElementById('navAboutDropdown').addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { setAboutMenu(false); document.getElementById('navAboutBtn').focus(); }
   });
 
   /* ==================================================================
