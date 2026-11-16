@@ -1975,6 +1975,8 @@
   .layout-toggle > button:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
   .layout-toggle-thumb { position:absolute; top:4px; bottom:4px; left:4px; border-radius:999px; background:var(--cyan); box-shadow:0 0 18px rgba(0,242,255,0.45); transition:transform .45s cubic-bezier(.16,1,.3,1), width .45s cubic-bezier(.16,1,.3,1); z-index:0; }
   @media (max-width:640px) { .layout-toggle-label { display:none; } }
+  /* only the chosen layout shows its name; the others are just the icon */
+  .layout-toggle > button[aria-pressed="false"] .layout-toggle-label { display:none; }
   /* Overview: every ticket at a glance, dealt in one after another */
   :root[data-design="ig"] .tournament-grid.is-overview { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 228px), 1fr)); gap:14px; padding:30px 0 80px; }
   /* Compact tickets: an overview, so as many as possible at a glance */
@@ -3411,9 +3413,9 @@
         <select id="pastYearFilter" class="year-filter" hidden></select>
         <div class="layout-toggle" id="tournamentLayoutToggle" role="group" aria-label="Tournament layout">
           <span class="layout-toggle-thumb" aria-hidden="true"></span>
-          <button type="button" data-layout="rail" aria-pressed="true" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span class="layout-toggle-label">Swipe</span></button>
+          <button type="button" data-layout="grid" aria-pressed="true" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="layout-toggle-label">Overview</span></button>
           <button type="button" data-layout="ring" aria-pressed="false" aria-label="Ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="4.5"/><rect x="9" y="7.5" width="6" height="8" rx="1.2"/></svg><span class="layout-toggle-label">Ring</span></button>
-          <button type="button" data-layout="grid" aria-pressed="false" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="layout-toggle-label">Overview</span></button>
+          <button type="button" data-layout="rail" aria-pressed="false" aria-label="Swipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span class="layout-toggle-label">Swipe</span></button>
         </div>
       </div>
       <div id="tournamentGrid" class="tournament-grid"></div>
@@ -9812,13 +9814,14 @@ var CLUBS = [
   // Swipe rail or an overview of every ticket; the choice is remembered per
   // browser (a convenience only — the page works the same without it).
   // Three layouts: 'rail' (swipe), 'ring' (round carousel), 'grid' (overview).
-  // Tournaments page defaults to swipe, the landing page to the ring; each
+  // Tournaments page defaults to the overview (order: overview, ring, swipe —
+  // only the chosen one shows its name), the landing page to the ring; each
   // remembers its own choice per browser.
   var LAYOUTS = ['rail', 'ring', 'grid'];
   function storedLayout(key, def) {
     try { var v = localStorage.getItem(key); return LAYOUTS.indexOf(v) !== -1 ? v : def; } catch (e) { return def; }
   }
-  var tournamentLayout = storedLayout('loc_tournament_layout', 'rail');
+  var tournamentLayout = storedLayout('loc_tournament_layout2', 'grid');
   var layoutToggle = document.getElementById('tournamentLayoutToggle');
   var LAYOUT_LABEL_KEYS = { rail: 'home.layoutSwipe', ring: 'home.layoutRing', grid: 'home.layoutOverview' };
   function syncToggle(toggle, value) {
@@ -9841,7 +9844,7 @@ var CLUBS = [
       var b = e.target.closest('button[data-layout]');
       if (!b || b.dataset.layout === tournamentLayout) return;
       tournamentLayout = b.dataset.layout;
-      try { localStorage.setItem('loc_tournament_layout', tournamentLayout); } catch (err) {}
+      try { localStorage.setItem('loc_tournament_layout2', tournamentLayout); } catch (err) {}
       renderGrid(currentFilter);
     });
     new ResizeObserver(syncLayoutToggle).observe(layoutToggle);
