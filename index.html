@@ -831,7 +831,7 @@
   .cp-tour-link { font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#0b0d63; text-decoration:none; border-bottom:2px solid var(--cyan); padding-bottom:2px; }
   .cp-tour-link:hover { color:#3a3fd0; }
   .cp-standalone { padding-top:110px; }
-  .cp-standalone .back-link { display:inline-block; margin-bottom:22px; }
+  .cp-standalone .back-btn { margin-bottom:22px; }
   /* tournament page: button to the preview / recap, bottom right of the photo */
   .event-news-btn { position:absolute; right:18px; bottom:22px; z-index:3; padding:11px 20px; border-radius:999px; background:var(--cyan); color:#07083f; font-size:13px; font-weight:700;
     letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; box-shadow:0 10px 26px rgba(3,4,40,0.45); transition:transform .2s, box-shadow .2s; }
@@ -8171,7 +8171,7 @@ var CLUBS = [
     if (newsPage >= items.length) newsPage = 0;
     var field = function(id, key, input) { return '<div class="form-group"><label for="' + id + '">' + esc(uiText(key)) + '</label>' + input + '</div>'; };
     return '<section class="landing-section cp-section' + (standalone ? ' cp-standalone' : '') + '" aria-labelledby="cpTitle"><div class="container">' +
-      (standalone ? '<button class="back-link" data-route="">' + esc(uiText('news.back')) + '</button>' : '') +
+      (standalone ? '<button class="back-btn" data-route="">' + esc(uiText('news.back')) + '</button>' : '') +
       '<div class="cp-masthead"><h2 id="cpTitle">' + esc(uiText('news.masthead')) + '</h2>' +
         '<span class="cp-mast-sub">' + esc(uiFormat(items.length === 1 ? 'news.editionOne' : 'news.edition', { year: new Date().getFullYear(), n: items.length })) + '</span></div>' +
       (items.length
@@ -19355,8 +19355,13 @@ var CLUBS = [
   /* ==================================================================
      NAV / GLOBAL LISTENERS
      ================================================================== */
+  // "17 tournaments across Europe, three formats …" under the tournaments page
+  // headline: hidden on request (2026-11-16); set to true to show it again.
+  var SHOW_HOME_SUBTITLE = false;
   function renderHeroSub() {
-    document.getElementById('heroSub').textContent = uiFormat('home.subtitle', { n: allTournaments().length });
+    var el = document.getElementById('heroSub');
+    el.hidden = !SHOW_HOME_SUBTITLE;
+    el.textContent = SHOW_HOME_SUBTITLE ? uiFormat('home.subtitle', { n: allTournaments().length }) : '';
   }
   renderHeroSub();
   // Re-run after loadContentOverrides() resolves too — CONFIG's hardcoded
