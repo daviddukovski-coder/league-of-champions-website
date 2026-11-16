@@ -12421,8 +12421,11 @@ var CLUBS = [
     if (t.status !== 'upcoming' || days <= 0) return uiText('detail.regClosed');
     return days === 1 ? uiText('detail.lastDay') : uiFormat('detail.daysLeft', { n: days });
   }
+  // Visitors without an account (fans) only get what they need to follow the
+  // tournament; entry fee, deadline and "registration closed" are for players.
+  function isFanView() { return !currentUser; }
   function glanceHtml(t) {
-    var dl = deadlineInfo(t);
+    var dl = deadlineInfo(t), fan = isFanView();
     var cell = function(label, value, sub, cls) {
       return '<div class="glance-cell' + (cls ? ' ' + cls : '') + '"><span class="glance-k">' + label + '</span><span class="glance-v">' + value + '</span>' + (sub ? '<span class="glance-s">' + sub + '</span>' : '') + '</div>';
     };
@@ -12430,8 +12433,8 @@ var CLUBS = [
       cell(uiEdit('detail.whenLabel'), esc(t.dateLabel) + ' ' + esc((t.dateSort || '').slice(0, 4))) +
       cell(uiEdit('detail.whereLabel'), esc(t.city), esc(t.country)) +
       cell(uiEdit('detail.formatLabel'), uiEdit('detail.formatValue')) +
-      cell(uiEdit('detail.feeLabel'), editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee : '–', 'entry fee'), t.fee ? 'per team' : '') +
-      cell(uiEdit('detail.deadlineLabel'), editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline'), dl ? esc(dl) : '', dl === uiText('detail.regClosed') ? 'is-closed' : 'is-open') +
+      (fan ? '' : cell(uiEdit('detail.feeLabel'), editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee : '–', 'entry fee'), t.fee ? 'per team' : '')) +
+      (fan ? '' : cell(uiEdit('detail.deadlineLabel'), editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline'), dl ? esc(dl) : '', dl === uiText('detail.regClosed') ? 'is-closed' : 'is-open')) +
       cell(uiEdit('detail.divisionsLabel'), editTextHtml(t.id, 'competitions', t.competitions.join(', '), divisionsText(t), 'divisions — comma-separated, e.g. Men, Women, Men 100')) +
       cell(uiEdit('detail.teamsLabel'), '<span id="glanceTeams">–</span>', '', 'glance-stub') +
     '</section>';
@@ -12671,7 +12674,7 @@ var CLUBS = [
       '</div>';
 
     if (t.status !== 'upcoming') {
-      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div><div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), partners: '', teams: '<div id="playerLists"></div>' };
+      var blocksClosed = { image: eventImageHtml(t), header: headerHtml, infoGrid: infoRows, venue: venueBlockHtml(t), registerActions: (isFanView() ? '' : '<div class="closed-note">' + uiEdit('detail.closedNote') + '</div>') + '<div class="live-link-row">' + liveButtonHtml(t) + ' ' + bracketLinksHtml(t) + '</div>' + tournamentPhaseControlHtml(t), partners: '', teams: '<div id="playerLists"></div>' };
       detailContent.innerHTML = '<div id="detailBlocks">' + blockOrderFor(t).map(function(k){ return sortableBlockHtml(k, blocksClosed[k]); }).join('') + '</div>';
       initSortable('detailBlocks', function(order) { saveContentField(t.id, 'blockOrder', JSON.stringify(order)); });
       wireLiveToggle(t);
