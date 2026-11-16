@@ -144,6 +144,8 @@
      second line instead of pushing the bar past the window edge. */
   @media (min-width:641px) { .nav-right { flex-wrap:wrap; justify-content:flex-end; row-gap:10px; } }
   .auth-nav { display:flex; align-items:center; gap:14px; }
+  /* same spacing between the page links and Log In as between the links */
+  .nav-links ~ .auth-nav { margin-left:14px; }
   .nav-user-menu { position:relative; }
   .nav-user { font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); cursor:pointer; background:none; border:none; padding:0; font-family:inherit; }
   .nav-user:hover { text-decoration:underline; }
@@ -3255,6 +3257,7 @@
       <div class="nav-links">
         <button class="nav-link" data-route="tournaments" data-ui-key="nav.tournaments">Tournaments</button>
         <button class="nav-link" data-route="ranking" data-ui-key="nav.ranking">Ranking</button>
+        <button class="nav-link" data-route="about" data-ui-key="nav.about">About</button>
       </div>
       <div class="auth-nav" id="authNavLoggedOut">
         <button class="nav-link" data-route="login" data-ui-key="nav.login">Log In</button>
@@ -5631,6 +5634,7 @@ var CLUBS = [
     'nav.sub': 'FOOTVOLLEY',
     'nav.tournaments': 'Tournaments',
     'nav.ranking': 'Ranking',
+    'nav.about': 'About',
     'nav.admin': 'Admin',
     'nav.imprint': 'Imprint',
     'nav.login': 'Log In',
@@ -6211,7 +6215,7 @@ var CLUBS = [
       'landing.nextEvent': 'Nächstes Turnier', 'landing.lastEvent': 'Letztes Turnier', 'landing.details': 'Zum Turnier', 'landing.results': 'Ergebnisse ansehen',
       'landing.cdDays': 'Tage', 'landing.cdHours': 'Std', 'landing.cdMinutes': 'Min', 'landing.cdSeconds': 'Sek',
       'landing.tourTitle': 'Die Tour {year}', 'landing.allTournaments': 'Alle Turniere', 'landing.leadersTitle': 'Ranking-Spitze {year}', 'fx.statTournaments': 'Turniere', 'fx.statPlayers': 'Spieler im Ranking', 'fx.statClubs': 'Vereine', 'fx.statCountries': 'Länder', 'fx.timelineTitle': 'Die Saison', 'fx.bentoTitle': 'Saison {year} auf einen Blick', 'fx.bentoMen': 'Nr. 1 Herren', 'fx.bentoWomen': 'Nr. 1 Damen', 'fx.bentoClub': 'Top-Verein', 'landing.fullRanking': 'Zum Ranking',
-      'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
+      'nav.tournaments': 'Turniere', 'nav.ranking': 'Rangliste', 'nav.about': "Über uns", 'nav.imprint': 'Impressum', 'nav.login': 'Anmelden', 'nav.register': 'Registrieren', 'nav.logout': 'Abmelden',
       'demoBanner.text': 'DEMO-MODUS – Anmeldungen werden nur lokal in diesem Browser gespeichert (kein echtes Backend verbunden)',
       'landing.eyebrow': 'Saison 2026', 'landing.headline': 'Europas Footvolley-Elite. Eine Tour.',
       'landing.subtitle': '17 Stopps, drei Formate, Hunderte Teams im Kampf um den Titel der League of Champions. Erstelle dein Konto und sichere dir deinen Platz im Sand.',
@@ -6284,7 +6288,7 @@ var CLUBS = [
       'live.bracketLabel': 'Live-Turnierbaum', 'live.resultsLabel': 'Ergebnisse', 'live.formatLabel': 'Turnierformat'
     },
     es: {
-      'nav.tournaments': 'Torneos', 'nav.ranking': 'Clasificación', 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sesión', 'nav.register': 'Registrarse', 'nav.logout': 'Cerrar sesión',
+      'nav.tournaments': 'Torneos', 'nav.ranking': 'Clasificación', 'nav.about': "Acerca de", 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sesión', 'nav.register': 'Registrarse', 'nav.logout': 'Cerrar sesión',
       'demoBanner.text': 'MODO DEMO: las inscripciones solo se guardan localmente en este navegador (sin backend real conectado)',
       'landing.eyebrow': 'Temporada 2026', 'landing.headline': 'La élite europea del fútbol vóley. Un solo tour.',
       'landing.subtitle': '17 paradas, tres formatos, cientos de equipos persiguiendo el título de la League of Champions. Crea tu cuenta y asegura tu lugar en la arena.',
@@ -6324,7 +6328,7 @@ var CLUBS = [
       'live.bracketLabel': 'Cuadro en vivo', 'live.resultsLabel': 'Resultados', 'live.formatLabel': 'Formato del torneo'
     },
     pt: {
-      'nav.tournaments': 'Torneios', 'nav.ranking': 'Classificação', 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sessão', 'nav.register': 'Registar', 'nav.logout': 'Terminar sessão',
+      'nav.tournaments': 'Torneios', 'nav.ranking': 'Classificação', 'nav.about': "Sobre", 'nav.imprint': 'Aviso legal', 'nav.login': 'Iniciar sessão', 'nav.register': 'Registar', 'nav.logout': 'Terminar sessão',
       'demoBanner.text': 'MODO DEMO – as inscrições são guardadas apenas localmente neste navegador (sem backend real ligado)',
       'landing.eyebrow': 'Época 2026', 'landing.headline': 'A elite europeia do futevólei. Um só circuito.',
       'landing.subtitle': '17 etapas, três formatos, centenas de equipas em busca do título da League of Champions. Cria a tua conta e garante o teu lugar na areia.',
@@ -6364,7 +6368,7 @@ var CLUBS = [
       'live.bracketLabel': 'Quadro ao vivo', 'live.resultsLabel': 'Resultados', 'live.formatLabel': 'Formato do torneio'
     },
     da: {
-      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangliste', 'nav.imprint': 'Impressum', 'nav.login': 'Log ind', 'nav.register': 'Tilmeld', 'nav.logout': 'Log ud',
+      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangliste', 'nav.about': "Om os", 'nav.imprint': 'Impressum', 'nav.login': 'Log ind', 'nav.register': 'Tilmeld', 'nav.logout': 'Log ud',
       'demoBanner.text': 'DEMOTILSTAND – tilmeldinger gemmes kun lokalt i denne browser (ingen rigtig backend forbundet)',
       'landing.eyebrow': 'Sæson 2026', 'landing.headline': 'Europas footvolley-elite. Én tour.',
       'landing.subtitle': '17 stop, tre formater, hundredvis af hold, der jagter League of Champions-titlen. Opret din konto, og sikr din plads i sandet.',
@@ -6404,7 +6408,7 @@ var CLUBS = [
       'live.bracketLabel': 'Live-skema', 'live.resultsLabel': 'Resultater', 'live.formatLabel': 'Turneringsformat'
     },
     sv: {
-      'nav.tournaments': 'Turneringar', 'nav.ranking': 'Rankning', 'nav.imprint': 'Impressum', 'nav.login': 'Logga in', 'nav.register': 'Registrera', 'nav.logout': 'Logga ut',
+      'nav.tournaments': 'Turneringar', 'nav.ranking': 'Rankning', 'nav.about': "Om oss", 'nav.imprint': 'Impressum', 'nav.login': 'Logga in', 'nav.register': 'Registrera', 'nav.logout': 'Logga ut',
       'demoBanner.text': 'DEMOLÄGE – anmälningar sparas endast lokalt i den här webbläsaren (ingen riktig backend ansluten)',
       'landing.eyebrow': 'Säsong 2026', 'landing.headline': 'Europas footvolley-elit. En tour.',
       'landing.subtitle': '17 stopp, tre format, hundratals lag som jagar League of Champions-titeln. Skapa ditt konto och säkra din plats i sanden.',
@@ -6444,7 +6448,7 @@ var CLUBS = [
       'live.bracketLabel': 'Live-schema', 'live.resultsLabel': 'Resultat', 'live.formatLabel': 'Turneringsformat'
     },
     fi: {
-      'nav.tournaments': 'Turnaukset', 'nav.ranking': 'Ranking', 'nav.imprint': 'Tietoa sivustosta', 'nav.login': 'Kirjaudu sisään', 'nav.register': 'Rekisteröidy', 'nav.logout': 'Kirjaudu ulos',
+      'nav.tournaments': 'Turnaukset', 'nav.ranking': 'Ranking', 'nav.about': "Tietoa", 'nav.imprint': 'Tietoa sivustosta', 'nav.login': 'Kirjaudu sisään', 'nav.register': 'Rekisteröidy', 'nav.logout': 'Kirjaudu ulos',
       'demoBanner.text': 'DEMOTILA – ilmoittautumiset tallennetaan vain paikallisesti tähän selaimeen (ei oikeaa taustajärjestelmää yhdistettynä)',
       'landing.eyebrow': 'Kausi 2026', 'landing.headline': 'Euroopan footvolley-eliitti. Yksi kiertue.',
       'landing.subtitle': '17 pysähdystä, kolme formaattia, satoja joukkueita tavoittelemassa League of Champions -titteliä. Luo tili ja varmista paikkasi hiekalla.',
@@ -6484,7 +6488,7 @@ var CLUBS = [
       'live.bracketLabel': 'Live-kaavio', 'live.resultsLabel': 'Tulokset', 'live.formatLabel': 'Turnausformaatti'
     },
     it: {
-      'nav.tournaments': 'Tornei', 'nav.ranking': 'Classifica', 'nav.imprint': 'Note legali', 'nav.login': 'Accedi', 'nav.register': 'Registrati', 'nav.logout': 'Esci',
+      'nav.tournaments': 'Tornei', 'nav.ranking': 'Classifica', 'nav.about': "Chi siamo", 'nav.imprint': 'Note legali', 'nav.login': 'Accedi', 'nav.register': 'Registrati', 'nav.logout': 'Esci',
       'demoBanner.text': 'MODALITÀ DEMO – le iscrizioni vengono salvate solo localmente in questo browser (nessun backend reale collegato)',
       'landing.eyebrow': 'Stagione 2026', 'landing.headline': "L'élite europea del footvolley. Un solo tour.",
       'landing.subtitle': "17 tappe, tre formati, centinaia di squadre a caccia del titolo League of Champions. Crea il tuo account e assicurati il tuo posto sulla sabbia.",
@@ -6524,7 +6528,7 @@ var CLUBS = [
       'live.bracketLabel': 'Tabellone live', 'live.resultsLabel': 'Risultati', 'live.formatLabel': 'Formato del torneo'
     },
     fr: {
-      'nav.tournaments': 'Tournois', 'nav.ranking': 'Classement', 'nav.imprint': 'Mentions légales', 'nav.login': 'Se connecter', 'nav.register': "S'inscrire", 'nav.logout': 'Se déconnecter',
+      'nav.tournaments': 'Tournois', 'nav.ranking': 'Classement', 'nav.about': "À propos", 'nav.imprint': 'Mentions légales', 'nav.login': 'Se connecter', 'nav.register': "S'inscrire", 'nav.logout': 'Se déconnecter',
       'demoBanner.text': 'MODE DÉMO – les inscriptions ne sont enregistrées que localement dans ce navigateur (aucun backend réel connecté)',
       'landing.eyebrow': 'Saison 2026', 'landing.headline': "L'élite européenne du footvolley. Un seul tour.",
       'landing.subtitle': "17 étapes, trois formats, des centaines d'équipes en quête du titre de la League of Champions. Créez votre compte et réservez votre place sur le sable.",
@@ -6564,7 +6568,7 @@ var CLUBS = [
       'live.bracketLabel': 'Tableau en direct', 'live.resultsLabel': 'Résultats', 'live.formatLabel': 'Format du tournoi'
     },
     hr: {
-      'nav.tournaments': 'Turniri', 'nav.ranking': 'Ljestvica', 'nav.imprint': 'Impresum', 'nav.login': 'Prijava', 'nav.register': 'Registracija', 'nav.logout': 'Odjava',
+      'nav.tournaments': 'Turniri', 'nav.ranking': 'Ljestvica', 'nav.about': "O nama", 'nav.imprint': 'Impresum', 'nav.login': 'Prijava', 'nav.register': 'Registracija', 'nav.logout': 'Odjava',
       'demoBanner.text': 'DEMO NAČIN – prijave se pohranjuju samo lokalno u ovom pregledniku (nema stvarnog povezanog backenda)',
       'landing.eyebrow': 'Sezona 2026.', 'landing.headline': 'Europska elita footvolleyja. Jedna turneja.',
       'landing.subtitle': '17 postaja, tri formata, stotine timova u potrazi za titulom League of Champions. Otvorite svoj račun i osigurajte svoje mjesto na pijesku.',
@@ -6597,7 +6601,7 @@ var CLUBS = [
       'registerAccount.switchText': 'Već imate račun?', 'registerAccount.switchBtn': 'Prijava', 'footer.questions': 'Pitanja?', 'footer.imprint': 'Impresum'
     },
     el: {
-      'nav.tournaments': 'Τουρνουά', 'nav.ranking': 'Κατάταξη', 'nav.imprint': 'Νομικές πληροφορίες', 'nav.login': 'Σύνδεση', 'nav.register': 'Εγγραφή', 'nav.logout': 'Αποσύνδεση',
+      'nav.tournaments': 'Τουρνουά', 'nav.ranking': 'Κατάταξη', 'nav.about': "Σχετικά", 'nav.imprint': 'Νομικές πληροφορίες', 'nav.login': 'Σύνδεση', 'nav.register': 'Εγγραφή', 'nav.logout': 'Αποσύνδεση',
       'demoBanner.text': 'ΛΕΙΤΟΥΡΓΙΑ DEMO – οι εγγραφές αποθηκεύονται μόνο τοπικά σε αυτό το πρόγραμμα περιήγησης (χωρίς πραγματικό backend)',
       'landing.eyebrow': 'Σεζόν 2026', 'landing.headline': 'Η ευρωπαϊκή ελίτ του footvolley. Ένα tour.',
       'landing.subtitle': '17 σταθμοί, τρία φορμάτ, εκατοντάδες ομάδες κυνηγούν τον τίτλο της League of Champions. Δημιούργησε τον λογαριασμό σου και κλείσε τη θέση σου στην άμμο.',
@@ -6630,7 +6634,7 @@ var CLUBS = [
       'registerAccount.switchText': 'Έχεις ήδη λογαριασμό;', 'registerAccount.switchBtn': 'Σύνδεση', 'footer.questions': 'Ερωτήσεις;', 'footer.imprint': 'Νομικές πληροφορίες'
     },
     tr: {
-      'nav.tournaments': 'Turnuvalar', 'nav.ranking': 'Sıralama', 'nav.imprint': 'Yasal Bilgiler', 'nav.login': 'Giriş Yap', 'nav.register': 'Kayıt Ol', 'nav.logout': 'Çıkış Yap',
+      'nav.tournaments': 'Turnuvalar', 'nav.ranking': 'Sıralama', 'nav.about': "Hakkında", 'nav.imprint': 'Yasal Bilgiler', 'nav.login': 'Giriş Yap', 'nav.register': 'Kayıt Ol', 'nav.logout': 'Çıkış Yap',
       'demoBanner.text': 'DEMO MODU – kayıtlar yalnızca bu tarayıcıda yerel olarak saklanır (gerçek bir backend bağlı değildir)',
       'landing.eyebrow': '2026 Sezonu', 'landing.headline': "Avrupa'nın footvolley elitleri. Tek bir tur.",
       'landing.subtitle': "17 durak, üç format, League of Champions unvanı için yarışan yüzlerce takım. Hesabını oluştur ve kumdaki yerini garantile.",
@@ -6663,7 +6667,7 @@ var CLUBS = [
       'registerAccount.switchText': 'Zaten bir hesabın var mı?', 'registerAccount.switchBtn': 'Giriş Yap', 'footer.questions': 'Sorularınız mı var?', 'footer.imprint': 'Yasal Bilgiler'
     },
     no: {
-      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangering', 'nav.imprint': 'Impressum', 'nav.login': 'Logg inn', 'nav.register': 'Registrer', 'nav.logout': 'Logg ut',
+      'nav.tournaments': 'Turneringer', 'nav.ranking': 'Rangering', 'nav.about': "Om oss", 'nav.imprint': 'Impressum', 'nav.login': 'Logg inn', 'nav.register': 'Registrer', 'nav.logout': 'Logg ut',
       'demoBanner.text': 'DEMOMODUS – påmeldinger lagres kun lokalt i denne nettleseren (ingen ekte backend tilkoblet)',
       'landing.eyebrow': 'Sesong 2026', 'landing.headline': 'Europas footvolley-elite. Én tour.',
       'landing.subtitle': '17 stopp, tre formater, hundrevis av lag som jakter på League of Champions-tittelen. Opprett kontoen din og sikre deg en plass i sanden.',
@@ -6897,7 +6901,7 @@ var CLUBS = [
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var currentFilter = 'upcoming';
 
-  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', admin:'admin', impressum:'impressum', login:'login', registeraccount:'register-account', inbox:'inbox' };
+  var VIEW_TO_ROUTE = { home:'tournaments', ranking:'ranking', about:'about', admin:'admin', impressum:'impressum', login:'login', registeraccount:'register-account', inbox:'inbox' };
 
   // Sliding glow under the nav: follows the hovered/focused item and rests
   // on the active page's link ('ig' design).
@@ -7057,11 +7061,9 @@ var CLUBS = [
     renderHeroMedia();
 
     var actionsHtml = currentUser
-      ? '<button class="btn btn-cyan btn-gradient" data-route="tournaments">' + uiEdit('landing.browseBtnLoggedIn') + '</button>' +
-        '<button class="btn btn-outline-light" data-route="about">' + uiEdit('landing.moreInfo') + '</button>'
+      ? '<button class="btn btn-cyan btn-gradient" data-route="tournaments">' + uiEdit('landing.browseBtnLoggedIn') + '</button>'
       : '<button class="btn btn-cyan btn-gradient" data-route="register-account">' + uiEdit('landing.registerBtn') + '</button>' +
-        '<button class="btn btn-outline-light" data-route="login">' + uiEdit('landing.loginBtn') + '</button>' +
-        '<button class="btn btn-outline-light" data-route="about">' + uiEdit('landing.moreInfo') + '</button>';
+        '<button class="btn btn-outline-light" data-route="login">' + uiEdit('landing.loginBtn') + '</button>';
 
     var blocks = {
       presented: SHOW_LANDING_PRESENTED ? brandSlotHtml('hero') : '',
