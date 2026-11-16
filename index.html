@@ -30,6 +30,73 @@
 /* latin */ @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600; font-display: swap; src: url(assets/fonts/poppins-600-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 /* latin-ext */ @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 700; font-display: swap; src: url(assets/fonts/poppins-700-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 /* latin */ @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 700; font-display: swap; src: url(assets/fonts/poppins-700-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+  /* ===== Ranking + tournament seeding lists in the LoC Instagram ranking
+     style: white rank box, club logo, name on one line, cyan points ===== */
+  :root[data-design="ig"] .ranking-table.is-insta thead th:first-child { width:96px; }
+  :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(3):not(:last-child) { order:1; width:116px; padding:0; text-align:center; white-space:nowrap; }
+  :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(2) { order:2; flex:1; padding-left:10px; }
+  :root[data-design="ig"] .ranking-table.is-insta thead th:last-child { order:3; padding-right:30px; }
+  :root[data-design="ig"] .ranking-table.is-insta .rank-pts small { display:none; }
+  :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td { order:1; width:116px; padding:0; justify-content:center; }
+  :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td .ranking-clubs { flex-direction:row; align-items:center; justify-content:center; width:100%; }
+  :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td .standings-team { gap:0; }
+  :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td .club-avatar { width:50px; height:50px; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-club-name { display:none; }
+  :root[data-design="ig"] .ranking-table.is-insta tbody tr td.rank-player { order:2; display:flex; align-items:center; gap:14px; padding-left:10px; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-name { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-first, :root[data-design="ig"] .ranking-table.is-insta .rk-last { display:inline; font:400 28px/1 'Bebas Neue', sans-serif; letter-spacing:0.04em; color:#fff; margin:0; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-first { margin-right:0.28em; }
+  :root[data-design="ig"] .ranking-table.is-insta .player-name-link.rk-name:hover .rk-first { color:var(--cyan); }
+  :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-first, :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-last { font-size:32px; }
+  :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature td.rank-player + td .club-avatar { width:58px; height:58px; }
+  :root[data-design="ig"] .ranking-table.is-insta tbody tr.rank-feature td.rank-player { overflow:visible; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo { position:relative; flex:0 0 84px; height:74px; border-radius:8px; overflow:hidden; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-empty { height:1px; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout { flex-basis:84px; height:118px; margin:-38px 0 -6px; border-radius:0; overflow:visible; }
+  :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout img { object-fit:contain; object-position:50% 100%; filter:drop-shadow(0 6px 10px rgba(3,4,40,0.45)); }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table.is-insta thead th { font-size:15px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:first-child { width:54px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(3):not(:last-child), :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td { width:62px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(3):not(:last-child) { font-size:12px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:nth-child(2), :root[data-design="ig"] .ranking-table.is-insta tbody tr td.rank-player { padding-left:6px; gap:8px; }
+    :root[data-design="ig"] .ranking-table.is-insta thead th:last-child { padding-right:18px; }
+    :root[data-design="ig"] .ranking-table.is-insta td.rank-player + td .club-avatar { width:32px; height:32px; }
+    :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature td.rank-player + td .club-avatar { width:36px; height:36px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-first, :root[data-design="ig"] .ranking-table.is-insta .rk-last { font-size:19px; }
+    :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-first, :root[data-design="ig"] .ranking-table.is-insta tr.rank-feature .rk-last { font-size:21px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-photo { flex-basis:44px; height:54px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-empty { height:1px; }
+    :root[data-design="ig"] .ranking-table.is-insta .rk-photo.is-cutout { flex-basis:44px; height:74px; margin:-18px 0 -4px; }
+  }
+
+  #playerLists .seed-list { display:flex; flex-direction:column; gap:10px; }
+  :root[data-design="ig"] #playerLists .seed-list > .player-row, :root[data-design="ig"] #playerLists .seed-list > .roster-row {
+    display:flex; align-items:center; gap:0; min-height:64px; padding:0 26px 0 0; margin:0; border:none; border-radius:12px 999px 999px 12px;
+    background:linear-gradient(90deg, #22247c 0%, #34369a 45%, #5b5ba8 100%) no-repeat 70px 0 / calc(100% - 70px) 100%; box-shadow:0 8px 18px rgba(10,12,70,0.35); }
+  #playerLists .seed-num { align-self:stretch; flex:0 0 84px; display:grid; place-items:center; background:#fff; border-radius:12px; color:#0b0d63; font:400 30px/1 'Bebas Neue', sans-serif; }
+  :root[data-design="ig"] #playerLists .seed-list .player-info, :root[data-design="ig"] #playerLists .seed-list .roster-row-teams { flex:1; min-width:0; display:flex; align-items:center; gap:16px; padding-left:18px; }
+  :root[data-design="ig"] #playerLists .seed-list .club-avatar { width:46px; height:46px; flex-shrink:0; }
+  :root[data-design="ig"] #playerLists .seed-list .club-pair .club-avatar { width:38px; height:38px; }
+  :root[data-design="ig"] #playerLists .seed-list .player-info > div, :root[data-design="ig"] #playerLists .seed-list .roster-row-teams > div { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    font:400 24px/1.1 'Bebas Neue', sans-serif; letter-spacing:0.04em; text-transform:uppercase; color:#fff; }
+  :root[data-design="ig"] #playerLists .seed-list strong { font-weight:400; }
+  :root[data-design="ig"] #playerLists .seed-list a, :root[data-design="ig"] #playerLists .seed-list .player-name-link { color:#fff; }
+  :root[data-design="ig"] #playerLists .seed-list .player-club { display:none; }
+  :root[data-design="ig"] #playerLists .seed-list .player-row-actions { display:flex; align-items:center; gap:10px; margin-left:12px; }
+  :root[data-design="ig"] #playerLists .seed-list .roster-points-badge { order:9; background:none; border:none; padding:0; box-shadow:none; font:400 28px/1 'Bebas Neue', sans-serif; color:var(--cyan); letter-spacing:0.02em; }
+  :root[data-design="ig"] #playerLists .seed-list .status { font-size:10px; padding:3px 8px; }
+  @media (max-width:640px) {
+    #playerLists .seed-num { flex-basis:46px; font-size:22px; }
+    :root[data-design="ig"] #playerLists .seed-list > .player-row, :root[data-design="ig"] #playerLists .seed-list > .roster-row { min-height:54px; padding-right:16px; background-position:40px 0; background-size:calc(100% - 40px) 100%; }
+    :root[data-design="ig"] #playerLists .seed-list .player-info, :root[data-design="ig"] #playerLists .seed-list .roster-row-teams { gap:8px; padding-left:8px; }
+    :root[data-design="ig"] #playerLists .seed-list .club-avatar { width:30px; height:30px; }
+    :root[data-design="ig"] #playerLists .seed-list .player-info > div, :root[data-design="ig"] #playerLists .seed-list .roster-row-teams > div { font-size:17px; white-space:normal; }
+    :root[data-design="ig"] #playerLists .seed-list .roster-points-badge { font-size:21px; }
+    :root[data-design="ig"] #playerLists .seed-list .status { display:none; }
+  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
@@ -2797,6 +2864,23 @@
   :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar { width:40px; height:40px; }
   :root[data-design="ig"] .ranking-table td:last-child, :root[data-design="ig"] .ranking-table tr.rank-top td:last-child { order:3; margin-left:auto; padding-right:30px; text-align:right; }
   :root[data-design="ig"] .ranking-table .rank-pts { font-family:'Bebas Neue', sans-serif; font-size:32px; color:var(--cyan); }
+  /* places 4-10: a bigger row with a small profile photo */
+  :root[data-design="ig"] .ranking-table tbody tr.rank-feature { min-height:84px; }
+  :root[data-design="ig"] .ranking-table tbody tr.rank-feature td.rank-player { display:flex; align-items:center; gap:16px; font-size:30px; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature td.rank-player .rk-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature .tw-face { width:52px; height:52px; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature .rank-num { font-size:40px; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature .rank-pts { font-size:36px; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature td .club-link, :root[data-design="ig"] .ranking-table tr.rank-feature td:nth-child(2):not(.rank-player) .standings-team { font-size:30px; }
+  :root[data-design="ig"] .ranking-table tr.rank-feature td .club-avatar { width:48px; height:48px; }
+  @media (max-width:640px) {
+    :root[data-design="ig"] .ranking-table tbody tr.rank-feature { min-height:68px; }
+    :root[data-design="ig"] .ranking-table tbody tr.rank-feature td.rank-player { gap:10px; font-size:22px; }
+    :root[data-design="ig"] .ranking-table tr.rank-feature .tw-face { width:38px; height:38px; }
+    :root[data-design="ig"] .ranking-table tr.rank-feature .rank-num { font-size:30px; }
+    :root[data-design="ig"] .ranking-table tr.rank-feature .rank-pts { font-size:27px; }
+    :root[data-design="ig"] .ranking-table tr.rank-feature td .club-avatar { width:34px; height:34px; }
+  }
   :root[data-design="ig"] .ranking-table .rank-pts small { display:none; }
   /* clubs table: logo + name in the bar */
   :root[data-design="ig"] .ranking-table td .club-link, :root[data-design="ig"] .ranking-table td:nth-child(2):not(.rank-player) .standings-team { font-family:'Bebas Neue', sans-serif; font-size:26px; letter-spacing:0.03em; text-transform:uppercase; color:#fff; gap:14px; }
@@ -2861,7 +2945,8 @@
   :root[data-design="ig"] .ranking-table thead th { background:none; border:none; padding:0 16px; font-family:'Bebas Neue', sans-serif; font-size:22px; font-weight:400; letter-spacing:0.06em; color:#fff; text-transform:uppercase; text-align:left; }
   :root[data-design="ig"] .ranking-table thead th:first-child { width:68px; padding:0; text-align:center; flex-shrink:0; }
   :root[data-design="ig"] .ranking-table thead th:nth-child(2) { flex:1; padding-left:26px; }
-  :root[data-design="ig"] .ranking-table thead th:last-child { margin-left:auto; padding-right:30px; text-align:right; }
+  /* "Points" ends where the numbers end (the small "PTS" sits outside) */
+  :root[data-design="ig"] .ranking-table thead th:last-child { margin-left:auto; padding-right:58px; text-align:right; }
   /* players table: CLUB heading sits over the club column */
   :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:230px; flex-shrink:0; padding:0 8px; order:2; }
   /* clubs on the right with their names written out small */
@@ -11131,9 +11216,12 @@ var CLUBS = [
     } else if (!rows.length) {
       table = '<p class="empty-note">No results for “' + esc(rankingSearch.trim()) + '”.</p>';
     } else if (rankingType === 'players') {
-      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Player</th><th>' + esc(uiText('ranking.homeClub')) + '</th><th>Points</th></tr></thead><tbody>' +
-        rows.map(function(r) {
-          var match = findPlayerByName(r.name);
+      // Places 1-3 stand on the podium above, so the list starts at 4; places
+      // 4-10 get a bigger row with a small profile photo.
+      var podium = !q && rows.length >= 3, skip = podium ? 3 : 0;
+      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table is-insta"><thead><tr><th>Rank</th><th>Player</th><th>' + esc(uiText('ranking.homeClub')) + '</th><th>Points</th></tr></thead><tbody>' +
+        rows.slice(skip).map(function(r, i) {
+          var match = findPlayerByName(r.name), feature = podium && i < 7;
           // Only the home club: the one on the player's profile, otherwise the
           // first club in the ranking sheet.
           var home = (match && match.homeClub) || r.club1 || r.club2;
@@ -11143,13 +11231,14 @@ var CLUBS = [
                 return '<span class="standings-team">' + clubAvatarHtml(findClub(name)) + '<span class="rk-club-name">' + esc(clubDisplayName(name)) + '</span></span>';
               }).join('') + '</div>'
             : '–';
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + rankNameHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+          return '<tr class="' + rankRowClass(r.rank) + (feature ? ' rank-feature' : '') + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td class="rank-player">' + (feature ? rankPhotoHtml(r.name) : '') + rankNameHtml(r.name, match ? match.uid : null) + '</td><td>' + clubsHtml + '</td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     } else {
-      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
-        rows.map(function(r) {
-          return '<tr class="' + rankRowClass(r.rank) + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td><a class="standings-team club-link" href="#/club/' + encodeURIComponent(clubKeyOf(r.name) === normalizeNameForMatch(r.name) ? r.name : findClub(r.name).name) + '">' + clubAvatarHtml(findClub(r.name)) + esc(clubDisplayName(r.name)) + '</a></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
+      var clubPodium = !q && rows.length >= 3;
+      table = rankingPodiumHtml(q ? [] : rows) + '<table class="history-table ranking-table is-insta"><thead><tr><th>Rank</th><th>Club</th><th>Points</th></tr></thead><tbody>' +
+        rows.slice(clubPodium ? 3 : 0).map(function(r, i) {
+          return '<tr class="' + rankRowClass(r.rank) + (clubPodium && i < 7 ? ' rank-feature' : '') + '"><td><span class="rank-num">' + r.rank + '</span>' + rankMoveHtml(r, prevMap) + '</td><td><a class="standings-team club-link" href="#/club/' + encodeURIComponent(clubKeyOf(r.name) === normalizeNameForMatch(r.name) ? r.name : findClub(r.name).name) + '">' + clubAvatarHtml(findClub(r.name)) + esc(clubDisplayName(r.name)) + '</a></td><td><span class="rank-pts">' + r.points + '<small>PTS</small></span></td></tr>';
         }).join('') +
         '</tbody></table>';
     }
@@ -11260,6 +11349,15 @@ var CLUBS = [
   }).observe(document.body, { childList: true, subtree: true });
   cleanClubLogos(document);
 
+  // Places 4-10: the player's whole photo like on the podium — a cut-out
+  // figure stands in the row, a normal photo is a small portrait; no photo, nothing.
+  function rankPhotoHtml(name) {
+    var p = podiumPhotoPlayer(name);
+    if (!p) return '<span class="rk-photo is-empty" aria-hidden="true"></span>'; // keeps the names in line
+    return isCutoutPhoto(p)
+      ? '<span class="rk-photo is-cutout" aria-hidden="true"><img src="' + esc(p.photoUrl) + '" alt="" loading="lazy" decoding="async"></span>'
+      : '<span class="rk-photo" aria-hidden="true"><img src="' + esc(p.photoUrl) + '" alt="" loading="lazy" decoding="async" style="' + framingStyle(playerMediaFraming(p)) + '"></span>';
+  }
   function rankRowClass(rank) { return rank <= 3 ? 'rank-top rank-' + rank : ''; }
 
   // Top three as a podium above the table (2nd, 1st, 3rd from left), only
@@ -12916,7 +13014,13 @@ var CLUBS = [
         var rows = regRows.map(function(p) { return { pts: registrationPoints(p), html: playerRowHtml(p) }; })
           .concat(teamRows.map(function(tm) { return { pts: computeTeamRankingPoints(tm), html: teamPublicRowHtml(tm) }; }));
         rows.sort(function(a, b) { return b.pts - a.pts; });
-        return '<div class="player-list">' + rows.map(function(r) { return r.html; }).join('') + '</div>';
+        // seeding list in the style of the Instagram ranking: seed number,
+        // club logo, "Player / Partner", points
+        return '<div class="player-list seed-list">' + rows.map(function(r, i) {
+          return r.html.replace(/^(<div class="(?:player-row|roster-row)"[^>]*>)/, '$1<span class="seed-num">' + (i + 1) + '</span>')
+            .replace(/<\/strong> &amp; /, ' / </strong>').replace(/(<strong>[^<]*?) &amp; /, '$1 / ')
+            .replace(/>(\d+) pts</, '>$1<');
+        }).join('') + '</div>';
       }
       var gt = document.getElementById('glanceTeams');
       if (gt) gt.textContent = divisionCount(null);
