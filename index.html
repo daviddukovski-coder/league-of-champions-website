@@ -957,7 +957,8 @@
   .tcard-meta span:first-child { color:var(--cyan); font-weight:700; letter-spacing:0.12em; text-transform:uppercase; font-size:12px; }
   .tcard-cat { color:rgba(255,255,255,0.6); position:relative; }
   .tcard-count { color:var(--cyan); position:relative; }
-  .tcard .badge-upcoming { background:rgba(47,158,110,0.25); color:#7ee2b4; }
+  /* upcoming: a loud neon-green "Sign up" */
+  .tcard .badge-upcoming { background:#39ff7a; color:#032a12; font-weight:800; box-shadow:0 0 16px rgba(57,255,122,0.55); }
   .tcard .badge-past { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.7); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tcard { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); } }
   :root[data-theme="dark"] .tcard { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 10px 30px var(--shadow); }
@@ -6313,7 +6314,7 @@ var CLUBS = [
     'footer.imprint': 'Imprint',
     'player.backLink': '← Back',
     'home.subtitle': '{n} tournaments across Europe, three formats – LoC 1000, 500 and 100.',
-    'home.badgeOpen': 'Registration open',
+    'home.badgeOpen': 'Sign up',
     'home.badgeCompleted': 'Completed',
     'home.teamRegisteredOne': '{n} team registered',
     'home.teamRegisteredMany': '{n} teams registered',
@@ -6416,7 +6417,7 @@ var CLUBS = [
       'registerAccount.consentLabel': 'Ich stimme der Verarbeitung meiner Daten für die Kontoerstellung zu. *', 'registerAccount.submitBtn': 'Konto erstellen',
       'registerAccount.switchText': 'Bereits ein Konto?', 'registerAccount.switchBtn': 'Anmelden', 'footer.questions': 'Fragen?', 'footer.imprint': 'Impressum',
       'player.backLink': '← Zurück', 'home.subtitle': '{n} Turniere in ganz Europa, drei Formate – LoC 1000, 500 und 100.',
-      'home.badgeOpen': 'Anmeldung offen', 'home.badgeCompleted': 'Abgeschlossen',
+      'home.badgeOpen': 'Jetzt anmelden', 'home.badgeCompleted': 'Abgeschlossen',
       'home.teamRegisteredOne': '{n} Team angemeldet', 'home.teamRegisteredMany': '{n} Teams angemeldet', 'home.seasonTag': 'SAISON {year} · {n} TURNIERE',
       'division.men': 'Herren', 'division.women': 'Damen', 'division.suffix': ' Kategorie',
       'schedule.scrollHint': '← Scrollen, um alle {n} Plätze zu sehen →', 'schedule.court': 'Platz {n}', 'schedule.noDays': 'Noch keine Tage eingerichtet.',
