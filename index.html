@@ -10531,7 +10531,7 @@ var CLUBS = [
       (rankingType === 'players' && compareOpen ? '<div id="comparePanel">' + comparePanelHtml(rows) + '</div>' : '') +
       '<div id="rankingTable"></div>';
     var meta = document.getElementById('rankingBandMeta');
-    if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span><span>' + rows.length + ' ' + (rankingType === 'players' ? 'Players' : 'Clubs') + '</span>';
+    if (meta) meta.innerHTML = '<span>' + esc(rankingYear) + '</span><span>' + (rankingGender === 'men' ? 'Men’s' : 'Women’s') + '</span>';
     renderRankingTable(rows);
     syncRankingUrl();
 
