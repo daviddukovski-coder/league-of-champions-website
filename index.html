@@ -2795,7 +2795,7 @@
   :root[data-design="ig"] .ranking-table td.rank-player + td { color:transparent; }
   :root[data-design="ig"] .ranking-table td.rank-player + td .standings-team { font-size:0; gap:0; }
   :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar { width:40px; height:40px; }
-  :root[data-design="ig"] .ranking-table td:last-child { order:3; margin-left:auto; padding-right:30px; text-align:right; }
+  :root[data-design="ig"] .ranking-table td:last-child, :root[data-design="ig"] .ranking-table tr.rank-top td:last-child { order:3; margin-left:auto; padding-right:30px; text-align:right; }
   :root[data-design="ig"] .ranking-table .rank-pts { font-family:'Bebas Neue', sans-serif; font-size:32px; color:var(--cyan); }
   :root[data-design="ig"] .ranking-table .rank-pts small { display:none; }
   /* clubs table: logo + name in the bar */
@@ -2811,7 +2811,7 @@
     :root[data-design="ig"] .ranking-table tbody tr td.rank-player { padding-left:14px; }
     :root[data-design="ig"] .ranking-table td.rank-player + td .club-avatar, :root[data-design="ig"] .ranking-table td:nth-child(2):not(.rank-player) .club-avatar { width:30px; height:30px; }
     :root[data-design="ig"] .ranking-table .rank-pts { font-size:24px; }
-    :root[data-design="ig"] .ranking-table td:last-child { padding-right:18px; }
+    :root[data-design="ig"] .ranking-table td:last-child, :root[data-design="ig"] .ranking-table tr.rank-top td:last-child { padding-right:18px; }
   }
 
   /* Ranking list, refined: quieter bars, two-line names, metallic top 3 */
@@ -2928,7 +2928,7 @@
   }
 
   @media (max-width:1000px) and (min-width:641px) {
-    :root[data-design="ig"] .ranking-table tbody tr td:last-child, :root[data-design="ig"] .ranking-table thead th:last-child { width:104px; padding-right:24px; }
+    :root[data-design="ig"] .ranking-table tbody tr td:last-child, :root[data-design="ig"] .ranking-table tbody tr.rank-top td:last-child, :root[data-design="ig"] .ranking-table thead th:last-child { width:104px; padding-right:24px; }
     :root[data-design="ig"] .ranking-table .rank-pts small { display:none; }
     :root[data-design="ig"] .ranking-table tbody tr td.rank-player + td, :root[data-design="ig"] .ranking-table thead th:nth-child(3):not(:last-child) { width:330px; }
   }
