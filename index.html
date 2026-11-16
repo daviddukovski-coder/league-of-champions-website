@@ -3805,8 +3805,15 @@
     ['Venezuela','VE','58'],['Vietnam','VN','84'],['Yemen','YE','967'],['Zambia','ZM','260'],
     ['Zimbabwe','ZW','263']
   ];
-  function countryFlagEmoji(iso2) {
-    return String.fromCodePoint.apply(null, iso2.split('').map(function(c) { return 0x1F1E6 + c.charCodeAt(0) - 65; }));
+  // Site rule: no flags anywhere — no countries, no regions (an inclusive
+  // format that stays out of politics). Flag emojis in texts that come from
+  // elsewhere (news, imported stories) are removed when shown.
+  function stripFlags(text) {
+    return String(text || '')
+      .replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, '')                       // country flags (regional indicator pairs)
+      .replace(/\u{1F3F4}[\u{E0061}-\u{E007A}]+\u{E007F}/gu, '')      // England, Scotland, Wales …
+      .replace(/[\u{1F3F4}\u{1F3F3}\u{1F6A9}\u{1F38C}\u{1F3C1}]\uFE0F?(\u200D[^\s]*)?/gu, '') // other flags
+      .replace(/[ \t]{2,}/g, ' ').replace(/ +$/gm, '');
   }
 
 var CLUBS = [
@@ -7295,7 +7302,7 @@ var CLUBS = [
       '<span class="hero-next-label">' + esc(uiText(pick.upcoming ? 'landing.nextEvent' : 'landing.lastEvent')) + '</span>' +
       '<span class="tier mono">LoC ' + esc(t.tier) + '</span>' +
       '<h2>' + esc(t.name) + '</h2>' +
-      '<p class="hero-next-meta">' + esc(t.dateLabel) + ' &nbsp;' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</p>' +
+      '<p class="hero-next-meta">' + esc(t.dateLabel) + ' &nbsp;' + esc(t.city) + ', ' + esc(t.country) + '</p>' +
       (showCountdown ? '<div class="countdown" id="heroCountdown" role="timer" aria-live="off"></div>' : '') +
       '<button class="btn btn-cyan btn-gradient btn-block" data-route="event/' + esc(t.id) + (pick.upcoming ? '' : '/live') + '">' + esc(uiText(pick.upcoming ? 'landing.details' : 'landing.results')) + '</button>' +
       // Tear-off stub of the ticket look ('ig' design only).
@@ -8158,8 +8165,8 @@ var CLUBS = [
     return '<article class="cp-page' + (i === newsPage ? ' is-current' : '') + '" data-cp-page="' + i + '" aria-roledescription="' + esc(uiText('news.pageWord')) + '" aria-label="' + esc(pageOf) + '"' + (i === newsPage ? '' : ' aria-hidden="true"') + '>' +
       '<div class="cp-page-head"><span class="cp-mast">' + esc(uiText('news.masthead')) + '</span><span>' + esc(newsDateLabel(n.date)) + '</span><span>' + esc(pageOf) + '</span></div>' +
       (n.kicker ? '<span class="cp-kicker">' + esc(n.kicker) + '</span>' : '') +
-      '<h3 class="cp-title">' + esc(n.title || '') + '</h3>' +
-      '<div class="cp-body' + (n.image ? '' : ' no-photo') + '">' + photo + '<div class="cp-text">' + rulesTextHtml(n.text) + '</div></div>' +
+      '<h3 class="cp-title">' + esc(stripFlags(n.title)) + '</h3>' +
+      '<div class="cp-body' + (n.image ? '' : ' no-photo') + '">' + photo + '<div class="cp-text">' + rulesTextHtml(stripFlags(n.text)) + '</div></div>' +
       '<div class="cp-page-foot">' + sponsor + newsTournamentLinks(n) + '</div>' +
       '<div class="cp-admin admin-only"><button type="button" class="btn btn-outline btn-sm" data-cp-edit="' + esc(n.id) + '">' + esc(uiText('team.edit')) + '</button>' +
         '<button type="button" class="btn btn-outline btn-sm" data-cp-del="' + esc(n.id) + '">' + esc(uiText('team.remove')) + '</button></div>' +
@@ -9175,7 +9182,7 @@ var CLUBS = [
         '<span class="tour-card-tier">' + esc(t.tier) + '</span>' +
         '<span class="tour-card-date">' + esc(t.dateLabel) + '</span>' +
         '<span class="tour-card-name">' + esc(t.name) + '</span>' +
-        '<span class="tour-card-place">' + t.flag + ' ' + esc(t.city) + '</span>' +
+        '<span class="tour-card-place">' + esc(t.city) + '</span>' +
         (t.id === nextId ? '<span class="tour-card-flag">' + esc(uiText('landing.nextEvent')) + '</span>' : '') +
       '</button>';
     }).join('');
@@ -10274,7 +10281,7 @@ var CLUBS = [
         '<span class="tcard-watermark">' + esc(t.tier) + '</span>' +
         '<div class="tcard-top"><span class="tier mono">LoC ' + t.tier + '</span>' + statusBadge + '</div>' +
         '<h3>' + esc(t.name) + '</h3>' +
-        '<div class="tcard-meta mono"><span>' + t.dateLabel + '<span class="tcard-year"> ' + esc(year) + '</span></span><span>' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
+        '<div class="tcard-meta mono"><span>' + t.dateLabel + '<span class="tcard-year"> ' + esc(year) + '</span></span><span>' + esc(t.city) + ', ' + esc(t.country) + '</span></div>' +
         '<div class="tcard-cat">' + esc(divisionsText(t)) + '</div>' +
         countSpan + soon +
         '<span class="tcard-stub" aria-hidden="true"><span class="tcard-stub-loc">LoC</span><span class="tcard-stub-tier">' + esc(t.tier) + '</span><span class="tcard-stub-arrow"></span></span>' +
@@ -11612,7 +11619,6 @@ var CLUBS = [
         '<div class="form-group"><label>Date (for sorting)</label><input type="date" id="tfDateSort" value="' + esc(v.dateSort || '') + '"></div>' +
         '<div class="form-group"><label>City</label><input type="text" id="tfCity" value="' + esc(v.city || '') + '"></div>' +
         '<div class="form-group"><label>Country</label><input type="text" id="tfCountry" value="' + esc(v.country || '') + '"></div>' +
-        '<div class="form-group"><label>Flag emoji</label><input type="text" id="tfFlag" placeholder="🇵🇹" value="' + esc(v.flag || '') + '"></div>' +
         '<div class="form-group"><label>Divisions (comma-separated)</label><input type="text" id="tfCompetitions" placeholder="Men, Women" value="' + esc((v.competitions || []).join(', ')) + '"></div>' +
         '<div class="form-group"><label>Entry fee</label><input type="number" min="0" id="tfFee" value="' + esc(v.fee != null ? v.fee : '') + '"></div>' +
         '<div class="form-group"><label>Registration deadline</label><input type="text" id="tfDeadline" placeholder="e.g. September 22, 2026" value="' + esc(v.deadline || '') + '"></div>' +
@@ -11661,7 +11667,7 @@ var CLUBS = [
       ? '<p class="empty-note">No tournaments in ' + esc(adminSeason) + ' yet.</p>'
       : '<table class="history-table"><thead><tr><th>Name</th><th>Tier</th><th>Status</th><th>Date</th><th>Divisions</th><th></th></tr></thead><tbody>' +
         list.map(function(t) {
-          return '<tr><td>' + esc(t.flag || '') + ' ' + esc(t.name) + '</td><td>' + t.tier + '</td><td>' + esc(t.status) + '</td><td>' + esc(t.dateLabel) + '</td><td>' + esc(divisionsText(t)) + '</td>' +
+          return '<tr><td>' + esc(t.name) + '</td><td>' + t.tier + '</td><td>' + esc(t.status) + '</td><td>' + esc(t.dateLabel) + '</td><td>' + esc(divisionsText(t)) + '</td>' +
             '<td class="admin-row-actions"><button type="button" class="btn btn-outline btn-sm" data-edit-tournament="' + esc(t.id) + '">Edit</button> ' +
             '<button type="button" class="icon-btn" data-delete-tournament="' + esc(t.id) + '" title="Delete tournament">✕</button></td></tr>';
         }).join('') +
@@ -11772,7 +11778,6 @@ var CLUBS = [
         dateSort: dateSort,
         city: document.getElementById('tfCity').value.trim(),
         country: document.getElementById('tfCountry').value.trim(),
-        flag: document.getElementById('tfFlag').value.trim(),
         competitions: competitions,
         fee: feeVal ? Number(feeVal) : null,
         deadline: document.getElementById('tfDeadline').value.trim() || null
@@ -12403,7 +12408,7 @@ var CLUBS = [
     };
     return '<section class="glance" aria-label="' + esc(uiText('detail.glanceHeading')) + '">' +
       cell(uiEdit('detail.whenLabel'), esc(t.dateLabel) + ' ' + esc((t.dateSort || '').slice(0, 4))) +
-      cell(uiEdit('detail.whereLabel'), t.flag + ' ' + esc(t.city), esc(t.country)) +
+      cell(uiEdit('detail.whereLabel'), esc(t.city), esc(t.country)) +
       cell(uiEdit('detail.formatLabel'), uiEdit('detail.formatValue')) +
       cell(uiEdit('detail.feeLabel'), editTextHtml(t.id, 'fee', t.fee || '', t.fee ? '€' + t.fee : '–', 'entry fee'), t.fee ? 'per team' : '') +
       cell(uiEdit('detail.deadlineLabel'), editTextHtml(t.id, 'deadline', t.deadline || '', t.deadline || '–', 'registration deadline'), dl ? esc(dl) : '', dl === uiText('detail.regClosed') ? 'is-closed' : 'is-open') +
@@ -12641,7 +12646,7 @@ var CLUBS = [
       '<div class="detail-head">' +
         '<span class="tier mono">LoC ' + t.tier + '</span>' +
         '<h1>' + editTextHtml(t.id, 'name', t.name, t.name, 'tournament name') + '</h1>' +
-        '<div class="detail-meta mono">' + editTextHtml(t.id, 'dateLabel', t.dateLabel, t.dateLabel, 'dates') + ' 2026 · ' + t.flag + ' ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
+        '<div class="detail-meta mono">' + editTextHtml(t.id, 'dateLabel', t.dateLabel, t.dateLabel, 'dates') + ' 2026 · ' + esc(t.city) + ', ' + esc(t.country) + '</div>' +
         '<button type="button" class="tour-share-btn" id="shareTournamentBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>' + esc(uiText('detail.share')) + '</button>' +
       '</div>';
 
@@ -18396,7 +18401,7 @@ var CLUBS = [
       }).slice(0, 8);
       if (!matches.length) { dropdown.hidden = true; return; }
       dropdown.innerHTML = matches.map(function(c) {
-        return '<div class="combo-item" data-dial="+' + c[2] + '"><span>' + countryFlagEmoji(c[1]) + '</span><span>' + esc(c[0]) + '</span><span class="player-club">+' + c[2] + '</span></div>';
+        return '<div class="combo-item" data-dial="+' + c[2] + '"><span>' + esc(c[0]) + '</span><span class="player-club">+' + c[2] + '</span></div>';
       }).join('');
       dropdown.hidden = false;
     });
